@@ -17,8 +17,6 @@ nestedJourneyStates:
     events:
       next:
         targetState: CRI_FRAUD
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetState: CRI_FRAUD
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -31,8 +29,6 @@ nestedJourneyStates:
     events:
       next:
         targetState: CRI_FRAUD
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetState: CRI_FRAUD
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -44,8 +40,6 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: next
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        exitEventToEmit: enhanced-verification
       fail-with-no-ci:
         exitEventToEmit: fraud-fail-with-no-ci
       fail-with-ci:

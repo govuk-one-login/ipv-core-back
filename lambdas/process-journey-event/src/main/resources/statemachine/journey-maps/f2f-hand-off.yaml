@@ -30,9 +30,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -40,12 +37,6 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED
       dl-auth-source-check:
@@ -134,11 +125,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
       access-denied:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_NO_TICF
@@ -151,12 +137,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-        checkMitigation:
-          enhanced-verification:
-            targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-            checkFeatureFlag:
-              processCandidateIdentity:
-                targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF

@@ -79,9 +79,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -89,12 +86,6 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED
       dl-auth-source-check:
@@ -345,12 +336,6 @@ states:
       next-passport:
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-      alternate-doc-next-dl: # To delete - can be combined with next-dl exitEvent
-        targetState: KBV_PHOTO_ID
-        targetEntryEvent: next
-      alternate-doc-next-passport: # To delete - can be combined with next-passport exitEvent
-        targetState: KBV_PHOTO_ID
-        targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -359,9 +344,6 @@ states:
       return-to-rp:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-      failed:
-        targetJourney: FAILED
-        targetState: FAILED
 
   PYI_ESCAPE:
     response:
@@ -455,9 +437,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
       fraud-fail-with-no-ci:
         targetJourney: EVALUATE_SCORES
         targetState: START
@@ -474,8 +453,6 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_J4
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetState: ADDRESS_AND_FRAUD_J4
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -484,9 +461,6 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      enhanced-verification:
         targetJourney: F2F_HAND_OFF
         targetState: START
       fraud-fail-with-no-ci:
@@ -503,14 +477,9 @@ states:
     events:
       next:
         targetState: CRI_NINO_NO_PHOTO_ID
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetState: CRI_NINO_NO_PHOTO_ID
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          enhanced-verification:
-            targetState: CRI_NINO_NO_PHOTO_ID
 
   CRI_NINO_NO_PHOTO_ID:
     response:
@@ -534,9 +503,6 @@ states:
     exitEvents:
       next:
         targetState: KBV_NO_PHOTO_ID
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -646,107 +612,6 @@ states:
         targetState: INELIGIBLE
 
   # Mitigation journey (01)
-  MITIGATION_01_IDENTITY_START_PAGE: # To delete - now matches IDENTITY_START_PAGE
-    response:
-      type: page
-      pageId: page-ipv-identity-document-start
-    events:
-      appTriage:
-        targetState: MITIGATION_01_APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetState: MITIGATION_01_F2F_START_PAGE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-
-  MITIGATION_01_STRATEGIC_APP_TRIAGE: # To delete - now matches STRATEGIC_APP_TRIAGE
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      anotherWay:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incompleteDlAuthCheckInvalidDl:
-        targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
-      failedDlAuthCheckInvalidDl:
-        targetJourney: FAILED
-        targetState: FAILED
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK: # To delete - now matches STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
-      postOffice:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  MITIGATION_01_APP_DOC_CHECK: # To delete - now matches APP_DOC_CHECK
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      incomplete:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK: # To delete - now matches PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-      postOffice:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
-
   MITIGATION_01_F2F_START_PAGE:
     response:
       type: page
@@ -791,10 +656,6 @@ states:
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: invalid-dl
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -841,10 +702,6 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
     response:
@@ -902,25 +759,6 @@ states:
         targetState: INELIGIBLE
 
   # Common Mitigation states - invalid-dl/invalid-passport
-  MITIGATION_KBVS: # To delete - now matches KBV_PHOTO_ID
-    nestedJourney: KBVS
-    exitEvents:
-      fail-with-no-ci:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-
   F2F_FAILED_MITIGATION_PAGE:
     response:
       type: page

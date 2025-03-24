@@ -46,9 +46,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -58,12 +55,6 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -172,9 +163,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_UPDATE_IDENTITY
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
       fail-with-no-ci:
         targetState: CHECK_COI_NAMES
         checkFeatureFlag:
@@ -183,10 +171,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-        checkMitigation:
-          enhanced-verification:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
 
   NAMES_ONLY_AFTER_RFC:
     response:
@@ -327,9 +311,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_UPDATE_IDENTITY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
       fraud-fail-with-no-ci:
         targetState: CHECK_COI_NAMES
         checkFeatureFlag:
