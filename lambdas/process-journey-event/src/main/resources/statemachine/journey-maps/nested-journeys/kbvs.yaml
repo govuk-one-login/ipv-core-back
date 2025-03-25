@@ -19,8 +19,6 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: next
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        exitEventToEmit: fail-with-ci
       invalid-request:
         targetState: DWP_THIN_FILE_PAGE
       access-denied:
@@ -37,8 +35,6 @@ nestedJourneyStates:
         exitEventToEmit: fail-with-no-ci
       next:
         exitEventToEmit: next
-      enhanced-verification: # To delete - processCriCallback no longer emits this
-        exitEventToEmit: fail-with-ci
       fail-with-ci:
         exitEventToEmit: fail-with-ci
   PRE_EXPERIAN_PAGE:
