@@ -106,6 +106,6 @@ jobs:
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
           artifact-bucket-name: ${{ env.ENVIRONMENT == 'build' && secrets.ARTIFACT_BUCKET_NAME || secrets.ARTIFACT_BUCKET_NAME_DEV }}
-          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          signing-profile-name: ${{ env.ENVIRONMENT == 'build' && secrets.SIGNING_PROFILE_NAME || secrets.SIGNING_PROFILE_NAME_DEV }}
           working-directory: ./deploy
           template-file: .aws-sam/build/template.yaml
