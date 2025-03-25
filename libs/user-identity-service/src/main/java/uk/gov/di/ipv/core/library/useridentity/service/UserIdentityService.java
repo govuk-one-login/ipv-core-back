@@ -41,6 +41,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -53,11 +54,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
-import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
@@ -66,19 +62,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GIVEN_NA
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    private static final List<Cri> PASSPORT_CRI_TYPES = List.of(PASSPORT, DCMAW);
-    private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, DRIVING_LICENCE);
-
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS);
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS);
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
-
-    private static final String MUST_BE_IDENTITYCHECK_MESSAGE =
-            "Credential must be an IdentityCheck credential.";
 
     private final ConfigService configService;
     private final CimitUtilityService cimitUtilityService;
@@ -271,18 +260,28 @@ public class UserIdentityService {
         identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
-            Optional<List<PostalAddress>> addressClaim = generateAddressClaim(vcs);
+            Optional<List<PostalAddress>> addressClaim = getAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<List<PassportDetails>> passportClaim = generatePassportClaim(vcs);
+            Optional<List<PassportDetails>> passportClaim =
+                    getFirstClaim(vcs, IdentityCheckSubject::getPassport);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
             Optional<List<DrivingPermitDetails>> drivingPermitClaim =
-                    generateDrivingPermitClaim(vcs);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+                    getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
+            drivingPermitClaim.ifPresent(
+                    drivingPermit -> {
+                        drivingPermit.forEach(
+                                permit -> {
+                                    permit.setFullAddress(null);
+                                    permit.setIssueDate(null);
+                                });
+                        userIdentityBuilder.drivingPermitClaim(drivingPermit);
+                    });
         }
 
-        Optional<List<SocialSecurityRecordDetails>> ninoClaim = generateNinoClaim(vcs, profileType);
+        Optional<List<SocialSecurityRecordDetails>> ninoClaim =
+                getFirstClaim(vcs, IdentityCheckSubject::getSocialSecurityRecord);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
@@ -461,7 +460,7 @@ public class UserIdentityService {
         return Vot.valueOf(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
-    public Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
+    public Optional<List<PostalAddress>> getAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var addressVc = findVc(ADDRESS, vcs);
 
@@ -496,112 +495,28 @@ public class UserIdentityService {
         }
     }
 
-    private Optional<List<SocialSecurityRecordDetails>> generateNinoClaim(
-            List<VerifiableCredential> vcs, ProfileType profileType)
-            throws HttpResponseExceptionWithErrorBody {
-        var criToExtractFrom = profileType.equals(ProfileType.GPG45) ? NINO : HMRC_MIGRATION;
-        var ninoVc = findVc(criToExtractFrom, vcs);
+    private <T> Optional<List<T>> getFirstClaim(
+            List<VerifiableCredential> vcs, Function<IdentityCheckSubject, List<T>> getClaim) {
+        for (var vc : vcs) {
+            if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+                var credentialSubject = identityCheckCredential.getCredentialSubject();
 
-        if (ninoVc.isEmpty()) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Failed to find appropriate CRI credential to extract "
-                                    + NINO_PROPERTY_NAME));
-            return Optional.empty();
-        }
+                if (credentialSubject == null) {
+                    continue;
+                }
 
-        if (ninoVc.get().getCredential()
-                instanceof IdentityCheckCredential identityCheckCredential) {
-            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
+                var claim = getClaim.apply(credentialSubject);
 
-            var nino = credentialSubject.getSocialSecurityRecord();
-
-            if (isNullOrEmpty(nino)) {
-                return Optional.empty();
+                if (!isNullOrEmpty(claim)) {
+                    return Optional.of(claim);
+                }
             }
-
-            return Optional.of(nino);
-        } else {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
-                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId()));
-            return Optional.empty();
         }
-    }
-
-    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody {
-        var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
-
-        if (passportVc.isEmpty()) {
-            return Optional.empty();
-        }
-
-        if (passportVc.get().getCredential()
-                instanceof IdentityCheckCredential identityCheckCredential) {
-
-            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
-
-            var passport = credentialSubject.getPassport();
-
-            if (isNullOrEmpty(passport)) {
-                return Optional.empty();
-            }
-
-            return Optional.of(passport);
-        } else {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
-                            .with(
-                                    LOG_CRI_ISSUER.getFieldName(),
-                                    passportVc.get().getCri().getId()));
-            return Optional.empty();
-        }
-    }
-
-    private Optional<List<DrivingPermitDetails>> generateDrivingPermitClaim(
-            List<VerifiableCredential> verifiableCredentials)
-            throws HttpResponseExceptionWithErrorBody {
-        var drivingPermitVc = findVc(DRIVING_PERMIT_CRI_TYPES, verifiableCredentials);
-
-        if (drivingPermitVc.isEmpty()) {
-            return Optional.empty();
-        }
-
-        if (drivingPermitVc.get().getCredential()
-                instanceof IdentityCheckCredential identityCheckCredential) {
-
-            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
-
-            var drivingPermit = credentialSubject.getDrivingPermit();
-
-            if (isNullOrEmpty(drivingPermit)) {
-                return Optional.empty();
-            }
-
-            drivingPermit.forEach(
-                    permit -> {
-                        permit.setFullAddress(null);
-                        permit.setIssueDate(null);
-                    });
-
-            return Optional.of(drivingPermit);
-        } else {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
-                            .with(
-                                    LOG_CRI_ISSUER.getFieldName(),
-                                    drivingPermitVc.get().getCri().getId()));
-            return Optional.empty();
-        }
+        return Optional.empty();
     }
 
     private Optional<VerifiableCredential> findVc(Cri cri, List<VerifiableCredential> vcs) {
         return vcs.stream().filter(credential -> credential.getCri().equals(cri)).findFirst();
-    }
-
-    private Optional<VerifiableCredential> findVc(List<Cri> cris, List<VerifiableCredential> vcs) {
-        return vcs.stream().filter(credential -> cris.contains(credential.getCri())).findFirst();
     }
 
     private boolean isEvidenceVc(VerifiableCredential vc) {
@@ -621,20 +536,6 @@ public class UserIdentityService {
             return false;
         }
         return false;
-    }
-
-    private IdentityCheckSubject getIdentityCheckSubjectOrThrowError(
-            IdentityCheckCredential identityCheckCredential)
-            throws HttpResponseExceptionWithErrorBody {
-        var credentialSubject = identityCheckCredential.getCredentialSubject();
-
-        if (credentialSubject == null) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.CREDENTIAL_SUBJECT_MISSING));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
-        }
-
-        return credentialSubject;
     }
 
     private boolean isNonZeroInt(Integer value) {

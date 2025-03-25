@@ -976,7 +976,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1653403140));
     }
 
-    VerifiableCredential M1B_DCMAW_VC =
+    VerifiableCredential M1B_DCMAW_DL_VC =
             generateVerifiableCredential(
                     "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                     DCMAW,
@@ -1091,7 +1091,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcF2fM1a() {
+    static VerifiableCredential vcF2fPassportM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(MARY_WATSON_NAME))
@@ -1126,6 +1126,43 @@ public interface VcFixtures {
                                                                         "24929d38-420c-4ba9-b846-3005ee691e26")))
                                                 .build()))
                         .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcF2fDrivingLicenceM1a() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("bcd2346")
+                                                .strengthScore(3)
+                                                .validityScore(2)
+                                                .activityHistoryScore(1)
+                                                .checkDetails(
+                                                        List.of(
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "vri",
+                                                                        "identityCheckPolicy",
+                                                                        "published",
+                                                                        "activityFrom",
+                                                                        "2019-01-01"),
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "bvr",
+                                                                        "biometricVerificationProcessLevel",
+                                                                        2)))
+                                                .build()))
+                        .credentialSubject(
+                                TestVc.TestCredentialSubject.builder()
+                                        .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
+                                        .address(List.of(ADDRESS_4))
+                                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                        .build())
                         .build(),
                 Instant.ofEpochSecond(1705986521));
     }

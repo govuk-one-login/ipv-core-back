@@ -55,7 +55,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessAsyncCriCredentialHandlerTest {
@@ -103,7 +103,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @BeforeEach
     void setUp() {
-        F2F_VC = vcF2fM1a();
+        F2F_VC = vcF2fPassportM1a();
     }
 
     @AfterEach
