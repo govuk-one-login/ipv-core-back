@@ -25,9 +25,9 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -146,7 +146,8 @@ class VotMatcherTest {
     @Test
     void shouldMatchM1cIfFraudCheckUnavailable() throws Exception {
         // Arrange
-        var vcs = List.of(vcVerificationM1a(), vcFraudApplicableAuthoritativeSourceFailed());
+        var vcs =
+                List.of(vcVerificationM1a(), vcExperianFraudApplicableAuthoritativeSourceFailed());
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
@@ -168,7 +169,7 @@ class VotMatcherTest {
     @Test
     void shouldMatchM1cIfFraudCheckAuthoritativeUnavailable() throws Exception {
         // Arrange
-        var vcs = List.of(vcVerificationM1a(), vcFraudAvailableAuthoritativeFailed());
+        var vcs = List.of(vcVerificationM1a(), vcExperianFraudAvailableAuthoritativeFailed());
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);

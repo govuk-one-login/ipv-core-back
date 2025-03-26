@@ -33,7 +33,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ADDRESS_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
@@ -54,7 +53,8 @@ import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
     String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
-    String TEST_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
+    String FRAUD_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
+    String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -130,92 +130,94 @@ public interface VcFixtures {
                 .build();
     }
 
+    private static IdentityCheckCredential vcClaimExperianFraudScore1() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(
+                                        List.of(
+                                                Name.builder()
+                                                        .withNameParts(
+                                                                List.of(
+                                                                        NamePart.builder()
+                                                                                .withValue(
+                                                                                        "KENNETH")
+                                                                                .withType(
+                                                                                        GIVEN_NAME)
+                                                                                .build(),
+                                                                        NamePart.builder()
+                                                                                .withValue(
+                                                                                        "DECERQUEIRA")
+                                                                                .withType(
+                                                                                        FAMILY_NAME)
+                                                                                .build()))
+                                                        .build()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1959-08-23")
+                                                        .build()))
+                                .withAddress(List.of(ADDRESS_3))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("RB000103490087")
+                                        .withIdentityFraudScore(1)
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimExperianFraudScore0() {
+        var vcClaim = vcClaimExperianFraudScore1();
+        vcClaim.getEvidence().get(0).setIdentityFraudScore(0);
+        return vcClaim;
+    }
+
+    private static IdentityCheckCredential vcClaimExperianFraudScore2() {
+        var vcClaim = vcClaimExperianFraudScore1();
+        var evidence = vcClaim.getEvidence().get(0);
+        evidence.setIdentityFraudScore(2);
+        evidence.setCheckDetails(
+                List.of(
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .withFraudCheck(CheckDetails.FraudCheckType.MORTALITY_CHECK)
+                                .build(),
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .withFraudCheck(CheckDetails.FraudCheckType.IDENTITY_THEFT_CHECK)
+                                .build(),
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .withFraudCheck(
+                                        CheckDetails.FraudCheckType.SYNTHETIC_IDENTITY_CHECK)
+                                .build(),
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .withFraudCheck(
+                                        CheckDetails.FraudCheckType.IMPERSONATION_RISK_CHECK)
+                                .withTxn("RB000180729626")
+                                .build(),
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .withActivityFrom("1963-01-01")
+                                .withIdentityCheckPolicy(CheckDetails.IdentityCheckPolicyType.NONE)
+                                .build()));
+        return vcClaim;
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
                             .strengthScore(4)
                             .validityScore(2)
                             .verificationScore(2)
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_NO_CHECK_DETAILS =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .txn("RB000103490087")
-                            .identityFraudScore(1)
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_FAILED_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .txn("RB000103490087")
-                            .identityFraudScore(0)
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_WITH_CHECK_DETAILS =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .txn("RB000180729610")
-                            .identityFraudScore(2)
-                            .checkDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "fraudCheck", "mortality_check"),
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "fraudCheck", "identity_theft_check"),
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "fraudCheck", "synthetic_identity_check"),
-                                            Map.of(
-                                                    "txn", "RB000180729626",
-                                                    "checkMethod", "data",
-                                                    "fraudCheck", "impersonation_risk_check"),
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "activityFrom", "1963-01-01",
-                                                    "identityCheckPolicy", "none")))
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_CRI_STUB_CHECK =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
-                            .txn("some-uuid")
-                            .identityFraudScore(1)
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .failedCheckDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "fraudCheck",
-                                                            "applicable_authoritative_source")))
-                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
-                            .txn("some-uuid")
-                            .build());
-
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_FAILED_AUTHORITATIVE_AVAILABLE_SOURCE_CHECK_DETAILS =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .failedCheckDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod",
-                                                    "data",
-                                                    "fraudCheck",
-                                                    "available_authoritative_source")))
-                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
-                            .txn("some-uuid")
                             .build());
 
     List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
@@ -542,180 +544,123 @@ public interface VcFixtures {
         return generateAddressVc(vcClaimAddressValid(MULTIPLE_ADDRESSES_NO_VALID_FROM));
     }
 
-    VerifiableCredential M1A_EXPERIAN_FRAUD_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.EXPERIAN_FRAUD,
-                    TestVc.builder()
-                            .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(createBirthDate("1959-08-23")))
-                                            .build())
-                            .build(),
-                    "https://review-f.integration.account.gov.uk",
-                    Instant.now().minusSeconds(10));
+    static VerifiableCredential vcExperianFraudM1a() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.EXPERIAN_FRAUD,
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_INTEGRATION,
+                Instant.now().minusSeconds(10));
+    }
 
-    VerifiableCredential EXPIRED_M1A_EXPERIAN_FRAUD_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.EXPERIAN_FRAUD,
-                    TestVc.builder()
-                            .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(createBirthDate("1959-08-23")))
-                                            .build())
-                            .build(),
-                    "https://review-f.integration.account.gov.uk",
-                    Instant.ofEpochSecond(1658829758));
+    static VerifiableCredential vcExperianFraudM1aExpired() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.EXPERIAN_FRAUD,
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_INTEGRATION,
+                Instant.ofEpochSecond(1658829758));
+    }
 
     static VerifiableCredential vcExperianFraudEvidenceFailed() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_FAILED_EVIDENCE)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
+                vcClaimExperianFraudScore0(),
+                FRAUD_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829758));
     }
 
     static VerifiableCredential vcExperianFraudScoreTwo() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_3)).build();
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_WITH_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                TEST_ISSUER_STAGING,
+                vcClaimExperianFraudScore2(),
+                FRAUD_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
-    static VerifiableCredential vcFraudExpired() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
+    static VerifiableCredential vcExperianFraudExpired() {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static VerifiableCredential vcFraudNotExpired() {
+    static VerifiableCredential vcExperianFraudNotExpired() {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime sixMonthsLater = now.plusMonths(6);
         Instant futureInstant = sixMonthsLater.toInstant();
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_INTEGRATION,
                 futureInstant);
     }
 
     static VerifiableCredential vcExperianFraudScoreOne() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(
-                                List.of(
-                                        Map.of(
-                                                VC_NAME_PARTS,
-                                                List.of(
-                                                        createNamePart(
-                                                                "Chris",
-                                                                NamePart.NamePartType
-                                                                        .GIVEN_NAME)))))
-                        .address(List.of(ADDRESS_1))
-                        .birthDate(List.of(createBirthDate("1984-09-28")))
-                        .build();
         return generateVerifiableCredential(
                 "user-id",
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                TEST_ISSUER_STAGING,
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_STAGING,
                 Instant.ofEpochSecond(1652953380));
     }
 
     static VerifiableCredential vcExperianFraudMissingName() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(Collections.emptyList())
-                        .address(List.of(ADDRESS_3))
-                        .build();
+        var vcClaim = vcClaimExperianFraudScore1();
+        vcClaim.getCredentialSubject().setName(Collections.emptyList());
+
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                TEST_ISSUER_STAGING,
+                vcClaim,
+                FRAUD_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
     }
 
-    static VerifiableCredential vcFraudApplicableAuthoritativeSourceFailed() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
+    static VerifiableCredential vcExperianFraudApplicableAuthoritativeSourceFailed() {
+        var vcClaim = vcClaimExperianFraudScore0();
+        vcClaim.getEvidence()
+                .get(0)
+                .setFailedCheckDetails(
+                        List.of(
+                                CheckDetails.builder()
+                                        .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                        .withFraudCheck(
+                                                CheckDetails.FraudCheckType
+                                                        .APPLICABLE_AUTHORITATIVE_SOURCE)
+                                        .build()));
+
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(
-                                FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
+                vcClaim,
+                FRAUD_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static VerifiableCredential vcFraudAvailableAuthoritativeFailed() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
+    static VerifiableCredential vcExperianFraudAvailableAuthoritativeFailed() {
+        var vcClaim = vcClaimExperianFraudScore0();
+        vcClaim.getEvidence()
+                .get(0)
+                .setFailedCheckDetails(
+                        List.of(
+                                CheckDetails.builder()
+                                        .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                        .withFraudCheck(
+                                                CheckDetails.FraudCheckType
+                                                        .AVAILABLE_AUTHORITATIVE_SOURCE)
+                                        .build()));
+
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(
-                                FRAUD_EVIDENCE_FAILED_AUTHORITATIVE_AVAILABLE_SOURCE_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
+                vcClaim,
+                FRAUD_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829758));
     }
 

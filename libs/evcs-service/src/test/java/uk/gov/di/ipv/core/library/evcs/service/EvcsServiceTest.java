@@ -44,12 +44,12 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
@@ -64,12 +64,12 @@ class EvcsServiceTest {
             vcWebPassportSuccessful();
     private static final VerifiableCredential VC_F2F = vcF2fPassportM1a();
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
-            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, M1A_EXPERIAN_FRAUD_VC);
+            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, vcExperianFraudM1a());
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =
             List.of(
                     VC_DRIVING_PERMIT_TEST,
                     VC_ADDRESS_TEST,
-                    M1A_EXPERIAN_FRAUD_VC,
+                    vcExperianFraudM1a(),
                     VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST);
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS =
             List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, VC_F2F);
@@ -383,7 +383,7 @@ class EvcsServiceTest {
                                         EvcsVCState.PENDING_RETURN,
                                         Map.of("reason", "testing")),
                                 new EvcsGetUserVCDto(
-                                        M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                        vcExperianFraudM1a().getVcString(),
                                         EvcsVCState.PENDING_RETURN,
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
@@ -456,7 +456,7 @@ class EvcsServiceTest {
                         new EvcsGetUserVCsDto(
                                 List.of(
                                         new EvcsGetUserVCDto(
-                                                M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                                vcExperianFraudM1a().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(
