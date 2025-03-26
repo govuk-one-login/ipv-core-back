@@ -24,7 +24,6 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
@@ -34,6 +33,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
@@ -41,7 +41,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetIdentityCheckVerifiableCredentialExtensionsForAudit() throws Exception {
-        var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        var auditExtensions = getExtensionsForAudit(vcWebPassportSuccessful(), false);
         var evidence = (IdentityCheck) auditExtensions.evidence().get(0);
 
         var expectedAge =
@@ -92,7 +92,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetPassportRestrictedDataForAudit() {
-        var restrictedData = getRestrictedAuditDataForAsync(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        var restrictedData = getRestrictedAuditDataForAsync(vcWebPassportSuccessful());
         var expectedName =
                 List.of(
                         NameGenerator.createName(
@@ -127,7 +127,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetPassportExpiryDateForAudit() {
-        var auditNameParts = getRestrictedAuditDataForAsync(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        var auditNameParts = getRestrictedAuditDataForAsync(vcWebPassportSuccessful());
         assertEquals("2030-01-01", auditNameParts.getDocExpiryDate());
     }
 

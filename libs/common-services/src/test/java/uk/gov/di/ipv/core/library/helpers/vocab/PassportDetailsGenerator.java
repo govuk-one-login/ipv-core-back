@@ -7,10 +7,10 @@ public class PassportDetailsGenerator {
 
     public static PassportDetails createPassportDetails(
             String documentNumber, String icaoIssuerCode, String expiryDate) {
-        PassportDetails passportDetails = new PassportDetails();
-        passportDetails.setDocumentNumber(documentNumber);
-        passportDetails.setIcaoIssuerCode(icaoIssuerCode);
-        passportDetails.setExpiryDate(expiryDate);
-        return passportDetails;
+        return PassportDetails.builder()
+                .withDocumentNumber(documentNumber)
+                .withIcaoIssuerCode(icaoIssuerCode)
+                .withExpiryDate(expiryDate)
+                .build();
     }
 }

@@ -42,7 +42,7 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class StoreIdentityServiceTest {
@@ -55,10 +55,7 @@ class StoreIdentityServiceTest {
     private static final String DEVICE_INFORMATION = "device-information";
     private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
     private static final List<VerifiableCredential> VCS =
-            List.of(
-                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                    EXPIRED_M1A_EXPERIAN_FRAUD_VC,
-                    M1A_ADDRESS_VC);
+            List.of(vcWebPassportSuccessful(), EXPIRED_M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
     @Spy private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
     private AuditEventUser testAuditEventUser;

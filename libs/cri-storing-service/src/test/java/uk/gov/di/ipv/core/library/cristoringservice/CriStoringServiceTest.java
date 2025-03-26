@@ -42,9 +42,9 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
@@ -141,7 +141,7 @@ class CriStoringServiceTest {
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var vc = vcWebPassportSuccessful();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var sessionVcs = List.of(M1A_ADDRESS_VC);
 
@@ -198,7 +198,7 @@ class CriStoringServiceTest {
                 callbackRequest.getCredentialIssuer(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
-                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                List.of(vcWebPassportSuccessful()),
                 clientOAuthSessionItem,
                 mockIpvSessionItem,
                 List.of());
@@ -320,7 +320,7 @@ class CriStoringServiceTest {
                                 callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                List.of(vcWebPassportSuccessful()),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem,
                                 List.of()));
@@ -344,7 +344,7 @@ class CriStoringServiceTest {
                                 callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                List.of(vcWebPassportSuccessful()),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem,
                                 List.of()));

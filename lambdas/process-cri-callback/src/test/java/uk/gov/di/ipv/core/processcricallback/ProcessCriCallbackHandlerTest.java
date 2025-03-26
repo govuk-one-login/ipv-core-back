@@ -59,7 +59,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -104,11 +104,10 @@ class ProcessCriCallbackHandlerTest {
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())
-                        .verifiableCredentials(
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()))
+                        .verifiableCredentials(List.of(vcWebPassportSuccessful().getVcString()))
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        var vcs = List.of(vcWebPassportSuccessful());
         var sessionVcs = List.of(M1A_ADDRESS_VC);
 
         when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -243,8 +242,7 @@ class ProcessCriCallbackHandlerTest {
         var vcResponse =
                 VerifiableCredentialResponse.builder()
                         .userId(clientOAuthSessionItem.getUserId())
-                        .verifiableCredentials(
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()))
+                        .verifiableCredentials(List.of(vcWebPassportSuccessful().getVcString()))
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
 

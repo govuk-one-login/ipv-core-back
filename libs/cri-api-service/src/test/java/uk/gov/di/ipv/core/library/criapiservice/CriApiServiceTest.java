@@ -59,7 +59,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriApiServiceTest {
@@ -70,7 +70,7 @@ class CriApiServiceTest {
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ACCESS_TOKEN =
             "d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4"; // pragma: allowlist secret
-    private static final VerifiableCredential PASSPORT_VC = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+    private static final VerifiableCredential PASSPORT_VC = vcWebPassportSuccessful();
     private static final Map<String, Object> DCMAW_SUCCESS_RESPONSE =
             Map.of(
                     "sub",

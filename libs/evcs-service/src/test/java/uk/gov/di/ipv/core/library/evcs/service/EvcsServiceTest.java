@@ -46,7 +46,6 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
@@ -55,13 +54,14 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
     private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcDrivingPermit();
     private static final VerifiableCredential VC_ADDRESS_TEST = VC_ADDRESS;
     private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
-            PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+            vcWebPassportSuccessful();
     private static final VerifiableCredential VC_F2F = vcF2fPassportM1a();
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
             List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, M1A_EXPERIAN_FRAUD_VC);
@@ -414,8 +414,7 @@ class EvcsServiceTest {
         // Arrange
         when(mockConfigService.getCriByIssuer(M1A_ADDRESS_VC.getClaimsSet().getIssuer()))
                 .thenReturn(Cri.ADDRESS);
-        when(mockConfigService.getCriByIssuer(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getClaimsSet().getIssuer()))
+        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
                 .thenReturn(Cri.DCMAW);
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
@@ -427,7 +426,7 @@ class EvcsServiceTest {
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(
-                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null))));
 
@@ -461,7 +460,7 @@ class EvcsServiceTest {
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(
-                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null))));
 

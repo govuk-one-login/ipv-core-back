@@ -118,12 +118,12 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIA
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.journeys.Events.ENHANCED_VERIFICATION_EVENT;
@@ -158,7 +158,7 @@ class CheckExistingIdentityHandlerTest {
     public static final String TEST_PREVIOUS_IPV_SESSION_ID = "previous-ipv-session-id";
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
-                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                    vcWebPassportSuccessful(),
                     M1A_ADDRESS_VC,
                     M1A_EXPERIAN_FRAUD_VC,
                     vcVerificationM1a(),
@@ -1355,7 +1355,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         M1A_ADDRESS_VC,
                         EXPIRED_M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),

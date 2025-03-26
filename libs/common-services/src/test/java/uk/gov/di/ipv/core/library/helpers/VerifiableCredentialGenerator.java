@@ -11,6 +11,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
@@ -108,12 +109,54 @@ public class VerifiableCredentialGenerator {
     }
 
     public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, IdentityCheckCredential vcClaim, String issuer, Instant nbf) {
+        return generateVerifiableCredential(userId, cri, vcClaim, issuer, nbf, KeyType.EC);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            IdentityCheckCredential vcClaim,
+            String issuer,
+            Instant nbf,
+            KeyType signingKeyType) {
+        try {
+            JWTClaimsSet claimsSet =
+                    new JWTClaimsSet.Builder()
+                            .claim(SUBJECT, userId)
+                            .claim(ISSUER, issuer)
+                            .claim(NOT_BEFORE, nbf.getEpochSecond())
+                            .claim(ISSUED_AT, nbf.getEpochSecond())
+                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
+                            .build();
+            return signTestVc(userId, cri, claimsSet, signingKeyType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
             String userId, Cri cri, TestVc vcClaim) {
         return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId, Cri cri, TestVc vcClaim, KeyType signingKeyType) {
+        try {
+            return generateVerifiableCredential(
+                    userId, cri, vcClaim, null, Instant.now(), signingKeyType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, IdentityCheckCredential vcClaim) {
+        return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, IdentityCheckCredential vcClaim, KeyType signingKeyType) {
         try {
             return generateVerifiableCredential(
                     userId, cri, vcClaim, null, Instant.now(), signingKeyType);
@@ -158,6 +201,31 @@ public class VerifiableCredentialGenerator {
                         .claim(VC_VTM, vtm)
                         .build();
         return signTestVc(userId, cri, claimsSet, signingKeyType);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, IdentityCheckCredential vcClaim, Instant nbf) {
+        return generateVerifiableCredential(userId, cri, vcClaim, nbf, KeyType.EC);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            IdentityCheckCredential vcClaim,
+            Instant nbf,
+            KeyType signingKeyType) {
+        try {
+            JWTClaimsSet claimsSet =
+                    new JWTClaimsSet.Builder()
+                            .claim(SUBJECT, userId)
+                            .claim(ISSUER, "https://review-p.staging.account.gov.uk")
+                            .claim(NOT_BEFORE, nbf.getEpochSecond())
+                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
+                            .build();
+            return signTestVc(userId, cri, claimsSet, signingKeyType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static VerifiableCredential generateVerifiableCredential(

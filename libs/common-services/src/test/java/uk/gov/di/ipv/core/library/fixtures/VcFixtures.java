@@ -5,10 +5,17 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.VerifiableCredentialType;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -49,27 +56,71 @@ public interface VcFixtures {
     String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
     String TEST_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
 
-    List<TestVc.TestEvidence> SUCCESSFUL_EVIDENCE =
+    private static IdentityCheckCredential vcClaimWebPassportValid() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(
+                                        List.of(
+                                                Name.builder()
+                                                        .withNameParts(
+                                                                List.of(
+                                                                        NamePart.builder()
+                                                                                .withValue(
+                                                                                        "KENNETH")
+                                                                                .withType(
+                                                                                        GIVEN_NAME)
+                                                                                .build(),
+                                                                        NamePart.builder()
+                                                                                .withValue(
+                                                                                        "DECERQUEIRA")
+                                                                                .withType(
+                                                                                        FAMILY_NAME)
+                                                                                .build()))
+                                                        .build()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withPassport(
+                                        List.of(
+                                                createPassportDetails(
+                                                        "321654987", "GBR", "2030-01-01")))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("1c04edf0-a205-4585-8877-be6bd1776a39")
+                                        .withStrengthScore(4)
+                                        .withValidityScore(2)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withIdentityCheckPolicy(
+                                                                        CheckDetails
+                                                                                .IdentityCheckPolicyType
+                                                                                .PUBLISHED)
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
                             .strengthScore(4)
                             .validityScore(2)
                             .verificationScore(2)
-                            .build());
-    List<TestVc.TestEvidence> UNSUCCESSFUL_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .strengthScore(4)
-                            .validityScore(0)
-                            .verificationScore(0)
-                            .build());
-    List<TestVc.TestEvidence> TEST_CI_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .strengthScore(4)
-                            .validityScore(2)
-                            .verificationScore(2)
-                            .ci(List.of("test"))
                             .build());
 
     List<TestVc.TestEvidence> FRAUD_EVIDENCE_NO_CHECK_DETAILS =
@@ -342,151 +393,98 @@ public interface VcFixtures {
     DrivingPermitDetails INVALID_DRIVING_PERMIT =
             createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", null, null);
 
-    List<PassportDetails> PASSPORT_DETAILS =
-            List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
+    static List<PassportDetails> passportDetails() {
+        return List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
+    }
 
-    VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.PASSPORT,
-                    TestVc.builder()
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .passport(PASSPORT_DETAILS)
-                                            .build())
-                            .evidence(SUCCESSFUL_EVIDENCE)
-                            .build(),
-                    Instant.ofEpochSecond(1705986521));
-
-    VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.PASSPORT,
-                    TestVc.builder()
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .passport(PASSPORT_DETAILS)
-                                            .build())
-                            .evidence(SUCCESSFUL_EVIDENCE)
-                            .build(),
-                    Instant.ofEpochSecond(1705986521),
-                    KeyType.RSA);
-
-    static VerifiableCredential vcPassportM1aFailed() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
+    static VerifiableCredential vcWebPassportSuccessful() {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(UNSUCCESSFUL_EVIDENCE)
-                        .build(),
+                vcClaimWebPassportValid(),
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcPassportM1aWithCI() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
+    static VerifiableCredential vcWebPassportSuccessfulWithRsaKeyType() {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(TEST_CI_EVIDENCE)
-                        .build(),
-                Instant.ofEpochSecond(1705986521));
+                vcClaimWebPassportValid(),
+                Instant.ofEpochSecond(1705986521),
+                KeyType.RSA);
     }
 
-    static VerifiableCredential vcPassportM1aMissingEvidence() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
+    static VerifiableCredential vcWebPassportM1aFailed() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        var evidence = vcClaim.getEvidence().get(0);
+        evidence.setValidityScore(0);
+        evidence.setVerificationScore(0);
+
         return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(Collections.emptyList())
-                        .build(),
-                Instant.ofEpochSecond(1705986521));
+                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcPassportMissingName() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .passport(PASSPORT_DETAILS)
-                        .name(Collections.emptyList())
-                        .build();
+    static VerifiableCredential vcWebPassportM1aWithCI() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getEvidence().get(0).setCi(List.of("test"));
+
         return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(SUCCESSFUL_EVIDENCE)
-                        .build());
+                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcPassportMissingBirthDate() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .passport(PASSPORT_DETAILS)
-                        .birthDate(Collections.emptyList())
-                        .build();
+    static VerifiableCredential vcWebPassportM1aMissingEvidence() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.setEvidence(Collections.emptyList());
+
         return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(SUCCESSFUL_EVIDENCE)
-                        .build());
+                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcPassportInvalidBirthDate() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .passport(PASSPORT_DETAILS)
-                        .birthDate(List.of(createBirthDate("invalid")))
-                        .build();
+    static VerifiableCredential vcWebPassportMissingName() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getCredentialSubject().setName(Collections.emptyList());
+
         return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(SUCCESSFUL_EVIDENCE)
-                        .build());
+                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcPassportMissingPassport() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().passport(Collections.emptyList()).build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(SUCCESSFUL_EVIDENCE)
-                        .build());
+    static VerifiableCredential vcWebPassportMissingBirthDate() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getCredentialSubject().setBirthDate(Collections.emptyList());
+
+        return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
     }
 
-    static VerifiableCredential vcMissingPassportProperty() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(SUCCESSFUL_EVIDENCE)
-                        .build());
+    static VerifiableCredential vcWebPassportInvalidBirthDate() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getCredentialSubject()
+                .setBirthDate(List.of(BirthDate.builder().withValue("invalid").build()));
+
+        return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
     }
 
-    static VerifiableCredential vcPassportClaimInvalidType() {
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.PASSPORT,
-                TestVc.builder()
-                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
-                        .build());
+    static VerifiableCredential vcWebPassportEmptyPassportDetails() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getCredentialSubject().setPassport(Collections.emptyList());
+
+        return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
+    }
+
+    static VerifiableCredential vcWebPassportMissingPassportDetails() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getCredentialSubject().setPassport(null);
+
+        return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
+    }
+
+    static VerifiableCredential vcWebPassportClaimInvalidType() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.setType(
+                List.of(
+                        VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                        VerifiableCredentialType.ADDRESS_CREDENTIAL));
+
+        return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
     }
 
     static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
@@ -1029,7 +1027,7 @@ public interface VcFixtures {
                                     TestVc.TestCredentialSubject.builder()
                                             .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
                                             .address(List.of(ADDRESS_4))
-                                            .passport(PASSPORT_DETAILS)
+                                            .passport(passportDetails())
                                             .build())
                             .build(),
                     Instant.ofEpochSecond(1705986521));
@@ -1058,7 +1056,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of((MORGAN_SARAH_MEREDYTH_NAME)))
                         .address(List.of(ADDRESS_4))
-                        .passport(PASSPORT_DETAILS)
+                        .passport(passportDetails())
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -1321,7 +1319,7 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigrationPCL250() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .passport(PASSPORT_DETAILS)
+                        .passport(passportDetails())
                         .socialSecurityRecord(
                                 List.of(
                                         createSocialSecurityRecordDetails(
@@ -1351,7 +1349,7 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigrationPCL200NoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .passport(PASSPORT_DETAILS)
+                        .passport(passportDetails())
                         .socialSecurityRecord(
                                 List.of(
                                         createSocialSecurityRecordDetails(
@@ -1392,7 +1390,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 null,
-                TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
+                TestVc.builder().evidence(SUCCESSFUL_WEB_PASSPORT_EVIDENCE).build(),
                 "https://review-p.staging.account.gov.uk",
                 "not-a-vot",
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
@@ -1403,7 +1401,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 null,
-                TestVc.builder().evidence(SUCCESSFUL_EVIDENCE).build(),
+                TestVc.builder().evidence(SUCCESSFUL_WEB_PASSPORT_EVIDENCE).build(),
                 "https://review-p.staging.account.gov.uk",
                 null,
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",

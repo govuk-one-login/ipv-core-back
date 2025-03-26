@@ -32,7 +32,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
@@ -49,13 +48,14 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportInvalidBirthDate;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aMissingEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aMissingEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCI;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
@@ -64,8 +64,8 @@ class VcHelperTest {
     private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
                 Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
-                Arguments.of("Evidence VC", PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
+                Arguments.of("Evidence VC", vcWebPassportSuccessful()),
+                Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
                 Arguments.of("Verification VC", vcVerificationM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_DL_VC),
@@ -91,7 +91,7 @@ class VcHelperTest {
     void shouldFilterVCsBasedOnProfileType_GPG45() throws Exception {
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         vcExperianFraudScoreOne(),
                         vcTicf(),
                         vcHmrcMigrationPCL200());
@@ -102,7 +102,7 @@ class VcHelperTest {
     void shouldFilterVCsBasedOnProfileType_operational() throws Exception {
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         vcExperianFraudScoreOne(),
                         vcHmrcMigrationPCL200());
         assertEquals(
@@ -144,17 +144,17 @@ class VcHelperTest {
 
     @Test
     void shouldExtractAgeFromCredential() {
-        assertNotNull(VcHelper.extractAgeFromCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+        assertNotNull(VcHelper.extractAgeFromCredential(vcWebPassportSuccessful()));
     }
 
     @Test
     void shouldExtractAgeFromCredentialWithMissingBirthDate() {
-        assertNull(VcHelper.extractAgeFromCredential(vcPassportMissingBirthDate()));
+        assertNull(VcHelper.extractAgeFromCredential(vcWebPassportMissingBirthDate()));
     }
 
     @Test
     void shouldExtractAgeFromCredentialWithInvalidBirthDate() {
-        assertNull(VcHelper.extractAgeFromCredential(vcPassportInvalidBirthDate()));
+        assertNull(VcHelper.extractAgeFromCredential(vcWebPassportInvalidBirthDate()));
     }
 
     @Test
@@ -165,8 +165,7 @@ class VcHelperTest {
     @Test
     void shouldCheckIfDocUKIssuedForCredential() {
         assertEquals(
-                Boolean.TRUE,
-                VcHelper.checkIfDocUKIssuedForCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+                Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcWebPassportSuccessful()));
     }
 
     @Test
@@ -197,7 +196,7 @@ class VcHelperTest {
     @Test
     void shouldCheckIsItOperationalVC() throws Exception {
         assertTrue(VcHelper.isOperationalProfileVc(vcHmrcMigrationPCL200()));
-        assertFalse(VcHelper.isOperationalProfileVc(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+        assertFalse(VcHelper.isOperationalProfileVc(vcWebPassportSuccessful()));
     }
 
     @Test
@@ -245,8 +244,8 @@ class VcHelperTest {
 
     private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
-                Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
-                Arguments.of("Failed passport VC", vcPassportM1aFailed()),
+                Arguments.of("VC missing evidence", vcWebPassportM1aMissingEvidence()),
+                Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
 
