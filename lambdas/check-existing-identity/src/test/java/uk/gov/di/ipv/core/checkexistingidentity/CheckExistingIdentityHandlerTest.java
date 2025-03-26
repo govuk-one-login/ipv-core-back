@@ -115,9 +115,9 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
@@ -159,7 +159,7 @@ class CheckExistingIdentityHandlerTest {
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
                     vcWebPassportSuccessful(),
-                    M1A_ADDRESS_VC,
+                    vcAddressM1a(),
                     M1A_EXPERIAN_FRAUD_VC,
                     vcVerificationM1a(),
                     M1B_DCMAW_DL_VC);
@@ -1356,7 +1356,7 @@ class CheckExistingIdentityHandlerTest {
         var vcs =
                 List.of(
                         vcWebPassportSuccessful(),
-                        M1A_ADDRESS_VC,
+                        vcAddressM1a(),
                         EXPIRED_M1A_EXPERIAN_FRAUD_VC,
                         vcVerificationM1a(),
                         M1B_DCMAW_DL_VC);

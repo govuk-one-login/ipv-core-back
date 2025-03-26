@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.Name;
-import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.List;
@@ -30,7 +29,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.ADDRESS_2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_FAILED_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.generateAddressVc;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
@@ -52,7 +52,6 @@ class SharedClaimsHelperTest {
     private static final String TEST_EMAIL = "test@example.com";
     private static final Name TEST_NAME = createName("Test", "User");
     private static final BirthDate TEST_DOB = createBirthDate("1970-01-01");
-    private static final PostalAddress TEST_ADDRESS = ADDRESS_1;
     private static final SocialSecurityRecordDetails TEST_NINO =
             createSocialSecurityRecordDetails("test-nino");
     private static final DrivingPermitDetails TEST_DRIVING_PERMIT =
@@ -62,10 +61,7 @@ class SharedClaimsHelperTest {
     void generatesSharedClaimsForAllSupportedAttributes() {
         var vcs =
                 List.of(
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
-                                        .build()),
+                        vcAddressOne(),
                         generateIdentityVc(
                                 TestVc.TestCredentialSubject.builder()
                                         .name(
@@ -83,7 +79,7 @@ class SharedClaimsHelperTest {
         assertEquals(TEST_EMAIL, sharedClaims.getEmailAddress());
         assertEquals(Set.of(TEST_NAME), sharedClaims.getName());
         assertEquals(Set.of(TEST_DOB), sharedClaims.getBirthDate());
-        assertEquals(Set.of(TEST_ADDRESS), sharedClaims.getAddress());
+        assertEquals(Set.of(ADDRESS_1), sharedClaims.getAddress());
         assertEquals(Set.of(TEST_NINO), sharedClaims.getSocialSecurityRecord());
         assertEquals(Set.of(TEST_DRIVING_PERMIT), sharedClaims.getDrivingPermit());
     }
@@ -179,10 +175,7 @@ class SharedClaimsHelperTest {
     void doesNotIncludeClaimsIfNoneAllowed() {
         var vcs =
                 List.of(
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
-                                        .build()),
+                        vcAddressOne(),
                         generateIdentityVc(
                                 TestVc.TestCredentialSubject.builder()
                                         .name(
@@ -211,7 +204,7 @@ class SharedClaimsHelperTest {
                 List.of(
                         generateIdentityVc(
                                 TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
+                                        .address(List.of(ADDRESS_1))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
@@ -236,7 +229,7 @@ class SharedClaimsHelperTest {
                                                                                 TEST_NAME
                                                                                         .getNameParts())))
                                                         .birthDate(List.of(TEST_DOB))
-                                                        .address(List.of(TEST_ADDRESS))
+                                                        .address(List.of(ADDRESS_1))
                                                         .socialSecurityRecord(List.of(TEST_NINO))
                                                         .drivingPermit(List.of(TEST_DRIVING_PERMIT))
                                                         .build())
@@ -256,21 +249,14 @@ class SharedClaimsHelperTest {
     void includesMultipleAttributes() {
         var otherName = createName("Other", "Name");
         var otherDob = createBirthDate("2000-01-01");
-        var otherAddress = ADDRESS_2;
         var otherNino = createSocialSecurityRecordDetails("other-nino");
         var otherDrivingPermit =
                 createDrivingPermitDetails("OTHER123456", "2062-02-02", "ISSUER", "2005-02-02");
 
         var vcs =
                 List.of(
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
-                                        .build()),
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(otherAddress))
-                                        .build()),
+                        vcAddressOne(),
+                        vcAddressTwo(),
                         generateIdentityVc(
                                 TestVc.TestCredentialSubject.builder()
                                         .name(
@@ -298,7 +284,7 @@ class SharedClaimsHelperTest {
 
         assertEquals(Set.of(TEST_NAME, otherName), sharedClaims.getName());
         assertEquals(Set.of(TEST_DOB, otherDob), sharedClaims.getBirthDate());
-        assertEquals(Set.of(TEST_ADDRESS, otherAddress), sharedClaims.getAddress());
+        assertEquals(Set.of(ADDRESS_1, ADDRESS_2), sharedClaims.getAddress());
         assertEquals(Set.of(TEST_NINO, otherNino), sharedClaims.getSocialSecurityRecord());
         assertEquals(
                 Set.of(TEST_DRIVING_PERMIT, otherDrivingPermit), sharedClaims.getDrivingPermit());
@@ -308,14 +294,8 @@ class SharedClaimsHelperTest {
     void deduplicatesAttributes() {
         var vcs =
                 List.of(
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
-                                        .build()),
-                        generateAddressVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(TEST_ADDRESS))
-                                        .build()),
+                        vcAddressOne(),
+                        vcAddressOne(),
                         generateIdentityVc(
                                 TestVc.TestCredentialSubject.builder()
                                         .name(
@@ -343,7 +323,7 @@ class SharedClaimsHelperTest {
 
         assertEquals(Set.of(TEST_NAME), sharedClaims.getName());
         assertEquals(Set.of(TEST_DOB), sharedClaims.getBirthDate());
-        assertEquals(Set.of(TEST_ADDRESS), sharedClaims.getAddress());
+        assertEquals(Set.of(ADDRESS_1), sharedClaims.getAddress());
         assertEquals(Set.of(TEST_NINO), sharedClaims.getSocialSecurityRecord());
         assertEquals(Set.of(TEST_DRIVING_PERMIT), sharedClaims.getDrivingPermit());
     }

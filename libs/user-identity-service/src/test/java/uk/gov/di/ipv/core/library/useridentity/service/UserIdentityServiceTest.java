@@ -129,7 +129,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -704,7 +704,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetIdentityClaimWhenVotIsP2() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -730,7 +730,7 @@ class UserIdentityServiceTest {
                         vcWebPassportMissingName(),
                         vcWebPassportMissingBirthDate(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS);
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -837,7 +837,7 @@ class UserIdentityServiceTest {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
-        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         // Act
         var credentials =
@@ -858,7 +858,7 @@ class UserIdentityServiceTest {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
-        var vcs = List.of(vcWithPassportClaim, vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWithPassportClaim, vcExperianFraudScoreTwo(), vcAddressOne());
 
         // Act
         var credentials =
@@ -897,7 +897,10 @@ class UserIdentityServiceTest {
     void shouldReturnNullWhenMissingPassportProperty() throws Exception {
         // Arrange
         var vcs =
-                List.of(vcWebPassportMissingPassportDetails(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+                List.of(
+                        vcWebPassportMissingPassportDetails(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -913,7 +916,11 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnNullWhenEmptyPassportProperty() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebPassportEmptyPassportDetails(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(
+                        vcWebPassportEmptyPassportDetails(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -929,7 +936,8 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldReturnEmptyClaimIfClaimIsIncorrectType() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebPassportClaimInvalidType(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(vcWebPassportClaimInvalidType(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         // Act
         var credentials =
@@ -949,7 +957,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermit(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoSuccessful());
 
         // Act
@@ -986,7 +994,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermit(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoMissingSocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1003,7 +1011,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoVc() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1023,7 +1031,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermit(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoUnsuccessful());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1044,7 +1052,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermit(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoEmptySocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1065,7 +1073,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermit(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoInvalidVcType());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1194,7 +1202,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
+        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1216,7 +1224,7 @@ class UserIdentityServiceTest {
     void shouldSetDrivingPermitClaimForAllowedCris(VerifiableCredential vcWithDrivingPermitClaim)
             throws Exception {
         // Arrange
-        var vcs = List.of(vcWithDrivingPermitClaim, vcExperianFraudScoreOne(), VC_ADDRESS);
+        var vcs = List.of(vcWithDrivingPermitClaim, vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1239,7 +1247,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
+        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -1258,7 +1266,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1280,7 +1288,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcDrivingPermitFailedChecks(),
                         vcWebPassportSuccessful(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcExperianFraudScoreTwo());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1332,7 +1340,8 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldReturnEmptyClaimIfDrivingPermitVcIsIncorrectType()
             throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermitIncorrectType(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(vcDrivingPermitIncorrectType(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 

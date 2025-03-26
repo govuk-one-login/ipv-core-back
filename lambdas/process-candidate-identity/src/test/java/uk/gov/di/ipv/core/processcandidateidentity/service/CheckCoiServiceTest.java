@@ -43,8 +43,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
@@ -72,7 +72,7 @@ class CheckCoiServiceTest {
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
         when(mockEvcsService.getVerifiableCredentials(
                         USER_ID, EVCS_ACCESS_TOKEN, EvcsVCState.CURRENT))
-                .thenReturn(List.of(M1A_ADDRESS_VC));
+                .thenReturn(List.of(vcAddressM1a()));
         when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn("some-component-id");
 
@@ -172,7 +172,7 @@ class CheckCoiServiceTest {
     @Test
     void shouldDoFullCheckIfReproveIdentityJourney() throws Exception {
         when(mockUserIdentityService.areVcsCorrelated(
-                        List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        List.of(vcAddressM1a(), M1A_EXPERIAN_FRAUD_VC)))
                 .thenReturn(true);
         var ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(IPV_SESSION_ID);

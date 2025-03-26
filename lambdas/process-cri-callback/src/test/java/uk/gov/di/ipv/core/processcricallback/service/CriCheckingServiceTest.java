@@ -51,8 +51,8 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
@@ -469,7 +469,7 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnNextWhenAllChecksPass() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vcs = List.of(M1A_ADDRESS_VC);
+        var vcs = List.of(vcAddressM1a());
         var sessionVcs = List.of(M1B_DCMAW_DL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
@@ -497,7 +497,7 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnNextWhenAllChecksPassForLowerConfidenceVot() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vcs = List.of(M1A_ADDRESS_VC);
+        var vcs = List.of(vcAddressM1a());
         var sessionVcs = List.of(M1B_DCMAW_DL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
@@ -679,7 +679,7 @@ class CriCheckingServiceTest {
     void checkVcResponseShouldReturnFailWithNoCiWhenVcsNotSuccessful() throws Exception {
         // Arrange for VCs not successful
         var callbackRequest = buildValidCallbackRequest();
-        var vcs = List.of(M1A_ADDRESS_VC);
+        var vcs = List.of(vcAddressM1a());
         var sessionVcs = List.of(M1B_DCMAW_DL_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();

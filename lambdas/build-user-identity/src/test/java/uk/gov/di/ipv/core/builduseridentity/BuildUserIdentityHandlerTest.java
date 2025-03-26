@@ -92,7 +92,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JS
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
@@ -213,7 +213,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -252,7 +252,8 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(
+                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -277,7 +278,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -316,7 +317,8 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
+                .generateUserIdentity(
+                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -342,7 +344,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -386,7 +388,8 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(
+                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -752,7 +755,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
 
         // Act
         APIGatewayProxyResponseEvent response =

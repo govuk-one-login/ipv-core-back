@@ -15,18 +15,17 @@ public class PostalAddressGenerator {
             Long uprn,
             String validFrom,
             String validUntil) {
-        var postalAddress = new PostalAddress();
-        postalAddress.setBuildingNumber(buildingNumber);
-        postalAddress.setBuildingName(buildingName);
-        postalAddress.setStreetName(streetName);
-        postalAddress.setPostalCode(postalCode);
-        postalAddress.setAddressLocality(addressLocality);
-        postalAddress.setAddressCountry(addressCountry);
-        postalAddress.setUprn(uprn);
-        postalAddress.setValidFrom(validFrom);
-        postalAddress.setValidUntil(validUntil);
-
-        return postalAddress;
+        return PostalAddress.builder()
+                .withBuildingNumber(buildingNumber)
+                .withBuildingName(buildingName)
+                .withStreetName(streetName)
+                .withPostalCode(postalCode)
+                .withAddressLocality(addressLocality)
+                .withAddressCountry(addressCountry)
+                .withUprn(uprn)
+                .withValidFrom(validFrom)
+                .withValidUntil(validUntil)
+                .build();
     }
 
     public static PostalAddress createPostalAddress(
@@ -44,22 +43,22 @@ public class PostalAddressGenerator {
             String dependentStreetName,
             String doubleDependentAddressLocality,
             String dependentAddressLocality) {
-        var postalAddress = new PostalAddress();
-        postalAddress.setBuildingNumber(buildingNumber);
-        postalAddress.setBuildingName(buildingName);
-        postalAddress.setStreetName(streetName);
-        postalAddress.setPostalCode(postalCode);
-        postalAddress.setAddressLocality(addressLocality);
-        postalAddress.setAddressCountry(addressCountry);
-        postalAddress.setUprn(uprn);
-        postalAddress.setValidFrom(validFrom);
-        postalAddress.setValidUntil(validUntil);
-        postalAddress.setSubBuildingName(subBuildingName);
-        postalAddress.setOrganisationName(organisationName);
-        postalAddress.setDependentStreetName(dependentStreetName);
-        postalAddress.setDependentAddressLocality(dependentAddressLocality);
-        postalAddress.setDoubleDependentAddressLocality(doubleDependentAddressLocality);
 
-        return postalAddress;
+        return PostalAddress.builder()
+                .withBuildingNumber(buildingNumber)
+                .withBuildingName(buildingName)
+                .withStreetName(streetName)
+                .withPostalCode(postalCode)
+                .withAddressLocality(addressLocality)
+                .withAddressCountry(addressCountry)
+                .withUprn(uprn)
+                .withValidFrom(validFrom)
+                .withValidUntil(validUntil)
+                .withSubBuildingName(subBuildingName)
+                .withOrganisationName(organisationName)
+                .withDependentStreetName(dependentStreetName)
+                .withDependentAddressLocality(dependentAddressLocality)
+                .withDoubleDependentAddressLocality(doubleDependentAddressLocality)
+                .build();
     }
 }

@@ -24,7 +24,7 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNoCredentialSubjectProperty;
@@ -151,7 +151,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void getRestrictedAuditDataForAsyncShouldReturnEmptyAuditRestrictedAsyncIfInvalidVcType() {
-        var restricted = getRestrictedAuditDataForAsync(VC_ADDRESS);
+        var restricted = getRestrictedAuditDataForAsync(vcAddressOne());
 
         assertNull(restricted.getName());
         assertNull(restricted.getDocExpiryDate());
@@ -197,7 +197,8 @@ class AuditExtensionsHelperTest {
     @Test
     void getRestrictedAuditDataForInheritedIdentityShouldReturnNullValuesIfInvalidVcType()
             throws Exception {
-        var restricted = getRestrictedAuditDataForInheritedIdentity(VC_ADDRESS, "test_device_data");
+        var restricted =
+                getRestrictedAuditDataForInheritedIdentity(vcAddressOne(), "test_device_data");
 
         assertNull(restricted.name());
         assertNull(restricted.birthDate());

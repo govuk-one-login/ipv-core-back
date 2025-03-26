@@ -44,9 +44,9 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
@@ -59,7 +59,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSucces
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
     private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcDrivingPermit();
-    private static final VerifiableCredential VC_ADDRESS_TEST = VC_ADDRESS;
+    private static final VerifiableCredential VC_ADDRESS_TEST = vcAddressOne();
     private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
             vcWebPassportSuccessful();
     private static final VerifiableCredential VC_F2F = vcF2fPassportM1a();
@@ -412,7 +412,7 @@ class EvcsServiceTest {
     void testGetVerifiableCredentials()
             throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
         // Arrange
-        when(mockConfigService.getCriByIssuer(M1A_ADDRESS_VC.getClaimsSet().getIssuer()))
+        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
                 .thenReturn(Cri.ADDRESS);
         when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
                 .thenReturn(Cri.DCMAW);
@@ -422,7 +422,7 @@ class EvcsServiceTest {
                         new EvcsGetUserVCsDto(
                                 List.of(
                                         new EvcsGetUserVCDto(
-                                                M1A_ADDRESS_VC.getVcString(),
+                                                vcAddressM1a().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(

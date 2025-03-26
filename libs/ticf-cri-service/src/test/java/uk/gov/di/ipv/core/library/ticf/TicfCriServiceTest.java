@@ -49,7 +49,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.ticf.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.library.ticf.TicfCriService.X_API_KEY_HEADER;
 
@@ -75,7 +75,7 @@ class TicfCriServiceTest {
                     TRUSTMARK,
                     USER_ID,
                     GOVUK_JOURNEY_ID,
-                    List.of(VC_ADDRESS.getVcString()));
+                    List.of(vcAddressOne().getVcString()));
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
@@ -121,12 +121,12 @@ class TicfCriServiceTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
 
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
             var ticfVc = ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem);
-            assertEquals(VC_ADDRESS.getVcString(), ticfVc.get(0).getVcString());
+            assertEquals(vcAddressOne().getVcString(), ticfVc.get(0).getVcString());
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));

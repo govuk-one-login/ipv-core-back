@@ -41,7 +41,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +55,7 @@ class StoreIdentityServiceTest {
     private static final String DEVICE_INFORMATION = "device-information";
     private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
     private static final List<VerifiableCredential> VCS =
-            List.of(vcWebPassportSuccessful(), EXPIRED_M1A_EXPERIAN_FRAUD_VC, M1A_ADDRESS_VC);
+            List.of(vcWebPassportSuccessful(), EXPIRED_M1A_EXPERIAN_FRAUD_VC, vcAddressM1a());
     @Spy private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
     private AuditEventUser testAuditEventUser;

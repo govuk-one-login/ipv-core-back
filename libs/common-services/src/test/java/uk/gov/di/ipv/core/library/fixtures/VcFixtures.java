@@ -115,6 +115,21 @@ public interface VcFixtures {
                 .build();
     }
 
+    private static IdentityCheckCredential vcClaimAddressValid(PostalAddress address) {
+        return vcClaimAddressValid(List.of(address));
+    }
+
+    private static IdentityCheckCredential vcClaimAddressValid(List<PostalAddress> addresses) {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.ADDRESS_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder().withAddress(addresses).build())
+                .build();
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -487,72 +502,44 @@ public interface VcFixtures {
         return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
     }
 
-    static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
+    private static VerifiableCredential generateAddressVc(IdentityCheckCredential vcClaim) {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 Cri.ADDRESS,
-                TestVc.builder()
-                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
-                        .credentialSubject(subject)
-                        .evidence(null)
-                        .build(),
+                vcClaim,
                 TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
     }
 
-    VerifiableCredential VC_ADDRESS =
-            generateAddressVc(
-                    TestVc.TestCredentialSubject.builder()
-                            .address(List.of(ADDRESS_1))
-                            .name(null)
-                            .birthDate(null)
-                            .build());
+    static VerifiableCredential vcAddressOne() {
+        return generateAddressVc(vcClaimAddressValid(ADDRESS_1));
+    }
 
     static VerifiableCredential vcAddressEmpty() {
-        return generateAddressVc(TestVc.TestCredentialSubject.builder().build());
+        var vcClaim = vcClaimAddressValid((List<PostalAddress>) null);
+        return generateAddressVc(vcClaim);
     }
 
     static VerifiableCredential vcAddressNoCredentialSubject() {
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.ADDRESS,
-                TestVc.builder()
-                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
-                        .credentialSubject(null)
-                        .evidence(null)
-                        .build());
+        var vcClaim = vcClaimAddressValid(ADDRESS_1);
+        vcClaim.setCredentialSubject(null);
+        return generateAddressVc(vcClaim);
     }
 
     static VerifiableCredential vcAddressTwo() {
-        return generateAddressVc(
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(ALICE_PARKER_NAME))
-                        .address(List.of(ADDRESS_2))
-                        .build());
+        return generateAddressVc(vcClaimAddressValid(ADDRESS_2));
     }
 
-    VerifiableCredential M1A_ADDRESS_VC =
-            generateAddressVc(
-                    TestVc.TestCredentialSubject.builder()
-                            .name(null)
-                            .birthDate(null)
-                            .address(List.of(ADDRESS_3))
-                            .build());
+    static VerifiableCredential vcAddressM1a() {
+        return generateAddressVc(vcClaimAddressValid(ADDRESS_3));
+    }
 
     static VerifiableCredential vcAddressMultipleAddresses() {
-        return generateAddressVc(
-                TestVc.TestCredentialSubject.builder()
-                        .name(null)
-                        .address(MULTIPLE_ADDRESSES_VALID)
-                        .build());
+        return generateAddressVc(vcClaimAddressValid(MULTIPLE_ADDRESSES_VALID));
     }
 
     static VerifiableCredential vcAddressMultipleAddressesNoValidFrom() {
-        return generateAddressVc(
-                TestVc.TestCredentialSubject.builder()
-                        .name(null)
-                        .address(MULTIPLE_ADDRESSES_NO_VALID_FROM)
-                        .build());
+        return generateAddressVc(vcClaimAddressValid(MULTIPLE_ADDRESSES_NO_VALID_FROM));
     }
 
     VerifiableCredential M1A_EXPERIAN_FRAUD_VC =

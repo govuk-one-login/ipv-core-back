@@ -57,8 +57,8 @@ import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.l1AEvidenceVc;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
@@ -128,9 +128,10 @@ class CheckReverificationIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyFoundIfUserHasP2Identity() throws Exception {
-            var p2Vcs = List.of(M1B_DCMAW_DL_VC, VC_ADDRESS, m1BFraudVc, pcl250vc);
+            var addressVc = vcAddressOne();
+            var p2Vcs = List.of(M1B_DCMAW_DL_VC, addressVc, m1BFraudVc, pcl250vc);
             when(mockUserIdentityService.areVcsCorrelated(
-                            List.of(M1B_DCMAW_DL_VC, VC_ADDRESS, m1BFraudVc)))
+                            List.of(M1B_DCMAW_DL_VC, vcAddressOne(), m1BFraudVc)))
                     .thenReturn(true);
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
@@ -153,7 +154,7 @@ class CheckReverificationIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyFoundIfUserHasP1Identity() throws Exception {
-            var p1Vcs = List.of(l1AEvidenceVc, VC_ADDRESS, m1BFraudVc, m1AVerificationVc);
+            var p1Vcs = List.of(l1AEvidenceVc, vcAddressOne(), m1BFraudVc, m1AVerificationVc);
             when(mockUserIdentityService.areVcsCorrelated(p1Vcs)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))

@@ -29,9 +29,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
@@ -63,7 +63,7 @@ class VcHelperTest {
 
     private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
-                Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
+                Arguments.of("Non-evidence VC", vcAddressM1a()),
                 Arguments.of("Evidence VC", vcWebPassportSuccessful()),
                 Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
@@ -257,7 +257,7 @@ class VcHelperTest {
         var vcs =
                 List.of(
                         DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcAddressM1a(),
                         vcFraudApplicableAuthoritativeSourceFailed(),
                         vcVerificationM1a());
 
@@ -276,7 +276,7 @@ class VcHelperTest {
         var vcs =
                 List.of(
                         DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcAddressM1a(),
                         vcFraudAvailableAuthoritativeFailed(),
                         vcVerificationM1a());
 
@@ -294,7 +294,7 @@ class VcHelperTest {
         var vcs =
                 List.of(
                         DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcAddressM1a(),
                         vcExperianFraudEvidenceFailed(),
                         vcVerificationM1a());
 
@@ -312,7 +312,7 @@ class VcHelperTest {
         var vcs =
                 List.of(
                         DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcAddressM1a(),
                         vcExperianFraudScoreOne(),
                         vcVerificationM1a());
 
@@ -327,7 +327,7 @@ class VcHelperTest {
     void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
-        var vcs = List.of(DCMAW_PASSPORT_VC, M1A_ADDRESS_VC, vcVerificationM1a());
+        var vcs = List.of(DCMAW_PASSPORT_VC, vcAddressM1a(), vcVerificationM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
