@@ -24,27 +24,6 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
-  ENHANCED_VERIFICATION:
-    events:
-      next:
-        targetState: MITIGATION_01_IDENTITY_START_PAGE
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-
-  ALTERNATE_DOC_PASSPORT:
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl
-
-  ALTERNATE_DOC_DL:
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-passport
-
   REPROVE_IDENTITY:
     events:
       next:
