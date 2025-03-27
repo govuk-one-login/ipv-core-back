@@ -65,11 +65,6 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/check-coi",
-          "Next": "CheckCoiLambda"
-        },
-        {
-          "Variable": "$.journey",
           "StringMatches": "/journey/call-dcmaw-async-cri",
           "Next": "CallDcmawAsyncCriLambda"
         },
@@ -237,24 +232,6 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
-    "CheckCoiLambda": {
-      "Type": "Task",
-      "Resource": "${CheckCoiFunctionArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet",
-        "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney",
       "Retry": [{

@@ -26,8 +26,6 @@ states:
         targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
       eventFive:
         targetState: PAGE_STATE_WITH_BACK_EVENT
-      eventSeven:
-        targetState: COI_CHECK
       eventEight:
         targetState: STRATEGIC_APP_TRIAGE
       eventWithMitigation:
@@ -172,11 +170,3 @@ states:
     response:
       type: page
       pageId: page-id-for-another-page-state
-
-  COI_CHECK:
-    response:
-      type: process
-      lambda: check-coi
-    events:
-      coi-check-passed:
-        targetState: ANOTHER_PAGE_STATE
