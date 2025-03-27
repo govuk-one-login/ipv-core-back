@@ -15,6 +15,7 @@ import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 import uk.gov.di.model.VerifiableCredentialType;
 
 import java.time.Instant;
@@ -223,6 +224,87 @@ public interface VcFixtures {
         vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         return vcClaim;
+    }
+
+    private static IdentityCheckCredential vcClaimNinoIdentityCheck() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(kennethDecerqueiraName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withSocialSecurityRecord(
+                                        List.of(
+                                                SocialSecurityRecordDetails.builder()
+                                                        .withPersonalNumber("AA000003D")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                        .withStrengthScore(2)
+                                        .withValidityScore(2)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimNinoRecordCheck() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(kennethDecerqueiraName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withSocialSecurityRecord(
+                                        List.of(
+                                                SocialSecurityRecordDetails.builder()
+                                                        .withPersonalNumber("AA000003D")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .RECORD_CHECK)
+                                                                .build()))
+                                        .build()))
+                .build();
     }
 
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
@@ -762,79 +844,55 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential generateNinoVc(
-            TestVc.TestCredentialSubject credentialSubject, List<TestVc.TestEvidence> evidence) {
+    private static VerifiableCredential generateNinoVc(IdentityCheckCredential vcClaim) {
         return generateVerifiableCredential(
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
                 NINO,
-                TestVc.builder().evidence(evidence).credentialSubject(credentialSubject).build(),
+                vcClaim,
                 "https://review-xx.account.gov.uk",
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static TestVc.TestEvidence testFailedNinoEvidence =
-            TestVc.TestEvidence.builder()
-                    .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                    .failedCheckDetails(List.of(Map.of("checkMethod", "data")))
-                    .build();
+    static VerifiableCredential vcNinoIdentityCheckSuccessful() {
+        return generateNinoVc(vcClaimNinoIdentityCheck());
+    }
 
-    static VerifiableCredential vcNinoSuccessful() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(
-                                List.of(createSocialSecurityRecordDetails("AA000003D")))
-                        .build();
-
-        var evidence =
+    static VerifiableCredential vcNinoIdentityCheckUnsuccessful() {
+        var vcClaim = vcClaimNinoIdentityCheck();
+        var evidence = vcClaim.getEvidence().get(0);
+        evidence.setCheckDetails(null);
+        evidence.setFailedCheckDetails(
                 List.of(
-                        TestVc.TestEvidence.builder()
-                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                .checkDetails(List.of(Map.of("checkMethod", "data")))
-                                .build());
-        return generateNinoVc(credentialSubject, evidence);
+                        CheckDetails.builder()
+                                .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                .build()));
+        evidence.setValidityScore(0);
+
+        return generateNinoVc(vcClaim);
     }
 
-    static VerifiableCredential vcNinoUnsuccessful() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(null)
-                        .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(createBirthDate("1970-01-01")))
-                        .socialSecurityRecord(
-                                List.of(createSocialSecurityRecordDetails("AA000003D")))
-                        .build();
+    static VerifiableCredential vcNinoIdentityCheckMissingSocialSecurityRecord() {
+        var vcClaim = vcClaimNinoIdentityCheck();
+        vcClaim.getCredentialSubject().setSocialSecurityRecord(null);
 
-        var evidence = List.of(testFailedNinoEvidence);
-        return generateNinoVc(credentialSubject, evidence);
+        return generateNinoVc(vcClaim);
     }
 
-    static VerifiableCredential vcNinoMissingSocialSecurityRecord() {
-        return generateNinoVc(
-                TestVc.TestCredentialSubject.builder().build(),
-                List.of(TestVc.TestEvidence.builder().build()));
-    }
+    static VerifiableCredential vcNinoIdentityCheckEmptySocialSecurityRecord() {
+        var vcClaim = vcClaimNinoIdentityCheck();
+        vcClaim.getCredentialSubject().setSocialSecurityRecord(Collections.emptyList());
 
-    static VerifiableCredential vcNinoEmptySocialSecurityRecord() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().socialSecurityRecord(List.of()).build();
-
-        var evidence = List.of(testFailedNinoEvidence);
-
-        return generateNinoVc(credentialSubject, evidence);
+        return generateNinoVc(vcClaim);
     }
 
     static VerifiableCredential vcNinoInvalidVcType() {
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                NINO,
-                TestVc.builder()
-                        .type(
-                                new String[] {
-                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
-                                })
-                        .build(),
-                "https://ticf.stubs.account.gov.uk",
-                Instant.ofEpochSecond(1704822570));
+        var vcClaim = vcClaimNinoIdentityCheck();
+        vcClaim.setType(
+                List.of(
+                        VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                        VerifiableCredentialType.RISK_ASSESSMENT_CREDENTIAL));
+
+        return generateNinoVc(vcClaim);
     }
 
     static VerifiableCredential vcTicf() {

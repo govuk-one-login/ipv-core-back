@@ -45,7 +45,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -70,7 +70,7 @@ class VcHelperTest {
                 Arguments.of("Verification VC", vcVerificationM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_DL_VC),
                 Arguments.of("Verification F2F VC", vcF2fPassportM1a()),
-                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
+                Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
                 Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
                 Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));
     }
@@ -111,7 +111,7 @@ class VcHelperTest {
 
     @Test
     void shouldExtractTxIdFromIdentityCheckCredentials() {
-        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoSuccessful()));
+        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoIdentityCheckSuccessful()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
@@ -121,7 +121,9 @@ class VcHelperTest {
     void shouldExtractTxIdDespiteNullEvidence() throws Exception {
         var txns =
                 VcHelper.extractTxnIdsFromCredentials(
-                        List.of(vcNinoSuccessful(), vcHmrcMigrationPCL200NoEvidence()));
+                        List.of(
+                                vcNinoIdentityCheckSuccessful(),
+                                vcHmrcMigrationPCL200NoEvidence()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));

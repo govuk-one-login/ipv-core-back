@@ -958,7 +958,7 @@ class UserIdentityServiceTest {
                         vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
                         vcAddressOne(),
-                        vcNinoSuccessful());
+                        vcNinoIdentityCheckSuccessful());
 
         // Act
         var credentials =
@@ -977,7 +977,7 @@ class UserIdentityServiceTest {
                 List.of(
                         vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreOne(),
-                        vcNinoSuccessful());
+                        vcNinoIdentityCheckSuccessful());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -999,7 +999,7 @@ class UserIdentityServiceTest {
                         vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
                         vcAddressOne(),
-                        vcNinoMissingSocialSecurityRecord());
+                        vcNinoIdentityCheckMissingSocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1036,7 +1036,7 @@ class UserIdentityServiceTest {
                         vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
                         vcAddressOne(),
-                        vcNinoUnsuccessful());
+                        vcNinoIdentityCheckUnsuccessful());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1057,7 +1057,7 @@ class UserIdentityServiceTest {
                         vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
                         vcAddressOne(),
-                        vcNinoEmptySocialSecurityRecord());
+                        vcNinoIdentityCheckEmptySocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
 
