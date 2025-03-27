@@ -11,22 +11,22 @@ public class DrivingPermitDetailsGenerator {
             String issuedBy,
             String issueDate,
             String issueNumber) {
-        var drivingPermit = new DrivingPermitDetails();
-        drivingPermit.setPersonalNumber(personalNumber);
-        drivingPermit.setExpiryDate(expiryDate);
-        drivingPermit.setIssuedBy(issuedBy);
-        drivingPermit.setIssueDate(issueDate);
-        drivingPermit.setIssueNumber(issueNumber);
-        return drivingPermit;
+        return DrivingPermitDetails.builder()
+                .withPersonalNumber(personalNumber)
+                .withExpiryDate(expiryDate)
+                .withIssuedBy(issuedBy)
+                .withIssueDate(issueDate)
+                .withIssueNumber(issueNumber)
+                .build();
     }
 
     public static DrivingPermitDetails createDrivingPermitDetails(
             String personalNumber, String expiryDate, String issuedBy, String issueDate) {
-        var drivingPermit = new DrivingPermitDetails();
-        drivingPermit.setPersonalNumber(personalNumber);
-        drivingPermit.setExpiryDate(expiryDate);
-        drivingPermit.setIssuedBy(issuedBy);
-        drivingPermit.setIssueDate(issueDate);
-        return drivingPermit;
+        return DrivingPermitDetails.builder()
+                .withPersonalNumber(personalNumber)
+                .withExpiryDate(expiryDate)
+                .withIssuedBy(issuedBy)
+                .withIssueDate(issueDate)
+                .build();
     }
 }

@@ -55,10 +55,10 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitEmptyDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitEmptyDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -741,7 +741,7 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            var drivingPermitVc = vcDrivingPermit();
+            var drivingPermitVc = vcWebDrivingPermitDvaValid();
 
             mockedVcHelper
                     .when(() -> VcHelper.isSuccessfulVc(M1B_DCMAW_DL_VC))
@@ -772,7 +772,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitMissingDrivingPermit()));
+                            List.of(vcWebDrivingPermitMissingDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -790,7 +790,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitEmptyDrivingPermit()));
+                            List.of(vcWebDrivingPermitEmptyDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -808,7 +808,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitNonDcmaw()));
+                            List.of(vcWebDrivingPermitDvlaValid()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -827,7 +827,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermit()));
+                            List.of(vcWebDrivingPermitDvaValid()));
 
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         }
@@ -876,7 +876,7 @@ class CriCheckingServiceTest {
             var ipvSessionItem = buildValidIpvSessionItem();
 
             var dcmawAsyncVc = vcDcmawAsyncDl();
-            var drivingPermitVc = vcDrivingPermit();
+            var drivingPermitVc = vcWebDrivingPermitDvaValid();
 
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(dcmawAsyncVc)).thenCallRealMethod();
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(drivingPermitVc)).thenReturn(false);
@@ -905,7 +905,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitMissingDrivingPermit()));
+                            List.of(vcWebDrivingPermitMissingDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -924,7 +924,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitEmptyDrivingPermit()));
+                            List.of(vcWebDrivingPermitEmptyDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -942,7 +942,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermitNonDcmaw()));
+                            List.of(vcWebDrivingPermitDvlaValid()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -961,7 +961,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(vcDrivingPermit()));
+                            List.of(vcWebDrivingPermitDvaValid()));
 
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         }

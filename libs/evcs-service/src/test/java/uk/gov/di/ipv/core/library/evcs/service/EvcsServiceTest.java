@@ -47,18 +47,18 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
-    private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcDrivingPermit();
+    private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcWebDrivingPermitDvaValid();
     private static final VerifiableCredential VC_ADDRESS_TEST = vcAddressOne();
     private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
             vcWebPassportSuccessful();
@@ -89,7 +89,7 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    vcDrivingPermitNonDcmaw().getVcString(),
+                                    vcWebDrivingPermitDvlaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of(
                                             "reason", "testing",

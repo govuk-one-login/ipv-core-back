@@ -75,7 +75,7 @@ class EvcsClientTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    VcFixtures.vcDrivingPermit().getVcString(),
+                                    VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of(
                                             "reason", "testing",
@@ -92,7 +92,7 @@ class EvcsClientTest {
                                     "timestampMs", "1714478033959"),
                             null),
                     new EvcsCreateUserVCsDto(
-                            VcFixtures.vcDrivingPermit().getVcString(),
+                            VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                             EvcsVCState.CURRENT,
                             Map.of(
                                     "reason", "testing",

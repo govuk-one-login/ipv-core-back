@@ -31,8 +31,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ADDRESS_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
@@ -64,24 +62,7 @@ public interface VcFixtures {
                                 VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
                 .withCredentialSubject(
                         IdentityCheckSubject.builder()
-                                .withName(
-                                        List.of(
-                                                Name.builder()
-                                                        .withNameParts(
-                                                                List.of(
-                                                                        NamePart.builder()
-                                                                                .withValue(
-                                                                                        "KENNETH")
-                                                                                .withType(
-                                                                                        GIVEN_NAME)
-                                                                                .build(),
-                                                                        NamePart.builder()
-                                                                                .withValue(
-                                                                                        "DECERQUEIRA")
-                                                                                .withType(
-                                                                                        FAMILY_NAME)
-                                                                                .build()))
-                                                        .build()))
+                                .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
                                         List.of(
                                                 BirthDate.builder()
@@ -138,24 +119,7 @@ public interface VcFixtures {
                                 VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
                 .withCredentialSubject(
                         IdentityCheckSubject.builder()
-                                .withName(
-                                        List.of(
-                                                Name.builder()
-                                                        .withNameParts(
-                                                                List.of(
-                                                                        NamePart.builder()
-                                                                                .withValue(
-                                                                                        "KENNETH")
-                                                                                .withType(
-                                                                                        GIVEN_NAME)
-                                                                                .build(),
-                                                                        NamePart.builder()
-                                                                                .withValue(
-                                                                                        "DECERQUEIRA")
-                                                                                .withType(
-                                                                                        FAMILY_NAME)
-                                                                                .build()))
-                                                        .build()))
+                                .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
                                         List.of(
                                                 BirthDate.builder()
@@ -212,6 +176,55 @@ public interface VcFixtures {
         return vcClaim;
     }
 
+    private static IdentityCheckCredential vcClaimWebDrivingLicenceDvla() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withAddress(List.of(ADDRESS_4))
+                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVLA))
+                                .withName(List.of(aliceParkerName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("bcd2346")
+                                        .withActivityHistoryScore(1)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withIdentityCheckPolicy(
+                                                                        CheckDetails
+                                                                                .IdentityCheckPolicyType
+                                                                                .PUBLISHED)
+                                                                .withActivityFrom("2019-01-01")
+                                                                .build()))
+                                        .withValidityScore(2)
+                                        .withStrengthScore(3)
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimWebDrivingLicenceDva() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA));
+        vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
+        return vcClaim;
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -239,21 +252,6 @@ public interface VcFixtures {
                                                     "bvr",
                                                     "biometricVerificationProcessLevel",
                                                     3)))
-                            .build());
-
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE_DATA_CHECK =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .txn("cbf56c46-f33a-49de-8be0-c6318d8eecfc")
-                            .strengthScore(3)
-                            .validityScore(2)
-                            .activityHistoryScore(1)
-                            .checkDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod", "data",
-                                                    "identityCheckPolicy", "published",
-                                                    "activityFrom", "1982-05-23")))
                             .build());
 
     List<TestVc.TestEvidence> DCMAW_FAILED_EVIDENCE =
@@ -379,6 +377,34 @@ public interface VcFixtures {
                             null,
                             null));
 
+    private static Name aliceParkerName() {
+        return Name.builder()
+                .withNameParts(
+                        List.of(
+                                NamePart.builder().withType(GIVEN_NAME).withValue("Alice").build(),
+                                NamePart.builder().withType(GIVEN_NAME).withValue("Jane").build(),
+                                NamePart.builder()
+                                        .withType(FAMILY_NAME)
+                                        .withValue("Parker")
+                                        .build()))
+                .build();
+    }
+
+    private static Name kennethDecerqueiraName() {
+        return Name.builder()
+                .withNameParts(
+                        List.of(
+                                NamePart.builder()
+                                        .withType(GIVEN_NAME)
+                                        .withValue("KENNETH")
+                                        .build(),
+                                NamePart.builder()
+                                        .withType(FAMILY_NAME)
+                                        .withValue("DECERQUEIRA")
+                                        .build()))
+                .build();
+    }
+
     Map<String, List<NamePart>> ALICE_PARKER_NAME =
             Map.of(
                     VC_NAME_PARTS,
@@ -401,14 +427,11 @@ public interface VcFixtures {
                             createNamePart("Watson", FAMILY_NAME)));
 
     DrivingPermitDetails DRIVING_PERMIT_DVA =
-            createDrivingPermitDetails(
-                    "MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19", "123456");
+            createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19");
 
     DrivingPermitDetails DRIVING_PERMIT_DVLA =
-            createDrivingPermitDetails("PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02");
-
-    DrivingPermitDetails INVALID_DRIVING_PERMIT =
-            createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", null, null);
+            createDrivingPermitDetails(
+                    "PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02", "123456");
 
     static List<PassportDetails> passportDetails() {
         return List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
@@ -664,108 +687,78 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static VerifiableCredential vcDrivingPermit() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
-                        .build();
+    static VerifiableCredential vcWebDrivingPermitDvaValid() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimWebDrivingLicenceDva(),
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcDrivingPermitMissingDrivingPermit() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_4)).build();
+    static VerifiableCredential vcWebDrivingPermitMissingDrivingPermit() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getCredentialSubject().setDrivingPermit(null);
+
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaim,
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcDrivingPermitEmptyDrivingPermit() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of())
-                        .build();
+    static VerifiableCredential vcWebDrivingPermitEmptyDrivingPermit() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getCredentialSubject().setDrivingPermit(Collections.emptyList());
+
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaim,
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcDrivingPermitFailedChecks() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_4))
-                        .drivingPermit(List.of(INVALID_DRIVING_PERMIT))
-                        .build();
+    static VerifiableCredential vcWebDrivingPermitFailedChecks() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getEvidence().get(0).setValidityScore(0);
+
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .evidence(DCMAW_FAILED_EVIDENCE)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaim,
                 Instant.ofEpochSecond(1705468290));
     }
 
-    static VerifiableCredential vcDrivingPermitNonDcmaw() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(null)
-                        .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(createBirthDate("1970-01-01")))
-                        .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
-                        .build();
+    static VerifiableCredential vcWebDrivingPermitDvlaValid() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_DATA_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimWebDrivingLicenceDvla(),
                 "https://driving-license-cri.stubs.account.gov.uk",
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static VerifiableCredential vcDrivingPermitNoCredentialSubjectProperty() {
+    static VerifiableCredential vcWebDrivingPermitNoCredentialSubjectProperty() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.setCredentialSubject(null);
+
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .credentialSubject(null)
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .type(
-                                new String[] {
-                                    VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
-                                })
-                        .build(),
+                vcClaim,
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcDrivingPermitIncorrectType() {
+    static VerifiableCredential vcWebDrivingPermitIncorrectType() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.setType(
+                List.of(
+                        VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                        VerifiableCredentialType.ADDRESS_CREDENTIAL));
+
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
-                TestVc.builder()
-                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
-                        .build(),
+                vcClaim,
                 Instant.ofEpochSecond(1705986521));
     }
 

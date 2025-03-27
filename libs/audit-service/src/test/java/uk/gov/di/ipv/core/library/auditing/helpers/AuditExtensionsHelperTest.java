@@ -26,13 +26,13 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNoCredentialSubjectProperty;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitMissingDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitNoCredentialSubjectProperty;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,7 +109,7 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetDLRestrictedDataForAudit() {
-        var restrictedData = getRestrictedAuditDataForAsync(vcDrivingPermitNonDcmaw());
+        var restrictedData = getRestrictedAuditDataForAsync(vcWebDrivingPermitDvlaValid());
         var expectedName =
                 List.of(
                         NameGenerator.createName(
@@ -133,7 +133,8 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldNotGetExpiryDateForAudit() {
-        var auditNameParts = getRestrictedAuditDataForAsync(vcDrivingPermitMissingDrivingPermit());
+        var auditNameParts =
+                getRestrictedAuditDataForAsync(vcWebDrivingPermitMissingDrivingPermit());
         assertNull(auditNameParts.getDocExpiryDate());
     }
 
@@ -160,7 +161,7 @@ class AuditExtensionsHelperTest {
     @Test
     void getRestrictedAuditDataForAsyncShouldNullValuesIfNullCredentialSubject() {
         var restricted =
-                getRestrictedAuditDataForAsync(vcDrivingPermitNoCredentialSubjectProperty());
+                getRestrictedAuditDataForAsync(vcWebDrivingPermitNoCredentialSubjectProperty());
 
         assertNull(restricted.getName());
         assertNull(restricted.getDocExpiryDate());
@@ -214,7 +215,7 @@ class AuditExtensionsHelperTest {
                     throws Exception {
         var restricted =
                 getRestrictedAuditDataForInheritedIdentity(
-                        vcDrivingPermitNoCredentialSubjectProperty(), "test_device_data");
+                        vcWebDrivingPermitNoCredentialSubjectProperty(), "test_device_data");
 
         assertNull(restricted.name());
         assertNull(restricted.birthDate());

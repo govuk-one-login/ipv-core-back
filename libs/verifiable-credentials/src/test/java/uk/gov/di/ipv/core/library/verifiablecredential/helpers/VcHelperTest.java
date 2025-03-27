@@ -32,7 +32,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
@@ -50,6 +49,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aMissingEvidence;
@@ -170,7 +170,9 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDL() {
-        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+        assertEquals(
+                Boolean.TRUE,
+                VcHelper.checkIfDocUKIssuedForCredential(vcWebDrivingPermitDvaValid()));
     }
 
     @Test
@@ -185,7 +187,9 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDCMAW() {
-        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+        assertEquals(
+                Boolean.TRUE,
+                VcHelper.checkIfDocUKIssuedForCredential(vcWebDrivingPermitDvaValid()));
     }
 
     @Test
