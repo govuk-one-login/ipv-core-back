@@ -60,11 +60,6 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/store-identity",
-          "Next": "StoreIdentityLambda"
-        },
-        {
-          "Variable": "$.journey",
           "StringMatches": "/journey/call-dcmaw-async-cri",
           "Next": "CallDcmawAsyncCriLambda"
         },
@@ -213,25 +208,6 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation",
         "lambdaInput.$": "$.lambdaInput"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
-    "StoreIdentityLambda": {
-      "Type": "Task",
-      "Resource": "${StoreIdentityLambdaArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet",
-        "lambdaInput.$": "$.lambdaInput",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
       "Next": "ProcessNextJourney",
       "Retry": [{

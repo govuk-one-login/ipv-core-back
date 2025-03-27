@@ -53,7 +53,6 @@ public class JourneyUris {
             "/journey/reset-session-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_REUSE_WITH_STORE_PATH = "/journey/reuse-with-store";
-    public static final String JOURNEY_STORE_IDENTITY_PATH = "/journey/store-identity";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
