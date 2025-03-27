@@ -23,7 +23,6 @@ dependencies {
 			project(":lambdas:check-gpg45-score"),
 			project(":lambdas:check-mobile-app-vc-receipt"),
 			project(":lambdas:check-reverification-identity"),
-			project(":lambdas:evaluate-gpg45-scores"),
 			project(":lambdas:initialise-ipv-session"),
 			project(":lambdas:issue-client-access-token"),
 			project(":lambdas:process-async-cri-credential"),

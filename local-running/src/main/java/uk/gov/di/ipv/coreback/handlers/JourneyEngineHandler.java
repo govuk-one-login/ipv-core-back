@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentityHandler;
-import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -26,7 +25,6 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_DCMAW
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXISTING_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
 
@@ -48,7 +46,6 @@ public class JourneyEngineHandler {
     private final BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private final BuildClientOauthResponseHandler buildClientOauthResponseHandler;
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
-    private final EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private final CallDcmawAsyncCriHandler callDcmawAsyncHandler;
     private final CheckReverificationIdentityHandler checkReverificationIdentityHandler;
     private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
@@ -61,7 +58,6 @@ public class JourneyEngineHandler {
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler(configService);
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler(configService);
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler(configService);
-        this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler(configService);
         this.callDcmawAsyncHandler = new CallDcmawAsyncCriHandler(configService);
         this.checkReverificationIdentityHandler =
                 new CheckReverificationIdentityHandler(configService);
@@ -110,8 +106,6 @@ public class JourneyEngineHandler {
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH -> buildClientOauthResponseHandler
                     .handleRequest(buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-            case JOURNEY_EVALUATE_GPG45_SCORES_PATH -> evaluateGpg45ScoresHandler.handleRequest(
-                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_CHECK_GPG45_SCORE_PATH -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH -> callDcmawAsyncHandler.handleRequest(
