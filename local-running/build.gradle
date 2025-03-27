@@ -19,7 +19,6 @@ dependencies {
 			project(":lambdas:build-proven-user-identity-details"),
 			project(":lambdas:build-user-identity"),
 			project(":lambdas:call-dcmaw-async-cri"),
-			project(":lambdas:call-ticf-cri"),
 			project(":lambdas:check-coi"),
 			project(":lambdas:check-existing-identity"),
 			project(":lambdas:check-gpg45-score"),

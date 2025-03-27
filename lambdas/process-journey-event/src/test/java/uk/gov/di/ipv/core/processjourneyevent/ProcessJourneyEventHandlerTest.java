@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationTyp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -1065,40 +1064,6 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"true,/journey/call-ticf-cri,", "false,,page-id-for-another-page-state"})
-    void shouldSkipTicfCriOnlyIfDisabled(
-            boolean enabled, String expectedJourney, String expectedPage) throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventSix")
-                        .ipvSessionId(TEST_SESSION_ID)
-                        .build();
-
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                .thenReturn(enabled);
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
-
-        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
-    }
-
-    @ParameterizedTest
     @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
     void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
             boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
@@ -1216,7 +1181,7 @@ class ProcessJourneyEventHandlerTest {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("eventSix")
+                        .journey("eventFive")
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 

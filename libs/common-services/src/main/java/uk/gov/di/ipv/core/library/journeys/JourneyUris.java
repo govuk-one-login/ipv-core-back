@@ -14,7 +14,6 @@ public class JourneyUris {
     public static final String JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH =
             "/journey/" + Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
     public static final String JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH = "/journey/call-dcmaw-async-cri";
-    public static final String JOURNEY_CALL_TICF_CRI_PATH = "/journey/call-ticf-cri";
     public static final String JOURNEY_CHECK_COI_PATH = "/journey/check-coi";
     public static final String JOURNEY_CHECK_EXISTING_IDENTITY_PATH =
             "/journey/check-existing-identity";
