@@ -68,7 +68,6 @@ import java.util.stream.Stream;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
@@ -83,7 +82,6 @@ public class ProcessJourneyEventHandler
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     private static final String BACK_EVENT = "back";
-    private static final String CHECK_COI_LAMBDA = "check-coi";
 
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -354,22 +352,6 @@ public class ProcessJourneyEventHandler
             }
         }
 
-        // Special case to skip COI check if the user does not already have an identity
-        if (result.state() instanceof BasicState basicState
-                && basicState.getResponse() instanceof ProcessStepResponse processResponse
-                && CHECK_COI_LAMBDA.equals(processResponse.getLambda())
-                && !hasExistingIdentity(clientOAuthSessionItem)) {
-            LOGGER.info(LogHelper.buildLogMessage("Skipping COI check - no existing identity"));
-            return executeStateTransition(
-                    new JourneyState(basicState.getJourneyType(), basicState.getName()),
-                    ipvSessionItem,
-                    "coi-check-passed",
-                    null,
-                    auditEventUser,
-                    deviceInformation,
-                    clientOAuthSessionItem);
-        }
-
         if (result.state() instanceof BasicState basicState) {
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
@@ -402,16 +384,6 @@ public class ProcessJourneyEventHandler
 
         throw new UnknownEventException(
                 String.format("Back event provided to state: '%s'", initialJourneyState.state()));
-    }
-
-    private boolean hasExistingIdentity(ClientOAuthSessionItem clientOAuthSessionItem)
-            throws EvcsServiceException, CredentialParseException {
-        return !evcsService
-                .getVerifiableCredentials(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getEvcsAccessToken(),
-                        CURRENT)
-                .isEmpty();
     }
 
     private void logStateChange(

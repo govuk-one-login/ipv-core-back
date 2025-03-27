@@ -9,7 +9,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -72,9 +71,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyEventHandlerTest {
@@ -1061,41 +1058,6 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
-    }
-
-    @ParameterizedTest
-    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
-    void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
-            boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventSeven")
-                        .ipvSessionId(TEST_IP)
-                        .build();
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        when(mockEvcsService.getVerifiableCredentials(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(hasVcsInEvcs ? List.of(M1A_EXPERIAN_FRAUD_VC) : List.of());
-
-        var processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
-
-        var output = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
     }
 
     @Test
