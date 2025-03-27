@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
-import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -110,7 +109,6 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
-    @Mock private EvcsService mockEvcsService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
@@ -227,7 +225,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(),
                         StateMachineInitializerMode.STANDARD,
                         REAL_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -272,7 +269,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -303,7 +299,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -333,7 +328,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -377,7 +371,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -615,7 +608,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
@@ -645,7 +637,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
@@ -691,7 +682,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
@@ -758,7 +748,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -811,7 +800,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -861,7 +849,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         // Act
@@ -913,7 +900,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -961,7 +947,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -1007,7 +992,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
@@ -1050,7 +1034,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -1156,7 +1139,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var logCollector = LogCollector.getLogCollectorFor(ProcessJourneyEventHandler.class);
@@ -1225,7 +1207,6 @@ class ProcessJourneyEventHandlerTest {
                 journeyTypes,
                 stateMachineInitializerMode,
                 nestedJourneyTypes,
-                mockEvcsService,
                 mockCimitUtilityService);
     }
 

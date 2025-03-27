@@ -351,7 +351,7 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       next:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -376,9 +376,9 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       fraud-fail-with-no-ci:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -465,7 +465,7 @@ states:
       end:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
       next:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -620,7 +620,7 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       anotherWay:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -656,7 +656,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetJourney: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       incomplete:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:

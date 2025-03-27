@@ -25,9 +25,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -88,7 +85,6 @@ public class ProcessJourneyEventHandler
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
-    private final EvcsService evcsService;
     private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -100,7 +96,6 @@ public class ProcessJourneyEventHandler
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
             List<String> nestedJourneyTypes,
-            EvcsService evcsService,
             CimitUtilityService cimitUtilityService)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
@@ -109,7 +104,6 @@ public class ProcessJourneyEventHandler
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.stateMachines =
                 loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
-        this.evcsService = evcsService;
         this.cimitUtilityService = cimitUtilityService;
     }
 
@@ -136,7 +130,6 @@ public class ProcessJourneyEventHandler
                         List.of(IpvJourneyTypes.values()),
                         StateMachineInitializerMode.STANDARD,
                         nestedJourneyTypes);
-        this.evcsService = new EvcsService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
@@ -204,10 +197,6 @@ public class ProcessJourneyEventHandler
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (EvcsServiceException | CredentialParseException e) {
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -223,7 +212,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation,
             String currentPage,
             ClientOAuthSessionItem clientOAuthSessionItem)
-            throws JourneyEngineException, EvcsServiceException, CredentialParseException {
+            throws JourneyEngineException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(ipvSessionItem, auditEventUser, deviceInformation);
             journeyEvent = NEXT_EVENT;
@@ -292,10 +281,6 @@ public class ProcessJourneyEventHandler
                     journeyEvent,
                     ipvSessionItem.getState());
             throw new JourneyEngineException();
-        } catch (CredentialParseException e) {
-            logErrorWithCurrentJourneyDetails(
-                    "Unable to parse credentials.", e, journeyEvent, ipvSessionItem.getState());
-            throw new JourneyEngineException();
         } catch (JourneyEngineException e) {
             logErrorWithCurrentJourneyDetails(
                     e.getMessage(), e, journeyEvent, ipvSessionItem.getState());
@@ -313,7 +298,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException,
-                    JourneyEngineException, EvcsServiceException, CredentialParseException {
+                    JourneyEngineException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
