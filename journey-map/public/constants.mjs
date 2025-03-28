@@ -46,7 +46,6 @@ export const CRI_NAMES = {
   dwpKbv: "DWP KBV",
   f2f: "Face-to-face",
   fraud: "Experian fraud",
-  hmrcKbv: "HMRC KBV",
   kbv: "Experian KBV",
   nino: "HMRC check (NINO)",
   ukPassport: "Passport (web)",

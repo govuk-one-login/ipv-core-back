@@ -17,7 +17,6 @@ const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   f2f: "f2f-cri",
   nino: "nino-cri",
   dwpKbv: "dwp-kbv-cri",
-  hmrcKbv: "hmrc-kbv-cri",
   bav: "bav-cri",
 };
 

@@ -38,7 +38,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -266,20 +265,16 @@ class SessionCredentialsServiceTest {
 
             var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
 
-            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
-
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionHmrcKbvCredentialItem = hmrcKbvVc.toSessionCredentialItem(SESSION_ID, true);
 
             when(mockDataStore.getItems(SESSION_ID))
                     .thenReturn(
                             List.of(
                                     sessionFraudCredentialItem,
                                     sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
+                                    sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
                     SESSION_ID, ADDRESS_ONLY_CHANGE);
@@ -298,20 +293,16 @@ class SessionCredentialsServiceTest {
 
             var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
 
-            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
-
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionHmrcKbvCredentialItem = hmrcKbvVc.toSessionCredentialItem(SESSION_ID, true);
 
             when(mockDataStore.getItems(SESSION_ID))
                     .thenReturn(
                             List.of(
                                     sessionFraudCredentialItem,
                                     sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
+                                    sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, resetType);
 
@@ -321,8 +312,7 @@ class SessionCredentialsServiceTest {
                             List.of(
                                     sessionFraudCredentialItem,
                                     sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
+                                    sessionDcmawCredentialItem));
         }
 
         @Test
@@ -332,20 +322,16 @@ class SessionCredentialsServiceTest {
 
             var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
 
-            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
-
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionHmrcKbvCredentialItem = hmrcKbvVc.toSessionCredentialItem(SESSION_ID, true);
 
             when(mockDataStore.getItems(SESSION_ID))
                     .thenReturn(
                             List.of(
                                     sessionFraudCredentialItem,
                                     sessionAddressCredentialItem,
-                                    sessionDcmawCredentialItem,
-                                    sessionHmrcKbvCredentialItem));
+                                    sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
                     SESSION_ID, SessionCredentialsResetType.DCMAW);
