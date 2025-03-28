@@ -180,7 +180,7 @@ class DcmawAsyncCriServiceTest {
 
     private static Stream<Arguments> mobileAppJourneyTypesAndClientCallbackUrls() {
         return Stream.of(
-                Arguments.of(MobileAppJourneyType.MAM, REDIRECT_URL + "?state=" + CRI_OAUTH_STATE),
+                Arguments.of(MobileAppJourneyType.MAM, REDIRECT_URL),
                 Arguments.of(MobileAppJourneyType.DAD, null));
     }
 }
