@@ -424,7 +424,7 @@ public interface VcFixtures {
                                                                         CheckDetails.CheckMethodType
                                                                                 .BVR)
                                                                 .withBiometricVerificationProcessLevel(
-                                                                        2)
+                                                                        3)
                                                                 .build()))
                                         .build()))
                 .build();
@@ -1081,59 +1081,20 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcDcmawAsyncDl() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of((MORGAN_SARAH_MEREDYTH_NAME)))
-                        .address(List.of(ADDRESS_4))
-                        .birthDate(List.of(createBirthDate("1970-01-01")))
-                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
-                        .build();
+    static VerifiableCredential vcDcmawAsyncDrivingPermitDva() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DCMAW_ASYNC,
-                TestVc.builder()
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimDcmawDrivingPermitDva(),
                 "https://dcmaw-async.stubs.account.gov.uk/async/credential",
                 Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcDcmawAsyncPassport() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of((MORGAN_SARAH_MEREDYTH_NAME)))
-                        .address(List.of(ADDRESS_4))
-                        .passport(passportDetails())
-                        .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DCMAW_ASYNC,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("bcd2346")
-                                                .strengthScore(4)
-                                                .validityScore(2)
-                                                .checkDetails(
-                                                        List.of(
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "vri",
-                                                                        "identityCheckPolicy",
-                                                                        "published",
-                                                                        "activityFrom",
-                                                                        "2019-01-01"),
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "bvr",
-                                                                        "biometricVerificationProcessLevel",
-                                                                        2)))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimDcmawPassport(),
                 "https://dcmaw-async.stubs.account.gov.uk/async/credential",
                 Instant.ofEpochSecond(1705986521));
     }

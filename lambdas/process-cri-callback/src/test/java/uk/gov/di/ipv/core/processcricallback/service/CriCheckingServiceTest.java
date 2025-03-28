@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
@@ -858,7 +858,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(vcDcmawAsyncDl()),
+                            List.of(vcDcmawAsyncDrivingPermitDva()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -875,7 +875,7 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            var dcmawAsyncVc = vcDcmawAsyncDl();
+            var dcmawAsyncVc = vcDcmawAsyncDrivingPermitDva();
             var drivingPermitVc = vcWebDrivingPermitDvaValid();
 
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(dcmawAsyncVc)).thenCallRealMethod();
@@ -901,7 +901,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(vcDcmawAsyncDl()),
+                            List.of(vcDcmawAsyncDrivingPermitDva()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -920,7 +920,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(vcDcmawAsyncDl()),
+                            List.of(vcDcmawAsyncDrivingPermitDva()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -938,7 +938,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(vcDcmawAsyncDl()),
+                            List.of(vcDcmawAsyncDrivingPermitDva()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -957,7 +957,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(vcDcmawAsyncDl()),
+                            List.of(vcDcmawAsyncDrivingPermitDva()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,

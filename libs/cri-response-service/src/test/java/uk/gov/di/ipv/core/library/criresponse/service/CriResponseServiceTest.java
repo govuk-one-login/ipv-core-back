@@ -33,7 +33,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
@@ -195,7 +195,7 @@ class CriResponseServiceTest {
                 .thenReturn("1000000000");
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
-        var vcs = List.of(vcDcmawAsyncDl(), vcAddressTwo());
+        var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
 
         // Act
         var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
@@ -214,7 +214,7 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, List.of(vcDcmawAsyncDl(), vcAddressTwo()), false);
+                        USER_ID_1, List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo()), false);
 
         // Assert
         assertNull(asyncCriStatus.cri());
