@@ -15,6 +15,8 @@ import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 import uk.gov.di.model.VerifiableCredentialType;
 
@@ -32,10 +34,8 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BankAccountGenerator.createBankAccountDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
@@ -54,6 +54,7 @@ public interface VcFixtures {
     String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
     String FRAUD_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
     String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
+    String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -303,6 +304,21 @@ public interface VcFixtures {
                                                                         CheckDetails.DataCheckType
                                                                                 .RECORD_CHECK)
                                                                 .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static RiskAssessmentCredential vcClaimTicf() {
+        return RiskAssessmentCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.RISK_ASSESSMENT_CREDENTIAL))
+                .withEvidence(
+                        List.of(
+                                RiskAssessment.builder()
+                                        .withType(RISK_ASSESSMENT_EVIDENCE_TYPE)
+                                        .withTxn("963deeb5-a52c-4030-a69a-3184f77a4f18")
                                         .build()))
                 .build();
     }
@@ -899,39 +915,17 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 TICF,
-                TestVc.builder()
-                        .credentialSubject(null)
-                        .evidence(TICF_EVIDENCE)
-                        .type(
-                                new String[] {
-                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
-                                })
-                        .build(),
-                "https://ticf.stubs.account.gov.uk",
+                vcClaimTicf(),
+                TICF_ISSUER,
                 Instant.ofEpochSecond(1704822570));
     }
 
     static VerifiableCredential vcTicfWithCi() {
+        var vcClaim = vcClaimTicf();
+        vcClaim.getEvidence().get(0).setCi(List.of("test"));
+
         return generateVerifiableCredential(
-                TEST_SUBJECT,
-                TICF,
-                TestVc.builder()
-                        .credentialSubject(null)
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
-                                                .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
-                                                .checkDetails(null)
-                                                .ci(List.of("test"))
-                                                .build()))
-                        .type(
-                                new String[] {
-                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
-                                })
-                        .build(),
-                "https://ticf.stubs.account.gov.uk",
-                Instant.ofEpochSecond(1704822570));
+                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
     }
 
     static VerifiableCredential vcVerificationM1a() {

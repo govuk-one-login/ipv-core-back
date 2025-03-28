@@ -11,7 +11,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.model.IdentityCheckCredential;
 
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
@@ -109,14 +108,18 @@ public class VerifiableCredentialGenerator {
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, IdentityCheckCredential vcClaim, String issuer, Instant nbf) {
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
+            String issuer,
+            Instant nbf) {
         return generateVerifiableCredential(userId, cri, vcClaim, issuer, nbf, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
             Cri cri,
-            IdentityCheckCredential vcClaim,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
             String issuer,
             Instant nbf,
             KeyType signingKeyType) {
@@ -151,12 +154,15 @@ public class VerifiableCredentialGenerator {
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, IdentityCheckCredential vcClaim) {
+            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim) {
         return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, IdentityCheckCredential vcClaim, KeyType signingKeyType) {
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
+            KeyType signingKeyType) {
         try {
             return generateVerifiableCredential(
                     userId, cri, vcClaim, null, Instant.now(), signingKeyType);
@@ -204,14 +210,14 @@ public class VerifiableCredentialGenerator {
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, IdentityCheckCredential vcClaim, Instant nbf) {
+            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim, Instant nbf) {
         return generateVerifiableCredential(userId, cri, vcClaim, nbf, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
             Cri cri,
-            IdentityCheckCredential vcClaim,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
             Instant nbf,
             KeyType signingKeyType) {
         try {
