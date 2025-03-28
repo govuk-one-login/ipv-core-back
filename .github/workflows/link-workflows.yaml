@@ -1,5 +1,7 @@
 # DO NOT CHANGE THIS FILE
-# Breaking the  syntax of this file would silently allow other workflows to break.
+# This action should be kept as small as possible and only do linting of workflow actions as syntax errors in
+# actions cause them to silently fail. If you do need to change this file, make sure that you watch it execute
+# successfully in GitHub actions as you will not be warned if it fails.
 
 name: Lint GitHub Workflows
 
