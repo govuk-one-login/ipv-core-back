@@ -14,8 +14,6 @@ public class JourneyUris {
     public static final String JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH =
             "/journey/" + Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
     public static final String JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH = "/journey/call-dcmaw-async-cri";
-    public static final String JOURNEY_CALL_TICF_CRI_PATH = "/journey/call-ticf-cri";
-    public static final String JOURNEY_CHECK_COI_PATH = "/journey/check-coi";
     public static final String JOURNEY_CHECK_EXISTING_IDENTITY_PATH =
             "/journey/check-existing-identity";
     public static final String JOURNEY_CHECK_GPG45_SCORE_PATH = "/journey/check-gpg45-score";
@@ -29,8 +27,6 @@ public class JourneyUris {
     public static final String JOURNEY_ENHANCED_VERIFICATION_PATH =
             "/journey/enhanced-verification";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
-    public static final String JOURNEY_EVALUATE_GPG45_SCORES_PATH =
-            "/journey/evaluate-gpg45-scores";
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
@@ -55,7 +51,6 @@ public class JourneyUris {
             "/journey/reset-session-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_REUSE_WITH_STORE_PATH = "/journey/reuse-with-store";
-    public static final String JOURNEY_STORE_IDENTITY_PATH = "/journey/store-identity";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
