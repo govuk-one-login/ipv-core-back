@@ -351,7 +351,9 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequestUsingAis()
-            throws JsonProcessingException, JarValidationException, ParseException,
+            throws JsonProcessingException,
+                    JarValidationException,
+                    ParseException,
                     AisClientException {
         // Arrange
         clientOAuthSessionItem.setReproveIdentity(false);
@@ -568,8 +570,12 @@ class InitialiseIpvSessionHandlerTest {
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
     void shouldReturn400IfMissingVtr(List<String> vtrList)
-            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException, ParseException, JarValidationException {
+            throws JsonProcessingException,
+                    InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
+                    ParseException,
+                    JarValidationException {
         // Arrange
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
         var missingVtrClaimsBuilder = getValidClaimsBuilder();
@@ -594,8 +600,12 @@ class InitialiseIpvSessionHandlerTest {
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
     void shouldIpvSessionIdIfMissingVtrAndReverificationJourney(List<String> vtrList)
-            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException, ParseException, JarValidationException {
+            throws JsonProcessingException,
+                    InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
+                    ParseException,
+                    JarValidationException {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
