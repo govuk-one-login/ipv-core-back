@@ -124,7 +124,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                                     userId,
                                     ipvSessionItem.getIpvSessionId(),
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                    RequestHelper.getIpAddress(input)),
+                                    null),
                             new AuditExtensionReverification(
                                     response.success(), response.failureCode()),
                             new AuditRestrictedDeviceInformation(

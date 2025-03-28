@@ -25,6 +25,7 @@ public class AuditEventUser {
     private final String govukSigninJourneyId;
 
     @JsonProperty(value = "ip_address")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String ipAddress;
 
     public AuditEventUser(
