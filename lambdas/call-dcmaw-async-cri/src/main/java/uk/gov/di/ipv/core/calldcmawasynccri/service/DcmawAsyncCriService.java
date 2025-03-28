@@ -107,8 +107,7 @@ public class DcmawAsyncCriService {
             case DAD:
                 break;
             case MAM:
-                clientCallbackUrl =
-                        criConfig.getClientCallbackUrl().toString() + "?state=" + oauthState;
+                clientCallbackUrl = criConfig.getClientCallbackUrl().toString();
                 break;
             default:
                 throw new HttpResponseExceptionWithErrorBody(
