@@ -62,9 +62,7 @@ public abstract class UserIdentityRequestHandler {
     }
 
     protected IpvSessionItem validateAccessTokenAndGetIpvSession(APIGatewayProxyRequestEvent input)
-            throws ParseException,
-                    RevokedAccessTokenException,
-                    ExpiredAccessTokenException,
+            throws ParseException, RevokedAccessTokenException, ExpiredAccessTokenException,
                     IpvSessionNotFoundException {
 
         LogHelper.attachComponentId(configService);

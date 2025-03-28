@@ -11,7 +11,7 @@ Globals:
     Architectures:
       - arm64
     MemorySize: !If [IsPerformanceSensitive, 3072, 1024]
-    Runtime: java21
+    Runtime: java17
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
@@ -126,6 +126,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "175872367215" ]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
+  IsBuild: !Equals [ !Ref Environment, "build" ]
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -1333,6 +1334,10 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
+      Runtime: !If
+        - IsBuild
+        - java21
+        - java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Tracing: Active
