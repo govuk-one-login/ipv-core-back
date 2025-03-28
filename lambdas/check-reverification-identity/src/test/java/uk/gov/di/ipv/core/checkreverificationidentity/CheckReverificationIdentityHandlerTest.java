@@ -60,9 +60,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.l1AEvidenceVc;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
@@ -98,7 +98,7 @@ class CheckReverificationIdentityHandlerTest {
         pcl250vc = vcHmrcMigrationPCL250();
         m1BFraudVc = vcExperianFraudScoreTwo();
         l1AEvidenceVc = l1AEvidenceVc();
-        m1AVerificationVc = vcVerificationM1a();
+        m1AVerificationVc = vcExperianKbvM1a();
     }
 
     @BeforeEach

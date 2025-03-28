@@ -55,6 +55,7 @@ public interface VcFixtures {
     String FRAUD_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
     String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
+    String EXPERIAN_KBV_ISSUER_INTEGRATION = "https://review-k.integration.account.gov.uk";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -319,6 +320,64 @@ public interface VcFixtures {
                                 RiskAssessment.builder()
                                         .withType(RISK_ASSESSMENT_EVIDENCE_TYPE)
                                         .withTxn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimExperianKbv() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(aliceParkerName()))
+                                .withAddress(List.of(ADDRESS_4))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1970-01-01")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("abc1234")
+                                        .withVerificationScore(2)
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(2)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .FREE_TEXT)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(2)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .MULTIPLE_CHOICE)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(1)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .MULTIPLE_CHOICE)
+                                                                .build()))
                                         .build()))
                 .build();
     }
@@ -928,26 +987,12 @@ public interface VcFixtures {
                 TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
     }
 
-    static VerifiableCredential vcVerificationM1a() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_4))
-                        .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(createBirthDate("1970-01-01")))
-                        .build();
+    static VerifiableCredential vcExperianKbvM1a() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 Cri.EXPERIAN_KBV,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("abc1234")
-                                                .verificationScore(2)
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-k.integration.account.gov.uk",
+                vcClaimExperianKbv(),
+                EXPERIAN_KBV_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1653403140));
     }
 

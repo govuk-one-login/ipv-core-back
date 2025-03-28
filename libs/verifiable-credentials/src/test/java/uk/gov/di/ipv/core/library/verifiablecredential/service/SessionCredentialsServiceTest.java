@@ -43,7 +43,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CRED
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ADDRESS_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
@@ -53,7 +53,7 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class SessionCredentialsServiceTest {
     private static final String SESSION_ID = "ipv-session-id";
     private static final VerifiableCredential CREDENTIAL_1 = vcWebDrivingPermitDvaValid();
-    private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
+    private static final VerifiableCredential CREDENTIAL_2 = vcExperianKbvM1a();
     private static final VerifiableCredential CREDENTIAL_3 = vcNinoIdentityCheckSuccessful();
     private static final String USER_ID = "userId";
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;

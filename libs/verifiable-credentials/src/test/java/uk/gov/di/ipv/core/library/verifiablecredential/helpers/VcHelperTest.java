@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudExpi
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
@@ -48,7 +49,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
@@ -67,7 +67,7 @@ class VcHelperTest {
                 Arguments.of("Evidence VC", vcWebPassportSuccessful()),
                 Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
-                Arguments.of("Verification VC", vcVerificationM1a()),
+                Arguments.of("Verification VC", vcExperianKbvM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_DL_VC),
                 Arguments.of("Verification F2F VC", vcF2fPassportM1a()),
                 Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
@@ -265,7 +265,7 @@ class VcHelperTest {
                         DCMAW_PASSPORT_VC,
                         vcAddressM1a(),
                         vcExperianFraudApplicableAuthoritativeSourceFailed(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
@@ -284,7 +284,7 @@ class VcHelperTest {
                         DCMAW_PASSPORT_VC,
                         vcAddressM1a(),
                         vcExperianFraudAvailableAuthoritativeFailed(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
@@ -302,7 +302,7 @@ class VcHelperTest {
                         DCMAW_PASSPORT_VC,
                         vcAddressM1a(),
                         vcExperianFraudEvidenceFailed(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
@@ -320,7 +320,7 @@ class VcHelperTest {
                         DCMAW_PASSPORT_VC,
                         vcAddressM1a(),
                         vcExperianFraudScoreOne(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
@@ -333,7 +333,7 @@ class VcHelperTest {
     void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
-        var vcs = List.of(DCMAW_PASSPORT_VC, vcAddressM1a(), vcVerificationM1a());
+        var vcs = List.of(DCMAW_PASSPORT_VC, vcAddressM1a(), vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
