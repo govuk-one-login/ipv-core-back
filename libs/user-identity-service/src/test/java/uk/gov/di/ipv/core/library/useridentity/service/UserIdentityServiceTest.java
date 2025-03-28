@@ -872,7 +872,7 @@ class UserIdentityServiceTest {
     private static Stream<Arguments> VcsWithPassportClaim() {
         return Stream.of(
                 Arguments.of(vcWebPassportSuccessful()),
-                Arguments.of(DCMAW_PASSPORT_VC),
+                Arguments.of(vcDcmawPassport()),
                 Arguments.of(vcF2fPassportM1a()));
     }
 
@@ -1244,7 +1244,7 @@ class UserIdentityServiceTest {
     private static Stream<Arguments> VcsWithDrivingPermitClaim() {
         return Stream.of(
                 Arguments.of(vcWebDrivingPermitDvaValid()),
-                Arguments.of(M1B_DCMAW_DL_VC),
+                Arguments.of(vcDcmawDrivingPermitDvaM1b()),
                 Arguments.of(vcF2fDrivingLicenceM1a()));
     }
 
@@ -1537,7 +1537,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_DL_VC);
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b());
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1550,7 +1550,7 @@ class UserIdentityServiceTest {
     void
             getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_DL_VC);
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b());
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1562,7 +1562,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_DL_VC, vcF2fPassportM1a());
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcF2fPassportM1a());
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcs));
@@ -1580,7 +1580,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_DL_VC, vcExperianFraudScoreTwo());
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcExperianFraudScoreTwo());
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))

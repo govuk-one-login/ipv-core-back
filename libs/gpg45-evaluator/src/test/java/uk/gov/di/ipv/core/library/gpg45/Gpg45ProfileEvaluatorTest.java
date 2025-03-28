@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
@@ -190,7 +190,7 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForDcmawCredential() {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(M1B_DCMAW_DL_VC));
+        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcDcmawDrivingPermitDvaM1b()));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 2);
 
         assertEquals(expectedScores, builtScores);

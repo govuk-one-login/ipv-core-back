@@ -114,9 +114,9 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
@@ -162,7 +162,7 @@ class CheckExistingIdentityHandlerTest {
                     vcAddressM1a(),
                     vcExperianFraudM1a(),
                     vcExperianKbvM1a(),
-                    M1B_DCMAW_DL_VC);
+                    vcDcmawDrivingPermitDvaM1b());
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
@@ -1360,7 +1360,7 @@ class CheckExistingIdentityHandlerTest {
                         vcAddressM1a(),
                         fraudVc,
                         vcExperianKbvM1a(),
-                        M1B_DCMAW_DL_VC);
+                        vcDcmawDrivingPermitDvaM1b());
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, vcs));

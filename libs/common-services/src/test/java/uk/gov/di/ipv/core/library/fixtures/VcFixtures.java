@@ -382,6 +382,63 @@ public interface VcFixtures {
                 .build();
     }
 
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDva() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(morganSarahMeredythName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withAddress(List.of(ADDRESS_4))
+                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("bcd2346")
+                                        .withStrengthScore(3)
+                                        .withValidityScore(2)
+                                        .withActivityHistoryScore(1)
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .VRI)
+                                                                .withIdentityCheckPolicy(
+                                                                        CheckDetails
+                                                                                .IdentityCheckPolicyType
+                                                                                .PUBLISHED)
+                                                                .withActivityFrom("2019-01-01")
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .BVR)
+                                                                .withBiometricVerificationProcessLevel(
+                                                                        2)
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimDcmawPassport() {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
+        vcClaim.getCredentialSubject().setDrivingPermit(null);
+        vcClaim.getCredentialSubject().setPassport(passportDetails());
+        vcClaim.getEvidence().get(0).setStrengthScore(4);
+
+        return vcClaim;
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -558,6 +615,18 @@ public interface VcFixtures {
                                 NamePart.builder()
                                         .withType(FAMILY_NAME)
                                         .withValue("DECERQUEIRA")
+                                        .build()))
+                .build();
+    }
+
+    private static Name morganSarahMeredythName() {
+        return Name.builder()
+                .withNameParts(
+                        List.of(
+                                NamePart.builder().withType(GIVEN_NAME).withValue("MORGAN").build(),
+                                NamePart.builder()
+                                        .withType(FAMILY_NAME)
+                                        .withValue("SARAH MEREDYTH")
                                         .build()))
                 .build();
     }
@@ -996,63 +1065,21 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1653403140));
     }
 
-    VerifiableCredential M1B_DCMAW_DL_VC =
-            generateVerifiableCredential(
-                    "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                    DCMAW,
-                    TestVc.builder()
-                            .evidence(
-                                    List.of(
-                                            TestVc.TestEvidence.builder()
-                                                    .txn("bcd2346")
-                                                    .strengthScore(3)
-                                                    .validityScore(2)
-                                                    .activityHistoryScore(1)
-                                                    .checkDetails(
-                                                            List.of(
-                                                                    Map.of(
-                                                                            "checkMethod",
-                                                                            "vri",
-                                                                            "identityCheckPolicy",
-                                                                            "published",
-                                                                            "activityFrom",
-                                                                            "2019-01-01"),
-                                                                    Map.of(
-                                                                            "checkMethod",
-                                                                            "bvr",
-                                                                            "biometricVerificationProcessLevel",
-                                                                            2)))
-                                                    .build()))
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
-                                            .address(List.of(ADDRESS_4))
-                                            .drivingPermit(List.of(DRIVING_PERMIT_DVA))
-                                            .build())
-                            .build(),
-                    Instant.ofEpochSecond(1705986521));
+    static VerifiableCredential vcDcmawDrivingPermitDvaM1b() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimDcmawDrivingPermitDva(),
+                Instant.ofEpochSecond(1705986521));
+    }
 
-    VerifiableCredential DCMAW_PASSPORT_VC =
-            generateVerifiableCredential(
-                    "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                    DCMAW,
-                    TestVc.builder()
-                            .evidence(
-                                    List.of(
-                                            TestVc.TestEvidence.builder()
-                                                    .txn("bcd2346")
-                                                    .strengthScore(4)
-                                                    .validityScore(2)
-                                                    .verificationScore(3)
-                                                    .build()))
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
-                                            .address(List.of(ADDRESS_4))
-                                            .passport(passportDetails())
-                                            .build())
-                            .build(),
-                    Instant.ofEpochSecond(1705986521));
+    static VerifiableCredential vcDcmawPassport() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimDcmawPassport(),
+                Instant.ofEpochSecond(1705986521));
+    }
 
     static VerifiableCredential vcDcmawAsyncDl() {
         TestVc.TestCredentialSubject credentialSubject =

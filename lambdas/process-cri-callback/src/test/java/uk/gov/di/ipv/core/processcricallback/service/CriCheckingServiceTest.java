@@ -50,11 +50,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitEmptyDrivingPermit;
@@ -470,7 +470,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(vcAddressM1a());
-        var sessionVcs = List.of(M1B_DCMAW_DL_VC);
+        var sessionVcs = List.of(vcDcmawDrivingPermitDvaM1b());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
 
@@ -498,7 +498,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(vcAddressM1a());
-        var sessionVcs = List.of(M1B_DCMAW_DL_VC);
+        var sessionVcs = List.of(vcDcmawDrivingPermitDvaM1b());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
         var ipvSessionItem = buildValidIpvSessionItem();
@@ -680,7 +680,7 @@ class CriCheckingServiceTest {
         // Arrange for VCs not successful
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(vcAddressM1a());
-        var sessionVcs = List.of(M1B_DCMAW_DL_VC);
+        var sessionVcs = List.of(vcDcmawDrivingPermitDvaM1b());
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
 
@@ -725,7 +725,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -744,13 +744,13 @@ class CriCheckingServiceTest {
             var drivingPermitVc = vcWebDrivingPermitDvaValid();
 
             mockedVcHelper
-                    .when(() -> VcHelper.isSuccessfulVc(M1B_DCMAW_DL_VC))
+                    .when(() -> VcHelper.isSuccessfulVc(vcDcmawDrivingPermitDvaM1b()))
                     .thenCallRealMethod();
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(drivingPermitVc)).thenReturn(false);
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -768,7 +768,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -786,7 +786,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -804,7 +804,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -823,7 +823,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(M1B_DCMAW_DL_VC),
+                            List.of(vcDcmawDrivingPermitDvaM1b()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
@@ -840,7 +840,7 @@ class CriCheckingServiceTest {
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
-                            List.of(DCMAW_PASSPORT_VC),
+                            List.of(vcDcmawPassport()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,

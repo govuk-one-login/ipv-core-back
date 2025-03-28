@@ -28,10 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
@@ -68,7 +68,7 @@ class VcHelperTest {
                 Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
                 Arguments.of("Verification VC", vcExperianKbvM1a()),
-                Arguments.of("Verification DCMAW VC", M1B_DCMAW_DL_VC),
+                Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),
                 Arguments.of("Verification F2F VC", vcF2fPassportM1a()),
                 Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
                 Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
@@ -262,7 +262,7 @@ class VcHelperTest {
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
+                        vcDcmawPassport(),
                         vcAddressM1a(),
                         vcExperianFraudApplicableAuthoritativeSourceFailed(),
                         vcExperianKbvM1a());
@@ -281,7 +281,7 @@ class VcHelperTest {
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
+                        vcDcmawPassport(),
                         vcAddressM1a(),
                         vcExperianFraudAvailableAuthoritativeFailed(),
                         vcExperianKbvM1a());
@@ -299,7 +299,7 @@ class VcHelperTest {
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
+                        vcDcmawPassport(),
                         vcAddressM1a(),
                         vcExperianFraudEvidenceFailed(),
                         vcExperianKbvM1a());
@@ -317,7 +317,7 @@ class VcHelperTest {
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
+                        vcDcmawPassport(),
                         vcAddressM1a(),
                         vcExperianFraudScoreOne(),
                         vcExperianKbvM1a());
@@ -333,7 +333,7 @@ class VcHelperTest {
     void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
-        var vcs = List.of(DCMAW_PASSPORT_VC, vcAddressM1a(), vcExperianKbvM1a());
+        var vcs = List.of(vcDcmawPassport(), vcAddressM1a(), vcExperianKbvM1a());
 
         // Act
         var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
@@ -369,7 +369,7 @@ class VcHelperTest {
     void hasUnavailableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Act
-        var result = VcHelper.hasUnavailableFraudCheck(DCMAW_PASSPORT_VC);
+        var result = VcHelper.hasUnavailableFraudCheck(vcDcmawPassport());
 
         // Assert
         assertFalse(result);
