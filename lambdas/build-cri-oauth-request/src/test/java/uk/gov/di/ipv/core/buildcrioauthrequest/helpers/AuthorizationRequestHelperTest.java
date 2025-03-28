@@ -99,9 +99,7 @@ class AuthorizationRequestHelperTest {
 
     @BeforeEach
     void setUp()
-            throws InvalidKeySpecException,
-                    NoSuchAlgorithmException,
-                    JOSEException,
+            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
                     ParseException {
         signer = new LocalECDSASigner(getPrivateKey());
         rsaEncrypter = new RSAEncrypter((RSAPublicKey) getEncryptionPublicKey());
@@ -293,10 +291,7 @@ class AuthorizationRequestHelperTest {
 
     @Test
     void shouldCreateJWEObject()
-            throws ParseException,
-                    JOSEException,
-                    NoSuchAlgorithmException,
-                    InvalidKeySpecException,
+            throws ParseException, JOSEException, NoSuchAlgorithmException, InvalidKeySpecException,
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(

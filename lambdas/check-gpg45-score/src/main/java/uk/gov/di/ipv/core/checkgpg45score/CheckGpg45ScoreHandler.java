@@ -135,10 +135,8 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private int getScore(String ipvSessionId, String scoreType)
-            throws UnknownScoreTypeException,
-                    VerifiableCredentialException,
-                    IpvSessionNotFoundException,
-                    ClientOauthSessionNotFoundException {
+            throws UnknownScoreTypeException, VerifiableCredentialException,
+                    IpvSessionNotFoundException, ClientOauthSessionNotFoundException {
         var vcs = getParsedCredentials(ipvSessionId);
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         return switch (scoreType) {
@@ -150,8 +148,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private List<VerifiableCredential> getParsedCredentials(String ipvSessionId)
-            throws VerifiableCredentialException,
-                    IpvSessionNotFoundException,
+            throws VerifiableCredentialException, IpvSessionNotFoundException,
                     ClientOauthSessionNotFoundException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =

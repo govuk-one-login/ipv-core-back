@@ -63,18 +63,15 @@ public class YamlConfigService extends ConfigService {
     private void addConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
-            case OBJECT ->
-                    tree.fields()
-                            .forEachRemaining(
-                                    entry ->
-                                            addConfig(
-                                                    map,
-                                                    entry.getValue(),
-                                                    prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
-                    throw new IllegalArgumentException(
-                            String.format(
-                                    "Invalid config of type %s at %s", tree.getNodeType(), prefix));
+            case OBJECT -> tree.fields()
+                    .forEachRemaining(
+                            entry ->
+                                    addConfig(
+                                            map,
+                                            entry.getValue(),
+                                            prefix + PATH_SEPARATOR + entry.getKey()));
+            case ARRAY, BINARY, MISSING, NULL, POJO -> throw new IllegalArgumentException(
+                    String.format("Invalid config of type %s at %s", tree.getNodeType(), prefix));
         }
     }
 

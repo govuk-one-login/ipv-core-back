@@ -244,11 +244,8 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiRetrievalException,
-                    ConfigException,
-                    HttpResponseExceptionWithErrorBody,
-                    CiExtractionException,
-                    CredentialParseException {
+            throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
+                    CredentialParseException, ConfigException {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
