@@ -84,7 +84,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DWP_KBV", "EXPERIAN_KBV", "HMRC_KBV"})
+    @EnumSource(names = {"DWP_KBV", "EXPERIAN_KBV"})
     void isSuccessfulShouldReturnTrueForKbvWithVerificationScore(Cri cri) {
         var identityCheck = new IdentityCheck();
         identityCheck.setVerificationScore(2);
@@ -95,7 +95,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DWP_KBV", "EXPERIAN_KBV", "HMRC_KBV"})
+    @EnumSource(names = {"DWP_KBV", "EXPERIAN_KBV"})
     void isSuccessfulShouldReturnFalseForKbvWithNoVerificationScore(Cri cri) {
         var identityCheck = new IdentityCheck();
         identityCheck.setVerificationScore(0);
