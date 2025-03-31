@@ -11,13 +11,16 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.model.IdentityCheck;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.VerifiableCredentialType;
 
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,15 +32,9 @@ import static com.nimbusds.jwt.JWTClaimNames.JWT_ID;
 import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
 import static com.nimbusds.jwt.JWTClaimNames.SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.DI_CONTEXT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CONTEXT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VOT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_VTM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3_BASE_CONTEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PRIVATE_KEY;
@@ -63,9 +60,33 @@ public class VerifiableCredentialGenerator {
     }
 
     public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim, String issuer)
+            throws Exception {
+        return generateVerifiableCredential(userId, cri, vcClaim, issuer, KeyType.EC);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
             String userId,
             Cri cri,
             Map<String, Object> vcClaim,
+            String issuer,
+            KeyType signingKeyType)
+            throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, userId)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, now.getEpochSecond())
+                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
+                        .build();
+        return signTestVc(userId, cri, claimsSet, signingKeyType);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
             String issuer,
             KeyType signingKeyType)
             throws Exception {
@@ -344,23 +365,22 @@ public class VerifiableCredentialGenerator {
                 userId, cri, SignedJWT.parse(signedJWT.serialize()));
     }
 
-    public static Map<String, Object> vcClaim(Map<String, Object> attributes) {
-        Map<String, Object> vc = new LinkedHashMap<>();
-        vc.put(VC_CONTEXT, new String[] {W3_BASE_CONTEXT, DI_CONTEXT});
-        vc.put(VC_TYPE, new String[] {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE});
-        vc.put(VC_CREDENTIAL_SUBJECT, attributes);
-        vc.put(
-                VC_EVIDENCE,
-                List.of(
-                        Map.of(
-                                "type",
-                                "IdentityCheck",
-                                "txn",
-                                "DSJJSEE29392",
-                                "verificationScore",
-                                "0",
-                                "ci",
-                                List.of("A02", "A03"))));
-        return vc;
+    public static IdentityCheckCredential vcClaimFailedWithCis(IdentityCheckSubject attributes) {
+        return IdentityCheckCredential.builder()
+                .withContext(List.of(W3_BASE_CONTEXT, DI_CONTEXT))
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(attributes)
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("DSJJSEE29392")
+                                        .withVerificationScore(0)
+                                        .withCi(List.of("A02", "A03"))
+                                        .build()))
+                .build();
     }
 }
