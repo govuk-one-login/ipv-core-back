@@ -89,9 +89,6 @@
     "extensions": {
       "success": false,
       "failure_code": "identity_check_failed"
-    },
-    "restricted": {
-      "device_information": {}
     }
   }
 ]
