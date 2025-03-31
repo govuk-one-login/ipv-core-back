@@ -48,7 +48,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
@@ -62,7 +62,7 @@ class EvcsServiceTest {
     private static final VerifiableCredential VC_ADDRESS_TEST = vcAddressOne();
     private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
             vcWebPassportSuccessful();
-    private static final VerifiableCredential VC_F2F = vcF2fPassportM1a();
+    private static final VerifiableCredential VC_F2F = vcF2fPassportPhotoM1a();
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
             List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, vcExperianFraudM1a());
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =

@@ -873,7 +873,7 @@ class UserIdentityServiceTest {
         return Stream.of(
                 Arguments.of(vcWebPassportSuccessful()),
                 Arguments.of(vcDcmawPassport()),
-                Arguments.of(vcF2fPassportM1a()));
+                Arguments.of(vcF2fPassportPhotoM1a()));
     }
 
     @Test
@@ -1245,7 +1245,7 @@ class UserIdentityServiceTest {
         return Stream.of(
                 Arguments.of(vcWebDrivingPermitDvaValid()),
                 Arguments.of(vcDcmawDrivingPermitDvaM1b()),
-                Arguments.of(vcF2fDrivingLicenceM1a()));
+                Arguments.of(vcF2fDrivingPermitDvaPhotoM1a()));
     }
 
     @Test
@@ -1562,7 +1562,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
-        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcF2fPassportM1a());
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcF2fPassportPhotoM1a());
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcs));

@@ -40,7 +40,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
@@ -69,7 +69,7 @@ class VcHelperTest {
                 Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
                 Arguments.of("Verification VC", vcExperianKbvM1a()),
                 Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),
-                Arguments.of("Verification F2F VC", vcF2fPassportM1a()),
+                Arguments.of("Verification F2F VC", vcF2fPassportPhotoM1a()),
                 Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
                 Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
                 Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));

@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -206,7 +206,7 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForF2FCredential() {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcF2fPassportM1a()));
+        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcF2fPassportPhotoM1a()));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 2);
 
         assertEquals(expectedScores, builtScores);

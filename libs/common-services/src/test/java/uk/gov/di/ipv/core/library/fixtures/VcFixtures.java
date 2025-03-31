@@ -37,8 +37,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
-import static uk.gov.di.ipv.core.library.helpers.vocab.BankAccountGenerator.createBankAccountDetails;
-import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
@@ -439,6 +437,169 @@ public interface VcFixtures {
         return vcClaim;
     }
 
+    private static IdentityCheckCredential vcClaimF2fPassportPhoto() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(maryWatsonName()))
+                                .withPassport(
+                                        List.of(
+                                                createPassportDetails(
+                                                        "824159121", null, "2030-01-01")))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withStrengthScore(4)
+                                        .withValidityScore(2)
+                                        .withVerificationScore(2)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .VRI)
+                                                                .withIdentityCheckPolicy(
+                                                                        CheckDetails
+                                                                                .IdentityCheckPolicyType
+                                                                                .PUBLISHED)
+                                                                .withTxn(
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .PVR)
+                                                                .withPhotoVerificationProcessLevel(
+                                                                        3)
+                                                                .withTxn(
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimF2fDrivingPermitDvaPhoto() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(morganSarahMeredythName()))
+                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withStrengthScore(4)
+                                        .withValidityScore(2)
+                                        .withVerificationScore(2)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .VRI)
+                                                                .withIdentityCheckPolicy(
+                                                                        CheckDetails
+                                                                                .IdentityCheckPolicyType
+                                                                                .PUBLISHED)
+                                                                .withTxn(
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .PVR)
+                                                                .withPhotoVerificationProcessLevel(
+                                                                        2)
+                                                                .withTxn(
+                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimF2fBrp() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(kennethDecerqueiraName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withResidencePermit(
+                                        List.of(
+                                                createResidencePermitDetails(
+                                                        "AX66K69P2", "2030-07-13", "CR", "UTO")))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("some-uuid")
+                                        .withVerificationScore(2)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .CANCELLED_CHECK)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .RECORD_CHECK)
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimF2fIdCard() {
+        var vcClaim = vcClaimF2fBrp();
+        vcClaim.getCredentialSubject().setResidencePermit(null);
+        vcClaim.getCredentialSubject()
+                .setIdCard(
+                        List.of(
+                                createIdCardDetails(
+                                        "SPEC12031", "2031-08-02", "NLD", "2021-08-02")));
+
+        return vcClaim;
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -627,6 +788,18 @@ public interface VcFixtures {
                                 NamePart.builder()
                                         .withType(FAMILY_NAME)
                                         .withValue("SARAH MEREDYTH")
+                                        .build()))
+                .build();
+    }
+
+    private static Name maryWatsonName() {
+        return Name.builder()
+                .withNameParts(
+                        List.of(
+                                NamePart.builder().withType(GIVEN_NAME).withValue("Mary").build(),
+                                NamePart.builder()
+                                        .withType(FAMILY_NAME)
+                                        .withValue("Watson")
                                         .build()))
                 .build();
     }
@@ -1099,194 +1272,35 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcF2fPassportM1a() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(MARY_WATSON_NAME))
-                        .passport(List.of(createPassportDetails("824159121", null, "2030-01-01")))
-                        .build();
+    static VerifiableCredential vcF2fPassportPhotoM1a() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("24929d38-420c-4ba9-b846-3005ee691e26")
-                                                .strengthScore(4)
-                                                .validityScore(2)
-                                                .verificationScore(2)
-                                                .checkDetails(
-                                                        List.of(
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "vri",
-                                                                        "identityCheckPolicy",
-                                                                        "published",
-                                                                        "txn",
-                                                                        "24929d38-420c-4ba9-b846-3005ee691e26"),
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "pvr",
-                                                                        "biometricVerificationProcessLevel",
-                                                                        3,
-                                                                        "txn",
-                                                                        "24929d38-420c-4ba9-b846-3005ee691e26")))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimF2fPassportPhoto(),
                 Instant.ofEpochSecond(1705986521));
     }
 
-    static VerifiableCredential vcF2fDrivingLicenceM1a() {
+    static VerifiableCredential vcF2fDrivingPermitDvaPhotoM1a() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("bcd2346")
-                                                .strengthScore(3)
-                                                .validityScore(2)
-                                                .activityHistoryScore(1)
-                                                .checkDetails(
-                                                        List.of(
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "vri",
-                                                                        "identityCheckPolicy",
-                                                                        "published",
-                                                                        "activityFrom",
-                                                                        "2019-01-01"),
-                                                                Map.of(
-                                                                        "checkMethod",
-                                                                        "bvr",
-                                                                        "biometricVerificationProcessLevel",
-                                                                        2)))
-                                                .build()))
-                        .credentialSubject(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
-                                        .address(List.of(ADDRESS_4))
-                                        .drivingPermit(List.of(DRIVING_PERMIT_DVA))
-                                        .build())
-                        .build(),
+                vcClaimF2fDrivingPermitDvaPhoto(),
                 Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcF2fBrp() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(
-                                List.of(
-                                        Map.of(
-                                                VC_NAME_PARTS,
-                                                List.of(
-                                                        createNamePart(
-                                                                "Chris",
-                                                                NamePart.NamePartType
-                                                                        .GIVEN_NAME)))))
-                        .birthDate(List.of(createBirthDate("1984-09-28")))
-                        .residencePermit(
-                                List.of(
-                                        createResidencePermitDetails(
-                                                "AX66K69P2", "2030-07-13", "CR", "UTO")))
-                        .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("some-uuid")
-                                                .verificationScore(2)
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimF2fBrp(),
                 Instant.ofEpochSecond(1652953080));
     }
 
     static VerifiableCredential vcF2fIdCard() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(
-                                List.of(
-                                        Map.of(
-                                                VC_NAME_PARTS,
-                                                List.of(
-                                                        createNamePart(
-                                                                "Chris",
-                                                                NamePart.NamePartType
-                                                                        .GIVEN_NAME)))))
-                        .birthDate(List.of(createBirthDate("1984-09-28")))
-                        .idCard(
-                                List.of(
-                                        createIdCardDetails(
-                                                "SPEC12031", "2031-08-02", "NLD", "2021-08-02")))
-                        .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("some-uuid")
-                                                .verificationScore(2)
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                Instant.ofEpochSecond(1652953080));
-    }
-
-    static VerifiableCredential vcF2fSocialSecurityCard() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                F2F,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("some-uuid")
-                                                .verificationScore(2)
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                Instant.ofEpochSecond(1652953080));
-    }
-
-    static VerifiableCredential vcF2fBankAccount() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .bankAccount(
-                                List.of(
-                                        createBankAccountDetails(
-                                                "123456323",
-                                                "20-55-77",
-                                                "20042020",
-                                                "20042025"))) // pragma: allowlist secret
-                        .build();
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                F2F,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("some-uuid")
-                                                .verificationScore(2)
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaimF2fIdCard(),
                 Instant.ofEpochSecond(1652953080));
     }
 
