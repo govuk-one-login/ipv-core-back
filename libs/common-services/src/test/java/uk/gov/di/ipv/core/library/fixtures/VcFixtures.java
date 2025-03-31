@@ -35,11 +35,9 @@ import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
-import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PostalAddressGenerator.createPostalAddress;
 import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
@@ -638,14 +636,6 @@ public interface VcFixtures {
                 .build();
     }
 
-    List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .strengthScore(4)
-                            .validityScore(2)
-                            .verificationScore(2)
-                            .build());
-
     List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -685,14 +675,6 @@ public interface VcFixtures {
                                                     "bvr",
                                                     "biometricVerificationProcessLevel",
                                                     2)))
-                            .build());
-
-    List<TestVc.TestEvidence> TICF_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
-                            .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
-                            .checkDetails(null)
                             .build());
 
     Long TEST_UPRN = Long.valueOf("100120012077");
@@ -841,27 +823,6 @@ public interface VcFixtures {
                                         .build()))
                 .build();
     }
-
-    Map<String, List<NamePart>> ALICE_PARKER_NAME =
-            Map.of(
-                    VC_NAME_PARTS,
-                    List.of(
-                            createNamePart("Alice", GIVEN_NAME),
-                            createNamePart("Jane", GIVEN_NAME),
-                            createNamePart("Parker", FAMILY_NAME)));
-    Map<String, List<NamePart>> MORGAN_SARAH_MEREDYTH_NAME =
-            Map.of(
-                    VC_NAME_PARTS,
-                    List.of(
-                            createNamePart("MORGAN", GIVEN_NAME),
-                            createNamePart("SARAH MEREDYTH", FAMILY_NAME)));
-
-    Map<String, List<NamePart>> MARY_WATSON_NAME =
-            Map.of(
-                    VC_NAME_PARTS,
-                    List.of(
-                            createNamePart("Mary", GIVEN_NAME),
-                            createNamePart("Watson", FAMILY_NAME)));
 
     DrivingPermitDetails DRIVING_PERMIT_DVA =
             createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19");
