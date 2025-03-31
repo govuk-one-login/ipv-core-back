@@ -2,7 +2,6 @@ export const JOURNEY_TYPES = {
   INITIAL_JOURNEY_SELECTION: "Initial journey selection",
   NEW_P1_IDENTITY: "New P1 identity",
   NEW_P2_IDENTITY: "New P2 identity",
-  EVALUATE_SCORES: "Evaluate scores",
   REUSE_EXISTING_IDENTITY: "Reuse existing identity",
   UPDATE_NAME: "Update name",
   UPDATE_ADDRESS: "Update address",
