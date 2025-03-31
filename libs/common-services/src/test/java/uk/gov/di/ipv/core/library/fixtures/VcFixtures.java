@@ -600,6 +600,44 @@ public interface VcFixtures {
         return vcClaim;
     }
 
+    private static IdentityCheckCredential vcClaimHmrcMigrationPassportSocialSecurity() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(kennethDecerqueiraName()))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1965-07-08")
+                                                        .build()))
+                                .withPassport(passportDetails())
+                                .withSocialSecurityRecord(
+                                        List.of(createSocialSecurityRecordDetails("AB123456C")))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("d22f8cb1")
+                                        .withStrengthScore(3)
+                                        .withValidityScore(2)
+                                        .withVerificationScore(3)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
     List<TestVc.TestEvidence> SUCCESSFUL_WEB_PASSPORT_EVIDENCE =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -1309,28 +1347,12 @@ public interface VcFixtures {
     }
 
     static VerifiableCredential vcHmrcMigrationPCL200() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
-        TestVc.TestEvidence evidence =
-                TestVc.TestEvidence.builder()
-                        .txn("d22f8cb1")
-                        .strengthScore(3)
-                        .validityScore(2)
-                        .verificationScore(3)
-                        .checkDetails(List.of(Map.of("checkMethod", "data")))
-                        .build();
+        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
+        vcClaim.getCredentialSubject().setPassport(null);
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 HMRC_MIGRATION,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(List.of(evidence))
-                        .build(),
+                vcClaim,
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL200.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
@@ -1338,29 +1360,10 @@ public interface VcFixtures {
     }
 
     static VerifiableCredential vcHmrcMigrationPCL250() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .passport(passportDetails())
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
-        TestVc.TestEvidence evidence =
-                TestVc.TestEvidence.builder()
-                        .txn("d22f8cb1")
-                        .strengthScore(3)
-                        .validityScore(2)
-                        .verificationScore(3)
-                        .checkDetails(List.of(Map.of("checkMethod", "data")))
-                        .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 HMRC_MIGRATION,
-                TestVc.builder()
-                        .credentialSubject(credentialSubject)
-                        .evidence(List.of(evidence))
-                        .build(),
+                vcClaimHmrcMigrationPassportSocialSecurity(),
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL250.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
@@ -1368,21 +1371,12 @@ public interface VcFixtures {
     }
 
     static VerifiableCredential vcHmrcMigrationPCL200NoEvidence() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .passport(passportDetails())
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
+        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
+        vcClaim.setEvidence(Collections.emptyList());
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 HMRC_MIGRATION,
-                TestVc.builder()
-                        .evidence(Collections.emptyList())
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                vcClaim,
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL200.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
@@ -1390,17 +1384,13 @@ public interface VcFixtures {
     }
 
     static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
+        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
+        vcClaim.getCredentialSubject().setPassport(null);
+        vcClaim.setEvidence(null);
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 HMRC_MIGRATION,
-                TestVc.builder().evidence(null).credentialSubject(credentialSubject).build(),
+                vcClaim,
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL250.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",

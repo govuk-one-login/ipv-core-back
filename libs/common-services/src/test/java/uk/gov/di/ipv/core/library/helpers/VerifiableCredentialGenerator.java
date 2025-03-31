@@ -184,11 +184,49 @@ public class VerifiableCredentialGenerator {
                 userId, cri, vcClaim, issuer, vot, jti, vtm, KeyType.EC);
     }
 
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
+            String issuer,
+            String vot,
+            String jti,
+            String vtm)
+            throws Exception {
+        return generateVerifiableCredential(
+                userId, cri, vcClaim, issuer, vot, jti, vtm, KeyType.EC);
+    }
+
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
             Cri cri,
             TestVc vcClaim,
+            String issuer,
+            String vot,
+            String jti,
+            String vtm,
+            KeyType signingKeyType)
+            throws Exception {
+        Instant now = Instant.now();
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .claim(SUBJECT, userId)
+                        .claim(ISSUER, issuer)
+                        .claim(NOT_BEFORE, now.getEpochSecond())
+                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
+                        .claim(VC_VOT, vot)
+                        .claim(JWT_ID, jti)
+                        .claim(VC_VTM, vtm)
+                        .build();
+        return signTestVc(userId, cri, claimsSet, signingKeyType);
+    }
+
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
             String issuer,
             String vot,
             String jti,
