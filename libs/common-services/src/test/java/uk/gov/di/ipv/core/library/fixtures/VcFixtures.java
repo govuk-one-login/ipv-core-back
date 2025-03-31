@@ -1400,8 +1400,8 @@ public interface VcFixtures {
     static VerifiableCredential vcInvalidVot() throws Exception {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
-                null,
-                TestVc.builder().evidence(SUCCESSFUL_WEB_PASSPORT_EVIDENCE).build(),
+                Cri.PASSPORT,
+                vcClaimWebPassportValid(),
                 "https://review-p.staging.account.gov.uk",
                 "not-a-vot",
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
@@ -1411,8 +1411,8 @@ public interface VcFixtures {
     static VerifiableCredential vcNullVot() throws Exception {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
-                null,
-                TestVc.builder().evidence(SUCCESSFUL_WEB_PASSPORT_EVIDENCE).build(),
+                Cri.PASSPORT,
+                vcClaimWebPassportValid(),
                 "https://review-p.staging.account.gov.uk",
                 null,
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
