@@ -1522,12 +1522,8 @@ Resources:
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Version
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Version
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Version
-        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Version
-        CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Version
         CallDcmawAsyncCriLambdaArn: !Ref CallDcmawAsyncCriFunction.Version
-        StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Version
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
-        CheckCoiFunctionArn: !Ref CheckCoiFunction.Version
         CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
         ProcessCandidateIdentityFunctionArn: !Ref ProcessCandidateIdentityFunction.Version
       AutoPublishAlias: live
@@ -1544,12 +1540,8 @@ Resources:
             - !Ref BuildCriOauthRequestFunctionErrorCanaryAlarm
             - !Ref BuildClientOauthResponseFunctionErrorCanaryAlarm
             - !Ref CheckGpg45ScoreFunctionErrorCanaryAlarm
-            - !Ref EvaluateGpg45ScoresFunctionErrorCanaryAlarm
-            - !Ref CallTicfCriFunctionErrorCanaryAlarm
             - !Ref CallDcmawAsyncCriFunctionErrorCanaryAlarm
-            - !Ref StoreIdentityFunctionErrorCanaryAlarm
             - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
-            - !Ref CheckCoiFunctionErrorCanaryAlarm
             - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
             - !Ref ProcessCandidateIdentityFunctionErrorCanaryAlarm
           - !Ref AWS::NoValue
@@ -1586,17 +1578,9 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGpg45ScoreFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref EvaluateGpg45ScoresFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref CallTicfCriFunction
-        - LambdaInvokePolicy:
             FunctionName: !Ref CallDcmawAsyncCriFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref StoreIdentityFunction
-        - LambdaInvokePolicy:
             FunctionName: !Ref ResetSessionIdentityFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref CheckCoiFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckReverificationIdentityFunction
         - LambdaInvokePolicy:
@@ -1745,89 +1729,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
-
-  EvaluateGpg45ScoresFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - EvaluateGpg45ScoresFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
-      Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/evaluate-gpg45-scores
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: {}
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
-      AutoPublishAlias: live
-
-  EvaluateGpg45ScoresFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}"
-
-  EvaluateGpg45ScoresFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
 
   BuildProvenUserIdentityDetailsFunction:
     Type: AWS::Serverless::Function
@@ -2206,89 +2107,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
 
-  CallTicfCriFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - CallTicfCriFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "call-ticf-cri-${Environment}"
-      Handler: uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/call-ticf-cri
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub call-ticf-cri-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/ticf/connections/*/apiKey-*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-      AutoPublishAlias: live
-
-  CallTicfCriFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/call-ticf-cri-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  CallTicfCriFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref CallTicfCriFunctionLogGroup
-
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -2364,85 +2182,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CallDcmawAsyncCriFunctionLogGroup
-
-  StoreIdentityFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - StoreIdentityFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "store-identity-${Environment}"
-      Handler: uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/store-identity
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-      AutoPublishAlias: live
-
-  StoreIdentityFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/store-identity-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  StoreIdentityFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref StoreIdentityFunctionLogGroup
 
   ResetSessionIdentityFunction:
     Type: AWS::Serverless::Function
@@ -2524,87 +2263,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
-
-  CheckCoiFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - CheckCoiFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-coi-${Environment}"
-      Handler: uk.gov.di.ipv.core.checkcoi.CheckCoiHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/check-coi
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub check-coi-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
-      AutoPublishAlias: live
-
-  CheckCoiFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-coi-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  CheckCoiFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref CheckCoiFunctionLogGroup
 
   CheckReverificationIdentityFunction:
     Type: AWS::Serverless::Function
@@ -3696,58 +3354,6 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  EvaluateGpg45ScoresFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the EvaluateGpg45ScoresFunction."
-      AlarmName: !Sub ${AWS::StackName}-EvaluateGpg45ScoresFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "evaluate-gpg45-scores-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref EvaluateGpg45ScoresFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt EvaluateGpg45ScoresFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
-  CallTicfCriFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the CallTicfCriFunction."
-      AlarmName: !Sub ${AWS::StackName}-CallTicfCriFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "call-ticf-cri-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref CallTicfCriFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt CallTicfCriFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
   CallDcmawAsyncCriFunctionErrorCanaryAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
@@ -3774,32 +3380,6 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
-  StoreIdentityFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the StoreIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-StoreIdentityFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "store-identity-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref StoreIdentityFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt StoreIdentityFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
   ResetSessionIdentityFunctionErrorCanaryAlarm:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
@@ -3817,32 +3397,6 @@ Resources:
           Value: !Ref ResetSessionIdentityFunction
         - Name: ExecutedVersion
           Value: !GetAtt ResetSessionIdentityFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
-  CheckCoiFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the CheckCoiFunction."
-      AlarmName: !Sub ${AWS::StackName}-CheckCoiFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "check-coi-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref CheckCoiFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt CheckCoiFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count

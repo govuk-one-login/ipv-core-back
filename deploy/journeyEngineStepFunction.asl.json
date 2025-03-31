@@ -55,26 +55,6 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/evaluate-gpg45-scores",
-          "Next": "EvaluateGpg45Scores"
-        },
-        {
-          "Variable": "$.journey",
-          "StringMatches": "/journey/call-ticf-cri",
-          "Next": "CallTicfCriLambda"
-        },
-        {
-          "Variable": "$.journey",
-          "StringMatches": "/journey/store-identity",
-          "Next": "StoreIdentityLambda"
-        },
-        {
-          "Variable": "$.journey",
-          "StringMatches": "/journey/check-coi",
-          "Next": "CheckCoiLambda"
-        },
-        {
-          "Variable": "$.journey",
           "StringMatches": "/journey/call-dcmaw-async-cri",
           "Next": "CallDcmawAsyncCriLambda"
         },
@@ -173,26 +153,6 @@
         "MaxDelaySeconds": 4
       }]
     },
-    "EvaluateGpg45Scores": {
-      "Type": "Task",
-      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
-      "Parameters": {
-        "journey.$": "$.journey",
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
     "CheckGpg45ScoreLambda": {
       "Type": "Task",
       "Resource": "${CheckGpg45ScoreFunctionArn}",
@@ -213,25 +173,6 @@
         "MaxDelaySeconds": 4
       }]
     },
-    "CallTicfCriLambda": {
-      "Type": "Task",
-      "Resource": "${CallTicfCriLambdaArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
     "CallDcmawAsyncCriLambda": {
       "Type": "Task",
       "Resource": "${CallDcmawAsyncCriLambdaArn}",
@@ -241,43 +182,6 @@
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation",
-        "lambdaInput.$": "$.lambdaInput"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
-    "StoreIdentityLambda": {
-      "Type": "Task",
-      "Resource": "${StoreIdentityLambdaArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet",
-        "lambdaInput.$": "$.lambdaInput",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
-      },
-      "Next": "ProcessNextJourney",
-      "Retry": [{
-        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
-        "IntervalSeconds": 1,
-        "BackoffRate": 2,
-        "MaxAttempts": 5,
-        "MaxDelaySeconds": 4
-      }]
-    },
-    "CheckCoiLambda": {
-      "Type": "Task",
-      "Resource": "${CheckCoiFunctionArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney",

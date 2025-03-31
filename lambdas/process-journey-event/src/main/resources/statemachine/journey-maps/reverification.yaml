@@ -50,19 +50,6 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  CRI_TICF_STATE:
-    events:
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
-        targetState: RETURN_TO_RP
-      fail-with-ci:
-        targetState: RETURN_TO_RP
-      error:
-        targetState: RETURN_TO_RP
-
   # Journey states
 
   CHECK_REVERIFICATION_IDENTITY:
@@ -113,18 +100,12 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_REVERIFICATION_IDENTITY
+        targetState: PROCESS_REVERIFICATION_IDENTITY
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
       incompleteDlAuthCheckInvalidDl:
         targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_STRATEGIC_APP
       failedDlAuthCheckInvalidDl:
@@ -141,19 +122,13 @@ states:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_REVERIFICATION_IDENTITY
+        targetState: PROCESS_REVERIFICATION_IDENTITY
       incomplete:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
@@ -181,26 +156,17 @@ states:
       lambda: process-candidate-identity
       lambdaInput:
         identityType: REVERIFICATION
-    parent: CRI_TICF_STATE
     events:
       next:
         targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED_SKIP_MESSAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  CHECK_COI:
-    response:
-      type: process
-      lambda: check-coi
-      lambdaInput:
-        checkType: REVERIFICATION
-    events:
-      coi-check-passed:
-        targetState: CRI_TICF
+      enhanced-verification:
+        targetState: RETURN_TO_RP
+      alternate-doc-invalid-dl:
+        targetState: RETURN_TO_RP
+      alternate-doc-invalid-passport:
+        targetState: RETURN_TO_RP
+      fail-with-ci:
+        targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
@@ -231,15 +197,6 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-
-  CRI_TICF:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
 
   WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE:
     response:

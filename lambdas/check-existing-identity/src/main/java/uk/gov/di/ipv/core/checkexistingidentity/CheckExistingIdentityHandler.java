@@ -12,7 +12,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -36,8 +35,6 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -64,7 +61,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -422,16 +418,6 @@ public class CheckExistingIdentityHandler
 
         var votMatchingResult = maybeVotMatchingResult.get();
 
-        if (GPG45.equals(votMatchingResult.vot().getProfileType())
-                && !configService.enabled(PROCESS_CANDIDATE_IDENTITY)) {
-            sendProfileMatchedAuditEvent(
-                    votMatchingResult.gpg45Profile(),
-                    votMatchingResult.gpg45Scores(),
-                    VcHelper.filterVCBasedOnProfileType(credentialBundle.credentials(), GPG45),
-                    auditEventUser,
-                    deviceInformation);
-        }
-
         // vot achieved for vtr
         return Optional.of(
                 buildReuseResponse(
@@ -619,25 +605,6 @@ public class CheckExistingIdentityHandler
         LOGGER.error(LogHelper.buildErrorMessage(errorResponse));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
-    }
-
-    private void sendProfileMatchedAuditEvent(
-            Gpg45Profile gpg45Profile,
-            Gpg45Scores gpg45Scores,
-            List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation) {
-        var auditEvent =
-                AuditEvent.createWithDeviceInformation(
-                        AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionGpg45ProfileMatched(
-                                gpg45Profile,
-                                gpg45Scores,
-                                VcHelper.extractTxnIdsFromCredentials(vcs)),
-                        new AuditRestrictedDeviceInformation(deviceInformation));
-        auditService.sendAuditEvent(auditEvent);
     }
 
     private boolean isReprovingWithF2f(

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -23,13 +22,11 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationTyp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
-import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -73,9 +70,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyEventHandlerTest {
@@ -114,7 +109,6 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
-    @Mock private EvcsService mockEvcsService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
@@ -231,7 +225,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(),
                         StateMachineInitializerMode.STANDARD,
                         REAL_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -276,7 +269,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -307,7 +299,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -337,7 +328,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -381,7 +371,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -619,7 +608,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
@@ -649,7 +637,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
@@ -695,7 +682,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
@@ -762,7 +748,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -815,7 +800,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -865,7 +849,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         // Act
@@ -917,7 +900,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var nextResponse =
@@ -965,7 +947,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -1011,7 +992,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
@@ -1054,7 +1034,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
@@ -1062,75 +1041,6 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
-    }
-
-    @ParameterizedTest
-    @CsvSource({"true,/journey/call-ticf-cri,", "false,,page-id-for-another-page-state"})
-    void shouldSkipTicfCriOnlyIfDisabled(
-            boolean enabled, String expectedJourney, String expectedPage) throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventSix")
-                        .ipvSessionId(TEST_SESSION_ID)
-                        .build();
-
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                .thenReturn(enabled);
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
-
-        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
-    }
-
-    @ParameterizedTest
-    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
-    void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
-            boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventSeven")
-                        .ipvSessionId(TEST_IP)
-                        .build();
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        when(mockEvcsService.getVerifiableCredentials(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(hasVcsInEvcs ? List.of(M1A_EXPERIAN_FRAUD_VC) : List.of());
-
-        var processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
-
-        var output = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
     }
 
     @Test
@@ -1216,7 +1126,7 @@ class ProcessJourneyEventHandlerTest {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("eventSix")
+                        .journey("eventFive")
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
@@ -1229,7 +1139,6 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
                         mockCimitUtilityService);
 
         var logCollector = LogCollector.getLogCollectorFor(ProcessJourneyEventHandler.class);
@@ -1298,7 +1207,6 @@ class ProcessJourneyEventHandlerTest {
                 journeyTypes,
                 stateMachineInitializerMode,
                 nestedJourneyTypes,
-                mockEvcsService,
                 mockCimitUtilityService);
     }
 
