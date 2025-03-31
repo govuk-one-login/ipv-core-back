@@ -3,14 +3,14 @@ package uk.gov.di.ipv.core.buildcrioauthrequest.helpers;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.Name;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,14 +23,13 @@ import static uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper
 import static uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper.SHARED_CLAIM_ATTR_NAME;
 import static uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper.SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD;
 import static uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper.generateSharedClaims;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.ADDRESS_1;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.ADDRESS_2;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_FAILED_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcClaimDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
@@ -63,15 +62,11 @@ class SharedClaimsHelperTest {
                 List.of(
                         vcAddressOne(),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                TEST_NAME.getNameParts())))
-                                        .birthDate(List.of(TEST_DOB))
-                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(TEST_NAME))
+                                        .withBirthDate(List.of(TEST_DOB))
+                                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
@@ -84,15 +79,17 @@ class SharedClaimsHelperTest {
         assertEquals(Set.of(TEST_DRIVING_PERMIT), sharedClaims.getDrivingPermit());
     }
 
+    private static IdentityCheckSubject.IdentityCheckSubjectBuilderBase
+            getDlCredentialSubjectBuilder() {
+        return IdentityCheckSubject.builder()
+                .withName(List.of(TEST_NAME))
+                .withBirthDate(List.of(TEST_DOB))
+                .withSocialSecurityRecord(List.of(TEST_NINO));
+    }
+
     @Test
     void
             generatesSharedClaimsShouldNotReturnDrivingPermitSharedClaimFromDrivingLicenceIfTargetCriIsDrivingLicence() {
-        var dlCredentialSubjectBuilder =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(Map.of(VC_NAME_PARTS, TEST_NAME.getNameParts())))
-                        .birthDate(List.of(TEST_DOB))
-                        .socialSecurityRecord(List.of(TEST_NINO));
-
         var updatedTestDrivingPermit =
                 createDrivingPermitDetails("another-number", "2062-02-02", "ISSUER", "2005-02-02");
 
@@ -101,18 +98,18 @@ class SharedClaimsHelperTest {
         var vcs =
                 List.of(
                         generateIdentityVc(
-                                dlCredentialSubjectBuilder
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                getDlCredentialSubjectBuilder()
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build(),
                                 Cri.DRIVING_LICENCE),
                         generateIdentityVc(
-                                dlCredentialSubjectBuilder
-                                        .drivingPermit(List.of(updatedTestDrivingPermit))
+                                getDlCredentialSubjectBuilder()
+                                        .withDrivingPermit(List.of(updatedTestDrivingPermit))
                                         .build(),
                                 Cri.DCMAW),
                         generateIdentityVc(
-                                dlCredentialSubjectBuilder
-                                        .drivingPermit(List.of(anotherDrivingPermit))
+                                getDlCredentialSubjectBuilder()
+                                        .withDrivingPermit(List.of(anotherDrivingPermit))
                                         .build(),
                                 Cri.DRIVING_LICENCE));
 
@@ -130,24 +127,18 @@ class SharedClaimsHelperTest {
     @Test
     void
             generatesSharedClaimsShouldReturnDrivingPermitFromDrivingLicenceCriIfTargetCriIsNotDrivingLicence() {
-        var dlCredentialSubjectBuilder =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(Map.of(VC_NAME_PARTS, TEST_NAME.getNameParts())))
-                        .birthDate(List.of(TEST_DOB))
-                        .socialSecurityRecord(List.of(TEST_NINO));
-
         var updatedTestDrivingPermit =
                 createDrivingPermitDetails("another-number", "2062-02-02", "ISSUER", "2005-02-02");
         var vcs =
                 List.of(
                         generateIdentityVc(
-                                dlCredentialSubjectBuilder
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                getDlCredentialSubjectBuilder()
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build(),
                                 Cri.DRIVING_LICENCE),
                         generateIdentityVc(
-                                dlCredentialSubjectBuilder
-                                        .drivingPermit(List.of(updatedTestDrivingPermit))
+                                getDlCredentialSubjectBuilder()
+                                        .withDrivingPermit(List.of(updatedTestDrivingPermit))
                                         .build(),
                                 Cri.DRIVING_LICENCE));
 
@@ -177,15 +168,11 @@ class SharedClaimsHelperTest {
                 List.of(
                         vcAddressOne(),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                TEST_NAME.getNameParts())))
-                                        .birthDate(List.of(TEST_DOB))
-                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(TEST_NAME))
+                                        .withBirthDate(List.of(TEST_DOB))
+                                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, List.of(), TEST_CRI);
@@ -203,8 +190,8 @@ class SharedClaimsHelperTest {
         var vcs =
                 List.of(
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .address(List.of(ADDRESS_1))
+                                IdentityCheckSubject.builder()
+                                        .withAddress(List.of(ADDRESS_1))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
@@ -214,27 +201,18 @@ class SharedClaimsHelperTest {
 
     @Test
     void doesNotIncludeFailedVcAttributes() {
-        var vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                TEST_SUBJECT,
-                                Cri.DCMAW,
-                                TestVc.builder()
-                                        .credentialSubject(
-                                                TestVc.TestCredentialSubject.builder()
-                                                        .name(
-                                                                List.of(
-                                                                        Map.of(
-                                                                                VC_NAME_PARTS,
-                                                                                TEST_NAME
-                                                                                        .getNameParts())))
-                                                        .birthDate(List.of(TEST_DOB))
-                                                        .address(List.of(ADDRESS_1))
-                                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
-                                                        .build())
-                                        .evidence(DCMAW_FAILED_EVIDENCE)
-                                        .build()));
+        var vcClaim = vcClaimDcmawPassport();
+        vcClaim.getEvidence().get(0).setValidityScore(0);
+        vcClaim.setCredentialSubject(
+                IdentityCheckSubject.builder()
+                        .withName(List.of(TEST_NAME))
+                        .withBirthDate(List.of(TEST_DOB))
+                        .withAddress(List.of(ADDRESS_1))
+                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
+                        .build());
+
+        var vcs = List.of(generateVerifiableCredential(TEST_SUBJECT, Cri.DCMAW, vcClaim));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
@@ -253,31 +231,27 @@ class SharedClaimsHelperTest {
         var otherDrivingPermit =
                 createDrivingPermitDetails("OTHER123456", "2062-02-02", "ISSUER", "2005-02-02");
 
+        var vc = vcDcmawPassport();
+        var credential = (IdentityCheckCredential) vc.getCredential();
+        credential.getCredentialSubject().setName(List.of(TEST_NAME));
+
         var vcs =
                 List.of(
                         vcAddressOne(),
                         vcAddressTwo(),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                TEST_NAME.getNameParts())))
-                                        .birthDate(List.of(TEST_DOB))
-                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(TEST_NAME))
+                                        .withBirthDate(List.of(TEST_DOB))
+                                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                otherName.getNameParts())))
-                                        .birthDate(List.of(otherDob))
-                                        .socialSecurityRecord(List.of(otherNino))
-                                        .drivingPermit(List.of(otherDrivingPermit))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(otherName))
+                                        .withBirthDate(List.of(otherDob))
+                                        .withSocialSecurityRecord(List.of(otherNino))
+                                        .withDrivingPermit(List.of(otherDrivingPermit))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
@@ -297,26 +271,18 @@ class SharedClaimsHelperTest {
                         vcAddressOne(),
                         vcAddressOne(),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                TEST_NAME.getNameParts())))
-                                        .birthDate(List.of(TEST_DOB))
-                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(TEST_NAME))
+                                        .withBirthDate(List.of(TEST_DOB))
+                                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()),
                         generateIdentityVc(
-                                TestVc.TestCredentialSubject.builder()
-                                        .name(
-                                                List.of(
-                                                        Map.of(
-                                                                VC_NAME_PARTS,
-                                                                TEST_NAME.getNameParts())))
-                                        .birthDate(List.of(TEST_DOB))
-                                        .socialSecurityRecord(List.of(TEST_NINO))
-                                        .drivingPermit(List.of(TEST_DRIVING_PERMIT))
+                                IdentityCheckSubject.builder()
+                                        .withName(List.of(TEST_NAME))
+                                        .withBirthDate(List.of(TEST_DOB))
+                                        .withSocialSecurityRecord(List.of(TEST_NINO))
+                                        .withDrivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
         var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
@@ -328,17 +294,14 @@ class SharedClaimsHelperTest {
         assertEquals(Set.of(TEST_DRIVING_PERMIT), sharedClaims.getDrivingPermit());
     }
 
-    private VerifiableCredential generateIdentityVc(TestVc.TestCredentialSubject subject) {
+    private VerifiableCredential generateIdentityVc(IdentityCheckSubject subject) {
         return generateIdentityVc(subject, Cri.DCMAW);
     }
 
-    private VerifiableCredential generateIdentityVc(TestVc.TestCredentialSubject subject, Cri cri) {
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                cri,
-                TestVc.builder()
-                        .credentialSubject(subject)
-                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
-                        .build());
+    private VerifiableCredential generateIdentityVc(IdentityCheckSubject subject, Cri cri) {
+        var vcClaim = vcClaimDcmawPassport();
+        vcClaim.setCredentialSubject(subject);
+
+        return generateVerifiableCredential(TEST_SUBJECT, cri, vcClaim);
     }
 }

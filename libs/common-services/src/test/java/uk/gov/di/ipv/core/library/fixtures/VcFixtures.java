@@ -4,7 +4,6 @@ import com.nimbusds.jose.jwk.KeyType;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -24,7 +23,6 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -426,7 +424,7 @@ public interface VcFixtures {
                 .build();
     }
 
-    private static IdentityCheckCredential vcClaimDcmawPassport() {
+    static IdentityCheckCredential vcClaimDcmawPassport() {
         var vcClaim = vcClaimDcmawDrivingPermitDva();
         vcClaim.getCredentialSubject().setDrivingPermit(null);
         vcClaim.getCredentialSubject().setPassport(passportDetails());
@@ -635,47 +633,6 @@ public interface VcFixtures {
                                         .build()))
                 .build();
     }
-
-    List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .txn("bcd2346")
-                            .strengthScore(3)
-                            .validityScore(2)
-                            .verificationScore(2)
-                            .activityHistoryScore(1)
-                            .checkDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod", "vri",
-                                                    "identityCheckPolicy", "published",
-                                                    "activityFrom", "2019-01-01"),
-                                            Map.of(
-                                                    "checkMethod",
-                                                    "bvr",
-                                                    "biometricVerificationProcessLevel",
-                                                    3)))
-                            .build());
-
-    List<TestVc.TestEvidence> DCMAW_FAILED_EVIDENCE =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .txn("bcd2346")
-                            .strengthScore(3)
-                            .validityScore(0)
-                            .activityHistoryScore(1)
-                            .failedCheckDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod", "vri",
-                                                    "identityCheckPolicy", "published",
-                                                    "activityFrom", "2019-01-01"),
-                                            Map.of(
-                                                    "checkMethod",
-                                                    "bvr",
-                                                    "biometricVerificationProcessLevel",
-                                                    2)))
-                            .build());
 
     Long TEST_UPRN = Long.valueOf("100120012077");
 
