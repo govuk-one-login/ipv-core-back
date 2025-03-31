@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.model.BankAccountDetails;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -35,8 +36,6 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGen
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestVc {
 
-    public static final String DEFAULT_DOB = "1965-07-08";
-
     @Builder.Default
     private String[] type = {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE};
 
@@ -62,7 +61,7 @@ public class TestVc {
                                                 "DECERQUEIRA",
                                                 NamePart.NamePartType.FAMILY_NAME))));
 
-        @Builder.Default private List<BirthDate> birthDate = List.of(createBirthDate(DEFAULT_DOB));
+        @Builder.Default private List<BirthDate> birthDate = List.of(createBirthDate(VcFixtures.DEFAULT_DOB));
         private List<PassportDetails> passport;
         private List<PostalAddress> address;
         private List<SocialSecurityRecordDetails> socialSecurityRecord;

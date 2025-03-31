@@ -50,6 +50,7 @@ public interface VcFixtures {
     String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String EXPERIAN_KBV_ISSUER_INTEGRATION = "https://review-k.integration.account.gov.uk";
+    String DEFAULT_DOB = "1965-07-08";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()

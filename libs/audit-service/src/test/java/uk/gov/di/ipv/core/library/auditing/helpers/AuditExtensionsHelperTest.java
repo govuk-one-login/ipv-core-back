@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator;
@@ -45,7 +45,7 @@ class AuditExtensionsHelperTest {
         var evidence = (IdentityCheck) auditExtensions.evidence().get(0);
 
         var expectedAge =
-                Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
+                Period.between(LocalDate.parse(VcFixtures.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
         assertEquals(expectedAge, auditExtensions.age());
@@ -66,7 +66,7 @@ class AuditExtensionsHelperTest {
         var evidence = (IdentityCheck) auditExtensions.evidence().get(0);
 
         var expectedAge =
-                Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
+                Period.between(LocalDate.parse(VcFixtures.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
         assertEquals("dcmawAsync", auditExtensions.credential_issuer_id());
