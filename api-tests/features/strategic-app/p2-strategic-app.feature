@@ -113,10 +113,12 @@ Feature: M2B Strategic App Journeys
       Then I get an 'pyi-no-match' page response
 
     Scenario: MAM journey detected iphone
-      When I submit an 'appTriageIphone' event
-      Then I get a 'pyi-triage-mobile-confirm' page response with context 'iphone'
-      When I submit an 'next' event
+      When I submit an 'mobileDownloadIphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+
+    Scenario: MAM journey detected iphone - invalid OS version
+      When I submit an 'appTriageSmartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
 
     Scenario: MAM journey declared android
       When I submit an 'appTriage' event
@@ -127,9 +129,7 @@ Feature: M2B Strategic App Journeys
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
     Scenario: MAM journey detected android
-      When I submit an 'appTriageAndroid' event
-      Then I get a 'pyi-triage-mobile-confirm' page response with context 'android'
-      When I submit an 'next' event
+      When I submit an 'mobileDownloadAndroid' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
     Scenario: MAM journey no compatible smartphone
