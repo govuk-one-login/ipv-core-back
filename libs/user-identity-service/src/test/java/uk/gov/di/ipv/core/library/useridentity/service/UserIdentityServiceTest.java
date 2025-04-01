@@ -42,7 +42,6 @@ import uk.gov.di.model.VerifiableCredentialType;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1906,7 +1905,6 @@ class UserIdentityServiceTest {
                                         .withTxn("1c04edf0-a205-4585-8877-be6bd1776a39")
                                         .withStrengthScore(isSuccessful ? 4 : 0)
                                         .withValidityScore(isSuccessful ? 2 : 0)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()

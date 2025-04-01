@@ -80,7 +80,6 @@ public interface VcFixtures {
                                         .withTxn("1c04edf0-a205-4585-8877-be6bd1776a39")
                                         .withStrengthScore(4)
                                         .withValidityScore(2)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -198,7 +197,6 @@ public interface VcFixtures {
                                         .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
                                         .withTxn("bcd2346")
                                         .withActivityHistoryScore(1)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -251,7 +249,6 @@ public interface VcFixtures {
                                         .withTxn("e5b22348-c866-4b25-bb50-ca2106af7874")
                                         .withStrengthScore(2)
                                         .withValidityScore(2)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -288,7 +285,6 @@ public interface VcFixtures {
                                 IdentityCheck.builder()
                                         .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
                                         .withTxn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -461,7 +457,6 @@ public interface VcFixtures {
                                         .withStrengthScore(4)
                                         .withValidityScore(2)
                                         .withVerificationScore(2)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -511,7 +506,6 @@ public interface VcFixtures {
                                         .withStrengthScore(4)
                                         .withValidityScore(2)
                                         .withVerificationScore(2)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -563,7 +557,6 @@ public interface VcFixtures {
                                         .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
                                         .withTxn("some-uuid")
                                         .withVerificationScore(2)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
@@ -624,7 +617,6 @@ public interface VcFixtures {
                                         .withStrengthScore(3)
                                         .withValidityScore(2)
                                         .withVerificationScore(3)
-                                        .withCi(Collections.emptyList())
                                         .withCheckDetails(
                                                 List.of(
                                                         CheckDetails.builder()
