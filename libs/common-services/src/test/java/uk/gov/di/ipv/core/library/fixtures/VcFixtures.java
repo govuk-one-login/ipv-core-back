@@ -64,10 +64,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withPassport(
                                         List.of(
                                                 createPassportDetails(
@@ -186,10 +183,7 @@ public interface VcFixtures {
                                 .withDrivingPermit(List.of(DRIVING_PERMIT_DVLA))
                                 .withName(List.of(aliceParkerName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .build())
                 .withEvidence(
                         List.of(
@@ -232,10 +226,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withSocialSecurityRecord(
                                         List.of(
                                                 SocialSecurityRecordDetails.builder()
@@ -270,10 +261,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withSocialSecurityRecord(
                                         List.of(
                                                 SocialSecurityRecordDetails.builder()
@@ -384,10 +372,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(morganSarahMeredythName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withAddress(List.of(ADDRESS_4))
                                 .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
                                 .build())
@@ -445,10 +430,7 @@ public interface VcFixtures {
                                                 createPassportDetails(
                                                         "824159121", null, "2030-01-01")))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .build())
                 .withEvidence(
                         List.of(
@@ -494,10 +476,7 @@ public interface VcFixtures {
                                 .withName(List.of(morganSarahMeredythName()))
                                 .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .build())
                 .withEvidence(
                         List.of(
@@ -542,10 +521,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withResidencePermit(
                                         List.of(
                                                 createResidencePermitDetails(
@@ -601,10 +577,7 @@ public interface VcFixtures {
                         IdentityCheckSubject.builder()
                                 .withName(List.of(kennethDecerqueiraName()))
                                 .withBirthDate(
-                                        List.of(
-                                                BirthDate.builder()
-                                                        .withValue("1965-07-08")
-                                                        .build()))
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withPassport(passportDetails())
                                 .withSocialSecurityRecord(
                                         List.of(createSocialSecurityRecordDetails("AB123456C")))
