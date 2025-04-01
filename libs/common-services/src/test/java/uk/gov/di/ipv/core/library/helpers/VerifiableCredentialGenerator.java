@@ -43,44 +43,9 @@ public class VerifiableCredentialGenerator {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, Map<String, Object> vcClaim) throws Exception {
-        return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, Map<String, Object> vcClaim, KeyType signingKeyType)
-            throws Exception {
-        return generateVerifiableCredential(
-                userId, cri, vcClaim, "https://subject.example.com", signingKeyType);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, Map<String, Object> vcClaim, String issuer) throws Exception {
-        return generateVerifiableCredential(userId, cri, vcClaim, issuer, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
             String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim, String issuer)
             throws Exception {
         return generateVerifiableCredential(userId, cri, vcClaim, issuer, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId,
-            Cri cri,
-            Map<String, Object> vcClaim,
-            String issuer,
-            KeyType signingKeyType)
-            throws Exception {
-        Instant now = Instant.now();
-        JWTClaimsSet claimsSet =
-                new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, userId)
-                        .claim(ISSUER, issuer)
-                        .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
-                        .build();
-        return signTestVc(userId, cri, claimsSet, signingKeyType);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
