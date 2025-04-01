@@ -22,7 +22,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 import static com.nimbusds.jose.jwk.KeyType.EC;
 import static com.nimbusds.jose.jwk.KeyType.RSA;
@@ -43,27 +42,12 @@ public class VerifiableCredentialGenerator {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim, String issuer)
-            throws Exception {
-        return generateVerifiableCredential(userId, cri, vcClaim, issuer, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
             String userId,
             Cri cri,
             uk.gov.di.model.VerifiableCredential<?> vcClaim,
-            String issuer,
-            KeyType signingKeyType)
-            throws Exception {
-        Instant now = Instant.now();
-        JWTClaimsSet claimsSet =
-                new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, userId)
-                        .claim(ISSUER, issuer)
-                        .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
-                        .build();
-        return signTestVc(userId, cri, claimsSet, signingKeyType);
+            String issuer) {
+        return generateVerifiableCredential(
+                userId, cri, vcClaim, issuer, Instant.now(), KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
@@ -82,6 +66,38 @@ public class VerifiableCredentialGenerator {
             String issuer,
             Instant nbf,
             KeyType signingKeyType) {
+        return generateVerifiableCredential(
+                userId, cri, vcClaim, issuer, nbf, null, null, null, signingKeyType);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim) {
+        return generateVerifiableCredential(userId, cri, vcClaim, null, Instant.now(), KeyType.EC);
+    }
+
+    public static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
+            String issuer,
+            String vot,
+            String jti,
+            String vtm) {
+        return generateVerifiableCredential(
+                userId, cri, vcClaim, issuer, Instant.now(), vot, jti, vtm, KeyType.EC);
+    }
+
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
+    private static VerifiableCredential generateVerifiableCredential(
+            String userId,
+            Cri cri,
+            uk.gov.di.model.VerifiableCredential<?> vcClaim,
+            String issuer,
+            Instant nbf,
+            String vot,
+            String jti,
+            String vtm,
+            KeyType signingKeyType) {
         try {
             JWTClaimsSet claimsSet =
                     new JWTClaimsSet.Builder()
@@ -89,89 +105,17 @@ public class VerifiableCredentialGenerator {
                             .claim(ISSUER, issuer)
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
                             .claim(ISSUED_AT, nbf.getEpochSecond())
-                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
-                            .build();
-            return signTestVc(userId, cri, claimsSet, signingKeyType);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim) {
-        return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId,
-            Cri cri,
-            uk.gov.di.model.VerifiableCredential<?> vcClaim,
-            KeyType signingKeyType) {
-        try {
-            return generateVerifiableCredential(
-                    userId, cri, vcClaim, null, Instant.now(), signingKeyType);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId,
-            Cri cri,
-            uk.gov.di.model.VerifiableCredential<?> vcClaim,
-            String issuer,
-            String vot,
-            String jti,
-            String vtm)
-            throws Exception {
-        return generateVerifiableCredential(
-                userId, cri, vcClaim, issuer, vot, jti, vtm, KeyType.EC);
-    }
-
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId,
-            Cri cri,
-            uk.gov.di.model.VerifiableCredential<?> vcClaim,
-            String issuer,
-            String vot,
-            String jti,
-            String vtm,
-            KeyType signingKeyType)
-            throws Exception {
-        Instant now = Instant.now();
-        JWTClaimsSet claimsSet =
-                new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, userId)
-                        .claim(ISSUER, issuer)
-                        .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
-                        .claim(VC_VOT, vot)
-                        .claim(JWT_ID, jti)
-                        .claim(VC_VTM, vtm)
-                        .build();
-        return signTestVc(userId, cri, claimsSet, signingKeyType);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId, Cri cri, uk.gov.di.model.VerifiableCredential<?> vcClaim, Instant nbf) {
-        return generateVerifiableCredential(userId, cri, vcClaim, nbf, KeyType.EC);
-    }
-
-    public static VerifiableCredential generateVerifiableCredential(
-            String userId,
-            Cri cri,
-            uk.gov.di.model.VerifiableCredential<?> vcClaim,
-            Instant nbf,
-            KeyType signingKeyType) {
-        try {
-            JWTClaimsSet claimsSet =
-                    new JWTClaimsSet.Builder()
-                            .claim(SUBJECT, userId)
-                            .claim(ISSUER, "https://review-p.staging.account.gov.uk")
-                            .claim(NOT_BEFORE, nbf.getEpochSecond())
                             .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
                             .build();
+            if (vot != null) {
+                claimsSet.getClaims().put(VC_VOT, vot);
+            }
+            if (jti != null) {
+                claimsSet.getClaims().put(JWT_ID, jti);
+            }
+            if (vtm != null) {
+                claimsSet.getClaims().put(VC_VTM, vtm);
+            }
             return signTestVc(userId, cri, claimsSet, signingKeyType);
         } catch (Exception e) {
             throw new RuntimeException(e);

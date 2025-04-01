@@ -48,10 +48,15 @@ import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
     String TEST_ISSUER_INTEGRATION = "https://review-a.integration.account.gov.uk";
+    String DCMAW_ASYNC_ISSUER_BUILD = "https://dcmaw-async.stubs.account.gov.uk/async/credential";
+    String DCMAW_ISSUER_STAGING = "https://review-b.staging.account.gov.uk";
+    String DRIVING_PERMIT_ISSUER_STAGING = "https://review-d.staging.account.gov.uk";
+    String F2F_ISSUER_STAGING = "https://review-o.staging.account.gov.uk";
     String FRAUD_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
     String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
-    String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String EXPERIAN_KBV_ISSUER_INTEGRATION = "https://review-k.integration.account.gov.uk";
+    String PASSPORT_ISSUER_STAGING = "https://review-p.staging.account.gov.uk";
+    String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
@@ -764,6 +769,7 @@ public interface VcFixtures {
                 TEST_SUBJECT,
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
+                PASSPORT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -772,6 +778,7 @@ public interface VcFixtures {
                 TEST_SUBJECT,
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
+                PASSPORT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521),
                 KeyType.RSA);
     }
@@ -783,7 +790,11 @@ public interface VcFixtures {
         evidence.setVerificationScore(0);
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                vcClaim,
+                PASSPORT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcWebPassportM1aWithCI() {
@@ -791,7 +802,11 @@ public interface VcFixtures {
         vcClaim.getEvidence().get(0).setCi(List.of("test"));
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                vcClaim,
+                PASSPORT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcWebPassportM1aMissingEvidence() {
@@ -799,7 +814,11 @@ public interface VcFixtures {
         vcClaim.setEvidence(Collections.emptyList());
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                vcClaim,
+                PASSPORT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcWebPassportMissingName() {
@@ -807,7 +826,11 @@ public interface VcFixtures {
         vcClaim.getCredentialSubject().setName(Collections.emptyList());
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, Cri.PASSPORT, vcClaim, Instant.ofEpochSecond(1705986521));
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                vcClaim,
+                PASSPORT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcWebPassportMissingBirthDate() {
@@ -1014,6 +1037,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaimWebDrivingLicenceDva(),
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1025,6 +1049,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaim,
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1036,6 +1061,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaim,
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1047,6 +1073,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaim,
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705468290));
     }
 
@@ -1055,7 +1082,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaimWebDrivingLicenceDvla(),
-                "https://driving-license-cri.stubs.account.gov.uk",
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1697097326));
     }
 
@@ -1067,6 +1094,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaim,
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1081,6 +1109,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DRIVING_LICENCE,
                 vcClaim,
+                DRIVING_PERMIT_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1166,6 +1195,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
                 vcClaimDcmawDrivingPermitDva(),
+                DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1174,6 +1204,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
                 vcClaimDcmawPassport(),
+                DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1182,7 +1213,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DCMAW_ASYNC,
                 vcClaimDcmawDrivingPermitDva(),
-                "https://dcmaw-async.stubs.account.gov.uk/async/credential",
+                DCMAW_ASYNC_ISSUER_BUILD,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1191,7 +1222,7 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DCMAW_ASYNC,
                 vcClaimDcmawPassport(),
-                "https://dcmaw-async.stubs.account.gov.uk/async/credential",
+                DCMAW_ASYNC_ISSUER_BUILD,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1200,6 +1231,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
                 vcClaimF2fPassportPhoto(),
+                F2F_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1208,6 +1240,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
                 vcClaimF2fDrivingPermitDvaPhoto(),
+                DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
 
@@ -1216,6 +1249,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
                 vcClaimF2fBrp(),
+                F2F_ISSUER_STAGING,
                 Instant.ofEpochSecond(1652953080));
     }
 
@@ -1224,6 +1258,7 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 F2F,
                 vcClaimF2fIdCard(),
+                F2F_ISSUER_STAGING,
                 Instant.ofEpochSecond(1652953080));
     }
 
@@ -1287,7 +1322,7 @@ public interface VcFixtures {
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
-                "https://review-p.staging.account.gov.uk",
+                PASSPORT_ISSUER_STAGING,
                 "not-a-vot",
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
@@ -1298,7 +1333,7 @@ public interface VcFixtures {
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
-                "https://review-p.staging.account.gov.uk",
+                PASSPORT_ISSUER_STAGING,
                 null,
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
