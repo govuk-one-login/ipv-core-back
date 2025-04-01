@@ -25,18 +25,24 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.Mitigation;
+import uk.gov.di.model.Name;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
+import uk.gov.di.model.VerifiableCredentialType;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +70,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
@@ -1837,7 +1842,7 @@ class UserIdentityServiceTest {
         params.forEach((key, value) -> when(mockConfigService.getParameter(key)).thenReturn(value));
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1845,7 +1850,7 @@ class UserIdentityServiceTest {
                 givenName, null, familyName, birthDateList, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String middleName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1853,7 +1858,7 @@ class UserIdentityServiceTest {
                 givenName, middleName, familyName, birthDateList, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, String birthDate, boolean isSuccessful) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1861,23 +1866,17 @@ class UserIdentityServiceTest {
                 givenName, null, familyName, birthDateList, isSuccessful);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, List<String> birthDates) {
         return createCredentialWithNameAndBirthDate(givenName, null, familyName, birthDates, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private static IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName,
             String middleName,
             String familyName,
             List<String> birthDates,
             boolean isSuccessful) {
-        var evidence =
-                TestVc.TestEvidence.builder()
-                        .strengthScore(isSuccessful ? 4 : 0)
-                        .validityScore(isSuccessful ? 2 : 0)
-                        .build();
-
         var nameParts =
                 new ArrayList<>(
                         List.of(
@@ -1887,18 +1886,46 @@ class UserIdentityServiceTest {
             nameParts.add(1, createNamePart(middleName, GIVEN_NAME));
         }
 
-        var credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(Map.of(VC_NAME_PARTS, nameParts)))
-                        .birthDate(
-                                birthDates.stream()
-                                        .map(BirthDateGenerator::createBirthDate)
-                                        .toList())
-                        .build();
-
-        return TestVc.builder()
-                .credentialSubject(credentialSubject)
-                .evidence(List.of(evidence))
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(Name.builder().withNameParts(nameParts).build()))
+                                .withBirthDate(
+                                        birthDates.stream()
+                                                .map(BirthDateGenerator::createBirthDate)
+                                                .toList())
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("1c04edf0-a205-4585-8877-be6bd1776a39")
+                                        .withStrengthScore(isSuccessful ? 4 : 0)
+                                        .withValidityScore(isSuccessful ? 2 : 0)
+                                        .withCi(Collections.emptyList())
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .CANCELLED_CHECK)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .RECORD_CHECK)
+                                                                .build()))
+                                        .build()))
                 .build();
     }
 
