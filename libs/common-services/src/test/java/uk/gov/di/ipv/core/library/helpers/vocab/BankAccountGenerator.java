@@ -7,11 +7,11 @@ public class BankAccountGenerator {
 
     public static BankAccountDetails createBankAccountDetails(
             String accountNumber, String sortCode, String validFrom, String validUntil) {
-        var bankAccountDetails = new BankAccountDetails();
-        bankAccountDetails.setAccountNumber(accountNumber);
-        bankAccountDetails.setSortCode(sortCode);
-        bankAccountDetails.setValidFrom(validFrom);
-        bankAccountDetails.setValidUntil(validUntil);
-        return bankAccountDetails;
+        return BankAccountDetails.builder()
+                .withAccountNumber(accountNumber)
+                .withSortCode(sortCode)
+                .withValidFrom(validFrom)
+                .withValidUntil(validUntil)
+                .build();
     }
 }
