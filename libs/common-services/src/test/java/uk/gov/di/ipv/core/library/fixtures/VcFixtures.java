@@ -4,6 +4,8 @@ import com.nimbusds.jose.jwk.KeyType;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.model.AddressAssertion;
+import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -94,18 +96,17 @@ public interface VcFixtures {
                 .build();
     }
 
-    private static IdentityCheckCredential vcClaimAddressValid(PostalAddress address) {
+    private static AddressCredential vcClaimAddressValid(PostalAddress address) {
         return vcClaimAddressValid(List.of(address));
     }
 
-    private static IdentityCheckCredential vcClaimAddressValid(List<PostalAddress> addresses) {
-        return IdentityCheckCredential.builder()
+    private static AddressCredential vcClaimAddressValid(List<PostalAddress> addresses) {
+        return AddressCredential.builder()
                 .withType(
                         List.of(
                                 VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
                                 VerifiableCredentialType.ADDRESS_CREDENTIAL))
-                .withCredentialSubject(
-                        IdentityCheckSubject.builder().withAddress(addresses).build())
+                .withCredentialSubject(AddressAssertion.builder().withAddress(addresses).build())
                 .build();
     }
 
@@ -883,7 +884,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(TEST_SUBJECT, Cri.PASSPORT, vcClaim);
     }
 
-    private static VerifiableCredential generateAddressVc(IdentityCheckCredential vcClaim) {
+    private static VerifiableCredential generateAddressVc(AddressCredential vcClaim) {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 Cri.ADDRESS,
