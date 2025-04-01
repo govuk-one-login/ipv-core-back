@@ -128,7 +128,8 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.journeys.Events.ENHANCED_VERIFICATION_EVENT;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P1_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P2_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
@@ -176,7 +177,9 @@ class CheckExistingIdentityHandlerTest {
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_F2F_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
-            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+            new JourneyResponse(JOURNEY_F2F_FAIL_P2_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P1 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P1_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW =
@@ -889,7 +892,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL_P1, journeyResponse);
 
         assertEquals(Vot.P0, ipvSessionItem.getVot());
     }
@@ -908,7 +911,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+        assertEquals(JOURNEY_F2F_FAIL_P1, journeyResponse);
 
         assertEquals(Vot.P0, ipvSessionItem.getVot());
     }
@@ -1036,8 +1039,8 @@ class CheckExistingIdentityHandlerTest {
     private static Stream<Arguments> f2fIncompleteStatus() {
         return Stream.of(
                 Arguments.of(AsyncCriStatus.STATUS_PENDING, JOURNEY_F2F_PENDING_PATH),
-                Arguments.of(AsyncCriStatus.STATUS_ABANDON, JOURNEY_F2F_FAIL_PATH),
-                Arguments.of(AsyncCriStatus.STATUS_ERROR, JOURNEY_F2F_FAIL_PATH));
+                Arguments.of(AsyncCriStatus.STATUS_ABANDON, JOURNEY_F2F_FAIL_P1_PATH),
+                Arguments.of(AsyncCriStatus.STATUS_ERROR, JOURNEY_F2F_FAIL_P1_PATH));
     }
 
     @ParameterizedTest
@@ -1351,7 +1354,7 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
+        assertEquals(JOURNEY_F2F_FAIL_P2_PATH, journeyResponse.getJourney());
     }
 
     @Test

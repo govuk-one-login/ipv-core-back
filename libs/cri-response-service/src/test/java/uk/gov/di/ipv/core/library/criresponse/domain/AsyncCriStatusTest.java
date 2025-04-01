@@ -65,8 +65,8 @@ class AsyncCriStatusTest {
     static Stream<Arguments> F2fJourneysAndCriResponseItemStatuses() {
         return Stream.of(
                 Arguments.of(AsyncCriStatus.STATUS_PENDING, "/journey/pending"),
-                Arguments.of(AsyncCriStatus.STATUS_ABANDON, "/journey/f2f-fail"),
-                Arguments.of(AsyncCriStatus.STATUS_ERROR, "/journey/f2f-fail"),
+                Arguments.of(AsyncCriStatus.STATUS_ABANDON, "/journey/f2f-fail-p1"),
+                Arguments.of(AsyncCriStatus.STATUS_ERROR, "/journey/f2f-fail-p1"),
                 Arguments.of("not a status", "/journey/error"));
     }
 }

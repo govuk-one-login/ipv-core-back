@@ -76,7 +76,8 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P1_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P2_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
@@ -105,8 +106,10 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
-    private static final JourneyResponse JOURNEY_F2F_FAIL =
-            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P1 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P1_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P2 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P2_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -324,7 +327,7 @@ public class CheckExistingIdentityHandler
                     // Returned with F2F async VC. Should have matched a profile.
 
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated, auditEventUser, deviceInformation);
+                            areGpg45VcsCorrelated, auditEventUser, deviceInformation, targetVot);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -431,7 +434,8 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildF2FNoMatchResponse(
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
-            String deviceInformation) {
+            String deviceInformation,
+            Vot targetVot) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -440,7 +444,10 @@ public class CheckExistingIdentityHandler
                 auditEventUser,
                 deviceInformation);
 
-        return JOURNEY_F2F_FAIL;
+        if (targetVot == Vot.P1) {
+            return JOURNEY_F2F_FAIL_P1;
+        }
+        return JOURNEY_F2F_FAIL_P2;
     }
 
     private JourneyResponse buildDCMAWContinuationResponse(

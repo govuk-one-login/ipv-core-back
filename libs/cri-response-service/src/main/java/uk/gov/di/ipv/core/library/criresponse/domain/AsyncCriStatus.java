@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P1_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 
 public record AsyncCriStatus(
@@ -26,7 +26,7 @@ public record AsyncCriStatus(
     private static final JourneyResponse JOURNEY_F2F_PENDING =
             new JourneyResponse(JOURNEY_F2F_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
-            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+            new JourneyResponse(JOURNEY_F2F_FAIL_P1_PATH);
     private static final JourneyResponse JOURNEY_ABANDON =
             new JourneyResponse(JOURNEY_ABANDON_PATH);
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
