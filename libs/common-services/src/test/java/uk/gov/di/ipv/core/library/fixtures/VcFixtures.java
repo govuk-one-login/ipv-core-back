@@ -585,7 +585,9 @@ public interface VcFixtures {
                                         List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withPassport(passportDetails())
                                 .withSocialSecurityRecord(
-                                        List.of(createSocialSecurityRecordDetails("AB123456C"))) // pragma: allowlist secret
+                                        List.of(
+                                                createSocialSecurityRecordDetails(
+                                                        "AB123456C"))) // pragma: allowlist secret
                                 .build())
                 .withEvidence(
                         List.of(
