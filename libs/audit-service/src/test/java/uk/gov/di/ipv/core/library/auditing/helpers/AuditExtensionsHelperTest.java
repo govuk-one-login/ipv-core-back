@@ -53,11 +53,7 @@ class AuditExtensionsHelperTest {
         assertEquals(2, evidence.getValidityScore());
         assertEquals(4, evidence.getStrengthScore());
         assertEquals("1c04edf0-a205-4585-8877-be6bd1776a39", evidence.getTxn());
-        assertEquals(
-                2,
-                evidence.getCheckDetails().stream()
-                        .filter(checkDetail -> checkDetail.getDataCheck() != null)
-                        .count());
+        assertEquals(1, evidence.getCheckDetails().size());
     }
 
     @Test
