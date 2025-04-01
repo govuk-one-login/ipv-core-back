@@ -99,24 +99,24 @@ public class VerifiableCredentialGenerator {
             String vtm,
             KeyType signingKeyType) {
         try {
-            JWTClaimsSet claimsSet =
+            var claimSetBuilder =
                     new JWTClaimsSet.Builder()
                             .claim(SUBJECT, userId)
                             .claim(ISSUER, issuer)
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
                             .claim(ISSUED_AT, nbf.getEpochSecond())
-                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
-                            .build();
+                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class));
+
             if (vot != null) {
-                claimsSet.getClaims().put(VC_VOT, vot);
+                claimSetBuilder.claim(VC_VOT, vot);
             }
             if (jti != null) {
-                claimsSet.getClaims().put(JWT_ID, jti);
+                claimSetBuilder.claim(JWT_ID, jti);
             }
             if (vtm != null) {
-                claimsSet.getClaims().put(VC_VTM, vtm);
+                claimSetBuilder.claim(VC_VTM, vtm);
             }
-            return signTestVc(userId, cri, claimsSet, signingKeyType);
+            return signTestVc(userId, cri, claimSetBuilder.build(), signingKeyType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

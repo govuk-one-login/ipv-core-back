@@ -198,6 +198,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequest() throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
@@ -213,7 +214,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(vcAddressOne()));
+                .thenReturn(List.of(addressVc));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -252,8 +253,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -262,6 +262,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithP1OnSuccessfulUserInfoRequestForP1() throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         ipvSessionItem.setVot(Vot.P1);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
@@ -278,7 +279,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(vcAddressOne()));
+                .thenReturn(List.of(addressVc));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -317,8 +318,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -329,6 +329,7 @@ class BuildUserIdentityHandlerTest {
             shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
                     throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
@@ -344,7 +345,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(vcAddressOne()));
+                .thenReturn(List.of(addressVc));
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -388,8 +389,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(vcAddressOne()), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
