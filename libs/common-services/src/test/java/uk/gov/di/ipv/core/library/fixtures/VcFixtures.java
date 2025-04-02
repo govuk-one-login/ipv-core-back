@@ -1230,7 +1230,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(TEST_SUBJECT, NINO, vcClaimNinoIdentityCheck());
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL200(){
+    static VerifiableCredential vcHmrcMigrationPCL200() {
         var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
         vcClaim.getCredentialSubject().setPassport(null);
         return generateVerifiableCredential(
