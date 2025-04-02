@@ -256,7 +256,11 @@ public class CheckExistingIdentityHandler
 
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
-                            userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
+                            userId,
+                            credentialBundle.credentials,
+                            credentialBundle.isPendingReturn,
+                            ipvSessionItem,
+                            clientOAuthSessionItem);
 
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 

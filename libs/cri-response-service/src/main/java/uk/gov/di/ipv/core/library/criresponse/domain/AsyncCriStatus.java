@@ -4,11 +4,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P1_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P2_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 
 public record AsyncCriStatus(
@@ -16,7 +18,9 @@ public record AsyncCriStatus(
         String incompleteStatus,
         boolean isAwaitingVc,
         boolean isPendingReturn,
-        boolean isReproveIdentity) {
+        boolean isReproveIdentity,
+        Vot targetVot) {
+
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_ABANDON = "abandon";
@@ -25,8 +29,10 @@ public record AsyncCriStatus(
 
     private static final JourneyResponse JOURNEY_F2F_PENDING =
             new JourneyResponse(JOURNEY_F2F_PENDING_PATH);
-    private static final JourneyResponse JOURNEY_F2F_FAIL =
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P1 =
             new JourneyResponse(JOURNEY_F2F_FAIL_P1_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P2 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P2_PATH);
     private static final JourneyResponse JOURNEY_ABANDON =
             new JourneyResponse(JOURNEY_ABANDON_PATH);
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
@@ -68,7 +74,7 @@ public record AsyncCriStatus(
                     throw getUnsupportedCriResponseLogicException();
                 }
             }
-            case F2F -> JOURNEY_F2F_FAIL;
+            case F2F -> getF2FFailJourney();
             default -> logUnexpectedCri();
         };
     }
@@ -76,9 +82,17 @@ public record AsyncCriStatus(
     private JourneyResponse getJourneyError() {
         return switch (cri) {
             case DCMAW_ASYNC -> JOURNEY_ERROR;
-            case F2F -> JOURNEY_F2F_FAIL;
+            case F2F -> getF2FFailJourney();
             default -> logUnexpectedCri();
         };
+    }
+
+    private JourneyResponse getF2FFailJourney() {
+        if (targetVot == Vot.P1) {
+            return JOURNEY_F2F_FAIL_P1;
+        } else {
+            return JOURNEY_F2F_FAIL_P2;
+        }
     }
 
     private JourneyResponse logUnexpectedCri() {

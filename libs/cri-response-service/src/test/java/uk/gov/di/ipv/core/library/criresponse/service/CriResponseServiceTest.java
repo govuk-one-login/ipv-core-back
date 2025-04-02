@@ -7,11 +7,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
@@ -54,6 +56,8 @@ class CriResponseServiceTest {
                     + "\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
 
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
+    @Spy private IpvSessionItem ipvSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUp() {
@@ -166,7 +170,9 @@ class CriResponseServiceTest {
                         : new ArrayList<VerifiableCredential>();
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertEquals(F2F, asyncCriStatus.cri());
@@ -180,7 +186,9 @@ class CriResponseServiceTest {
         var vcs = new ArrayList<VerifiableCredential>();
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());
@@ -198,7 +206,9 @@ class CriResponseServiceTest {
         var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
@@ -214,7 +224,11 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo()), false);
+                        USER_ID_1,
+                        List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo()),
+                        false,
+                        ipvSessionItem,
+                        clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());
@@ -225,7 +239,9 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyStatusIfNoCriResponseFound() {
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, List.of(), false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, List.of(), false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());
