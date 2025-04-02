@@ -98,7 +98,6 @@ Feature: P1 Web Journeys
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'photo-id-security-questions-find-another-way' page response
-    When I submit a 'next' event
 
   Scenario Outline: P1 journey used when both P1 and P2 are present in JAR request
     Given I activate the 'p1Journeys' feature set
