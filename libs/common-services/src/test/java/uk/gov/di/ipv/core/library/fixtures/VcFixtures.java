@@ -256,44 +256,6 @@ public interface VcFixtures {
                 .build();
     }
 
-    private static IdentityCheckCredential vcClaimNinoRecordCheck() {
-        return IdentityCheckCredential.builder()
-                .withType(
-                        List.of(
-                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
-                .withCredentialSubject(
-                        IdentityCheckSubject.builder()
-                                .withName(List.of(kennethDecerqueiraName()))
-                                .withBirthDate(
-                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
-                                .withSocialSecurityRecord(
-                                        List.of(
-                                                SocialSecurityRecordDetails.builder()
-                                                        .withPersonalNumber("AA000003D")
-                                                        .build()))
-                                .build())
-                .withEvidence(
-                        List.of(
-                                IdentityCheck.builder()
-                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
-                                        .withTxn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                        .withCheckDetails(
-                                                List.of(
-                                                        CheckDetails.builder()
-                                                                .withCheckMethod(
-                                                                        CheckDetails.CheckMethodType
-                                                                                .DATA)
-                                                                .build(),
-                                                        CheckDetails.builder()
-                                                                .withDataCheck(
-                                                                        CheckDetails.DataCheckType
-                                                                                .RECORD_CHECK)
-                                                                .build()))
-                                        .build()))
-                .build();
-    }
-
     private static RiskAssessmentCredential vcClaimTicf() {
         return RiskAssessmentCredential.builder()
                 .withType(
@@ -1268,7 +1230,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(TEST_SUBJECT, NINO, vcClaimNinoIdentityCheck());
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL200() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL200(){
         var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
         vcClaim.getCredentialSubject().setPassport(null);
         return generateVerifiableCredential(
@@ -1281,7 +1243,7 @@ public interface VcFixtures {
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL250() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL250() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 HMRC_MIGRATION,
@@ -1292,7 +1254,7 @@ public interface VcFixtures {
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL200NoEvidence() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL200NoEvidence() {
         var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
         vcClaim.setEvidence(Collections.emptyList());
         return generateVerifiableCredential(
@@ -1305,7 +1267,7 @@ public interface VcFixtures {
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() {
         var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
         vcClaim.getCredentialSubject().setPassport(null);
         vcClaim.setEvidence(null);
@@ -1319,7 +1281,7 @@ public interface VcFixtures {
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcInvalidVot() throws Exception {
+    static VerifiableCredential vcInvalidVot() {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 Cri.PASSPORT,
@@ -1330,7 +1292,7 @@ public interface VcFixtures {
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcNullVot() throws Exception {
+    static VerifiableCredential vcNullVot() {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 Cri.PASSPORT,
