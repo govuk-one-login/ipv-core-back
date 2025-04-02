@@ -143,7 +143,8 @@ class CriStoringServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var vc = vcWebPassportSuccessful();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        var sessionVcs = List.of(vcAddressM1a());
+        var addressVc = vcAddressM1a();
+        var sessionVcs = List.of(addressVc);
 
         // Act
         criStoringService.storeVcs(
@@ -168,7 +169,7 @@ class CriStoringServiceTest {
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
-        assertEquals(List.of(vcAddressM1a(), vc), vcListCaptor.getValue());
+        assertEquals(List.of(addressVc, vc), vcListCaptor.getValue());
 
         assertEquals(vc, vcCaptor.getValue());
 

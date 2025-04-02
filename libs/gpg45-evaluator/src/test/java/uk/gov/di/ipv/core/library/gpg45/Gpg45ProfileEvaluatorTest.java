@@ -191,7 +191,7 @@ class Gpg45ProfileEvaluatorTest {
     @Test
     void buildScoreShouldReturnCorrectScoreForDcmawCredential() {
         Gpg45Scores builtScores = evaluator.buildScore(List.of(vcDcmawDrivingPermitDvaM1b()));
-        Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 2);
+        Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 3);
 
         assertEquals(expectedScores, builtScores);
     }
