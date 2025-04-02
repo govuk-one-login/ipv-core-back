@@ -74,18 +74,19 @@ class VerifiableCredentialValidatorTest {
 
     @Test
     void validatesValidVcWithEcSignatureSuccessfully() throws VerifiableCredentialException {
+        var vcString = vcWebPassportSuccessful().getVcString();
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
                         PASSPORT,
-                        vcWebPassportSuccessful().getVcString(),
+                        vcString,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
         assertEquals(PASSPORT, vc.getCri());
-        assertEquals(vcWebPassportSuccessful().getVcString(), vc.getVcString());
+        assertEquals(vcString, vc.getVcString());
     }
 
     @Test
@@ -125,33 +126,35 @@ class VerifiableCredentialValidatorTest {
 
     @Test
     void validatesValidVcsListSuccessfully() throws VerifiableCredentialException {
+        var vcString = vcWebPassportSuccessful().getVcString();
         var vcs =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
                         PASSPORT,
-                        List.of(vcWebPassportSuccessful().getVcString()),
+                        List.of(vcString),
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID);
 
         assertEquals(TEST_USER, vcs.get(0).getUserId());
         assertEquals(PASSPORT, vcs.get(0).getCri());
-        assertEquals(vcWebPassportSuccessful().getVcString(), vcs.get(0).getVcString());
+        assertEquals(vcString, vcs.get(0).getVcString());
     }
 
     @Test
     void validatesValidVcSuccessfullyWhenUserIdNotMatchSubjectAndSkipSubjectCheckIsTrue()
             throws VerifiableCredentialException {
+        var vcString = vcWebPassportSuccessful().getVcString();
         var vc =
                 vcJwtValidator.parseAndValidate(
                         "not the user",
                         PASSPORT,
-                        vcWebPassportSuccessful().getVcString(),
+                        vcString,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         true);
 
         assertEquals(PASSPORT, vc.getCri());
-        assertEquals(vcWebPassportSuccessful().getVcString(), vc.getVcString());
+        assertEquals(vcString, vc.getVcString());
     }
 
     @Test

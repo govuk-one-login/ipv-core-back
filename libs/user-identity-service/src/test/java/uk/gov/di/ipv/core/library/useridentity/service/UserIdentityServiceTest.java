@@ -1210,7 +1210,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws Exception {
         // Arrange
-        var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreOne(), vcAddressOne());
+        var vcs = List.of(vcWebDrivingPermitDvlaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1222,9 +1222,9 @@ class UserIdentityServiceTest {
         // Assert
         DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
 
-        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.getPersonalNumber());
+        assertEquals("PARKE710112PBFGA", drivingPermitClaim.getPersonalNumber());
         assertEquals("123456", drivingPermitClaim.getIssueNumber());
-        assertEquals("2042-10-01", drivingPermitClaim.getExpiryDate());
+        assertEquals("2032-02-02", drivingPermitClaim.getExpiryDate());
     }
 
     @ParameterizedTest
