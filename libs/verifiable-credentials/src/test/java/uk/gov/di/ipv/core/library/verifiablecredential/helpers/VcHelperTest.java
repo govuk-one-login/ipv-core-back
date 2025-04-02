@@ -61,7 +61,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSucces
 class VcHelperTest {
     @Mock private ConfigService configService;
 
-    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
+    private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("Non-evidence VC", vcAddressM1a()),
                 Arguments.of("Evidence VC", vcWebPassportSuccessful()),
@@ -88,7 +88,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_GPG45() throws Exception {
+    void shouldFilterVCsBasedOnProfileType_GPG45() {
         var vcs =
                 List.of(
                         vcWebPassportSuccessful(),
@@ -99,7 +99,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_operational() throws Exception {
+    void shouldFilterVCsBasedOnProfileType_operational() {
         var vcs =
                 List.of(
                         vcWebPassportSuccessful(),
@@ -118,7 +118,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldExtractTxIdDespiteNullEvidence() throws Exception {
+    void shouldExtractTxIdDespiteNullEvidence() {
         var txns =
                 VcHelper.extractTxnIdsFromCredentials(
                         List.of(

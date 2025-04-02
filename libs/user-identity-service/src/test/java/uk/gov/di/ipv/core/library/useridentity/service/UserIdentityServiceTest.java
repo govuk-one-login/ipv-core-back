@@ -782,7 +782,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowForInvalidVot() throws Exception {
+    void shouldThrowForInvalidVot() {
         // Arrange
         var vc = vcInvalidVot();
 

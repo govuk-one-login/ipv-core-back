@@ -93,7 +93,7 @@ class CheckReverificationIdentityHandlerTest {
     @InjectMocks private CheckReverificationIdentityHandler checkReverificationIdentityHandler;
 
     @BeforeAll
-    public static void beforeAll() throws Exception {
+    static void beforeAll() {
         pcl200vc = vcHmrcMigrationPCL200();
         pcl250vc = vcHmrcMigrationPCL250();
         m1BFraudVc = vcExperianFraudScoreTwo();
@@ -102,7 +102,7 @@ class CheckReverificationIdentityHandlerTest {
     }
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         ipvSession =
                 spy(
                         IpvSessionItem.builder()
@@ -120,7 +120,7 @@ class CheckReverificationIdentityHandlerTest {
     @Nested
     class SuccessfulInvocations {
         @BeforeEach
-        public void beforeEachFound() throws Exception {
+        void beforeEachFound() throws Exception {
             when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSession);
             when(mockClientSessionService.getClientOAuthSession(TEST_CLIENT_SESSION_ID))
                     .thenReturn(clientSession);

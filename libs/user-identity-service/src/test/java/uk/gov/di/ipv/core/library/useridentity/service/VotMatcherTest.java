@@ -47,7 +47,7 @@ class VotMatcherTest {
     @InjectMocks private VotMatcher votMatcher;
 
     @BeforeAll
-    static void beforeAll() throws Exception {
+    static void beforeAll() {
         gpg45Vcs = List.of(vcExperianFraudScoreTwo(), vcExperianKbvM1a());
         pcl200vc = vcHmrcMigrationPCL200();
         pcl250vc = vcHmrcMigrationPCL250();
