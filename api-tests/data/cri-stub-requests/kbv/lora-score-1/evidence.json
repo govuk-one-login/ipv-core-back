@@ -1,0 +1,17 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "verificationScore": 1,
+  "checkDetails": [
+    {
+      "kbvResponseMode": "multiple_choice",
+      "kbvQuality": 3,
+      "checkMethod": "kbv"
+    },
+    {
+      "kbvResponseMode": "multiple_choice",
+      "kbvQuality": 3,
+      "checkMethod": "kbv"
+    }
+  ]
+}
