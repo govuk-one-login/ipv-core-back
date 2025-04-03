@@ -53,7 +53,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitD
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aMissingEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCI;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCiButValidity2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
@@ -65,7 +65,7 @@ class VcHelperTest {
         return Stream.of(
                 Arguments.of("Non-evidence VC", vcAddressM1a()),
                 Arguments.of("Evidence VC", vcWebPassportSuccessful()),
-                Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCI()),
+                Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCiButValidity2()),
                 Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
                 Arguments.of("Verification VC", vcExperianKbvM1a()),
                 Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),

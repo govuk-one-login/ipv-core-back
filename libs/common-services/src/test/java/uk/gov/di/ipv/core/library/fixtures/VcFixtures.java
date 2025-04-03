@@ -774,6 +774,18 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcWebPassportM1aWithCiButValidity2() {
+        IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
+        vcClaim.getEvidence().get(0).setCi(List.of("test"));
+
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                vcClaim,
+                PASSPORT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcWebPassportM1aMissingEvidence() {
         IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
         vcClaim.setEvidence(Collections.emptyList());
