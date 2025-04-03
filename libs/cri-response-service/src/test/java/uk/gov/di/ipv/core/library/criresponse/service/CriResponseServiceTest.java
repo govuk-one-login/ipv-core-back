@@ -32,10 +32,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYN
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriResponseServiceTest {
@@ -64,7 +64,7 @@ class CriResponseServiceTest {
     void shouldReturnCredentialFromDataStoreForSpecificCri() {
         String ipvSessionId = "ipvSessionId";
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, ADDRESS.getId())).thenReturn(criResponseItem);
 
@@ -104,7 +104,7 @@ class CriResponseServiceTest {
     @Test
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.getItem(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
@@ -117,7 +117,7 @@ class CriResponseServiceTest {
     @Test
     void shouldDeleteExistingWhenUserHasDeleteRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.delete(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
@@ -129,7 +129,7 @@ class CriResponseServiceTest {
     @Test
     void shouldUpdateExistingWhenUserHasUpdateRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
         when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
 
         criResponseService.updateCriResponseItem(criResponseItem);
@@ -139,10 +139,8 @@ class CriResponseServiceTest {
     @Test
     void getCriResponseItemWithStateShouldGetCorrectItem() {
         // Arrange
-        var criResponseItem1 =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
-        var criResponseItem2 =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+        var criResponseItem1 = createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
+        var criResponseItem2 = createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
         criResponseItem2.setOauthState(TEST_OAUTH_STATE);
         when(mockDataStore.getItems(USER_ID_1))
                 .thenReturn(List.of(criResponseItem1, criResponseItem2));
@@ -197,7 +195,7 @@ class CriResponseServiceTest {
                 .thenReturn("1000000000");
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
-        var vcs = List.of(vcDcmawAsyncDl(), vcAddressTwo());
+        var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
 
         // Act
         var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
@@ -216,7 +214,7 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, List.of(vcDcmawAsyncDl(), vcAddressTwo()), false);
+                        USER_ID_1, List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo()), false);
 
         // Assert
         assertNull(asyncCriStatus.cri());

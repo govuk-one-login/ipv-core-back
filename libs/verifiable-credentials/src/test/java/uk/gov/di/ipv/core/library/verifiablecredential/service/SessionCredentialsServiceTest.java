@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,18 +42,18 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CRED
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ADDRESS_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaimFailedWithCis;
 
 @ExtendWith(MockitoExtension.class)
 class SessionCredentialsServiceTest {
     private static final String SESSION_ID = "ipv-session-id";
-    private static final VerifiableCredential CREDENTIAL_1 = vcDrivingPermit();
-    private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
-    private static final VerifiableCredential CREDENTIAL_3 = vcNinoSuccessful();
+    private static final VerifiableCredential CREDENTIAL_1 = vcWebDrivingPermitDvaValid();
+    private static final VerifiableCredential CREDENTIAL_2 = vcExperianKbvM1a();
+    private static final VerifiableCredential CREDENTIAL_3 = vcNinoIdentityCheckSuccessful();
     private static final String USER_ID = "userId";
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
@@ -241,8 +240,11 @@ class SessionCredentialsServiceTest {
         @Test
         void deleteSessionCredentialsForResetTypeShouldPersistAddressVcForNameChange()
                 throws Exception {
-            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
-            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -260,10 +262,13 @@ class SessionCredentialsServiceTest {
         @Test
         void deleteSessionCredentialsForResetTypeShouldDeleteAddressAndFraudForAddressChange()
                 throws Exception {
-            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
-            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -288,10 +293,13 @@ class SessionCredentialsServiceTest {
         @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "REINSTATE"})
         void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(
                 SessionCredentialsResetType resetType) throws Exception {
-            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
-            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -317,10 +325,13 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialsForResetTypeShouldDeleteDcmawVcs() throws Exception {
-            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
-            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);

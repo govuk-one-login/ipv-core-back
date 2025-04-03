@@ -57,8 +57,8 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -885,7 +885,7 @@ class InitialiseIpvSessionHandlerTest {
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,
-                            Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now())
+                            Period.between(LocalDate.parse(VcFixtures.DEFAULT_DOB), LocalDate.now())
                                     .getYears());
             assertEquals(expectedExtension, extension);
 

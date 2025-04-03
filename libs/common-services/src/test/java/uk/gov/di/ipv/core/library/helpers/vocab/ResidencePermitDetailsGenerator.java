@@ -7,12 +7,11 @@ public class ResidencePermitDetailsGenerator {
 
     public static ResidencePermitDetails createResidencePermitDetails(
             String documentNumber, String expiryDate, String documentType, String icaoIssuerCode) {
-        var residencePermitDetails = new ResidencePermitDetails();
-        residencePermitDetails.setDocumentNumber(documentNumber);
-        residencePermitDetails.setExpiryDate(expiryDate);
-        residencePermitDetails.setDocumentType(documentType);
-        residencePermitDetails.setIcaoIssuerCode(icaoIssuerCode);
-
-        return residencePermitDetails;
+        return ResidencePermitDetails.builder()
+                .withDocumentNumber(documentNumber)
+                .withExpiryDate(expiryDate)
+                .withDocumentType(documentType)
+                .withIcaoIssuerCode(icaoIssuerCode)
+                .build();
     }
 }

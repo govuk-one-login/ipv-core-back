@@ -22,7 +22,7 @@ public class VerifiableCredential {
     private final JWTClaimsSet claimsSet;
     private final SignedJWT signedJwt;
     private Instant migrated;
-    private final uk.gov.di.model.VerifiableCredential credential;
+    private final uk.gov.di.model.VerifiableCredential<?> credential;
     private String batchId;
 
     private VerifiableCredential(

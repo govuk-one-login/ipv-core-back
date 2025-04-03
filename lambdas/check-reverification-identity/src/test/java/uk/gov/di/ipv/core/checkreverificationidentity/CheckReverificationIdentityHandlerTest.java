@@ -56,13 +56,13 @@ import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.l1AEvidenceVc;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckL1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
@@ -93,16 +93,16 @@ class CheckReverificationIdentityHandlerTest {
     @InjectMocks private CheckReverificationIdentityHandler checkReverificationIdentityHandler;
 
     @BeforeAll
-    public static void beforeAll() throws Exception {
+    static void beforeAll() {
         pcl200vc = vcHmrcMigrationPCL200();
         pcl250vc = vcHmrcMigrationPCL250();
         m1BFraudVc = vcExperianFraudScoreTwo();
-        l1AEvidenceVc = l1AEvidenceVc();
-        m1AVerificationVc = vcVerificationM1a();
+        l1AEvidenceVc = vcNinoIdentityCheckL1a();
+        m1AVerificationVc = vcExperianKbvM1a();
     }
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         ipvSession =
                 spy(
                         IpvSessionItem.builder()
@@ -120,7 +120,7 @@ class CheckReverificationIdentityHandlerTest {
     @Nested
     class SuccessfulInvocations {
         @BeforeEach
-        public void beforeEachFound() throws Exception {
+        void beforeEachFound() throws Exception {
             when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSession);
             when(mockClientSessionService.getClientOAuthSession(TEST_CLIENT_SESSION_ID))
                     .thenReturn(clientSession);
@@ -128,9 +128,11 @@ class CheckReverificationIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyFoundIfUserHasP2Identity() throws Exception {
-            var p2Vcs = List.of(M1B_DCMAW_DL_VC, VC_ADDRESS, m1BFraudVc, pcl250vc);
+            var addressVc = vcAddressOne();
+            var m1bDrivingPermitVc = vcDcmawDrivingPermitDvaM1b();
+            var p2Vcs = List.of(m1bDrivingPermitVc, addressVc, m1BFraudVc, pcl250vc);
             when(mockUserIdentityService.areVcsCorrelated(
-                            List.of(M1B_DCMAW_DL_VC, VC_ADDRESS, m1BFraudVc)))
+                            List.of(m1bDrivingPermitVc, addressVc, m1BFraudVc)))
                     .thenReturn(true);
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
@@ -153,7 +155,7 @@ class CheckReverificationIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyFoundIfUserHasP1Identity() throws Exception {
-            var p1Vcs = List.of(l1AEvidenceVc, VC_ADDRESS, m1BFraudVc, m1AVerificationVc);
+            var p1Vcs = List.of(l1AEvidenceVc, vcAddressOne(), m1BFraudVc, m1AVerificationVc);
             when(mockUserIdentityService.areVcsCorrelated(p1Vcs)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))

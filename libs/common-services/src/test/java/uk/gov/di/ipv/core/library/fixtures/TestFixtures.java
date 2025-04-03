@@ -10,9 +10,14 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.List;
-import java.util.Map;
 
 public interface TestFixtures {
     String EC_PRIVATE_KEY =
@@ -61,81 +66,149 @@ public interface TestFixtures {
 
     // As this is public test data you can generate VC signed JWTs using https://jwt.io/. Use the EC
     // public/private keys above to sign test VCs
+    IdentityCheckSubject CREDENTIAL_ATTRIBUTES_1 =
+            IdentityCheckSubject.builder()
+                    .withName(
+                            List.of(
+                                    Name.builder()
+                                            .withNameParts(
+                                                    List.of(
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Alice")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Jane")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Laura")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .FAMILY_NAME)
+                                                                    .withValue("Doe")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .FAMILY_NAME)
+                                                                    .withValue("Musk")
+                                                                    .build()))
+                                            .build()))
+                    .withBirthDate(
+                            List.of(
+                                    BirthDate.builder().withValue("2020-01-03").build(),
+                                    BirthDate.builder().withValue("2021-01-03").build()))
+                    .withAddress(
+                            List.of(
+                                    PostalAddress.builder()
+                                            .withBuildingNumber("10")
+                                            .withStreetName("DowningStreet")
+                                            .withDependentAddressLocality("Westminster")
+                                            .withAddressLocality("London")
+                                            .withPostalCode("SW1A2AA")
+                                            .withAddressCountry("GB")
+                                            .withValidFrom("2019-07-24")
+                                            .build(),
+                                    PostalAddress.builder()
+                                            .withBuildingNumber("123")
+                                            .withPostalCode("M34 1AA")
+                                            .build()))
+                    .withSocialSecurityRecord(
+                            List.of(
+                                    SocialSecurityRecordDetails.builder()
+                                            .withPersonalNumber("AA000003D")
+                                            .build()))
+                    .build();
 
-    Map<String, Object> CREDENTIAL_ATTRIBUTES_1 =
-            Map.of(
-                    "name",
-                    List.of(
-                            Map.of(
-                                    "nameParts",
-                                    List.of(
-                                            Map.of("value", "Alice", "type", "GivenName"),
-                                            Map.of("value", "Jane", "type", "GivenName"),
-                                            Map.of("value", "Laura", "type", "GivenName"),
-                                            Map.of("value", "Doe", "type", "FamilyName"),
-                                            Map.of("value", "Musk", "type", "FamilyName")))),
-                    "birthDate",
-                    List.of(Map.of("value", "2020-01-03"), Map.of("value", "2021-01-03")),
-                    "address",
-                    List.of(
-                            Map.of(
-                                    "buildingNumber", "10",
-                                    "streetName", "DowningStreet",
-                                    "dependentAddressLocality", "Westminster",
-                                    "addressLocality", "London",
-                                    "postalCode", "SW1A2AA",
-                                    "addressCountry", "GB",
-                                    "validFrom", "2019-07-24"),
-                            Map.of(
-                                    "buildingNumber", "123",
-                                    "postalCode", "M34 1AA")),
-                    "socialSecurityRecord",
-                    List.of(Map.of("personalNumber", "AA000003D")));
+    IdentityCheckSubject CREDENTIAL_ATTRIBUTES_2 =
+            IdentityCheckSubject.builder()
+                    .withName(
+                            List.of(
+                                    Name.builder()
+                                            .withNameParts(
+                                                    List.of(
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Alice")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .FAMILY_NAME)
+                                                                    .withValue("Doe")
+                                                                    .build()))
+                                            .build()))
+                    .withBirthDate(
+                            List.of(
+                                    BirthDate.builder().withValue("2020-01-03").build(),
+                                    BirthDate.builder().withValue("2021-01-03").build()))
+                    .withAddress(
+                            List.of(
+                                    PostalAddress.builder()
+                                            .withBuildingNumber("11")
+                                            .withStreetName("NotDowningStreet")
+                                            .withDependentAddressLocality("Eastminster")
+                                            .withAddressLocality("Nodnol")
+                                            .withPostalCode("SW2A 3BB")
+                                            .withAddressCountry("GB")
+                                            .withValidFrom("2018-06-23")
+                                            .build()))
+                    .build();
 
-    Map<String, Object> CREDENTIAL_ATTRIBUTES_2 =
-            Map.of(
-                    "name",
-                    List.of(
-                            Map.of(
-                                    "nameParts",
-                                    List.of(
-                                            Map.of("value", "Alice", "type", "GivenName"),
-                                            Map.of("value", "Doe", "type", "FamilyName")))),
-                    "birthDate",
-                    List.of(Map.of("value", "2020-01-03")),
-                    "address",
-                    List.of(
-                            Map.of(
-                                    "buildingNumber", "11",
-                                    "streetName", "NotDowningStreet",
-                                    "dependentAddressLocality", "Eastminster",
-                                    "addressLocality", "Nodnol",
-                                    "postalCode", "SW2A 3BB",
-                                    "addressCountry", "GB",
-                                    "validFrom", "2018-06-23")));
-
-    Map<String, Object> CREDENTIAL_ATTRIBUTES_3 =
-            Map.of(
-                    "name",
-                    List.of(
-                            Map.of(
-                                    "nameParts",
-                                    List.of(
-                                            Map.of("value", "Alice", "type", "GivenName"),
-                                            Map.of("value", "Jane", "type", "GivenName"),
-                                            Map.of("value", "Doe", "type", "FamilyName")))),
-                    "birthDate",
-                    List.of(Map.of("value", "2020-01-03")),
-                    "address",
-                    List.of(
-                            Map.of(
-                                    "buildingNumber", "11",
-                                    "streetName", "NotDowningStreet",
-                                    "dependentAddressLocality", "Eastminster",
-                                    "addressLocality", "Nodnol",
-                                    "postalCode", "SW2A 3BB",
-                                    "addressCountry", "GB",
-                                    "validFrom", "2018-06-23")));
+    IdentityCheckSubject CREDENTIAL_ATTRIBUTES_3 =
+            IdentityCheckSubject.builder()
+                    .withName(
+                            List.of(
+                                    Name.builder()
+                                            .withNameParts(
+                                                    List.of(
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Alice")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .GIVEN_NAME)
+                                                                    .withValue("Jane")
+                                                                    .build(),
+                                                            NamePart.builder()
+                                                                    .withType(
+                                                                            NamePart.NamePartType
+                                                                                    .FAMILY_NAME)
+                                                                    .withValue("Doe")
+                                                                    .build()))
+                                            .build()))
+                    .withBirthDate(
+                            List.of(
+                                    BirthDate.builder().withValue("2020-01-03").build(),
+                                    BirthDate.builder().withValue("2021-01-03").build()))
+                    .withAddress(
+                            List.of(
+                                    PostalAddress.builder()
+                                            .withBuildingNumber("11")
+                                            .withStreetName("NotDowningStreet")
+                                            .withDependentAddressLocality("Eastminster")
+                                            .withAddressLocality("Nodnol")
+                                            .withPostalCode("SW2A 3BB")
+                                            .withAddressCountry("GB")
+                                            .withValidFrom("2018-06-23")
+                                            .build()))
+                    .build();
 
     String ADDRESS_JSON_1 =
             "{\"buildingNumber\":10,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";

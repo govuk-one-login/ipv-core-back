@@ -103,7 +103,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PR
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaimFailedWithCis;
 
 @ExtendWith(MockitoExtension.class)
 class BuildCriOauthRequestHandlerTest {
@@ -326,12 +326,12 @@ class BuildCriOauthRequestHandlerTest {
                         generateVerifiableCredential(
                                 TEST_USER_ID,
                                 ADDRESS,
-                                vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                 IPV_ISSUER),
                         generateVerifiableCredential(
                                 TEST_USER_ID,
                                 ADDRESS,
-                                vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                 IPV_ISSUER));
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID)).thenReturn(vcs);
         when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
@@ -414,12 +414,12 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
 
         when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
@@ -502,12 +502,12 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -588,12 +588,12 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -673,12 +673,12 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -759,12 +759,12 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -843,17 +843,17 @@ class BuildCriOauthRequestHandlerTest {
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
                                         ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
+                                        vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

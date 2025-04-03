@@ -54,7 +54,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -113,17 +112,17 @@ import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcClaimDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.journeys.Events.ENHANCED_VERIFICATION_EVENT;
@@ -158,11 +157,11 @@ class CheckExistingIdentityHandlerTest {
     public static final String TEST_PREVIOUS_IPV_SESSION_ID = "previous-ipv-session-id";
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
-                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                    M1A_ADDRESS_VC,
-                    M1A_EXPERIAN_FRAUD_VC,
-                    vcVerificationM1a(),
-                    M1B_DCMAW_DL_VC);
+                    vcWebPassportSuccessful(),
+                    vcAddressM1a(),
+                    vcExperianFraudM1a(),
+                    vcExperianKbvM1a(),
+                    vcDcmawDrivingPermitDvaM1b());
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
@@ -185,8 +184,8 @@ class CheckExistingIdentityHandlerTest {
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final VerifiableCredential gpg45Vc = vcDrivingPermit();
-    private static final VerifiableCredential f2fVc = vcF2fPassportM1a();
+    private static final VerifiableCredential gpg45Vc = vcWebDrivingPermitDvaValid();
+    private static final VerifiableCredential f2fVc = vcF2fPassportPhotoM1a();
     private static ECDSASigner jwtSigner;
     private static VerifiableCredential pcl200Vc;
     private static VerifiableCredential pcl250Vc;
@@ -365,7 +364,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyReuseWithStoreResponseIfIsF2fPendingReturn() throws Exception {
-            var vcs = List.of(gpg45Vc, vcF2fPassportM1a());
+            var vcs = List.of(gpg45Vc, vcF2fPassportPhotoM1a());
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -589,7 +588,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportM1a()))));
+                .thenReturn(
+                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -635,7 +635,7 @@ class CheckExistingIdentityHandlerTest {
         previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
         when(ipvSessionService.getIpvSessionByClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(previousIpvSession);
-        var vcs = List.of(vcDcmawAsyncDl());
+        var vcs = List.of(vcDcmawAsyncDrivingPermitDva());
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(
@@ -687,7 +687,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDl())));
+                .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDrivingPermitDva())));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(emptyAsyncCriStatus);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -713,7 +713,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportM1a())));
+                .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportPhotoM1a())));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
@@ -918,7 +918,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportM1a()))));
+                .thenReturn(
+                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -946,7 +947,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportM1a()))));
+                .thenReturn(
+                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -973,7 +975,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportM1a()))));
+                .thenReturn(
+                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(emptyAsyncCriStatus);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1335,7 +1338,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportM1a()))));
+                .thenReturn(
+                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -1353,13 +1357,14 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        var fraudVc = vcExperianFraudM1aExpired();
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        M1A_ADDRESS_VC,
-                        EXPIRED_M1A_EXPERIAN_FRAUD_VC,
-                        vcVerificationM1a(),
-                        M1B_DCMAW_DL_VC);
+                        vcWebPassportSuccessful(),
+                        vcAddressM1a(),
+                        fraudVc,
+                        vcExperianKbvM1a(),
+                        vcDcmawDrivingPermitDvaM1b());
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, vcs));
@@ -1381,8 +1386,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
         assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
 
-        var expectedStoredVc =
-                vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
+        var expectedStoredVc = vcs.stream().filter(vc -> vc != fraudVc).toList();
         verify(mockSessionCredentialService)
                 .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
 
@@ -1463,7 +1467,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     private static VerifiableCredential createOperationalProfileVc(Vot vot) throws Exception {
-        var testVcClaim = TestVc.builder().evidence(DCMAW_EVIDENCE_VRI_CHECK).build();
+        var testVcClaim = vcClaimDcmawPassport();
         var jwt =
                 new SignedJWT(
                         new JWSHeader(JWSAlgorithm.ES256),

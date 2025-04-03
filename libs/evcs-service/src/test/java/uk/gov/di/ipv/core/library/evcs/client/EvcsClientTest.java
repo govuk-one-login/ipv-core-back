@@ -68,14 +68,14 @@ class EvcsClientTest {
             new EvcsGetUserVCsDto(
                     List.of(
                             new EvcsGetUserVCDto(
-                                    VcFixtures.VC_ADDRESS.getVcString(),
+                                    VcFixtures.vcAddressOne().getVcString(),
                                     EvcsVCState.CURRENT,
                                     Map.of(
                                             "reason", "testing",
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    VcFixtures.vcDrivingPermit().getVcString(),
+                                    VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of(
                                             "reason", "testing",
@@ -84,7 +84,7 @@ class EvcsClientTest {
     private static final List<EvcsCreateUserVCsDto> EVCS_CREATE_USER_VCS_DTO =
             List.of(
                     new EvcsCreateUserVCsDto(
-                            VcFixtures.VC_ADDRESS.getVcString(),
+                            VcFixtures.vcAddressOne().getVcString(),
                             EvcsVCState.CURRENT,
                             Map.of(
                                     "reason", "testing",
@@ -92,7 +92,7 @@ class EvcsClientTest {
                                     "timestampMs", "1714478033959"),
                             null),
                     new EvcsCreateUserVCsDto(
-                            VcFixtures.vcDrivingPermit().getVcString(),
+                            VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                             EvcsVCState.CURRENT,
                             Map.of(
                                     "reason", "testing",

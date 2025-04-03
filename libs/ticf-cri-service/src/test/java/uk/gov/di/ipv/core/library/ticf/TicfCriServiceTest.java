@@ -48,8 +48,8 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.ticf.TicfCriService.TRUSTMARK;
 import static uk.gov.di.ipv.core.library.ticf.TicfCriService.X_API_KEY_HEADER;
 
@@ -75,7 +75,7 @@ class TicfCriServiceTest {
                     TRUSTMARK,
                     USER_ID,
                     GOVUK_JOURNEY_ID,
-                    List.of(VC_ADDRESS.getVcString()));
+                    List.of(vcAddressOne().getVcString()));
     private IpvSessionItem ipvSessionItem;
     private RestCriConfig ticfCriConfig;
     @Mock private ConfigService mockConfigService;
@@ -104,6 +104,8 @@ class TicfCriServiceTest {
 
     @Test
     void getTicfVcShouldReturnASignedJwtForASuccessfulInvocation() throws Exception {
+        var addressVc = vcAddressOne();
+        var drivingPermitVc = vcDcmawDrivingPermitDvaM1b();
         RestCriConfig ticfConfigWithApiKeyRequired =
                 RestCriConfig.builder()
                         .credentialUrl(new URI("https://credential.example.com"))
@@ -116,17 +118,17 @@ class TicfCriServiceTest {
         when(mockConfigService.getSecret(CREDENTIAL_ISSUER_API_KEY, TICF.getId(), null))
                 .thenReturn("api-key");
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
-                .thenReturn(List.of(M1B_DCMAW_DL_VC));
+                .thenReturn(List.of(drivingPermitVc));
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(addressVc));
 
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
             var ticfVc = ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem);
-            assertEquals(VC_ADDRESS.getVcString(), ticfVc.get(0).getVcString());
+            assertEquals(addressVc.getVcString(), ticfVc.get(0).getVcString());
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
@@ -137,7 +139,7 @@ class TicfCriServiceTest {
             assertEquals(TRUSTMARK, sentTicfCriDto.vtm());
             assertEquals(USER_ID, sentTicfCriDto.sub());
             assertEquals(GOVUK_JOURNEY_ID, sentTicfCriDto.govukSigninJourneyId());
-            assertEquals(List.of(M1B_DCMAW_DL_VC.getVcString()), sentTicfCriDto.credentials());
+            assertEquals(List.of(drivingPermitVc.getVcString()), sentTicfCriDto.credentials());
 
             verify(mockHttpClient).send(requestCaptor.capture(), any());
             assertEquals(

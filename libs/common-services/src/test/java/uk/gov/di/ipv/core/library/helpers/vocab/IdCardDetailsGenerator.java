@@ -7,12 +7,11 @@ public class IdCardDetailsGenerator {
 
     public static IdCardDetails createIdCardDetails(
             String documentNumber, String expiryDate, String icaoIssuerCode, String issueDate) {
-        var idCardDetails = new IdCardDetails();
-        idCardDetails.setDocumentNumber(documentNumber);
-        idCardDetails.setExpiryDate(expiryDate);
-        idCardDetails.setIcaoIssuerCode(icaoIssuerCode);
-        idCardDetails.setIssueDate(issueDate);
-
-        return idCardDetails;
+        return IdCardDetails.builder()
+                .withDocumentNumber(documentNumber)
+                .withExpiryDate(expiryDate)
+                .withIcaoIssuerCode(icaoIssuerCode)
+                .withIssueDate(issueDate)
+                .build();
     }
 }

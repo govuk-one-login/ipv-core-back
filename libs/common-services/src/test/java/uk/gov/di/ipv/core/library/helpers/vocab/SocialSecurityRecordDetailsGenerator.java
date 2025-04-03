@@ -7,8 +7,6 @@ public class SocialSecurityRecordDetailsGenerator {
 
     public static SocialSecurityRecordDetails createSocialSecurityRecordDetails(
             String personalNumber) {
-        var socialSecurityRecord = new SocialSecurityRecordDetails();
-        socialSecurityRecord.setPersonalNumber(personalNumber);
-        return socialSecurityRecord;
+        return SocialSecurityRecordDetails.builder().withPersonalNumber(personalNumber).build();
     }
 }

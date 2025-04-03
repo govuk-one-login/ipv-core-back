@@ -9,9 +9,7 @@ public class NameGenerator {
     private NameGenerator() {}
 
     public static Name createName(List<NamePart> nameParts) {
-        var name = new Name();
-        name.setNameParts(nameParts);
-        return name;
+        return Name.builder().withNameParts(nameParts).build();
     }
 
     public static Name createName(String givenName, String familyName) {
@@ -27,10 +25,7 @@ public class NameGenerator {
         private NamePartGenerator() {}
 
         public static NamePart createNamePart(String value, NamePart.NamePartType type) {
-            var namePart = new NamePart();
-            namePart.setValue(value);
-            namePart.setType(type);
-            return namePart;
+            return NamePart.builder().withValue(value).withType(type).build();
         }
     }
 }

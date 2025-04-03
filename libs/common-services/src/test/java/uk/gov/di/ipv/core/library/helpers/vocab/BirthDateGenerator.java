@@ -6,8 +6,6 @@ public class BirthDateGenerator {
     private BirthDateGenerator() {}
 
     public static BirthDate createBirthDate(String value) {
-        var birthDate = new BirthDate();
-        birthDate.setValue(value);
-        return birthDate;
+        return BirthDate.builder().withValue(value).build();
     }
 }
