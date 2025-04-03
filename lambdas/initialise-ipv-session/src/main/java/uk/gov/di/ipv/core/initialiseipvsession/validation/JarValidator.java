@@ -203,27 +203,36 @@ public class JarValidator {
         }
     }
 
-    private void validateSignature(SignedJWT signedJWT, String clientId)
+    private void validateSignature(SignedJWT signedJWT, String clientId) // TODO
             throws JarValidationException {
         try {
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A"));
             SignedJWT concatSignatureJwt;
             if (JwtHelper.signatureIsDerFormat(signedJWT)) {
+                LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone B"));
                 concatSignatureJwt = JwtHelper.transcodeSignature(signedJWT);
+                LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone C"));
             } else {
                 concatSignatureJwt = signedJWT;
+                LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone D"));
             }
+
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone E"));
             boolean valid =
                     concatSignatureJwt.verify(
                             new ECDSAVerifier(
                                     oAuthKeyService.getClientSigningKey(
                                             clientId, signedJWT.getHeader())));
 
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone F"));
             if (!valid) {
                 LOGGER.error(LogHelper.buildLogMessage("JWT signature validation failed"));
                 throw new JarValidationException(
                         OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                                 "JWT signature validation failed"));
             }
+
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone G"));
         } catch (JOSEException | ParseException e) {
             LOGGER.error(
                     LogHelper.buildLogMessage(

@@ -84,7 +84,9 @@ public class OAuthKeyService {
     }
 
     public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) throws ParseException {
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A1"));
         var keyId = jwsHeader.getKeyID();
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A2"));
         if (keyId == null) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
@@ -93,8 +95,10 @@ public class OAuthKeyService {
             return ECKey.parse(
                     configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
         }
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A3"));
 
-        var jwksUrl = getClientJwksUrl(clientId);
+        var jwksUrl = getClientJwksUrl(clientId); //
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A4"));
         if (jwksUrl == null) {
             LOGGER.warn(
                     LogHelper.buildLogMessage("JWKS URL not configured, returning key from config")
@@ -103,6 +107,7 @@ public class OAuthKeyService {
                     configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
         }
 
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone A5"));
         var keyByKeyId = getCachedJWKSet(jwksUrl).filter(SIG_USE_MATCHER).getKeyByKeyId(keyId);
         if (keyByKeyId == null) {
             LOGGER.warn(
@@ -123,13 +128,23 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            return URI.create(configService.getParameter(CLIENT_JWKS_URL, clientId));
+            LOGGER.warn(LogHelper.buildLogMessage("getClientJwksUrl"));
+            var param = configService.getParameter(CLIENT_JWKS_URL, clientId);
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "MIKE param %s %s %s", param, clientId, CLIENT_JWKS_URL)));
+            return URI.create(param);
         } catch (ConfigParameterNotFoundException e) {
+            LOGGER.warn(LogHelper.buildErrorMessage("Configuration parameter not found", e));
             return null;
         }
     }
 
     private JWKSet getCachedJWKSet(URI jwksUrl) {
+        LOGGER.warn(
+                LogHelper.buildLogMessage(
+                        String.format("MIKE getCachedJWKSet %s", jwksUrl.toString())));
         return cachedJwkSets
                 .compute(
                         jwksUrl,
