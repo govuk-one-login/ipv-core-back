@@ -764,6 +764,7 @@ public interface VcFixtures {
     static VerifiableCredential vcWebPassportM1aWithCI() {
         IdentityCheckCredential vcClaim = vcClaimWebPassportValid();
         vcClaim.getEvidence().get(0).setCi(List.of("test"));
+        vcClaim.getEvidence().get(0).setValidityScore(0);
 
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -1031,6 +1032,7 @@ public interface VcFixtures {
 
     static VerifiableCredential vcWebDrivingPermitFailedChecks() {
         var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getEvidence().get(0).setCi(List.of("testCI"));
         vcClaim.getEvidence().get(0).setValidityScore(0);
 
         return generateVerifiableCredential(
