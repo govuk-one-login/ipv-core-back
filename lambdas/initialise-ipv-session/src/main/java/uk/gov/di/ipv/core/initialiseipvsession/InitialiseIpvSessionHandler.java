@@ -147,12 +147,15 @@ public class InitialiseIpvSessionHandler
         LogHelper.attachComponentId(configService);
 
         try {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(String.format("MIKE input: %s", input.getBody())));
             String ipAddress = RequestHelper.getIpAddress(input);
             String deviceInformation = RequestHelper.getEncodedDeviceInformation(input);
             configService.setFeatureSet(RequestHelper.getFeatureSet(input));
             Map<String, String> sessionParams =
                     OBJECT_MAPPER.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 1"));
             if (error.isPresent()) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -165,9 +168,13 @@ public class InitialiseIpvSessionHandler
             SignedJWT signedJWT =
                     jarValidator.decryptJWE(JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)));
 
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            String.format("MIKE signedJWT: %s", signedJWT.getParsedString())));
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 10"));
 
             String govukSigninJourneyId =
                     claimsSet.getStringClaim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY);

@@ -69,7 +69,9 @@ public class JarValidator {
 
     public SignedJWT decryptJWE(JWEObject jweObject) throws JarValidationException {
         try {
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 2"));
             jweObject.decrypt(jweDecrypter);
+            LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 3"));
             return jweObject.getPayload().toSignedJWT();
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to decrypt the JWE", e));
@@ -81,12 +83,18 @@ public class JarValidator {
 
     public JWTClaimsSet validateRequestJwt(SignedJWT signedJWT, String clientId)
             throws JarValidationException, ParseException {
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 4"));
         validateClientId(clientId);
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 5"));
         validateJWTHeader(signedJWT);
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 6"));
         validateSignature(signedJWT, clientId);
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 7"));
 
         JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 8"));
         URI redirectUri = validateRedirectUri(jwtClaimsSet, clientId);
+        LOGGER.warn(LogHelper.buildLogMessage("MIKE milestone 9"));
 
         try {
             return getValidatedClaimSet(signedJWT, clientId);
@@ -289,6 +297,9 @@ public class JarValidator {
     private URI validateRedirectUri(JWTClaimsSet claimsSet, String clientId)
             throws JarValidationException {
         try {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            String.format("MIKE claimsSet: %s", claimsSet.toJSONObject())));
             URI redirectUri = claimsSet.getURIClaim(REDIRECT_URI_CLAIM);
             List<String> allowedRedirectUris =
                     configService.getStringListParameter(
