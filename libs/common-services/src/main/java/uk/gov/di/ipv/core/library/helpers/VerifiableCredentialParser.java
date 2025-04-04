@@ -38,7 +38,7 @@ public class VerifiableCredentialParser {
 
     private VerifiableCredentialParser() {}
 
-    public static VerifiableCredential parseCredential(JWTClaimsSet claimsSet)
+    public static VerifiableCredential<?> parseCredential(JWTClaimsSet claimsSet)
             throws CredentialParseException {
         try {
             var vcClaim = claimsSet.getJSONObjectClaim(VC_CLAIM);
@@ -68,7 +68,7 @@ public class VerifiableCredentialParser {
         }
     }
 
-    private static <T extends VerifiableCredential> T parseCredentialOfType(
+    private static <T extends VerifiableCredential<?>> T parseCredentialOfType(
             Object vcClaim, Class<T> vcType) {
         try {
             return OBJECT_MAPPER.convertValue(vcClaim, vcType);
