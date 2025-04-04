@@ -4,18 +4,24 @@ description: >-
   but their attempt failed. For example, they might
   have taken the wrong document or the name they entered
   did not match the name on their document.
+entryEvents:
+  f2f-fail-p1:
+    targetState: F2F_FAILED_P1_PAGE
+  f2f-fail-p2:
+    targetState: F2F_FAILED_P2_PAGE
 
-states:
-  # Entry points
-
-  FAILED:
+nestedJourneyStates:
+  F2F_FAILED_P1_PAGE:
+    response:
+      type: page
+      pageId: pyi-f2f-technical
     events:
       next:
-        targetState: F2F_FAILED_PAGE
+        targetState: RESET_SESSION_BEFORE_NEW_P1_IDENTITY
+      end:
+        targetState: RESET_SESSION_BEFORE_RETURN_TO_RP
 
-  # Journey states
-
-  F2F_FAILED_PAGE:
+  F2F_FAILED_P2_PAGE:
     response:
       type: page
       pageId: pyi-f2f-technical
@@ -25,6 +31,16 @@ states:
       end:
         targetState: RESET_SESSION_BEFORE_RETURN_TO_RP
 
+  RESET_SESSION_BEFORE_NEW_P1_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_F2F_ALL
+    events:
+      next:
+        exitEventToEmit: next-p1
+
   RESET_SESSION_BEFORE_NEW_P2_IDENTITY:
     response:
       type: process
@@ -33,8 +49,7 @@ states:
         resetType: PENDING_F2F_ALL
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: START
+        exitEventToEmit: next-p2
 
   RESET_SESSION_BEFORE_RETURN_TO_RP:
     response:

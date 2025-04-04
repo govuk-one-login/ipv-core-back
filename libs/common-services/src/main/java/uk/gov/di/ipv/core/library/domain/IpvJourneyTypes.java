@@ -27,7 +27,6 @@ public enum IpvJourneyTypes {
     // F2F journeys
     F2F_HAND_OFF("f2f-hand-off"),
     F2F_PENDING("f2f-pending"),
-    F2F_FAILED("f2f-failed"),
 
     // Operational profile journeys
     OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),

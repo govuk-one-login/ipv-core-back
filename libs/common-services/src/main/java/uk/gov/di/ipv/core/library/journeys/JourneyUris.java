@@ -27,7 +27,8 @@ public class JourneyUris {
     public static final String JOURNEY_ENHANCED_VERIFICATION_PATH =
             "/journey/enhanced-verification";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
-    public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
+    public static final String JOURNEY_F2F_FAIL_P1_PATH = "/journey/f2f-fail-p1";
+    public static final String JOURNEY_F2F_FAIL_P2_PATH = "/journey/f2f-fail-p2";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
     public static final String JOURNEY_FOUND = "/journey/found";
