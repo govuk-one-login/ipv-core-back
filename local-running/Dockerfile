@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim as build
+FROM openjdk:17-jdk-slim AS build
 
 WORKDIR /core-back
 
