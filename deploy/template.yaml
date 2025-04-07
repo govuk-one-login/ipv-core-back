@@ -2879,7 +2879,7 @@ Resources:
           ReturnData: true
           MetricStat:
             Metric:
-              Namespace: Custom/LambdaErrors
+              Namespace: AWS/Lambda
               MetricName: IOExceptionCount
             Period: 60
             Stat: Sum
@@ -2891,7 +2891,7 @@ Resources:
       FilterPattern: '"IOException"'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: Custom/LambdaErrors
+          MetricNamespace: AWS/Lambda
           MetricName: IOExceptionCount
 
   ####################################################################
