@@ -54,7 +54,7 @@ public class TracingHttpClient extends HttpClient {
         try {
             return baseClient.send(request, responseBodyHandler);
         } catch (IOException e) {
-            LOGGER.error("HTTP request failed with IOException", e);
+            LOGGER.error(LogHelper.buildErrorMessage("HTTP request failed with IOException", e));
             if (e instanceof HttpTimeoutException) {
                 throw e;
             }
@@ -73,8 +73,7 @@ public class TracingHttpClient extends HttpClient {
                     throw new UncheckedIOException(ex);
                 }
             }
-            // Rethrow any other IOException as unchecked exception to force a crash (see PYIC-8058
-            // and linked incident INC0014124)
+            // Rethrow any other IOException as unchecked exception
             throw new UncheckedIOException(e);
         }
     }
