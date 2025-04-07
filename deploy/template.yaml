@@ -127,6 +127,10 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
+  IsStaging: !Equals [ !Ref Environment, "staging" ]
+  IsBuildOrStaging: !Or
+    - !Condition IsBuild
+    - !Condition IsStaging
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -1839,6 +1843,16 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
       Tracing: Active
+      Layers:
+        - !If
+          - UseDynatrace
+          - !If
+            - IsBuildOrStaging
+            - !Ref AWS::NoValue
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !Ref AWS::NoValue
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1849,6 +1863,13 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          AWS_LAMBDA_EXEC_WRAPPER: !If
+            - UseDynatrace
+            - !If
+              - IsBuildOrStaging
+              - !Ref AWS::NoValue
+              - /opt/dynatrace
+            - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2837,6 +2858,41 @@ Resources:
       Threshold: 30000 #30k milliseconds = 30 seconds
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
+
+  IOExceptionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsNotDevelopment
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue sns-topics-AlarmTopic
+      AlarmName: !Sub ${AWS::StackName}-IOExceptionInLogs
+      InsufficientDataActions: []
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: ioExceptionMetric
+          Label: IOException Count
+          ReturnData: true
+          MetricStat:
+            Metric:
+              Namespace: Custom/LambdaErrors
+              MetricName: IOExceptionCount
+            Period: 60
+            Stat: Sum
+
+  IOExceptionMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
+      FilterPattern: '"IOException"'
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: Custom/LambdaErrors
+          MetricName: IOExceptionCount
 
   ####################################################################
   #                                                                  #
