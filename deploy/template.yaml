@@ -1863,6 +1863,8 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          # We're temporarily disabling this for lower envs to investigate the effect it has on IOExceptions
+          # https://govukverify.atlassian.net/browse/PYIC-8220
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
@@ -2865,7 +2867,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue sns-topics-AlarmTopic
+        - !ImportValue alarm-alerts-topic
       AlarmName: !Sub ${AWS::StackName}-IOExceptionInLogs
       InsufficientDataActions: []
       EvaluationPeriods: 1
