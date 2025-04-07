@@ -2888,7 +2888,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
-      FilterPattern: '"IOException"'
+      FilterPattern: '"HTTP request failed with IOException"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
