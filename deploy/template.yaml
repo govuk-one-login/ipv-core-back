@@ -2893,7 +2893,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   BuildClientOauthResponseFunctionIOExceptionMetricFilter:
@@ -2903,7 +2903,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   InitialiseIpvSessionFunctionIOExceptionMetricFilter:
@@ -2913,7 +2913,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   BuildCriOauthRequestFunctionIOExceptionMetricFilter:
@@ -2923,7 +2923,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ProcessCriCallbackIOExceptionMetricFilter:
@@ -2933,7 +2933,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ProcessMobileAppCallbackIOExceptionMetricFilter:
@@ -2943,7 +2943,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   CheckMobileAppVcReceiptIOExceptionMetricFilter:
@@ -2953,7 +2953,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   BuildUserIdentityFunctionIOExceptionMetricFilter:
@@ -2963,7 +2963,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   UserReverificationFunctionIOExceptionMetricFilter:
@@ -2973,7 +2973,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   JourneyEngineStepFunctionIOExceptionMetricFilter:
@@ -2983,7 +2983,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   IPVProcessJourneyEventFunctionIOExceptionMetricFilter:
@@ -2993,7 +2993,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   BuildProvenUserIdentityDetailsFunctionIOExceptionMetricFilter:
@@ -3003,7 +3003,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   CheckExistingIdentityFunctionIOExceptionMetricFilter:
@@ -3013,7 +3013,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ProcessAsyncCriCredentialFunctionIOExceptionMetricFilter:
@@ -3023,7 +3023,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   CheckGpg45ScoreFunctionIOExceptionMetricFilter:
@@ -3033,7 +3033,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   CallDcmawAsyncCriFunctionIOExceptionMetricFilter:
@@ -3043,7 +3043,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ResetSessionIdentityFunctionIOExceptionMetricFilter:
@@ -3053,7 +3053,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   CheckReverificationIdentityFunctionIOExceptionMetricFilter:
@@ -3063,7 +3063,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ProcessCandidateIdentityFunctionIOExceptionMetricFilter:
@@ -3073,7 +3073,7 @@ Resources:
       FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
-          MetricNamespace: AWS/Lambda
+          MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
   ####################################################################
