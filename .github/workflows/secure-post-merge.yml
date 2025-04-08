@@ -22,7 +22,7 @@ jobs:
 
       - name: Get changed api-tests files
         id: get-changed-files
-        uses: tj-actions/changed-files@27ae6b33eaed7bf87272fdeb9f1c54f9facc9d99 # v45.0.7
+        uses: tj-actions/changed-files@cf2e39e86bf842d1f9bc5bca56c0a6b207cca792 # v45.0.7
         with:
           files: |
             api-tests/**
