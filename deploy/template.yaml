@@ -2890,7 +2890,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2900,7 +2900,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2910,7 +2910,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2920,7 +2920,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2930,7 +2930,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessCriCallbackLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2940,7 +2940,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2950,7 +2950,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckMobileAppVcReceiptLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2960,7 +2960,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2970,7 +2970,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref UserReverificationFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2980,7 +2980,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2990,7 +2990,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3000,7 +3000,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildProvenUserIdentityDetailsFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3010,7 +3010,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3020,7 +3020,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3030,7 +3030,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3040,7 +3040,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CallDcmawAsyncCriFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3050,7 +3050,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3060,7 +3060,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckReverificationIdentityFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3070,7 +3070,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessCandidateIdentityFunctionLogGroup
-      FilterPattern: '"IOException: <init>"'
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
