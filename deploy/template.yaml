@@ -2890,7 +2890,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2900,7 +2900,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2910,7 +2910,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2920,7 +2920,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2930,7 +2930,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessCriCallbackLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2940,7 +2940,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2950,7 +2950,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckMobileAppVcReceiptLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2960,7 +2960,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2970,7 +2970,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref UserReverificationFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2980,7 +2980,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -2990,7 +2990,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3000,7 +3000,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref BuildProvenUserIdentityDetailsFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3010,7 +3010,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3020,7 +3020,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3030,7 +3030,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3040,7 +3040,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CallDcmawAsyncCriFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3050,7 +3050,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3060,7 +3060,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref CheckReverificationIdentityFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
@@ -3070,7 +3070,7 @@ Resources:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref ProcessCandidateIdentityFunctionLogGroup
-      FilterPattern: '"HTTP request failed with IOException"'
+      FilterPattern: '"IOException: <init>"'
       MetricTransformations:
         - MetricValue: "1"
           MetricNamespace: AWS/Lambda
