@@ -316,13 +316,19 @@ public class ProcessCandidateIdentityHandler
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
 
+        // These identity types require the VCs from EVCS. To save multiple calls,
+        // we call for them once here.
+        if (COI_CHECK_TYPES.contains(processIdentityType)
+                || STORE_IDENTITY_TYPES.contains(processIdentityType)
+                || PENDING.equals(processIdentityType)) {
+            evcsUserVcs = getUserVcsFromEvcs(clientOAuthSessionItem);
+        }
+
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
                     LogHelper.buildLogMessage("Performing COI check")
                             .with(LOG_CHECK_TYPE.getFieldName(), coiCheckType.name()));
-
-            evcsUserVcs = getUserVcsFromEvcs(clientOAuthSessionItem);
 
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(
@@ -375,9 +381,7 @@ public class ProcessCandidateIdentityHandler
                             deviceInformation,
                             sessionVcs,
                             auditEventUser,
-                            evcsUserVcs == null
-                                    ? getUserVcsFromEvcs(clientOAuthSessionItem)
-                                    : evcsUserVcs);
+                            evcsUserVcs);
                 }
                 return journey.toObjectMap();
             }
@@ -393,7 +397,7 @@ public class ProcessCandidateIdentityHandler
                     deviceInformation,
                     sessionVcs,
                     auditEventUser,
-                    evcsUserVcs == null ? getUserVcsFromEvcs(clientOAuthSessionItem) : evcsUserVcs);
+                    evcsUserVcs);
         }
 
         return JOURNEY_NEXT.toObjectMap();
