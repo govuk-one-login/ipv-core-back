@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
-import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -79,8 +78,7 @@ public class CheckCoiService {
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser,
             List<EvcsGetUserVCDto> evcsUserVcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                    EvcsServiceException {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
 
         var userId = clientOAuthSession.getUserId();
 
