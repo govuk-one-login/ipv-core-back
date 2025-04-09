@@ -74,8 +74,6 @@ class EvcsServiceTest {
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS =
             List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, VC_F2F);
     private static final String TEST_USER_ID = "a-user-id";
-    private static final List<EvcsVCState> VC_STATES_TO_QUERY_FOR =
-            List.of(CURRENT, PENDING_RETURN);
 
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final List<EvcsGetUserVCDto> EVCS_GET_USER_VC_DTO =
@@ -425,6 +423,62 @@ class EvcsServiceTest {
                 () ->
                         evcsService.getVerifiableCredentials(
                                 TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT));
+    }
+
+    @Test
+    void getVerifiableCredentialsShouldReturnParsedVcsWhenGivenEvcsVcs() throws Exception {
+        // Arrange
+        var evcsVcs =
+                List.of(
+                        new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
+                        new EvcsGetUserVCDto(
+                                vcWebPassportSuccessful().getVcString(), CURRENT, null));
+
+        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
+                .thenReturn(Cri.ADDRESS);
+        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
+                .thenReturn(Cri.DCMAW);
+
+        // Act
+        var vcs = evcsService.getVerifiableCredentials(TEST_USER_ID, evcsVcs, CURRENT);
+        // Assert
+        assertEquals(
+                2,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCri().equals(Cri.ADDRESS)
+                                                || vc.getCri().equals(Cri.DCMAW))
+                        .count()));
+    }
+
+    @Test
+    void getVerifiableCredentialsSupportsMultipleStates() throws Exception {
+        // Arrange
+        var evcsVcs =
+                List.of(
+                        new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
+                        new EvcsGetUserVCDto(
+                                vcWebPassportSuccessful().getVcString(), PENDING_RETURN, null));
+
+        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
+                .thenReturn(Cri.ADDRESS);
+        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
+                .thenReturn(Cri.DCMAW);
+
+        // Act
+        var vcs =
+                evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, evcsVcs, CURRENT, PENDING_RETURN);
+        // Assert
+        assertEquals(
+                2,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCri().equals(Cri.ADDRESS)
+                                                || vc.getCri().equals(Cri.DCMAW))
+                        .count()));
     }
 
     @Test

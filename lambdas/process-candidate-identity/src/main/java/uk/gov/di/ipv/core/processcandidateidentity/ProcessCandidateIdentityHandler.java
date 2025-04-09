@@ -368,10 +368,6 @@ public class ProcessCandidateIdentityHandler
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-
-                    if (evcsService == null) {
-                        evcsUserVcs = getUserVcsFromEvcs(clientOAuthSessionItem);
-                    }
                     storeIdentityService.storeIdentity(
                             ipvSessionItem,
                             userId,
@@ -379,7 +375,9 @@ public class ProcessCandidateIdentityHandler
                             deviceInformation,
                             sessionVcs,
                             auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs == null
+                                    ? getUserVcsFromEvcs(clientOAuthSessionItem)
+                                    : evcsUserVcs);
                 }
                 return journey.toObjectMap();
             }
@@ -388,10 +386,6 @@ public class ProcessCandidateIdentityHandler
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-
-            if (evcsService == null) {
-                evcsUserVcs = getUserVcsFromEvcs(clientOAuthSessionItem);
-            }
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     userId,
@@ -399,7 +393,7 @@ public class ProcessCandidateIdentityHandler
                     deviceInformation,
                     sessionVcs,
                     auditEventUser,
-                    evcsUserVcs);
+                    evcsUserVcs == null ? getUserVcsFromEvcs(clientOAuthSessionItem) : evcsUserVcs);
         }
 
         return JOURNEY_NEXT.toObjectMap();

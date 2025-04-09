@@ -114,7 +114,7 @@ public class EvcsService {
 
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, List<EvcsGetUserVCDto> evcsUserVcs, EvcsVCState... states)
-            throws CredentialParseException, EvcsServiceException {
+            throws CredentialParseException {
         var evcsUserVcsByRequiredState =
                 evcsUserVcs.stream()
                         .filter(evcsVc -> List.of(states).contains(evcsVc.state()))

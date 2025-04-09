@@ -726,7 +726,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of());
 
             // Act
@@ -747,7 +747,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC));
 
             // Act
@@ -769,7 +769,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
             // Act
@@ -793,7 +793,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC));
 
             // Act
@@ -815,7 +815,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
             // Act
@@ -839,7 +839,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL250_MIGRATION_VC));
 
             // Act
@@ -855,7 +855,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, PCL250_MIGRATION_VC));
 
             // Act
@@ -871,7 +871,7 @@ class InitialiseIpvSessionHandlerTest {
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
             when(mockEvcsService.getVerifiableCredentials(
-                            eq(TEST_USER_ID), eq(TEST_EVCS_ACCESS_TOKEN), eq(CURRENT)))
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of());
 
             // Act
