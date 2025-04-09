@@ -19,11 +19,9 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
 import java.util.List;
@@ -53,15 +51,12 @@ class StoreIdentityServiceTest {
     private static final String SESSION_ID = "session-id";
     private static final String USER_ID = "user-id";
     private static final String DEVICE_INFORMATION = "device-information";
-    private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
     private static final List<VerifiableCredential> VCS =
             List.of(vcWebPassportSuccessful(), vcExperianFraudM1aExpired(), vcAddressM1a());
     @Spy private static IpvSessionItem ipvSessionItem;
-    private static ClientOAuthSessionItem clientOAuthSessionItem;
     private AuditEventUser testAuditEventUser;
 
     @Mock ConfigService configService;
-    @Mock SessionCredentialsService sessionCredentialsService;
     @Mock AuditService auditService;
     @Mock EvcsService evcsService;
     @InjectMocks StoreIdentityService storeIdentityService;
@@ -73,13 +68,6 @@ class StoreIdentityServiceTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
-
-        clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .userId(USER_ID)
-                        .govukSigninJourneyId(GOVUK_JOURNEY_ID)
-                        .evcsAccessToken(EVCS_ACCESS_TOKEN)
-                        .build();
     }
 
     @Nested
@@ -105,11 +93,12 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser);
+                    testAuditEventUser,
+                    List.of());
 
             // Assert
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
@@ -133,11 +122,12 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser);
+                    testAuditEventUser,
+                    List.of());
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -161,11 +151,12 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    USER_ID,
                     CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser);
+                    testAuditEventUser,
+                    List.of());
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -192,11 +183,12 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser);
+                    testAuditEventUser,
+                    List.of());
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -217,11 +209,12 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    USER_ID,
                     CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser);
+                    testAuditEventUser,
+                    List.of());
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -236,9 +229,7 @@ class StoreIdentityServiceTest {
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
 
-            verify(evcsService, times(1))
-                    .storePendingIdentity(
-                            USER_ID, VCS, clientOAuthSessionItem.getEvcsAccessToken());
+            verify(evcsService, times(1)).storePendingIdentity(USER_ID, VCS, List.of());
         }
     }
 
@@ -249,7 +240,7 @@ class StoreIdentityServiceTest {
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(evcsService)
-                .storePendingIdentity(USER_ID, VCS, clientOAuthSessionItem.getEvcsAccessToken());
+                .storePendingIdentity(USER_ID, VCS, List.of());
 
         // Assert
         assertThrows(
@@ -257,10 +248,11 @@ class StoreIdentityServiceTest {
                 () ->
                         storeIdentityService.storeIdentity(
                                 ipvSessionItem,
-                                clientOAuthSessionItem,
+                                USER_ID,
                                 CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
                                 VCS,
-                                testAuditEventUser));
+                                testAuditEventUser,
+                                List.of()));
     }
 }

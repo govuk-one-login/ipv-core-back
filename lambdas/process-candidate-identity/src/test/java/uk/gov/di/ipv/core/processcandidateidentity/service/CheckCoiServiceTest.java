@@ -72,8 +72,7 @@ class CheckCoiServiceTest {
     void setup() throws Exception {
         testAuditEventUser =
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
-        when(mockEvcsService.getVerifiableCredentials(
-                        USER_ID, EVCS_ACCESS_TOKEN, EvcsVCState.CURRENT))
+        when(mockEvcsService.getVerifiableCredentials(USER_ID, List.of(), EvcsVCState.CURRENT))
                 .thenReturn(List.of(ADDRESS_VC));
         when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn("some-component-id");
@@ -111,7 +110,8 @@ class CheckCoiServiceTest {
                         STANDARD,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -164,7 +164,8 @@ class CheckCoiServiceTest {
                         ACCOUNT_INTERVENTION,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -195,7 +196,8 @@ class CheckCoiServiceTest {
                         STANDARD,
                         "device-information",
                         List.of(fraudVc),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -225,7 +227,8 @@ class CheckCoiServiceTest {
                         ACCOUNT_INTERVENTION,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -258,7 +261,8 @@ class CheckCoiServiceTest {
                         STANDARD,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -312,7 +316,8 @@ class CheckCoiServiceTest {
                         STANDARD,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertFalse(res);
@@ -366,7 +371,8 @@ class CheckCoiServiceTest {
                         ACCOUNT_INTERVENTION,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertFalse(res);
@@ -406,7 +412,8 @@ class CheckCoiServiceTest {
                         ACCOUNT_INTERVENTION,
                         "device-information",
                         List.of(),
-                        testAuditEventUser);
+                        testAuditEventUser,
+                        List.of());
 
         // Assert
         assertFalse(res);

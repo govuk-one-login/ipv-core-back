@@ -14,9 +14,9 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
-import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -77,7 +77,8 @@ public class CheckCoiService {
             CoiCheckType checkType,
             String deviceInformation,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser)
+            AuditEventUser auditEventUser,
+            List<EvcsGetUserVCDto> evcsUserVcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     EvcsServiceException {
 
@@ -99,9 +100,7 @@ public class CheckCoiService {
                 null,
                 deviceInformation);
 
-        var oldVcs =
-                evcsService.getVerifiableCredentials(
-                        userId, clientOAuthSession.getEvcsAccessToken(), CURRENT);
+        var oldVcs = evcsService.getVerifiableCredentials(userId, evcsUserVcs, CURRENT);
         var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
         var successfulCheck =
                 switch (checkType) {
@@ -113,9 +112,6 @@ public class CheckCoiService {
                             combinedCredentials);
                 };
 
-        var scopeClaims = clientOAuthSession.getScopeClaims();
-        var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
-
         sendAuditEvent(
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 checkType,
@@ -125,7 +121,7 @@ public class CheckCoiService {
                 sessionVcs,
                 deviceInformation);
 
-        if (isReverification) {
+        if (clientOAuthSession.isReverification()) {
             ipvSessionItem.setReverificationStatus(
                     successfulCheck ? ReverificationStatus.SUCCESS : ReverificationStatus.FAILED);
 

@@ -309,7 +309,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldUseEvcsService() throws Exception {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
 
@@ -317,7 +317,7 @@ class CheckExistingIdentityHandlerTest {
 
             verify(clientOAuthSessionDetailsService).getClientOAuthSession(any());
             verify(mockEvcsService)
-                    .getVerifiableCredentialsByState(
+                    .getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN);
         }
 
@@ -327,7 +327,7 @@ class CheckExistingIdentityHandlerTest {
                 Gpg45Profile matchedProfile) throws Exception {
             var hmrcMigrationVC = vcHmrcMigrationPCL200();
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, hmrcMigrationVC)));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
@@ -365,7 +365,7 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnJourneyReuseWithStoreResponseIfIsF2fPendingReturn() throws Exception {
             var vcs = List.of(gpg45Vc, vcF2fPassportPhotoM1a());
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
@@ -388,7 +388,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
             var inheritedIdentityVc = vcHmrcMigrationPCL200();
             var vcs = List.of(gpg45Vc, f2fVc);
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs, CURRENT, List.of(inheritedIdentityVc)));
             var combinedVcs = List.of(inheritedIdentityVc, gpg45Vc, f2fVc);
@@ -403,7 +403,7 @@ class CheckExistingIdentityHandlerTest {
         @Test // User returning after migration
         void shouldReturnJourneyOpProfileReuseResponseIfPCL200RequestedAndMetWhenNotInMigration()
                 throws Exception {
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl200Vc)));
             when(mockVotMatcher.matchFirstVot(
@@ -435,7 +435,7 @@ class CheckExistingIdentityHandlerTest {
         @Test // User returning after migration
         void shouldReturnJourneyOpProfileReuseResponseIfPCL250RequestedAndMetWhenNotInMigration()
                 throws Exception {
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl250Vc)));
             when(mockVotMatcher.matchFirstVot(
@@ -465,7 +465,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnJourneyOpProfileReuseResponseIfOpProfileAndPendingF2F() throws Exception {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(pcl250Vc)));
             when(mockVotMatcher.matchFirstVot(
@@ -491,7 +491,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test // User in process of migration
         void shouldReturnJourneyInMigrationReuseResponseIfPCL200RequestedAndMet() throws Exception {
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl200Vc)));
             when(mockVotMatcher.matchFirstVot(
@@ -522,7 +522,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test // User in process of migration
         void shouldReturnJourneyInMigrationReuseResponseIfPCL250RequestedAndMet() throws Exception {
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl250Vc)));
             when(mockVotMatcher.matchFirstVot(
@@ -586,7 +586,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
@@ -641,7 +641,7 @@ class CheckExistingIdentityHandlerTest {
                         new AsyncCriStatus(
                                 DCMAW_ASYNC, AsyncCriStatus.STATUS_PENDING, false, true, false));
         Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(PENDING_RETURN, vcs));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -685,7 +685,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDrivingPermitDva())));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
@@ -711,7 +711,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportPhotoM1a())));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
@@ -742,7 +742,7 @@ class CheckExistingIdentityHandlerTest {
         if (vot.isPresent()) {
             credentials.add(createOperationalProfileVc(vot.get()));
         }
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, credentials));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -765,7 +765,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyIpvGpg45MediumResponseIfScoresDoNotSatisfyP2Gpg45Profile()
             throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
@@ -792,7 +792,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -916,7 +916,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
@@ -945,7 +945,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
@@ -973,7 +973,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
@@ -1069,7 +1069,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
 
@@ -1091,7 +1091,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenThrow(CiExtractionException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
 
@@ -1112,7 +1112,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenThrow(CredentialParseException.class);
 
@@ -1233,7 +1233,7 @@ class CheckExistingIdentityHandlerTest {
                 throws Exception {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
             var vcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, vcs));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, false))
@@ -1253,7 +1253,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
             var vcs = new ArrayList<>(List.of(gpg45Vc));
-            when(mockEvcsService.getVerifiableCredentialsByState(
+            when(mockEvcsService.getParsedVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
@@ -1310,7 +1310,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
@@ -1336,7 +1336,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
@@ -1365,7 +1365,7 @@ class CheckExistingIdentityHandlerTest {
                         fraudVc,
                         vcExperianKbvM1a(),
                         vcDcmawDrivingPermitDvaM1b());
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, vcs));
 
@@ -1397,7 +1397,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
             throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
+        when(mockEvcsService.getParsedVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
 
