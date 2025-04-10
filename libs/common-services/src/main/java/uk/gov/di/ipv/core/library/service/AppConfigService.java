@@ -54,17 +54,13 @@ public class AppConfigService extends YamlParametersConfigService {
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
 
         appConfigProvider =
-                AppConfigProvider.builder()
-                        .withClient(
+                ParamManager.getAppConfigProvider(
                                 AppConfigDataClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
-                                        .build())
-                        .withCacheManager(ParamManager.getCacheManager())
-                        .withTransformationManager(ParamManager.getTransformationManager())
-                        .withApplication(applicationId)
-                        .withEnvironment(environmentId)
-                        .build()
-                        .withMaxAge(0, MINUTES);
+                                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                                        .build(),
+                                environmentId,
+                                applicationId)
+                        .withMaxAge(cacheDuration, MINUTES);
 
         secretsProvider =
                 ParamManager.getSecretsProvider(
