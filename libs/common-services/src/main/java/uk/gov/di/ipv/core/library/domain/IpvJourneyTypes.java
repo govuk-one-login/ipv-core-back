@@ -17,7 +17,6 @@ public enum IpvJourneyTypes {
     NEW_P1_IDENTITY("new-p1-identity"),
     NEW_P2_IDENTITY("new-p2-identity"),
     REPEAT_FRAUD_CHECK("repeat-fraud-check"),
-    EVALUATE_SCORES("evaluate-scores"),
 
     // Unsuccessful journeys
     INELIGIBLE("ineligible"),
@@ -28,7 +27,6 @@ public enum IpvJourneyTypes {
     // F2F journeys
     F2F_HAND_OFF("f2f-hand-off"),
     F2F_PENDING("f2f-pending"),
-    F2F_FAILED("f2f-failed"),
 
     // Operational profile journeys
     OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),

@@ -77,7 +77,7 @@ public class UserReverificationHandlerTest {
     void pactSetup(PactVerificationContext context) throws IOException {
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockOAuthSessionStore);
+                new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
 
         var handler =
                 new UserReverificationHandler(

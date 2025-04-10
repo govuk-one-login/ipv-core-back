@@ -147,7 +147,7 @@ public class TicfCriService {
                 LOGGER.warn(LogHelper.buildLogMessage("Request to TICF CRI has timed out"));
             }
             // In the case of unavailability, the TICF CRI is deemed optional.
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "Request to TICF CRI failed. Allowing user journey to continue", e));
             return List.of();

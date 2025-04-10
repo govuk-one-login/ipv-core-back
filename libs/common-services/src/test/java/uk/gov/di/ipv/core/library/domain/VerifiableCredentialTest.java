@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 
 class VerifiableCredentialTest {
     private static final Cri CRI = Cri.ADDRESS;
@@ -30,7 +30,7 @@ class VerifiableCredentialTest {
 
     @BeforeEach
     void setUp() {
-        vcFixture = vcDrivingPermit();
+        vcFixture = vcWebDrivingPermitDvaValid();
     }
 
     @Test

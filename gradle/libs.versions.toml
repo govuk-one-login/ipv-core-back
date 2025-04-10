@@ -1,10 +1,10 @@
 [versions]
-awsSdk = "2.30.31"
+awsSdk = "2.31.3"
 jackson = "2.18.0"
 log4j = "2.24.0"
 mockito = "5.16.0"
 pact = "4.6.5"
-powertools = "1.18.0"
+powertools = "1.20.0"
 
 [libraries]
 apacheHttpCore = "org.apache.httpcomponents.core5:httpcore5:5.3.3"
@@ -19,12 +19,12 @@ awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.18.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
-diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.1"
+diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.3"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-javalin = "io.javalin:javalin:6.4.0"
+javalin = "io.javalin:javalin:6.5.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.12.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.12.0"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
@@ -50,6 +50,6 @@ log4j = ["log4jApi", "log4jCore"]
 awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
-postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.12"
+postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.13"
 sonar = "org.sonarqube:5.1.0.4882"
 spotless = "com.diffplug.spotless:7.0.1"

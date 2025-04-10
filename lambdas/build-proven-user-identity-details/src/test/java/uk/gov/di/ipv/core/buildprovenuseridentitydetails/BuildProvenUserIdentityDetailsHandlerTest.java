@@ -46,16 +46,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
@@ -106,10 +106,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportSuccessful(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -136,11 +136,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                vcPassportMissingName(),
-                                vcPassportMissingBirthDate(),
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportMissingName(),
+                                vcWebPassportMissingBirthDate(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -165,10 +165,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                                vcWebPassportSuccessful(),
                                 vcAddressMultipleAddresses(),
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -199,10 +199,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                                vcWebPassportSuccessful(),
                                 vcAddressMultipleAddressesNoValidFrom(),
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -224,7 +224,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC, vcVerificationM1a()));
+                .thenReturn(List.of(vcAddressM1a(), vcExperianFraudM1a(), vcExperianKbvM1a()));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -245,9 +245,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportSuccessful(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -269,10 +269,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                vcPassportM1aFailed(),
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportM1aFailed(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -294,10 +294,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                vcPassportMissingName(),
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportMissingName(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -319,10 +319,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                vcPassportMissingBirthDate(),
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
+                                vcWebPassportMissingBirthDate(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -376,10 +376,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a(),
+                                vcWebPassportSuccessful(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a(),
                                 vcHmrcMigrationPCL200NoEvidence()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -407,10 +407,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a(),
+                                vcWebPassportSuccessful(),
+                                vcAddressM1a(),
+                                vcExperianFraudM1a(),
+                                vcExperianKbvM1a(),
                                 vcHmrcMigrationPCL200NoEvidence()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))

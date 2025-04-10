@@ -1,0 +1,67 @@
+name: Face to Face Failed
+description: >-
+  A user chose to prove their identity at the Post Office
+  but their attempt failed. For example, they might
+  have taken the wrong document or the name they entered
+  did not match the name on their document.
+entryEvents:
+  f2f-fail-p1:
+    targetState: F2F_FAILED_P1_PAGE
+  f2f-fail-p2:
+    targetState: F2F_FAILED_P2_PAGE
+
+nestedJourneyStates:
+  F2F_FAILED_P1_PAGE:
+    response:
+      type: page
+      pageId: pyi-f2f-technical
+    events:
+      next:
+        targetState: RESET_SESSION_BEFORE_NEW_P1_IDENTITY
+      end:
+        targetState: RESET_SESSION_BEFORE_RETURN_TO_RP
+
+  F2F_FAILED_P2_PAGE:
+    response:
+      type: page
+      pageId: pyi-f2f-technical
+    events:
+      next:
+        targetState: RESET_SESSION_BEFORE_NEW_P2_IDENTITY
+      end:
+        targetState: RESET_SESSION_BEFORE_RETURN_TO_RP
+
+  RESET_SESSION_BEFORE_NEW_P1_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_F2F_ALL
+    events:
+      next:
+        exitEventToEmit: next-p1
+
+  RESET_SESSION_BEFORE_NEW_P2_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_F2F_ALL
+    events:
+      next:
+        exitEventToEmit: next-p2
+
+  RESET_SESSION_BEFORE_RETURN_TO_RP:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_F2F_ALL
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

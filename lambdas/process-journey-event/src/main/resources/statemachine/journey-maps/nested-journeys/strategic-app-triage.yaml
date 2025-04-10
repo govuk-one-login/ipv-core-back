@@ -15,10 +15,12 @@ nestedJourneyStates:
     events:
       appTriage:
         targetState: SELECT_DEVICE_PAGE
-      appTriageIphone:
-        targetState: MOBILE_IPHONE_CONFIRM_PAGE
-      appTriageAndroid:
-        targetState: MOBILE_ANDROID_CONFIRM_PAGE
+      mobileDownloadIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mobileDownloadAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      appTriageSmartphone:
+        targetState: MAM_SELECT_SMARTPHONE
 
   SELECT_DEVICE_PAGE:
     response:
@@ -69,19 +71,6 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  DAD_ANDROID_START_SESSION:
-    response:
-      type: process
-      lambda: call-dcmaw-async-cri
-      lambdaInput:
-        mobileAppJourneyType: dad
-    events:
-      next:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
   DESKTOP_IPHONE_DOWNLOAD_PAGE:
     response:
       type: page
@@ -89,8 +78,25 @@ nestedJourneyStates:
       context: iphone
     events:
       next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        exitEventToEmit: anotherWay
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
         targetState: STRATEGIC_APP_HANDLE_RESULT
-        targetEntryEvent: check-mobile-app-result
+        targetEntryEvent: dl-auth-source-check
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -109,6 +115,16 @@ nestedJourneyStates:
       back:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
 
+  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      useApp:
+        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+
   DESKTOP_ANDROID_DOWNLOAD_PAGE:
     response:
       type: page
@@ -116,8 +132,23 @@ nestedJourneyStates:
       context: android
     events:
       next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
         targetState: STRATEGIC_APP_HANDLE_RESULT
-        targetEntryEvent: check-mobile-app-result
+        targetEntryEvent: dl-auth-source-check
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -136,6 +167,29 @@ nestedJourneyStates:
       back:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
+  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      useApp:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+
+  DAD_ANDROID_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: dad
+    events:
+      next:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   MAM_SELECT_SMARTPHONE:
     response:
       type: page
@@ -147,28 +201,6 @@ nestedJourneyStates:
       android:
         targetState: MOBILE_ANDROID_START_SESSION
       neither:
-        targetState: DAD_SELECT_SMARTPHONE
-
-  MOBILE_IPHONE_CONFIRM_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-mobile-confirm
-      context: iphone
-    events:
-      next:
-        targetState: MOBILE_IPHONE_START_SESSION
-      otherDevice:
-        targetState: DAD_SELECT_SMARTPHONE
-
-  MOBILE_ANDROID_CONFIRM_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-mobile-confirm
-      context: android
-    events:
-      next:
-        targetState: MOBILE_ANDROID_START_SESSION
-      otherDevice:
         targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_START_SESSION:
@@ -260,26 +292,6 @@ nestedJourneyStates:
         exitEventToEmit: returnToRp
       useApp:
         targetState: DAD_SELECT_SMARTPHONE
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
     response:

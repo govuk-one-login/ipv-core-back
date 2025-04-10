@@ -9,36 +9,20 @@ states:
   START:
     events:
       next:
-        targetState: IDENTITY_START_PAGE
-        checkFeatureFlag:
-          internationalAddressEnabled:
-            targetState: LIVE_IN_UK_PAGE
-
-  ENHANCED_VERIFICATION:
-    events:
-      next:
-        targetState: MITIGATION_01_IDENTITY_START_PAGE
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-
-  ALTERNATE_DOC_PASSPORT:
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl
-
-  ALTERNATE_DOC_DL:
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-passport
-
-  ENHANCED_VERIFICATION_F2F_FAIL:
-    events:
-      next:
-        targetState: F2F_FAILED_MITIGATION_PAGE
+        targetState: LIVE_IN_UK_PAGE
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: alternate-doc-invalid-dl
+          alternate-doc-invalid-passport:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: alternate-doc-invalid-passport
+          enhanced-verification:
+            targetState: MITIGATION_01_IDENTITY_START_PAGE
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   REPROVE_IDENTITY:
     events:
@@ -69,9 +53,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -81,33 +62,9 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-
-  CRI_TICF_STATE:
-    events:
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
 
   # Journey states
   REPROVE_IDENTITY_START:
@@ -156,11 +113,22 @@ states:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       incomplete-invalid-dl:
         targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
       alternate-doc-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
@@ -176,11 +144,15 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+        checkMitigation:
+          enhanced-verification:
+            targetState: PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -189,16 +161,28 @@ states:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
       failedDlAuthCheckInvalidDl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
+        checkMitigation:
+          enhanced-verification:
+            targetJourney: FAILED
+            targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
@@ -214,11 +198,15 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+        checkMitigation:
+          enhanced-verification:
+            targetState: PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   F2F_START_PAGE:
     response:
@@ -281,11 +269,6 @@ states:
       next-passport:
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-      alternate-doc-next-dl:
-        targetState: MITIGATION_CHECK_FRAUD_AFTER_DL
-      alternate-doc-next-passport:
-        targetState: MITIGATION_KBVS
-        targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -294,9 +277,6 @@ states:
       return-to-rp:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-      failed:
-        targetJourney: FAILED
-        targetState: FAILED
 
   CHECK_FRAUD_AFTER_DL:
     response:
@@ -308,21 +288,6 @@ states:
     events:
       met:
         targetState: KBV_PHOTO_ID
-        targetEntryEvent: next
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  MITIGATION_CHECK_FRAUD_AFTER_DL:
-    response:
-      type: process
-      lambda: check-gpg45-score
-      lambdaInput:
-        scoreType: fraud
-        scoreThreshold: 2
-    events:
-      met:
-        targetState: MITIGATION_KBVS
         targetEntryEvent: next
       unmet:
         targetJourney: FAILED
@@ -369,20 +334,34 @@ states:
     exitEvents:
       fail-with-no-ci:
         targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+          alternate-doc-invalid-dl:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
       end:
         targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+          alternate-doc-invalid-dl:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetState: MITIGATION_KBV_FAIL_PHOTO_ID
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
+        targetState: PROCESS_NEW_IDENTITY
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_KBV_FAIL_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   # DCMAW journey (J1)
   POST_APP_DOC_CHECK_SUCCESS_PAGE:
@@ -397,20 +376,9 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: PROCESS_NEW_IDENTITY
       fraud-fail-with-no-ci:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -421,16 +389,14 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_J4
-      enhanced-verification:
-        targetState: ADDRESS_AND_FRAUD_J4
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   ADDRESS_AND_FRAUD_J4:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      enhanced-verification:
         targetJourney: F2F_HAND_OFF
         targetState: START
       fraud-fail-with-no-ci:
@@ -447,8 +413,9 @@ states:
     events:
       next:
         targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
-      enhanced-verification:
-        targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   CRI_BANK_ACCOUNT_NO_PHOTO_ID:
     response:
@@ -486,9 +453,6 @@ states:
     exitEvents:
       next:
         targetState: KBV_NO_PHOTO_ID
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -501,17 +465,17 @@ states:
       end:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
+        targetState: PROCESS_NEW_IDENTITY
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   MITIGATION_KBV_FAIL_NO_PHOTO_ID:
     response:
@@ -613,11 +577,11 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: MITIGATION_01_APP_DOC_CHECK
+        targetState: APP_DOC_CHECK
         targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+            targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
@@ -628,85 +592,6 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-
-  MITIGATION_01_STRATEGIC_APP_TRIAGE:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      anotherWay:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incompleteDlAuthCheckInvalidDl:
-        targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
-      failedDlAuthCheckInvalidDl:
-        targetJourney: FAILED
-        targetState: FAILED
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
-      postOffice:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  MITIGATION_01_APP_DOC_CHECK:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      incomplete:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: MITIGATION_01_APP_DOC_CHECK
-        targetEntryEvent: next
-      postOffice:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MITIGATION_01_F2F_START_PAGE:
     response:
@@ -735,11 +620,7 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       anotherWay:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -752,10 +633,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
     response:
@@ -772,20 +650,13 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   APP_DOC_CHECK_PYI_ESCAPE:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
       incomplete:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -813,10 +684,7 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MITIGATION_KBV_FAIL_PHOTO_ID:
     response:
@@ -854,41 +722,6 @@ states:
         targetState: INELIGIBLE
 
   # Common Mitigation states - invalid-dl/invalid-passport
-  MITIGATION_KBVS:
-    nestedJourney: KBVS
-    exitEvents:
-      fail-with-no-ci:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  F2F_FAILED_MITIGATION_PAGE:
-    response:
-      type: page
-      pageId: pyi-f2f-technical
-    events:
-      next:
-        targetState: MITIGATION_01_IDENTITY_START_PAGE
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-      end:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   # International Address journey
   APP_DOC_CHECK_INTERNATIONAL_ADDRESS:
@@ -936,10 +769,7 @@ states:
       pageId: non-uk-no-passport
     events:
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
       useApp:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
@@ -955,10 +785,7 @@ states:
         auditEvents:
           - IPV_INTERNATIONAL_ADDRESS_START
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   NON_UK_NO_APP_PAGE:
     response:
@@ -969,10 +796,7 @@ states:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
       end:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE:
     response:
@@ -995,10 +819,7 @@ states:
       failedDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_NON_UK_NO_APP_PAGE
       returnToRp:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   STRATEGIC_APP_NON_UK_NO_APP_PAGE:
     response:
@@ -1009,10 +830,7 @@ states:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
       end:
-        targetState: RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   # End of journey steps
 
@@ -1037,15 +855,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -1068,12 +877,6 @@ states:
       next:
         targetState: RETURN_TO_RP
       fail-with-ci:
-        targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
         targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR

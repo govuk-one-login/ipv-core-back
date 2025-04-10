@@ -30,9 +30,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -42,12 +39,6 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -72,72 +63,9 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: PROCESS_UPDATE_IDENTITY
       fraud-fail-with-no-ci:
-        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
-
-  EVALUATE_GPG45_SCORES_UPDATE_ADDRESS:
-    response:
-      type: process
-      lambda: evaluate-gpg45-scores
-    events:
-      met:
-        targetState: CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-
-  STORE_IDENTITY_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: UPDATE
-    events:
-      identity-stored:
-        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_END
-        auditContext:
-          successful: true
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  CRI_TICF_BEFORE_SUCCESS_UPDATE_ADDRESS:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
+        targetState: PROCESS_UPDATE_IDENTITY
 
   PROCESS_UPDATE_IDENTITY:
     response:
@@ -162,15 +90,6 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       error:

@@ -279,6 +279,7 @@ class JourneyMapTest {
                 checkTargetStatesExist(basicEvent.getCheckIfDisabled(), stateMachineKeys);
                 checkTargetStatesExist(basicEvent.getCheckFeatureFlag(), stateMachineKeys);
                 checkTargetStatesExist(basicEvent.getCheckJourneyContext(), stateMachineKeys);
+                checkTargetStatesExist(basicEvent.getCheckMitigation(), stateMachineKeys);
             }
         }
     }
@@ -297,9 +298,7 @@ class JourneyMapTest {
                     if (event instanceof BasicEvent basicEvent) {
                         if (basicEvent.getCheckIfDisabled() != null) {
                             basicEvent.getCheckIfDisabled().values().stream()
-                                    .filter(
-                                            disableEvent ->
-                                                    disableEvent instanceof ExitNestedJourneyEvent)
+                                    .filter(ExitNestedJourneyEvent.class::isInstance)
                                     .forEach(
                                             disabledEvent ->
                                                     actualExitEvents.add(
@@ -308,10 +307,7 @@ class JourneyMapTest {
                         }
                         if (basicEvent.getCheckFeatureFlag() != null) {
                             basicEvent.getCheckFeatureFlag().values().stream()
-                                    .filter(
-                                            checkFlagEvent ->
-                                                    checkFlagEvent
-                                                            instanceof ExitNestedJourneyEvent)
+                                    .filter(ExitNestedJourneyEvent.class::isInstance)
                                     .forEach(
                                             checkFlagEvent ->
                                                     actualExitEvents.add(
@@ -321,15 +317,22 @@ class JourneyMapTest {
                         }
                         if (basicEvent.getCheckJourneyContext() != null) {
                             basicEvent.getCheckJourneyContext().values().stream()
-                                    .filter(
-                                            checkContextEvent ->
-                                                    checkContextEvent
-                                                            instanceof ExitNestedJourneyEvent)
+                                    .filter(ExitNestedJourneyEvent.class::isInstance)
                                     .forEach(
                                             checkContextEvent ->
                                                     actualExitEvents.add(
                                                             ((ExitNestedJourneyEvent)
                                                                             checkContextEvent)
+                                                                    .getExitEventToEmit()));
+                        }
+                        if (basicEvent.getCheckMitigation() != null) {
+                            basicEvent.getCheckMitigation().values().stream()
+                                    .filter(ExitNestedJourneyEvent.class::isInstance)
+                                    .forEach(
+                                            checkMitigationEvent ->
+                                                    actualExitEvents.add(
+                                                            ((ExitNestedJourneyEvent)
+                                                                            checkMitigationEvent)
                                                                     .getExitEventToEmit()));
                         }
                     }

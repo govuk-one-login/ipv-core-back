@@ -44,32 +44,32 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
-    private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcDrivingPermit();
-    private static final VerifiableCredential VC_ADDRESS_TEST = VC_ADDRESS;
+    private static final VerifiableCredential VC_DRIVING_PERMIT_TEST = vcWebDrivingPermitDvaValid();
+    private static final VerifiableCredential VC_ADDRESS_TEST = vcAddressOne();
     private static final VerifiableCredential VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST =
-            PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-    private static final VerifiableCredential VC_F2F = vcF2fM1a();
+            vcWebPassportSuccessful();
+    private static final VerifiableCredential VC_F2F = vcF2fPassportPhotoM1a();
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS =
-            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, M1A_EXPERIAN_FRAUD_VC);
+            List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, vcExperianFraudM1a());
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS =
             List.of(
                     VC_DRIVING_PERMIT_TEST,
                     VC_ADDRESS_TEST,
-                    M1A_EXPERIAN_FRAUD_VC,
+                    vcExperianFraudM1a(),
                     VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST);
     private static final List<VerifiableCredential> VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS =
             List.of(VC_DRIVING_PERMIT_TEST, VC_ADDRESS_TEST, VC_F2F);
@@ -89,7 +89,7 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    vcDrivingPermitNonDcmaw().getVcString(),
+                                    vcWebDrivingPermitDvlaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of(
                                             "reason", "testing",
@@ -383,7 +383,7 @@ class EvcsServiceTest {
                                         EvcsVCState.PENDING_RETURN,
                                         Map.of("reason", "testing")),
                                 new EvcsGetUserVCDto(
-                                        M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                        vcExperianFraudM1a().getVcString(),
                                         EvcsVCState.PENDING_RETURN,
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
@@ -412,10 +412,9 @@ class EvcsServiceTest {
     void testGetVerifiableCredentials()
             throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
         // Arrange
-        when(mockConfigService.getCriByIssuer(M1A_ADDRESS_VC.getClaimsSet().getIssuer()))
+        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
                 .thenReturn(Cri.ADDRESS);
-        when(mockConfigService.getCriByIssuer(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getClaimsSet().getIssuer()))
+        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
                 .thenReturn(Cri.DCMAW);
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
@@ -423,11 +422,11 @@ class EvcsServiceTest {
                         new EvcsGetUserVCsDto(
                                 List.of(
                                         new EvcsGetUserVCDto(
-                                                M1A_ADDRESS_VC.getVcString(),
+                                                vcAddressM1a().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(
-                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null))));
 
@@ -457,11 +456,11 @@ class EvcsServiceTest {
                         new EvcsGetUserVCsDto(
                                 List.of(
                                         new EvcsGetUserVCDto(
-                                                M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                                vcExperianFraudM1a().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null),
                                         new EvcsGetUserVCDto(
-                                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                                vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null))));
 

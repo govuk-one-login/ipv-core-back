@@ -7,11 +7,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
@@ -32,10 +34,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYN
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriResponseServiceTest {
@@ -54,6 +56,8 @@ class CriResponseServiceTest {
                     + "\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
 
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
+    @Spy private IpvSessionItem ipvSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +68,7 @@ class CriResponseServiceTest {
     void shouldReturnCredentialFromDataStoreForSpecificCri() {
         String ipvSessionId = "ipvSessionId";
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, ADDRESS.getId())).thenReturn(criResponseItem);
 
@@ -104,7 +108,7 @@ class CriResponseServiceTest {
     @Test
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.getItem(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
@@ -117,7 +121,7 @@ class CriResponseServiceTest {
     @Test
     void shouldDeleteExistingWhenUserHasDeleteRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
 
         when(mockDataStore.delete(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
@@ -129,7 +133,7 @@ class CriResponseServiceTest {
     @Test
     void shouldUpdateExistingWhenUserHasUpdateRequest() {
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+                createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
         when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
 
         criResponseService.updateCriResponseItem(criResponseItem);
@@ -139,10 +143,8 @@ class CriResponseServiceTest {
     @Test
     void getCriResponseItemWithStateShouldGetCorrectItem() {
         // Arrange
-        var criResponseItem1 =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
-        var criResponseItem2 =
-                createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
+        var criResponseItem1 = createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
+        var criResponseItem2 = createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now());
         criResponseItem2.setOauthState(TEST_OAUTH_STATE);
         when(mockDataStore.getItems(USER_ID_1))
                 .thenReturn(List.of(criResponseItem1, criResponseItem2));
@@ -168,7 +170,9 @@ class CriResponseServiceTest {
                         : new ArrayList<VerifiableCredential>();
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertEquals(F2F, asyncCriStatus.cri());
@@ -182,7 +186,9 @@ class CriResponseServiceTest {
         var vcs = new ArrayList<VerifiableCredential>();
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());
@@ -197,10 +203,12 @@ class CriResponseServiceTest {
                 .thenReturn("1000000000");
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
-        var vcs = List.of(vcDcmawAsyncDl(), vcAddressTwo());
+        var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
 
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, vcs, false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
@@ -216,7 +224,11 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, List.of(vcDcmawAsyncDl(), vcAddressTwo()), false);
+                        USER_ID_1,
+                        List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo()),
+                        false,
+                        ipvSessionItem,
+                        clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());
@@ -227,7 +239,9 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyStatusIfNoCriResponseFound() {
         // Act
-        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, List.of(), false);
+        var asyncCriStatus =
+                criResponseService.getAsyncResponseStatus(
+                        USER_ID_1, List.of(), false, ipvSessionItem, clientOAuthSessionItem);
 
         // Assert
         assertNull(asyncCriStatus.cri());

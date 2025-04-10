@@ -106,6 +106,18 @@ Feature: M2B Strategic App Journeys
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
+    Scenario: MAM journey detected iphone
+      When I submit an 'mobileDownloadIphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+
+    Scenario: MAM journey detected iphone - invalid OS version
+      When I submit an 'appTriageSmartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+
+    Scenario: MAM journey detected android
+      When I submit an 'mobileDownloadAndroid' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
+
     Scenario: DAD journey no compatible smartphone continues to other methods
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response

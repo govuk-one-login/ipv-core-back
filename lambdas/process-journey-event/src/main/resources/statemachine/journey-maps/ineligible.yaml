@@ -10,10 +10,7 @@ states:
   INELIGIBLE:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_ANOTHER_WAY
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   INELIGIBLE_NO_TICF:
     events:
@@ -23,52 +20,9 @@ states:
   INELIGIBLE_SKIP_MESSAGE:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_SKIP_MESSAGE
+        targetState: PROCESS_INCOMPLETE_IDENTITY_SKIP_MESSAGE
 
   # Journey states
-
-  CRI_TICF_BEFORE_ANOTHER_WAY:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: ANOTHER_WAY_PAGE
-      enhanced-verification:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-dl:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-passport:
-        targetState: ANOTHER_WAY_PAGE
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_RETURN_TO_RP:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
-        targetState: RETURN_TO_RP
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
 
   PROCESS_INCOMPLETE_IDENTITY:
     response:
@@ -79,15 +33,16 @@ states:
     events:
       next:
         targetState: ANOTHER_WAY_PAGE
-      enhanced-verification:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-dl:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-passport:
-        targetState: ANOTHER_WAY_PAGE
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+        checkMitigation:
+          enhanced-verification:
+            targetState: ANOTHER_WAY_PAGE
+          alternate-doc-invalid-dl:
+            targetState: ANOTHER_WAY_PAGE
+          alternate-doc-invalid-passport:
+            targetState: ANOTHER_WAY_PAGE
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -110,15 +65,16 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
-        targetState: RETURN_TO_RP
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+        checkMitigation:
+          enhanced-verification:
+            targetState: RETURN_TO_RP
+          alternate-doc-invalid-dl:
+            targetState: RETURN_TO_RP
+          alternate-doc-invalid-passport:
+            targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

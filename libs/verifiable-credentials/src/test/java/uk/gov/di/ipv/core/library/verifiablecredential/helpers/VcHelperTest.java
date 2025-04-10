@@ -28,49 +28,49 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeAvailableFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportInvalidBirthDate;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aMissingEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aMissingEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCiButValidity2;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
     @Mock private ConfigService configService;
 
-    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
+    private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
-                Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
-                Arguments.of("Evidence VC", PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
-                Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
-                Arguments.of("Verification VC", vcVerificationM1a()),
-                Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
-                Arguments.of("Verification F2F VC", vcF2fM1a()),
-                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
+                Arguments.of("Non-evidence VC", vcAddressM1a()),
+                Arguments.of("Evidence VC", vcWebPassportSuccessful()),
+                Arguments.of("Evidence VC with CI", vcWebPassportM1aWithCiButValidity2()),
+                Arguments.of("Fraud and activity VC", vcExperianFraudM1a()),
+                Arguments.of("Verification VC", vcExperianKbvM1a()),
+                Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),
+                Arguments.of("Verification F2F VC", vcF2fPassportPhotoM1a()),
+                Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
                 Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
                 Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));
     }
@@ -88,10 +88,10 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_GPG45() throws Exception {
+    void shouldFilterVCsBasedOnProfileType_GPG45() {
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         vcExperianFraudScoreOne(),
                         vcTicf(),
                         vcHmrcMigrationPCL200());
@@ -99,10 +99,10 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_operational() throws Exception {
+    void shouldFilterVCsBasedOnProfileType_operational() {
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         vcExperianFraudScoreOne(),
                         vcHmrcMigrationPCL200());
         assertEquals(
@@ -111,17 +111,19 @@ class VcHelperTest {
 
     @Test
     void shouldExtractTxIdFromIdentityCheckCredentials() {
-        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoSuccessful()));
+        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoIdentityCheckSuccessful()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
     }
 
     @Test
-    void shouldExtractTxIdDespiteNullEvidence() throws Exception {
+    void shouldExtractTxIdDespiteNullEvidence() {
         var txns =
                 VcHelper.extractTxnIdsFromCredentials(
-                        List.of(vcNinoSuccessful(), vcHmrcMigrationPCL200NoEvidence()));
+                        List.of(
+                                vcNinoIdentityCheckSuccessful(),
+                                vcHmrcMigrationPCL200NoEvidence()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
@@ -144,17 +146,17 @@ class VcHelperTest {
 
     @Test
     void shouldExtractAgeFromCredential() {
-        assertNotNull(VcHelper.extractAgeFromCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+        assertNotNull(VcHelper.extractAgeFromCredential(vcWebPassportSuccessful()));
     }
 
     @Test
     void shouldExtractAgeFromCredentialWithMissingBirthDate() {
-        assertNull(VcHelper.extractAgeFromCredential(vcPassportMissingBirthDate()));
+        assertNull(VcHelper.extractAgeFromCredential(vcWebPassportMissingBirthDate()));
     }
 
     @Test
     void shouldExtractAgeFromCredentialWithInvalidBirthDate() {
-        assertNull(VcHelper.extractAgeFromCredential(vcPassportInvalidBirthDate()));
+        assertNull(VcHelper.extractAgeFromCredential(vcWebPassportInvalidBirthDate()));
     }
 
     @Test
@@ -165,13 +167,14 @@ class VcHelperTest {
     @Test
     void shouldCheckIfDocUKIssuedForCredential() {
         assertEquals(
-                Boolean.TRUE,
-                VcHelper.checkIfDocUKIssuedForCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+                Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcWebPassportSuccessful()));
     }
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDL() {
-        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+        assertEquals(
+                Boolean.TRUE,
+                VcHelper.checkIfDocUKIssuedForCredential(vcWebDrivingPermitDvaValid()));
     }
 
     @Test
@@ -186,7 +189,9 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDCMAW() {
-        assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+        assertEquals(
+                Boolean.TRUE,
+                VcHelper.checkIfDocUKIssuedForCredential(vcWebDrivingPermitDvaValid()));
     }
 
     @Test
@@ -197,7 +202,7 @@ class VcHelperTest {
     @Test
     void shouldCheckIsItOperationalVC() throws Exception {
         assertTrue(VcHelper.isOperationalProfileVc(vcHmrcMigrationPCL200()));
-        assertFalse(VcHelper.isOperationalProfileVc(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
+        assertFalse(VcHelper.isOperationalProfileVc(vcWebPassportSuccessful()));
     }
 
     @Test
@@ -219,7 +224,7 @@ class VcHelperTest {
     void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
-        VerifiableCredential vc = vcFraudExpired();
+        VerifiableCredential vc = vcExperianFraudExpired();
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
@@ -233,7 +238,7 @@ class VcHelperTest {
     void shouldReturnFalseWhenVcIsNotExpired() {
         VcHelper.setConfigService(configService);
         // Arrange
-        VerifiableCredential vc = vcFraudNotExpired();
+        VerifiableCredential vc = vcExperianFraudNotExpired();
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
@@ -245,91 +250,126 @@ class VcHelperTest {
 
     private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
-                Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
-                Arguments.of("Failed passport VC", vcPassportM1aFailed()),
+                Arguments.of("VC missing evidence", vcWebPassportM1aMissingEvidence()),
+                Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
+    void
+            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
 
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
-                        vcFraudApplicableAuthoritativeSourceFailed(),
-                        vcVerificationM1a());
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudApplicableAuthoritativeSourceFailed(),
+                        vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertTrue(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
+    void
+            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
 
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
-                        vcFraudApplicableAuthoritativeAvailableFailed(),
-                        vcVerificationM1a());
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudAvailableAuthoritativeFailed(),
+                        vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertTrue(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForOtherFailedFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForOtherFailedFraudCheck() {
 
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
                         vcExperianFraudEvidenceFailed(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForSuccessfulFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForSuccessfulFraudCheck() {
 
         // Arrange
         var vcs =
                 List.of(
-                        DCMAW_PASSPORT_VC,
-                        M1A_ADDRESS_VC,
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
                         vcExperianFraudScoreOne(),
-                        vcVerificationM1a());
+                        vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForMissingFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
-        var vcs = List.of(DCMAW_PASSPORT_VC, M1A_ADDRESS_VC, vcVerificationM1a());
+        var vcs = List.of(vcDcmawPassport(), vcAddressM1a(), vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnTrueForUnavailableFraudCheck() {
+
+        // Arrange
+        var vc = vcExperianFraudAvailableAuthoritativeFailed();
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(vc);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnFalseForSuccessfulFraudCheck() {
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(vcExperianFraudScoreOne());
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnFalseForMissingFraudCheck() {
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(vcDcmawPassport());
 
         // Assert
         assertFalse(result);

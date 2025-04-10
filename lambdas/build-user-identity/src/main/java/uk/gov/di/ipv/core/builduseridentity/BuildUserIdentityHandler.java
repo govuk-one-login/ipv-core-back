@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -35,6 +34,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -44,16 +44,15 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -129,18 +128,11 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            var targetVot =
-                    Optional.ofNullable(ipvSessionItem.getTargetVot())
-                            .orElseThrow(
-                                    () ->
-                                            new HttpResponseExceptionWithErrorBody(
-                                                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                                                    MISSING_TARGET_VOT));
             var achievedVot = ipvSessionItem.getVot();
-            var thresholdVot = ipvSessionItem.getThresholdVot();
+            var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
             var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, achievedVot, targetVot, contraIndicators);
+                            vcs, userId, achievedVot, thresholdVot, contraIndicators);
             userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
@@ -166,8 +158,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
-        } catch (java.text.ParseException e) {
-            return serverErrorJsonResponse("Failed to parse credentials.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiExtractionException e) {
@@ -184,6 +174,12 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

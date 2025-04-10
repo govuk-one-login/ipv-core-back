@@ -42,11 +42,11 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DWP_KBV_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDwpKbv;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
@@ -143,9 +143,10 @@ class CriStoringServiceTest {
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest(DWP_KBV);
-        var vc = DWP_KBV_VC;
+        var vc = vcDwpKbv();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        var sessionVcs = List.of(M1A_ADDRESS_VC);
+        var addressVc = vcAddressM1a();
+        var sessionVcs = List.of(addressVc);
 
         // Act
         criStoringService.storeVcs(
@@ -170,7 +171,7 @@ class CriStoringServiceTest {
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
-        assertEquals(List.of(M1A_ADDRESS_VC, vc), vcListCaptor.getValue());
+        assertEquals(List.of(addressVc, vc), vcListCaptor.getValue());
 
         assertEquals(vc, vcCaptor.getValue());
 
@@ -202,7 +203,7 @@ class CriStoringServiceTest {
                 callbackRequest.getCredentialIssuer(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
-                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                List.of(vcWebPassportSuccessful()),
                 clientOAuthSessionItem,
                 mockIpvSessionItem,
                 List.of());
@@ -217,7 +218,7 @@ class CriStoringServiceTest {
             throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vc = VC_ADDRESS;
+        var vc = vcAddressOne();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
 
         // Act
@@ -324,7 +325,7 @@ class CriStoringServiceTest {
                                 callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                List.of(vcWebPassportSuccessful()),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem,
                                 List.of()));
@@ -348,7 +349,7 @@ class CriStoringServiceTest {
                                 callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                                List.of(vcWebPassportSuccessful()),
                                 clientOAuthSessionItem,
                                 mockIpvSessionItem,
                                 List.of()));

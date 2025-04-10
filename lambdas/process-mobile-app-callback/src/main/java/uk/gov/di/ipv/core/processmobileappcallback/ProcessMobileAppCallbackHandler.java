@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -36,7 +37,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 import uk.gov.di.ipv.core.processmobileappcallback.exception.InvalidMobileAppCallbackRequestException;
 
+import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -91,14 +94,32 @@ public class ProcessMobileAppCallbackHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
-        } catch (InvalidMobileAppCallbackRequestException | ClientOauthSessionNotFoundException e) {
-            return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
+        } catch (InvalidMobileAppCallbackRequestException e) {
+            if (Set.of(ErrorResponse.INVALID_OAUTH_STATE, ErrorResponse.MISSING_IPV_SESSION_ID)
+                    .contains(e.getErrorResponse())) {
+                return buildErrorResponse(
+                        e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
+            }
+            return buildErrorResponse(
+                    e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.ERROR);
+        } catch (ClientOauthSessionNotFoundException e) {
+            return buildErrorResponse(
+                    e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.ERROR);
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
-                    e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    e,
+                    HttpStatusCode.BAD_REQUEST,
+                    ErrorResponse.IPV_SESSION_NOT_FOUND,
+                    Level.ERROR);
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(
-                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
+                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.ERROR);
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -186,8 +207,8 @@ public class ProcessMobileAppCallbackHandler
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(
-            Exception e, int status, ErrorResponse errorResponse) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+            Exception e, int status, ErrorResponse errorResponse, Level level) {
+        LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 status,
                 new JourneyErrorResponse(

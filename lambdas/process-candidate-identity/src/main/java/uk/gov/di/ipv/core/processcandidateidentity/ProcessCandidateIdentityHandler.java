@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -41,6 +42,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -59,6 +61,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
 
+import java.io.UncheckedIOException;
 import java.text.ParseException;
 import java.util.EnumSet;
 import java.util.List;
@@ -82,6 +85,7 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UNMET_PATH;
 
@@ -95,6 +99,8 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
             new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -219,7 +225,12 @@ public class ProcessCandidateIdentityHandler
                     auditEventUser);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
+            var errorMessage = LogHelper.buildErrorMessage("Failed to process identity", e);
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                LOGGER.info(errorMessage);
+            } else {
+                LOGGER.error(errorMessage);
+            }
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -264,6 +275,12 @@ public class ProcessCandidateIdentityHandler
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -398,9 +415,7 @@ public class ProcessCandidateIdentityHandler
 
         var votResult =
                 votMatcher.matchFirstVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getRequestedVotsByStrengthDescending(),
+                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
                         sessionVcs,
                         contraIndicators,
                         areVcsCorrelated);
@@ -447,30 +462,41 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     auditEventUser);
 
-            var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress,
-                            ipvSessionItem);
+            if (!clientOAuthSessionItem.isReverification()) {
+                // Get mitigations from old CIMIT VC to compare against the mitigations on the new
+                // CIs
+                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+                var oldMitigations =
+                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                ipvSessionItem.getSecurityCheckCredential(),
+                                clientOAuthSessionItem.getUserId(),
+                                targetVot);
 
-            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+                var contraIndicatorsVc =
+                        cimitService.fetchContraIndicatorsVc(
+                                clientOAuthSessionItem.getUserId(),
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                ipAddress,
+                                ipvSessionItem);
+                var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+                var newMitigations =
+                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                newCis, targetVot);
 
-            var thresholdVot = ipvSessionItem.getThresholdVot();
+                // If breaching and no available mitigations or a new mitigation is required, we
+                // return fail-with-ci
+                if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
+                        && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage(
+                                    "CI score is breaching threshold - setting VOT to P0"));
+                    ipvSessionItem.setVot(Vot.P0);
+                    ipvSessionService.updateIpvSession(ipvSessionItem);
+                    return JOURNEY_FAIL_WITH_CI;
+                }
 
-            var journeyResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
-            if (journeyResponse.isPresent()) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "CI score is breaching threshold - setting VOT to P0"));
-                ipvSessionItem.setVot(Vot.P0);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return journeyResponse.get();
+                LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
             }
-
-            LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
 
             return null;
         } catch (TicfCriServiceException
@@ -480,7 +506,8 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
-                | UnrecognisedVotException e) {
+                | UnrecognisedVotException
+                | CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,

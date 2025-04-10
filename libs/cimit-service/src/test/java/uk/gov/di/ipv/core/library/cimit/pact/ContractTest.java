@@ -110,7 +110,7 @@ class ContractTest {
 
         // Act
         var contraIndicatorVc =
-                underTest.getContraIndicatorsVc(
+                underTest.fetchContraIndicatorsVc(
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
@@ -177,7 +177,7 @@ class ContractTest {
 
         // Act
         var contraIndicatorsVc =
-                underTest.getContraIndicatorsVc(
+                underTest.fetchContraIndicatorsVc(
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
@@ -440,7 +440,8 @@ class ContractTest {
             {
               "iss": "mockCimitComponentId",
               "sub": "mockUserId",
-              "nbf": 1721899627,
+              "nbf": 1262304000,
+              "iat": 1262304000,
               "exp": 4070908800,
               "vc": {
                 "evidence": [
@@ -461,7 +462,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NO_CI_VC_SIGNATURE =
-            "WbKckUsr2ubiqKkYqYJJyk9CfO2KQe3MldE0QE3Y8woAJZHcP_WpH6bSca_L6z8rP_P-E9J9dY1qxQjpb3r2Mg"; // pragma: allowlist secret
+            "ZSPpIHn7ahuqppckpDg4i48Ei_J7eZLbCMFo_0NUIvQeFF2ZbdoR6-GZhbFqHnfBr5N9o75Epom_M6CKJgrIXw"; // pragma: allowlist secret
     private static final String VALID_NO_CI_VC_JWT =
             new PactJwtBuilder(VALID_VC_HEADER, VALID_NO_CI_VC_BODY, VALID_NO_CI_VC_SIGNATURE)
                     .buildJwt();
@@ -474,7 +475,7 @@ class ContractTest {
                "sub": "mockUserId",
                "iss": "mockCimitComponentId",
                "nbf": 1262304000,
-               "iat": 4070908800,
+               "iat": 1262304000,
                "exp": 4070908800,
                "vc": {
                  "type": [
@@ -540,20 +541,19 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_CI_VC_SIGNATURE =
-            "5tmZS7VGkci8y4WLYzDcIcDqnbJ4deAtZa_OAEBSxYAFYJQxlxEj_XEUOXa0t-lbn-OjM-hIdaf9uW3DyBPzwQ"; // pragma: allowlist secret
+            "HjMYSU0SWgo_Eo073HH28fr6NJnkzYmi6MR9Qan4R8kvl4NUS0j_-F1y01_R4hsrbDys2-NWP1s1gZ5qA8SSMQ"; // pragma: allowlist secret
     private static final String VALID_CI_VC_JWT =
             new PactJwtBuilder(VALID_VC_HEADER, VALID_CI_VC_BODY, VALID_CI_VC_SIGNATURE).buildJwt();
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5477-AC1
     private static final String FAILED_DVLA_VC_WITH_CI_BODY =
             """
             {
-              "iat": 1712228728,
+              "iat": 1262304000,
               "iss": "mockCimitComponentId",
               "aud": "issuer",
               "sub": "mockUserId",
-              "nbf": 4070908800,
+              "nbf": 1262304000,
               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "type": [
@@ -644,7 +644,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_WITH_CI_BODY_SIGNATURE =
-            "PR1jYFN4AfDlkXBQQgnOqMDtTtS7QH_-xGn15lGXy1Nz8gdrhs0wEyIHf7xIPUA-j1ZqRiJF9kudmHfRwXOyqg"; // pragma: allowlist secret
+            "oscpEvGkT18T6SzlS7CKk601j-Yse2LCIqkU_q_5Tz2olmSk-YF2rdK6V6_D8sXE3XSPi4Hi_aAhWTB5Y2naKg"; // pragma: allowlist secret
     private static final String FAILED_DVLA_VC_WITH_CI_JWT =
             new PactJwtBuilder(
                             VALID_VC_HEADER,
@@ -653,15 +653,14 @@ class ContractTest {
                     .buildJwt();
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5477-AC1
     private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER =
             """
             {
-              "iat": 1712228728,
+              "iat": 1262304000,
               "iss": "invalidIssuer",
               "aud": "issuer",
               "sub": "mockUserId",
-              "nbf": 4070908800,
+              "nbf": 1262304000,
               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
                 "type": [
@@ -752,7 +751,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_SIGNATURE =
-            "8c6iIjlh7JipvbhkOBesiumnFp_EcZpAkBuOpVxNIdAO68ZUmxMYW4MpVi7jz0-dbMGOgKHROIPQZ4yw-wsa_Q"; // pragma: allowlist secret
+            "ypABJzp8XFkHbhl9dnkP0L8Xp3k-MI5QD-kw0gjSHJWc4OJccEAWkq2nwbykX9I8nb-jNcqoNX5fkcQaQJ9hEg"; // pragma: allowlist secret
     private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT =
             new PactJwtBuilder(
                             VALID_VC_HEADER,

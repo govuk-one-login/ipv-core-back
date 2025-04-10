@@ -9,10 +9,14 @@ import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.jca.JWEJCAContext;
 import com.nimbusds.jose.util.Base64URL;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
+import software.amazon.awssdk.services.kms.model.DecryptResponse;
+import software.amazon.awssdk.services.kms.model.IncorrectKeyException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -24,18 +28,20 @@ import java.util.Set;
 import static com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256;
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 import static software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec.RSAES_OAEP_SHA_256;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY;
 
-@ExcludeFromGeneratedCoverageReport
 public class KmsRsaDecrypter implements JWEDecrypter {
     private static final Set<JWEAlgorithm> SUPPORTED_ALGORITHMS = Set.of(JWEAlgorithm.RSA_OAEP_256);
     private static final Set<EncryptionMethod> SUPPORTED_ENCRYPTION_METHODS =
             Set.of(EncryptionMethod.A256GCM);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;
     private final KmsClient kmsClient;
     private final JWEJCAContext jwejcaContext = new JWEJCAContext();
 
+    @ExcludeFromGeneratedCoverageReport
     public KmsRsaDecrypter(ConfigService configService) {
         this.configService = configService;
         this.kmsClient =
@@ -43,6 +49,11 @@ public class KmsRsaDecrypter implements JWEDecrypter {
                         .region(EU_WEST_2)
                         .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
+    }
+
+    public KmsRsaDecrypter(ConfigService configService, KmsClient kmsClient) {
+        this.configService = configService;
+        this.kmsClient = kmsClient;
     }
 
     @Override
@@ -73,16 +84,39 @@ public class KmsRsaDecrypter implements JWEDecrypter {
                     AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, supportedJWEAlgorithms()));
         }
 
-        var keyId = configService.getParameter(JAR_KMS_ENCRYPTION_KEY_ID);
+        var primaryKeyAlias =
+                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY);
+        var secondaryKeyAlias =
+                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY);
 
-        var encryptedKeyDecryptRequest =
+        var encryptedKeyDecryptRequestPrimary =
                 DecryptRequest.builder()
                         .ciphertextBlob(SdkBytes.fromByteArray(encryptedKey.decode()))
                         .encryptionAlgorithm(RSAES_OAEP_SHA_256)
-                        .keyId(keyId)
+                        .keyId("alias/" + primaryKeyAlias)
                         .build();
 
-        var decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequest);
+        var encryptedKeyDecryptRequestSecondary =
+                DecryptRequest.builder()
+                        .ciphertextBlob(SdkBytes.fromByteArray(encryptedKey.decode()))
+                        .encryptionAlgorithm(RSAES_OAEP_SHA_256)
+                        .keyId("alias/" + secondaryKeyAlias)
+                        .build();
+
+        // During a key rotation we might receive JWTs encrypted with either the old or new key.
+        DecryptResponse decryptResponse;
+        try {
+            decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestPrimary);
+        } catch (IncorrectKeyException e) {
+            decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestSecondary);
+        } catch (Exception e) {
+            // We only expect to get IncorrectKeyExceptions, but if we get another error we should
+            // still try the secondary key
+            LOGGER.warn(
+                    "Unexpected exception decrypting JWT key with primary key. Trying secondary key. %s"
+                            .formatted(e.getMessage()));
+            decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestSecondary);
+        }
 
         SecretKeySpec contentEncryptionKey =
                 new SecretKeySpec(decryptResponse.plaintext().asByteArray(), "AES");

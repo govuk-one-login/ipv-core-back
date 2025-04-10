@@ -110,7 +110,7 @@ public class CimitService {
         }
     }
 
-    public VerifiableCredential getContraIndicatorsVc(
+    public VerifiableCredential fetchContraIndicatorsVc(
             String userId,
             String govukSigninJourneyId,
             String ipAddress,

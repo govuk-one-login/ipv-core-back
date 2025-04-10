@@ -2,17 +2,16 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import uk.gov.di.ipv.core.checkexistingidentity.exceptions.MitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -36,10 +35,9 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -54,6 +52,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
+import java.io.UncheckedIOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +62,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -78,10 +76,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P1_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P2_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -109,10 +107,10 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
-    private static final JourneyResponse JOURNEY_F2F_FAIL =
-            new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
-            new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P1 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P1_PATH);
+    private static final JourneyResponse JOURNEY_F2F_FAIL_P2 =
+            new JourneyResponse(JOURNEY_F2F_FAIL_P2_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -123,6 +121,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -227,6 +227,12 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_NOT_FOUND, ErrorResponse.IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -257,23 +263,16 @@ public class CheckExistingIdentityHandler
 
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
-                            userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
+                            userId,
+                            credentialBundle.credentials,
+                            credentialBundle.isPendingReturn,
+                            ipvSessionItem,
+                            clientOAuthSessionItem);
 
-            // If we want to prove or mitigate CIs for an identity we want to go for the lowest
-            // strength that is acceptable to the caller. We can only prove/mitigate GPG45
-            // identities
-            var lowestGpg45ConfidenceRequested =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedGpg45Vot(configService);
-
-            // As almost all of our journeys are proving or mitigating a GPG45 vot we set the
-            // target vot here as a default value. It will be overridden for identity reuse.
-            ipvSessionItem.setTargetVot(lowestGpg45ConfidenceRequested);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
             var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             govukSigninJourneyId,
                             ipAddress,
@@ -287,7 +286,7 @@ public class CheckExistingIdentityHandler
             // journey
             if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
-                if (lowestGpg45ConfidenceRequested == Vot.P1) {
+                if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -300,14 +299,11 @@ public class CheckExistingIdentityHandler
             // That might cause an issue if a user needs to mitigate a P2 journey but comes back to
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
-            var ciScoringCheckResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(
-                            contraIndicators, lowestGpg45ConfidenceRequested);
-            if (ciScoringCheckResponse.isPresent()) {
-                if (asyncCriStatus.isAwaitingVc()) {
-                    return asyncCriStatus.getJourneyForAwaitingVc(false);
-                }
-                return ciScoringCheckResponse.get();
+            if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
+                    && cimitUtilityService
+                            .getCiMitigationEvent(contraIndicators, targetVot)
+                            .isEmpty()) {
+                return JOURNEY_FAIL_WITH_CI;
             }
 
             // No breaching CIs.
@@ -325,12 +321,6 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
-                // We are re-using an existing Vot, so it might not be a GPG45 vot
-                ipvSessionItem.setTargetVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getLowestStrengthRequestedVot(configService));
-                ipvSessionService.updateIpvSession(ipvSessionItem);
                 return profileMatchResponse.get();
             }
 
@@ -348,10 +338,7 @@ public class CheckExistingIdentityHandler
                     // Returned with F2F async VC. Should have matched a profile.
 
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated,
-                            auditEventUser,
-                            deviceInformation,
-                            contraIndicators);
+                            areGpg45VcsCorrelated, auditEventUser, deviceInformation, targetVot);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -360,7 +347,7 @@ public class CheckExistingIdentityHandler
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
-                                    lowestGpg45ConfidenceRequested,
+                                    targetVot,
                                     clientOAuthSessionItem,
                                     auditEventUser,
                                     deviceInformation);
@@ -373,10 +360,13 @@ public class CheckExistingIdentityHandler
 
             // No relevant async CRI
 
-            return buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
+            return getNewIdentityJourney(targetVot);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                return buildErrorResponse(e.getErrorResponse(), e, Level.INFO);
+            }
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -388,8 +378,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
-        } catch (MitigationRouteException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND, e);
         } catch (CiExtractionException e) {
@@ -433,9 +421,7 @@ public class CheckExistingIdentityHandler
         // Check for attained vot from requested vots
         var maybeVotMatchingResult =
                 votMatcher.matchFirstVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getRequestedVotsByStrengthDescending(),
+                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
                         credentialBundle.credentials,
                         contraIndicators,
                         areGpg45VcsCorrelated);
@@ -445,16 +431,6 @@ public class CheckExistingIdentityHandler
         }
 
         var votMatchingResult = maybeVotMatchingResult.get();
-
-        if (GPG45.equals(votMatchingResult.vot().getProfileType())
-                && !configService.enabled(PROCESS_CANDIDATE_IDENTITY)) {
-            sendProfileMatchedAuditEvent(
-                    votMatchingResult.gpg45Profile(),
-                    votMatchingResult.gpg45Scores(),
-                    VcHelper.filterVCBasedOnProfileType(credentialBundle.credentials(), GPG45),
-                    auditEventUser,
-                    deviceInformation);
-        }
 
         // vot achieved for vtr
         return Optional.of(
@@ -470,8 +446,7 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException {
+            Vot targetVot) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -480,27 +455,10 @@ public class CheckExistingIdentityHandler
                 auditEventUser,
                 deviceInformation);
 
-        // If someone's ever picked up a CI, they can only try mitigation routes, even if it has
-        // been mitigated.
-        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
-        if (mitigatedCI.isPresent()) {
-            var mitigationJourney =
-                    cimitUtilityService
-                            .getMitigatedCiJourneyResponse(mitigatedCI.get())
-                            .map(JourneyResponse::getJourney)
-                            .orElseThrow(
-                                    () ->
-                                            new MitigationRouteException(
-                                                    String.format(
-                                                            "Empty mitigation route for mitigated CI: %s",
-                                                            mitigatedCI.get())));
-            if (!JOURNEY_ENHANCED_VERIFICATION_PATH.equals(mitigationJourney)) {
-                throw new MitigationRouteException(
-                        String.format("Unsupported mitigation route: %s", mitigationJourney));
-            }
-            return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
+        if (targetVot == Vot.P1) {
+            return JOURNEY_F2F_FAIL_P1;
         }
-        return JOURNEY_F2F_FAIL;
+        return JOURNEY_F2F_FAIL_P2;
     }
 
     private JourneyResponse buildDCMAWContinuationResponse(
@@ -541,25 +499,6 @@ public class CheckExistingIdentityHandler
         };
     }
 
-    private JourneyResponse buildNoMatchResponse(
-            List<ContraIndicator> contraIndicators, Vot preferredNewIdentityLevel)
-            throws ConfigException, MitigationRouteException, HttpResponseExceptionWithErrorBody {
-
-        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
-        if (mitigatedCI.isPresent()) {
-            return cimitUtilityService
-                    .getMitigatedCiJourneyResponse(mitigatedCI.get())
-                    .orElseThrow(
-                            () ->
-                                    new MitigationRouteException(
-                                            String.format(
-                                                    "Empty mitigation route for mitigated CI: %s",
-                                                    mitigatedCI.get())));
-        }
-
-        return getNewIdentityJourney(preferredNewIdentityLevel);
-    }
-
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
@@ -570,8 +509,10 @@ public class CheckExistingIdentityHandler
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && allFraudVcsAreExpired(credentialBundle.credentials)) {
-            LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
+                && allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "All Fraud VCs are expired or from unavailable source"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(credentialBundle.credentials),
                     auditEventUser.getSessionId(),
@@ -632,10 +573,13 @@ public class CheckExistingIdentityHandler
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
     }
 
-    private boolean allFraudVcsAreExpired(List<VerifiableCredential> vcs) {
+    private boolean allFraudVcsAreExpiredOrFromUnavailableSource(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
-                .allMatch(VcHelper::isExpiredFraudVc);
+                .allMatch(
+                        vc ->
+                                VcHelper.isExpiredFraudVc(vc)
+                                        || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
     private void sendAuditEvent(
@@ -664,35 +608,21 @@ public class CheckExistingIdentityHandler
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
-    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+    private JourneyResponse buildErrorResponse(
+            ErrorResponse errorResponse, Exception e, Level level) {
+        LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
+    }
+
+    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
+        return buildErrorResponse(errorResponse, e, Level.ERROR);
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse) {
         LOGGER.error(LogHelper.buildErrorMessage(errorResponse));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
-    }
-
-    private void sendProfileMatchedAuditEvent(
-            Gpg45Profile gpg45Profile,
-            Gpg45Scores gpg45Scores,
-            List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation) {
-        var auditEvent =
-                AuditEvent.createWithDeviceInformation(
-                        AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionGpg45ProfileMatched(
-                                gpg45Profile,
-                                gpg45Scores,
-                                VcHelper.extractTxnIdsFromCredentials(vcs)),
-                        new AuditRestrictedDeviceInformation(deviceInformation));
-        auditService.sendAuditEvent(auditEvent);
     }
 
     private boolean isReprovingWithF2f(

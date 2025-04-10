@@ -15,18 +15,18 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "11.2.0",
-    "@govuk-one-login/data-vocab": "1.9.0",
+    "@govuk-one-login/data-vocab": "1.9.3",
     "@types/eslint__js": "9.14.0",
     "dotenv": "16.4.5",
     "eslint": "8.57.0",
-    "eslint-config-prettier": "10.0.1",
+    "eslint-config-prettier": "10.1.1",
     "jose": "5.10.0",
     "jsonschema": "1.5.0",
     "prettier": "3.5.0",
     "start-server-and-test": "2.0.4",
     "ts-node": "10.9.2",
-    "typescript": "5.7.2",
-    "typescript-eslint": "8.26.0",
+    "typescript": "5.8.2",
+    "typescript-eslint": "8.28.0",
     "yaml": "2.7.0"
   }
 }

@@ -61,7 +61,6 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -87,14 +86,13 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
@@ -184,7 +182,6 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot(Vot.P2);
-        ipvSessionItem.setTargetVot(Vot.P2);
         ipvSessionItem.setFeatureSet("someCoolNewThing");
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
@@ -201,6 +198,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequest() throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
@@ -216,7 +214,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(addressVc));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -255,7 +253,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -264,8 +262,8 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithP1OnSuccessfulUserInfoRequestForP1() throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         ipvSessionItem.setVot(Vot.P1);
-        ipvSessionItem.setTargetVot(Vot.P1);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
@@ -281,7 +279,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(addressVc));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -320,30 +318,10 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
-    }
-
-    @Test
-    void shouldReturnJourneyErrorResponseIfTargetVotIsNull() throws Exception {
-        // Arrange
-        ipvSessionItem.setTargetVot(null);
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        // Act
-        var response = buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-
-        // Assert
-        Map<String, String> body =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(500, response.getStatusCode());
-        assertEquals(MISSING_TARGET_VOT.getCode(), Integer.valueOf(body.get("error")));
-        assertEquals(MISSING_TARGET_VOT.getMessage(), body.get("error_description"));
     }
 
     @Test
@@ -351,6 +329,7 @@ class BuildUserIdentityHandlerTest {
             shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequestWhenDeleteSessionCredentialsError()
                     throws Exception {
         // Arrange
+        var addressVc = vcAddressOne();
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
@@ -366,7 +345,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(addressVc));
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -410,7 +389,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
+                .generateUserIdentity(List.of(addressVc), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -754,29 +733,6 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenVcStringCannotBeParsed() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
-                .thenThrow(new ParseException("Unable to parse VC string", 0));
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Failed to parse credentials. Unable to parse VC string",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitUtilityService, times(1)).getContraIndicatorsFromVc(any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
     void shouldNotReturnErrorResponseWhenScopeIsInvalidAndFeatureDisabled() throws Exception {
 
         // Arrange
@@ -799,7 +755,7 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(VC_ADDRESS));
+                .thenReturn(List.of(vcAddressOne()));
 
         // Act
         APIGatewayProxyResponseEvent response =

@@ -6,11 +6,13 @@ import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -33,8 +35,11 @@ public class NestedJourneyInvokeState implements State {
 
     @Override
     public TransitionResult transition(
-            String eventName, String startState, JourneyContext journeyContext)
-            throws UnknownEventException, UnknownStateException {
+            String eventName,
+            String startState,
+            EventResolveParameters eventResolveParameters,
+            EventResolver eventResolver)
+            throws UnknownEventException, UnknownStateException, JourneyEngineException {
         Queue<String> stateNameParts = getStateNameParts(startState);
 
         TransitionResult result;
@@ -46,7 +51,7 @@ public class NestedJourneyInvokeState implements State {
                                 "Unknown entry event '%s' for '%s' state nested journey definition",
                                 eventName, name));
             }
-            result = event.resolve(journeyContext);
+            result = eventResolver.resolve(event, eventResolveParameters);
         } else {
             stateNameParts.remove();
             State currentNestedState =
@@ -61,7 +66,8 @@ public class NestedJourneyInvokeState implements State {
                     currentNestedState.transition(
                             eventName,
                             String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
-                            journeyContext);
+                            eventResolveParameters,
+                            eventResolver);
         }
 
         if (result.state() instanceof NestedJourneyInvokeState) {
@@ -70,7 +76,8 @@ public class NestedJourneyInvokeState implements State {
                     .transition(
                             entryEvent,
                             String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
-                            journeyContext);
+                            eventResolveParameters,
+                            eventResolver);
         }
 
         return result;

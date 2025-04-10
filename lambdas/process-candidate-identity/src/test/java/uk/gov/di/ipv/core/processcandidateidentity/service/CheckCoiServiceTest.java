@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
@@ -43,8 +44,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
@@ -55,6 +56,7 @@ class CheckCoiServiceTest {
     private static final String IPV_SESSION_ID = "ipv-session-id";
     private static final String OPENID_SCOPE = "openid";
     private static final String REVERIFICATION_SCOPE = "reverification";
+    private static final VerifiableCredential ADDRESS_VC = vcAddressM1a();
     private AuditEventUser testAuditEventUser;
 
     @Mock private ConfigService mockConfigService;
@@ -72,7 +74,7 @@ class CheckCoiServiceTest {
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
         when(mockEvcsService.getVerifiableCredentials(
                         USER_ID, EVCS_ACCESS_TOKEN, EvcsVCState.CURRENT))
-                .thenReturn(List.of(M1A_ADDRESS_VC));
+                .thenReturn(List.of(ADDRESS_VC));
         when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn("some-component-id");
 
@@ -82,7 +84,7 @@ class CheckCoiServiceTest {
         address.setAddressCountry("AnyCountry");
         address.setAddressLocality("AnyTown");
         address.setAddressRegion("AnyRegion");
-        when(mockUserIdentityService.generateAddressClaim(any()))
+        when(mockUserIdentityService.getAddressClaim(any()))
                 .thenReturn(Optional.of(List.of(address)));
     }
 
@@ -171,8 +173,8 @@ class CheckCoiServiceTest {
 
     @Test
     void shouldDoFullCheckIfReproveIdentityJourney() throws Exception {
-        when(mockUserIdentityService.areVcsCorrelated(
-                        List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+        var fraudVc = vcExperianFraudM1a();
+        when(mockUserIdentityService.areVcsCorrelated(List.of(ADDRESS_VC, fraudVc)))
                 .thenReturn(true);
         var ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(IPV_SESSION_ID);
@@ -192,7 +194,7 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         STANDARD,
                         "device-information",
-                        List.of(M1A_EXPERIAN_FRAUD_VC),
+                        List.of(fraudVc),
                         testAuditEventUser);
 
         // Assert

@@ -50,24 +50,15 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      f2f-fail:
-        targetJourney: F2F_FAILED
-        targetState: FAILED
+      f2f-fail-p1:
+        targetState: F2F_FAILED
+        targetEntryEvent: f2f-fail-p1
+      f2f-fail-p2:
+        targetState: F2F_FAILED
+        targetEntryEvent: f2f-fail-p2
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      enhanced-verification:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: ENHANCED_VERIFICATION
-      alternate-doc-invalid-dl:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: ALTERNATE_DOC_PASSPORT
-      alternate-doc-invalid-passport:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: ALTERNATE_DOC_DL
-      enhanced-verification-f2f-fail:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: ENHANCED_VERIFICATION_F2F_FAIL
       repeat-fraud-check:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
@@ -77,3 +68,13 @@ states:
       reprove-identity-gpg45-low:
         targetJourney: NEW_P1_IDENTITY
         targetState: REPROVE_IDENTITY
+
+  F2F_FAILED:
+    nestedJourney: F2F_FAILED
+    exitEvents:
+      next-p1:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: START
+      next-p2:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: START

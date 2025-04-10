@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,24 +25,31 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.Mitigation;
+import uk.gov.di.model.Name;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
+import uk.gov.di.model.VerifiableCredentialType;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,7 +69,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
@@ -105,8 +113,8 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnCredentialsFromDataStore() throws Exception {
         // Arrange
-        var passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-        var fraudVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var passportVc = vcWebPassportSuccessful();
+        var fraudVc = vcWebPassportSuccessful();
         var vcs = List.of(passportVc, fraudVc);
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -125,7 +133,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() throws Exception {
         // Arrange
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -700,7 +708,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetIdentityClaimWhenVotIsP2() throws Exception {
         // Arrange
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -723,10 +731,10 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcPassportMissingName(),
-                        vcPassportMissingBirthDate(),
+                        vcWebPassportMissingName(),
+                        vcWebPassportMissingBirthDate(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS);
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -747,7 +755,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetIdentityClaimWhenVotIsP0() throws Exception {
         // Arrange
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -774,7 +782,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowForInvalidVot() throws Exception {
+    void shouldThrowForInvalidVot() {
         // Arrange
         var vc = vcInvalidVot();
 
@@ -791,7 +799,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldThrowExceptionWhenMissingNameProperty() {
         // Arrange
-        var vcs = List.of(vcPassportMissingName(), vcExperianFraudScoreTwo());
+        var vcs = List.of(vcWebPassportMissingName(), vcExperianFraudScoreTwo());
 
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
@@ -811,7 +819,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldThrowExceptionWhenMissingBirthDateProperty() {
         // Arrange
-        var vcs = List.of(vcPassportMissingBirthDate(), vcExperianFraudScoreTwo());
+        var vcs = List.of(vcWebPassportMissingBirthDate(), vcExperianFraudScoreTwo());
 
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
@@ -833,7 +841,7 @@ class UserIdentityServiceTest {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
 
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         // Act
         var credentials =
@@ -847,10 +855,35 @@ class UserIdentityServiceTest {
         assertEquals("2030-01-01", passportClaim.getExpiryDate());
     }
 
+    @ParameterizedTest
+    @MethodSource("VcsWithPassportClaim")
+    void shouldSetPassportClaimWhenVotIsP2(VerifiableCredential vcWithPassportClaim)
+            throws Exception {
+        // Arrange
+        mockParamStoreCalls(paramsToMockForP2);
+
+        var vcs = List.of(vcWithPassportClaim, vcExperianFraudScoreTwo(), vcAddressOne());
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNotNull(credentials.getPassportClaim().get(0));
+    }
+
+    private static Stream<Arguments> VcsWithPassportClaim() {
+        return Stream.of(
+                Arguments.of(vcWebPassportSuccessful()),
+                Arguments.of(vcDcmawPassport()),
+                Arguments.of(vcF2fPassportPhotoM1a()));
+    }
+
     @Test
     void shouldNotSetPassportClaimWhenVotIsP0() throws Exception {
         // Arrange
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -867,7 +900,11 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnNullWhenMissingPassportProperty() throws Exception {
         // Arrange
-        var vcs = List.of(vcMissingPassportProperty(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(
+                        vcWebPassportMissingPassportDetails(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -883,7 +920,11 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnNullWhenEmptyPassportProperty() throws Exception {
         // Arrange
-        var vcs = List.of(vcPassportMissingPassport(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(
+                        vcWebPassportEmptyPassportDetails(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -899,7 +940,8 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldReturnEmptyClaimIfClaimIsIncorrectType() throws Exception {
         // Arrange
-        var vcs = List.of(vcPassportClaimInvalidType(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(vcWebPassportClaimInvalidType(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         // Act
         var credentials =
@@ -917,10 +959,10 @@ class UserIdentityServiceTest {
 
         var vcs =
                 List.of(
-                        vcDrivingPermit(),
+                        vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
-                        vcNinoSuccessful());
+                        vcAddressOne(),
+                        vcNinoIdentityCheckSuccessful());
 
         // Act
         var credentials =
@@ -935,7 +977,11 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldNotSetNinoClaimWhenVotIsP0() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), vcNinoSuccessful());
+        var vcs =
+                List.of(
+                        vcWebDrivingPermitDvaValid(),
+                        vcExperianFraudScoreOne(),
+                        vcNinoIdentityCheckSuccessful());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -954,10 +1000,10 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcDrivingPermit(),
+                        vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
-                        vcNinoMissingSocialSecurityRecord());
+                        vcAddressOne(),
+                        vcNinoIdentityCheckMissingSocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -973,7 +1019,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldReturnEmptyNinoClaimWhenMissingNinoVc() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -991,10 +1037,10 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcDrivingPermit(),
+                        vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
-                        vcNinoUnsuccessful());
+                        vcAddressOne(),
+                        vcNinoIdentityCheckUnsuccessful());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1012,10 +1058,10 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcDrivingPermit(),
+                        vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
-                        vcNinoEmptySocialSecurityRecord());
+                        vcAddressOne(),
+                        vcNinoIdentityCheckEmptySocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1033,9 +1079,9 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcDrivingPermit(),
+                        vcWebDrivingPermitDvaValid(),
                         vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
+                        vcAddressOne(),
                         vcNinoInvalidVcType());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1080,11 +1126,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetAddressClaimOnUserIdentity() throws Exception {
         // Arrange
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcExperianFraudScoreTwo(),
-                        vcAddressTwo());
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1107,11 +1149,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldThrowIfNoAddressesInAddressVC() {
         // Arrange
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcExperianFraudScoreTwo(),
-                        vcAddressEmpty());
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressEmpty());
 
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
@@ -1133,7 +1171,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcWebPassportSuccessful(),
                         vcExperianFraudScoreTwo(),
                         vcAddressNoCredentialSubject());
 
@@ -1172,7 +1210,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
+        var vcs = List.of(vcWebDrivingPermitDvlaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1184,15 +1222,40 @@ class UserIdentityServiceTest {
         // Assert
         DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
 
-        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.getPersonalNumber());
+        assertEquals("PARKE710112PBFGA", drivingPermitClaim.getPersonalNumber());
         assertEquals("123456", drivingPermitClaim.getIssueNumber());
-        assertEquals("2042-10-01", drivingPermitClaim.getExpiryDate());
+        assertEquals("2032-02-02", drivingPermitClaim.getExpiryDate());
+    }
+
+    @ParameterizedTest
+    @MethodSource("VcsWithDrivingPermitClaim")
+    void shouldSetDrivingPermitClaimForAllowedCris(VerifiableCredential vcWithDrivingPermitClaim)
+            throws Exception {
+        // Arrange
+        var vcs = List.of(vcWithDrivingPermitClaim, vcExperianFraudScoreOne(), vcAddressOne());
+
+        mockParamStoreCalls(paramsToMockForP2);
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNotNull(credentials.getDrivingPermitClaim().get(0));
+    }
+
+    private static Stream<Arguments> VcsWithDrivingPermitClaim() {
+        return Stream.of(
+                Arguments.of(vcWebDrivingPermitDvaValid()),
+                Arguments.of(vcDcmawDrivingPermitDvaM1b()),
+                Arguments.of(vcF2fDrivingPermitDvaPhotoM1a()));
     }
 
     @Test
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
+        var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
@@ -1211,7 +1274,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing() throws Exception {
         // Arrange
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1231,9 +1294,9 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        vcDrivingPermitFailedChecks(),
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        VC_ADDRESS,
+                        vcWebDrivingPermitFailedChecks(),
+                        vcWebPassportSuccessful(),
+                        vcAddressOne(),
                         vcExperianFraudScoreTwo());
 
         mockParamStoreCalls(paramsToMockForP2);
@@ -1252,7 +1315,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnNullWhenMissingDrivingPermitProperty() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermitMissingDrivingPermit());
+        var vcs = List.of(vcWebDrivingPermitMissingDrivingPermit());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1268,7 +1331,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnNullWhenEmptyDrivingPermitProperty() throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermitEmptyDrivingPermit());
+        var vcs = List.of(vcWebDrivingPermitEmptyDrivingPermit());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1285,7 +1348,11 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldReturnEmptyClaimIfDrivingPermitVcIsIncorrectType()
             throws Exception {
         // Arrange
-        var vcs = List.of(vcDrivingPermitIncorrectType(), vcExperianFraudScoreTwo(), VC_ADDRESS);
+        var vcs =
+                List.of(
+                        vcWebDrivingPermitIncorrectType(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP2);
 
@@ -1474,7 +1541,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC);
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b());
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1487,7 +1554,7 @@ class UserIdentityServiceTest {
     void
             getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC);
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b());
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1499,7 +1566,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC, vcF2fM1a());
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcF2fPassportPhotoM1a());
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcs));
@@ -1517,7 +1584,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC, vcExperianFraudScoreTwo());
+        var vcs = List.of(vcDcmawDrivingPermitDvaM1b(), vcExperianFraudScoreTwo());
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
@@ -1529,7 +1596,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnCredentialsFromDataStoreForGPGProfile() throws Exception {
-        var passportVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var passportVc = vcWebPassportSuccessful();
         var fraudVc = vcExperianFraudScoreOne();
         var vcs = List.of(passportVc, fraudVc);
 
@@ -1774,7 +1841,7 @@ class UserIdentityServiceTest {
         params.forEach((key, value) -> when(mockConfigService.getParameter(key)).thenReturn(value));
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1782,7 +1849,7 @@ class UserIdentityServiceTest {
                 givenName, null, familyName, birthDateList, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String middleName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1790,7 +1857,7 @@ class UserIdentityServiceTest {
                 givenName, middleName, familyName, birthDateList, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, String birthDate, boolean isSuccessful) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
@@ -1798,23 +1865,17 @@ class UserIdentityServiceTest {
                 givenName, null, familyName, birthDateList, isSuccessful);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName, String familyName, List<String> birthDates) {
         return createCredentialWithNameAndBirthDate(givenName, null, familyName, birthDates, true);
     }
 
-    private TestVc createCredentialWithNameAndBirthDate(
+    private static IdentityCheckCredential createCredentialWithNameAndBirthDate(
             String givenName,
             String middleName,
             String familyName,
             List<String> birthDates,
             boolean isSuccessful) {
-        var evidence =
-                TestVc.TestEvidence.builder()
-                        .strengthScore(isSuccessful ? 4 : 0)
-                        .validityScore(isSuccessful ? 2 : 0)
-                        .build();
-
         var nameParts =
                 new ArrayList<>(
                         List.of(
@@ -1824,18 +1885,45 @@ class UserIdentityServiceTest {
             nameParts.add(1, createNamePart(middleName, GIVEN_NAME));
         }
 
-        var credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(Map.of(VC_NAME_PARTS, nameParts)))
-                        .birthDate(
-                                birthDates.stream()
-                                        .map(BirthDateGenerator::createBirthDate)
-                                        .toList())
-                        .build();
-
-        return TestVc.builder()
-                .credentialSubject(credentialSubject)
-                .evidence(List.of(evidence))
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(Name.builder().withNameParts(nameParts).build()))
+                                .withBirthDate(
+                                        birthDates.stream()
+                                                .map(BirthDateGenerator::createBirthDate)
+                                                .toList())
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("1c04edf0-a205-4585-8877-be6bd1776a39")
+                                        .withStrengthScore(isSuccessful ? 4 : 0)
+                                        .withValidityScore(isSuccessful ? 2 : 0)
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .CANCELLED_CHECK)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .DATA)
+                                                                .withDataCheck(
+                                                                        CheckDetails.DataCheckType
+                                                                                .RECORD_CHECK)
+                                                                .build()))
+                                        .build()))
                 .build();
     }
 

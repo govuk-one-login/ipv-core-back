@@ -25,12 +25,12 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeAvailableFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
@@ -47,8 +47,8 @@ class VotMatcherTest {
     @InjectMocks private VotMatcher votMatcher;
 
     @BeforeAll
-    static void beforeAll() throws Exception {
-        gpg45Vcs = List.of(vcExperianFraudScoreTwo(), vcVerificationM1a());
+    static void beforeAll() {
+        gpg45Vcs = List.of(vcExperianFraudScoreTwo(), vcExperianKbvM1a());
         pcl200vc = vcHmrcMigrationPCL200();
         pcl250vc = vcHmrcMigrationPCL250();
     }
@@ -146,7 +146,7 @@ class VotMatcherTest {
     @Test
     void shouldMatchM1cIfFraudCheckUnavailable() throws Exception {
         // Arrange
-        var vcs = List.of(vcVerificationM1a(), vcFraudApplicableAuthoritativeSourceFailed());
+        var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudApplicableAuthoritativeSourceFailed());
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
@@ -168,7 +168,7 @@ class VotMatcherTest {
     @Test
     void shouldMatchM1cIfFraudCheckAuthoritativeUnavailable() throws Exception {
         // Arrange
-        var vcs = List.of(vcVerificationM1a(), vcFraudApplicableAuthoritativeAvailableFailed());
+        var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudAvailableAuthoritativeFailed());
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);

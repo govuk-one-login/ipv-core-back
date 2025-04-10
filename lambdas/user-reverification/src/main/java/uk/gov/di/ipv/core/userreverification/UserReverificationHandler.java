@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
@@ -29,12 +28,13 @@ import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+
+import java.io.UncheckedIOException;
 
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 
@@ -117,18 +117,16 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             }
 
             var reverificationEndAuditEvent =
-                    AuditEvent.createWithDeviceInformation(
+                    AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_REVERIFY_END,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(
                                     userId,
                                     ipvSessionItem.getIpvSessionId(),
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                    RequestHelper.getIpAddress(input)),
+                                    null),
                             new AuditExtensionReverification(
-                                    response.success(), response.failureCode()),
-                            new AuditRestrictedDeviceInformation(
-                                    RequestHelper.getEncodedDeviceInformation(input)));
+                                    response.success(), response.failureCode()));
             auditService.sendAuditEvent(reverificationEndAuditEvent);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
@@ -146,6 +144,12 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException | ClientOauthSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

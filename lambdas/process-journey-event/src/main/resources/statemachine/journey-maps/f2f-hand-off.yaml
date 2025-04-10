@@ -7,10 +7,7 @@ states:
   START:
     events:
       next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_PENDING_IDENTITY
+        targetState: PROCESS_PENDING_IDENTITY
 
   # Parent states
   CRI_STATE:
@@ -30,9 +27,6 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -42,62 +36,11 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  CRI_TICF_STATE:
-    events:
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   # Journey states
-  CHECK_COI:
-    response:
-      type: process
-      lambda: check-coi
-      lambdaInput:
-        checkType: STANDARD
-    events:
-      coi-check-passed:
-        targetState: CRI_TICF_BEFORE_F2F
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  CRI_TICF_BEFORE_F2F:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetState: CRI_F2F
-      enhanced-verification:
-        targetState: CRI_F2F
-
   PROCESS_PENDING_IDENTITY:
     response:
       type: process
@@ -119,14 +62,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetState: CRI_F2F
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -138,15 +73,7 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
-      enhanced-verification:
-        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
+        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
       access-denied:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_NO_TICF
@@ -168,19 +95,6 @@ states:
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
-
-  STORE_IDENTITY_BEFORE_F2F_HANDOFF:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: PENDING
-    events:
-      identity-stored:
-        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
 
   RESET_SESSION_BEFORE_F2F_HANDOFF:
     response:

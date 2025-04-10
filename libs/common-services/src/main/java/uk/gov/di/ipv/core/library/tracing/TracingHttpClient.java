@@ -54,13 +54,16 @@ public class TracingHttpClient extends HttpClient {
         try {
             return baseClient.send(request, responseBodyHandler);
         } catch (IOException e) {
-            LOGGER.error("HTTP request failed with IOException", e);
+            LOGGER.error(LogHelper.buildErrorMessage("HTTP request failed with IOException", e));
             if (e instanceof HttpTimeoutException) {
                 throw e;
             }
-            // In the build environment we see connection resets for idle connections in the
-            // pool. Retrying uses a different connection.
-            if (e.getMessage().contains("Connection reset") || e instanceof HttpRetryException) {
+            // We occasionally see HTTP/2 GOAWAY messages and in build we occasionally see
+            // connection resets for idle connections in the pool. Retrying uses a different
+            // connection.
+            if (e.getMessage().contains("GOAWAY received")
+                    || e.getMessage().contains("Connection reset")
+                    || e instanceof HttpRetryException) {
                 LOGGER.warn(
                         LogHelper.buildErrorMessage("Retrying after non-fatal HTTP IOException", e)
                                 .with("host", request.uri().getHost()));
@@ -70,8 +73,7 @@ public class TracingHttpClient extends HttpClient {
                     throw new UncheckedIOException(ex);
                 }
             }
-            // Rethrow any other IOException as unchecked exception to force a crash (see PYIC-8058
-            // and linked incident INC0014124)
+            // Rethrow any other IOException as unchecked exception
             throw new UncheckedIOException(e);
         }
     }

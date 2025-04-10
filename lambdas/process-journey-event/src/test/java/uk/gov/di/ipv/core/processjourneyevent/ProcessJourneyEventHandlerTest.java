@@ -9,7 +9,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -23,17 +22,20 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationTyp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -45,6 +47,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -67,8 +70,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyEventHandlerTest {
@@ -107,7 +109,7 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
-    @Mock private EvcsService mockEvcsService;
+    @Mock private CimitUtilityService mockCimitUtilityService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
     @AfterEach
@@ -223,7 +225,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(),
                         StateMachineInitializerMode.STANDARD,
                         REAL_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -267,7 +269,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -297,7 +299,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -326,7 +328,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -369,7 +371,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -606,7 +608,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -635,7 +637,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -680,7 +682,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
 
@@ -746,7 +748,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -798,7 +800,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
@@ -847,7 +849,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         // Act
         var nextResponse =
@@ -898,7 +900,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -945,7 +947,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -990,7 +992,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
         assertEquals(
@@ -1032,7 +1034,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -1041,71 +1043,79 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
 
-    @ParameterizedTest
-    @CsvSource({"true,/journey/call-ticf-cri,", "false,,page-id-for-another-page-state"})
-    void shouldSkipTicfCriOnlyIfDisabled(
-            boolean enabled, String expectedJourney, String expectedPage) throws Exception {
+    @Test
+    void shouldReturnMitigationStateIfCheckMitigationIsConfigured() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("eventSix")
+                        .journey("eventWithMitigation")
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                .thenReturn(enabled);
-
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
-
-        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
-    }
-
-    @ParameterizedTest
-    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
-    void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
-            boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventSeven")
-                        .ipvSessionId(TEST_IP)
-                        .build();
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-
-        when(mockEvcsService.getVerifiableCredentials(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(hasVcsInEvcs ? List.of(M1A_EXPERIAN_FRAUD_VC) : List.of());
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
 
         var output = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(expectedJourney, output.get("journey"));
-        assertEquals(expectedPage, output.get("page"));
+        assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnMitigationStateFromNestedJourneyIfCheckMitigationIsConfigured()
+            throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenReturn(Optional.of("first-mitigation"));
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-page-state", output.get("page"));
+    }
+
+    private static Stream<Arguments> getMitigationEventIfBreachingOrActiveErrors() {
+        return Stream.of(
+                Arguments.of(new CredentialParseException("Unable to parse credentials")),
+                Arguments.of(new ConfigException("Unable to get config")),
+                Arguments.of(new CiExtractionException("Unable to extract CIs from VC")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("getMitigationEventIfBreachingOrActiveErrors")
+    void shouldReturn500IfCimitUtilityServiceThrowsExceptionWhenGettingMitigations(
+            Exception exception) throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithMitigation")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenThrow(exception);
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var response = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
 
     @Test
@@ -1116,7 +1126,7 @@ class ProcessJourneyEventHandlerTest {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
-                        .journey("eventSix")
+                        .journey("eventFive")
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
@@ -1129,7 +1139,7 @@ class ProcessJourneyEventHandlerTest {
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
+                        mockCimitUtilityService);
 
         var logCollector = LogCollector.getLogCollectorFor(ProcessJourneyEventHandler.class);
 
@@ -1153,6 +1163,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState));
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
         when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
@@ -1170,6 +1181,8 @@ class ProcessJourneyEventHandlerTest {
                 .govukSigninJourneyId("testjourneyid")
                 .userId(TEST_USER_ID)
                 .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
+                .vtr(List.of("P2"))
+                .scope(ScopeConstants.OPENID)
                 .build();
     }
 
@@ -1194,7 +1207,7 @@ class ProcessJourneyEventHandlerTest {
                 journeyTypes,
                 stateMachineInitializerMode,
                 nestedJourneyTypes,
-                mockEvcsService);
+                mockCimitUtilityService);
     }
 
     private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {

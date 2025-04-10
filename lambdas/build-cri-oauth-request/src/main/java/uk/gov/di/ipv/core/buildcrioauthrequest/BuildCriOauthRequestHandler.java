@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -53,13 +54,13 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,7 +72,6 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUC
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
@@ -192,6 +192,7 @@ public class BuildCriOauthRequestHandler
             JWEObject jweObject =
                     signEncryptJar(
                             ipvSessionItem,
+                            clientOAuthSessionItem,
                             criConfig,
                             userId,
                             oauthState,
@@ -273,6 +274,12 @@ public class BuildCriOauthRequestHandler
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     IPV_SESSION_NOT_FOUND);
+        } catch (UncheckedIOException e) {
+            // Temporary mitigation to force lambda instance to crash and restart by explicitly
+            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
+            LOGGER.error("Crashing on UncheckedIOException", e);
+            System.exit(1);
+            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -324,6 +331,7 @@ public class BuildCriOauthRequestHandler
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private JWEObject signEncryptJar(
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             OauthCriConfig oauthCriConfig,
             String userId,
             String oauthState,
@@ -347,22 +355,11 @@ public class BuildCriOauthRequestHandler
         if (cri.equals(F2F)) {
             evidenceRequest =
                     getEvidenceRequestForF2F(
-                            vcs,
-                            Optional.ofNullable(ipvSessionItem.getTargetVot())
-                                    .orElseThrow(
-                                            () ->
-                                                    new HttpResponseExceptionWithErrorBody(
-                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                                                            MISSING_TARGET_VOT)));
+                            vcs, VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
         } else if (cri.isKbvCri()) {
             evidenceRequest =
                     getEvidenceRequestForKbvCri(
-                            Optional.ofNullable(ipvSessionItem.getTargetVot())
-                                    .orElseThrow(
-                                            () ->
-                                                    new HttpResponseExceptionWithErrorBody(
-                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                                                            MISSING_TARGET_VOT)));
+                            VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -391,7 +388,7 @@ public class BuildCriOauthRequestHandler
     private EvidenceRequest getEvidenceRequestForF2F(
             List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
+        var isFraudScoreRequired = !VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
         var requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
                         requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired));

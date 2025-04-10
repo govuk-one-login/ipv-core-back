@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -43,7 +42,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CimitUtilityServiceTest {
@@ -278,8 +276,9 @@ class CimitUtilityServiceTest {
 
     @ParameterizedTest
     @MethodSource("ciScoresAndUnsurpassedThresholds")
-    void getMitigationJourneyIfBreaching_ShouldReturnEmpty_IfCiScoreNotBreaching(
-            int ciScore1, int ciScore2, int ciScoreThreshold) throws ConfigException {
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiScoreNotBreachingAndNoExistingMitigations(
+                    int ciScore1, int ciScore2, int ciScoreThreshold) throws ConfigException {
         // Arrange
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2"))
                 .thenReturn(String.valueOf(ciScoreThreshold));
@@ -296,7 +295,7 @@ class CimitUtilityServiceTest {
         var cis = List.of(createCi("ci_1"), createCi("ci_2"));
 
         // Act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // Assert
         assertTrue(
@@ -307,7 +306,7 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationJourneyIfBreaching_ShouldReturnMitigation_WhenCiCanBeMitigated()
+    void getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigated()
             throws Exception {
         // arrange
         var code = "ci_code";
@@ -326,15 +325,16 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+        assertEquals(Optional.of(journey), result);
     }
 
     @Test
-    void getMitigationJourneyIfBreaching_ShouldReturnMitigation_WhenCiCanBeMitigatedWithNoDocInCi()
-            throws Exception {
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigatedWithNoDocInCi()
+                    throws Exception {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -349,15 +349,15 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+        assertEquals(Optional.of(journey), result);
     }
 
     @Test
     void
-            getMitigationJourneyIfBreaching_ShouldReturnFailWithCi_IfCiIsMitigatableButDocTypeIsNotConfigured()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured()
                     throws Exception {
         // Arrange
         var code = "ci_code";
@@ -381,16 +381,17 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // Act
-        Optional<JourneyResponse> result =
-                cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        Optional<String> result =
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // Assert
-        assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
-    void getMitigationJourneyIfBreaching_ShouldReturnFailWithCi_WhenCiIsNotMitigatable()
-            throws Exception {
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable()
+                    throws Exception {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -403,36 +404,40 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
-
-        // assert
-        assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
-    }
-
-    @Test
-    void getMitigationJourneyIfBreaching_ShouldReturnEmpty_WhenCiIsAlreadyMitigated()
-            throws Exception {
-        // arrange
-        var code = "ci_code";
-        var ci = createCi(code);
-        ci.setMitigation(List.of(new Mitigation()));
-        var cis = List.of(ci);
-
-        Map<String, ContraIndicatorConfig> ciConfigMap =
-                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
-        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
-
-        // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
     }
 
     @Test
-    void getMitigationJourneyIfBreaching_ShouldReturnFailWithCi_WhenMitigationDoesNotResolveBreach()
-            throws Exception {
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenNotBreachingAndCiIsAlreadyMitigated()
+                    throws Exception {
+        // arrange
+        var code = "ci_code";
+        var ci = createCi(code);
+        ci.setMitigation(List.of(new Mitigation()));
+        var cis = List.of(ci);
+
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute("some-event", null))));
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
+
+        // act
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+
+        // assert
+        assertEquals(Optional.of("some-event"), result);
+    }
+
+    @Test
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenMitigationDoesNotResolveBreach()
+                    throws Exception {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -446,16 +451,15 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
-    void
-            getCiMitigationJourneyResponse_ShouldReturnFailWithCi_WhenCiMitigationJourneyConfigNotFoundForDocType()
-                    throws Exception {
+    void getCiMitigationEvent_ShouldReturnEmpty_WhenCiMitigationConfigNotFoundForDocType()
+            throws Exception {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -470,15 +474,15 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // Act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // Assert
-        assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
     void
-            getMitigationJourneyIfBreaching_ShouldReturnFailWithCi_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
                     throws Exception {
         // arrange
         var code = "ci_code";
@@ -504,69 +508,10 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
-
-        // assert
-        assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
-    }
-
-    @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnMitigation_WhenCiCanBeMitigated()
-            throws Exception {
-        // arrange
-        var code = "ci_code";
-        var journey = "some_mitigation";
-        String document = "doc_type/213123";
-        String documentType = "doc_type";
-        var ci = createCi(code);
-        ci.setDocument(document);
-        ci.setMitigation(List.of(new Mitigation()));
-
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-
-        // act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
-
-        // assert
-        assertEquals(Optional.of(new JourneyResponse(journey)), result);
-    }
-
-    @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnEmpty_WhenCiIsNotMitigatable() throws Exception {
-        // arrange
-        var code = "ci_code";
-        var ci = createCi(code);
-
-        when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
-
-        // act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
-    }
-
-    @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnEmptyOptional_IfMitigationRouteNotFound()
-            throws Exception {
-        // Arrange
-        var code = "ci_code";
-        var journey = "some_mitigation";
-        String document = "not-configured-doc-type/213123";
-        String documentType = "doc_type";
-        var ci = createCi(code);
-        ci.setDocument(document);
-        ci.setMitigation(List.of(new Mitigation()));
-
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-
-        // Act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
-
-        // Assert
-        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -634,6 +579,23 @@ class CimitUtilityServiceTest {
                 () ->
                         cimitUtilityService.getContraIndicatorsFromVc(
                                 VC_RESIDENCE_PERMIT_DCMAW, "mock-user-id"));
+    }
+
+    @Test
+    void getMitigationEventIfBreachingOrActive_ReturnsEmpty_IfNoCis() throws Exception {
+        // Arrange
+        var code = "ci_code";
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 4, -3, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
+
+        // act
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(List.of(), TEST_VOT);
+
+        // assert
+        assertEquals(Optional.empty(), result);
     }
 
     private static ContraIndicator createCi(String code) {

@@ -1,7 +1,7 @@
 @Build
-@TrafficGeneration
 Feature: P2 Reuse journey
 
+  @TrafficGeneration
   Scenario: Successful P2 reuse journey
     # First identity proving journey
     Given I start a new 'medium-confidence' journey
@@ -35,3 +35,13 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+
+  Scenario: User with M1C is sent on reuse journey when no applicable fraud check
+    Given the subject already has the following credentials
+      | CRI     | scenario               |
+      | dcmaw   | kenneth-passport-valid |
+      | address | kenneth-current        |
+      | fraud   | kenneth-no-applicable  |
+
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
