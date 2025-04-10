@@ -792,6 +792,12 @@ class BuildCriOauthRequestHandlerTest {
                 queryParams.stream().filter(param -> param.getName().equals("lng")).findFirst();
         assertTrue(lng.isPresent());
         assertEquals(TEST_LANGUAGE, lng.get().getValue());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_DWP_KBV_CRI_START, auditEvents.get(1).getEventName());
     }
 
     @Test
