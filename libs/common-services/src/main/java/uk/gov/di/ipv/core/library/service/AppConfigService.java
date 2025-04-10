@@ -17,7 +17,6 @@ import software.amazon.lambda.powertools.parameters.BaseProvider;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.CustomAppConfigProvider;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -55,7 +54,7 @@ public class AppConfigService extends YamlParametersConfigService {
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
 
         appConfigProvider =
-                CustomAppConfigProvider.builder()
+                AppConfigProvider.builder()
                         .withClient(
                                 AppConfigDataClient.builder()
                                         .httpClient(UrlConnectionHttpClient.create())

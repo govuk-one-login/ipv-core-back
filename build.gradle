@@ -10,7 +10,6 @@ sonar {
 		property "sonar.projectKey", "ipv-core-back"
 		property "sonar.organization", "govuk-one-login"
 		property "sonar.host.url", "https://sonarcloud.io"
-		property "sonar.exclusions", "**/CustomAppConfigProvider.java"
 	}
 }
 
