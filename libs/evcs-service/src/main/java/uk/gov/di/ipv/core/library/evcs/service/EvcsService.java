@@ -105,7 +105,7 @@ public class EvcsService {
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
-        return getParsedVerifiableCredentialsByState(userId, evcsAccessToken, states)
+        return fetchEvcsVerifiableCredentialsByState(userId, evcsAccessToken, states)
                 .values()
                 .stream()
                 .flatMap(List::stream)
@@ -126,14 +126,14 @@ public class EvcsService {
                 .toList();
     }
 
-    public Map<EvcsVCState, List<VerifiableCredential>> getParsedVerifiableCredentialsByState(
+    public Map<EvcsVCState, List<VerifiableCredential>> fetchEvcsVerifiableCredentialsByState(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
         var evcsUserVcs = getUserVCs(userId, evcsAccessToken, states);
         return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcs);
     }
 
-    public Map<EvcsVCState, List<VerifiableCredential>>
+    private Map<EvcsVCState, List<VerifiableCredential>>
             getParsedVerifiableCredentialsFromEvcsResponse(
                     String userId, List<EvcsGetUserVCDto> evcsUserVcs)
                     throws CredentialParseException {

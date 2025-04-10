@@ -321,7 +321,12 @@ public class ProcessCandidateIdentityHandler
         if (COI_CHECK_TYPES.contains(processIdentityType)
                 || STORE_IDENTITY_TYPES.contains(processIdentityType)
                 || PENDING.equals(processIdentityType)) {
-            evcsUserVcs = getUserVcsFromEvcs(clientOAuthSessionItem);
+            evcsUserVcs =
+                    evcsService.getUserVCs(
+                            userId,
+                            clientOAuthSessionItem.getEvcsAccessToken(),
+                            CURRENT,
+                            PENDING_RETURN);
         }
 
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
@@ -401,15 +406,6 @@ public class ProcessCandidateIdentityHandler
         }
 
         return JOURNEY_NEXT.toObjectMap();
-    }
-
-    private List<EvcsGetUserVCDto> getUserVcsFromEvcs(ClientOAuthSessionItem clientOAuthSessionItem)
-            throws EvcsServiceException {
-        return evcsService.getUserVCs(
-                clientOAuthSessionItem.getUserId(),
-                clientOAuthSessionItem.getEvcsAccessToken(),
-                CURRENT,
-                PENDING_RETURN);
     }
 
     private JourneyResponse getJourneyResponseForProfileMatching(

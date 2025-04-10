@@ -374,7 +374,7 @@ public class CheckExistingIdentityHandler
     private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
         var vcs =
-                evcsService.getParsedVerifiableCredentialsByState(
+                evcsService.fetchEvcsVerifiableCredentialsByState(
                         userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
         var isPendingReturn = !isNullOrEmpty(vcs.get(PENDING_RETURN));
