@@ -6,11 +6,9 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
@@ -87,15 +85,10 @@ public class CriResponseService {
     }
 
     public AsyncCriStatus getAsyncResponseStatus(
-            String userId,
-            List<VerifiableCredential> credentials,
-            boolean isPendingReturn,
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem) {
+            String userId, List<VerifiableCredential> credentials, boolean isPendingReturn) {
         // F2F CRI response item blocks other async CRI routes, except for
         // enhanced-verification-f2f-fail, which enforces the user stays on the same mitigation
         // route, so it is fine here as we check F2F first.
-        var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
         var f2fCriResponseItem = getCriResponseItem(userId, F2F);
         if (f2fCriResponseItem != null) {
             var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
@@ -106,8 +99,7 @@ public class CriResponseService {
                     f2fCriResponseItem.getStatus(),
                     !hasVc,
                     isPendingReturn,
-                    f2fCriResponseItem.isReproveIdentity(),
-                    targetVot);
+                    f2fCriResponseItem.isReproveIdentity());
         }
 
         // DCMAW async VC existence determines success or abandonment
@@ -134,12 +126,11 @@ public class CriResponseService {
                             // This allows us to test journeys with pre-existing DCMAW Async VCs
                             // without having to go through
                             // the whole journey to populate the datastore.
-                            criResponse != null && criResponse.isReproveIdentity(),
-                            targetVot);
+                            criResponse != null && criResponse.isReproveIdentity());
                 }
             }
         }
 
-        return new AsyncCriStatus(null, null, false, false, false, null);
+        return new AsyncCriStatus(null, null, false, false, false);
     }
 }

@@ -15,8 +15,7 @@ public enum NestedJourneyTypes {
     KBVS("kbvs"),
     STRATEGIC_APP_HANDLE_RESULT("strategic-app-handle-result"),
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
-    WEB_DL_OR_PASSPORT("web-dl-or-passport"),
-    F2F_FAILED("f2f-failed");
+    WEB_DL_OR_PASSPORT("web-dl-or-passport");
 
     private final String journeyName;
 
