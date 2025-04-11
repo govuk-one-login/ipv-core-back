@@ -63,4 +63,5 @@ api-tests/.env*
 !api-tests/.env.template
 !api-tests/.env.dev.template
 !api-tests/.env.local
+!api-tests/.env.dev01
 !api-tests/.env.build

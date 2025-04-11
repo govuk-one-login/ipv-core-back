@@ -38,7 +38,6 @@ public class AppConfigService extends YamlParametersConfigService {
     private static final String CORE_BASE_PATH = "/%s/core/";
 
     @Getter @Setter private List<String> featureSet;
-    private final String profileId;
     private String paramsRawHash;
     private final BaseProvider appConfigProvider;
     private final SecretsProvider secretsProvider;
@@ -50,12 +49,6 @@ public class AppConfigService extends YamlParametersConfigService {
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
-        profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
-        LOGGER.warn(
-                LogHelper.buildLogMessage(
-                        String.format(
-                                "Mike log 1! applicationId: %s, environmentId: %s, profileId: %s",
-                                applicationId, environmentId, profileId)));
 
         appConfigProvider =
                 ParamManager.getAppConfigProvider(
@@ -77,8 +70,6 @@ public class AppConfigService extends YamlParametersConfigService {
     @ExcludeFromGeneratedCoverageReport
     public AppConfigService(AppConfigProvider appConfigProvider, SecretsProvider secretsProvider) {
         this.appConfigProvider = appConfigProvider;
-        profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
-
         this.secretsProvider = secretsProvider;
     }
 
@@ -95,11 +86,9 @@ public class AppConfigService extends YamlParametersConfigService {
     }
 
     private void reloadParameters() {
+        var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
-        LOGGER.warn(
-                LogHelper.buildLogMessage(
-                        String.format(
-                                "Mike log 2! profileId: %s, paramsRaw: %s", profileId, paramsRaw)));
+
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
             updateParameters(parameters, paramsRaw);
