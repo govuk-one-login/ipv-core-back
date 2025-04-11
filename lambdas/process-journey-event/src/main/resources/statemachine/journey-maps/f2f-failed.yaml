@@ -33,7 +33,7 @@ states:
         resetType: PENDING_F2F_ALL
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: INITIAL_JOURNEY_SELECTION
         targetState: START
 
   RESET_SESSION_BEFORE_RETURN_TO_RP:
