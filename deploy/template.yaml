@@ -16,8 +16,8 @@ Globals:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
         CONFIG_SOURCE: "app-config"
-        APP_CONFIG_ID: !Sub "core-back-${Environment}"
-        APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
+        APP_CONFIG_ID: r51gjld
+        APP_CONFIG_ENVIRONMENT_ID: j598rmd
         APP_CONFIG_PROFILE_ID: fwu0arf
         DT_CONNECTION_AUTH_TOKEN: !If
           - UseDynatrace
