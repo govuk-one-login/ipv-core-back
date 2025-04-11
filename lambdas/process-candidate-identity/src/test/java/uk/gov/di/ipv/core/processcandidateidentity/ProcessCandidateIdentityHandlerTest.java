@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,9 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -59,6 +62,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -92,6 +96,7 @@ class ProcessCandidateIdentityHandlerTest {
     private static final String SIGNIN_JOURNEY_ID = "journey-id";
     private static final String USER_ID = "user-id";
     private static final String PROCESS_IDENTITY_TYPE = "identityType";
+    private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
 
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
 
@@ -113,6 +118,7 @@ class ProcessCandidateIdentityHandlerTest {
     @Mock private CriStoringService criStoringService;
     @Mock private CimitUtilityService cimitUtilityService;
     @Mock private CimitService cimitService;
+    @Mock private EvcsService evcsService;
     @InjectMocks ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     @BeforeEach
@@ -128,7 +134,8 @@ class ProcessCandidateIdentityHandlerTest {
                         .userId(USER_ID)
                         .govukSigninJourneyId(SIGNIN_JOURNEY_ID)
                         .vtr(List.of())
-                        .reproveIdentity(false);
+                        .reproveIdentity(false)
+                        .evcsAccessToken(EVCS_ACCESS_TOKEN);
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setVot(P2);
@@ -156,7 +163,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -167,6 +175,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -183,11 +197,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.NEW),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class));
+                            any(AuditEventUser.class),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -212,7 +227,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -227,6 +243,12 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
             when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                     .thenReturn(List.of())
+                    .thenReturn(List.of());
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
                     .thenReturn(List.of());
 
             var request =
@@ -247,11 +269,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.PENDING),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class));
+                            any(AuditEventUser.class),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -274,7 +297,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -282,6 +306,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -301,11 +331,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.PENDING),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class));
+                            any(AuditEventUser.class),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -332,12 +363,19 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(REVERIFICATION),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -355,7 +393,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -397,9 +435,9 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -429,9 +467,9 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -444,7 +482,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -455,6 +494,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -473,11 +518,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.UPDATE),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class));
+                            any(AuditEventUser.class),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -512,22 +558,29 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
             verify(ticfCriService, times(0)).getTicfVc(any(), any());
         }
 
         @Test
         void shouldHandleCoiFailure() throws Exception {
             // Arrange
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(false);
 
             var request =
@@ -543,19 +596,26 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldHandleCorrelationFailure() throws Exception {
             // Arrange
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(false);
 
@@ -572,19 +632,26 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldHandleNoProfileMatch() throws Exception {
             // Arrange
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.empty());
@@ -603,7 +670,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_PROFILE_UNMET_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
@@ -617,7 +684,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -635,6 +703,12 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             var request =
                     requestBuilder
                             .lambdaInput(
@@ -648,7 +722,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
@@ -662,7 +736,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -680,6 +755,12 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
                     .thenReturn(Optional.of("a-new-mitigation"));
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             var request =
                     requestBuilder
                             .lambdaInput(
@@ -693,7 +774,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
@@ -711,7 +792,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ACCOUNT_INTERVENTION),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -738,11 +820,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
-                            eq(reproveIdentityClientOAuthSessionItem),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.NEW),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class));
+                            any(AuditEventUser.class),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -758,7 +841,14 @@ class ProcessCandidateIdentityHandlerTest {
         @Test
         void shouldReturnJourneyErrorForCredentialParseException() throws Exception {
             // Arrange
-            when(checkCoiService.isCoiCheckSuccessful(any(), any(), any(), any(), any(), any()))
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new CredentialParseException("Unable to parse credentials"));
 
             var request =
@@ -776,19 +866,26 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldReturnJourneyErrorForFailedCiExtraction() throws Exception {
             // Arrange
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
@@ -809,20 +906,27 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldReturnJourneyErrorForMissingSecurityCheckCredential() throws Exception {
             // Arrange
             ipvSessionItem.setSecurityCheckCredential(null);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
 
             var request =
@@ -840,20 +944,27 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(MISSING_SECURITY_CHECK_CREDENTIAL.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldReturnJourneyErrorForFailedCiRetrieval() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -881,20 +992,27 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
         }
 
         @Test
         void shouldReturnJourneyErrorWhenFailingToStoreIdentity() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class)))
+                            any(AuditEventUser.class),
+                            any()))
                     .thenReturn(true);
             when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -911,7 +1029,7 @@ class ProcessCandidateIdentityHandlerTest {
                             new EvcsServiceException(
                                     SC_SERVER_ERROR, RECEIVED_NON_200_RESPONSE_STATUS_CODE))
                     .when(storeIdentityService)
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
 
             var request =
                     requestBuilder
@@ -927,6 +1045,32 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(500, response.get("statusCode"));
             assertEquals(
                     RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage(), response.get("message"));
+        }
+
+        @Test
+        void shouldReturnJourneyErrorIfFailingToGetVcsFromEvcs() throws Exception {
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenThrow(
+                            new EvcsServiceException(
+                                    HTTPResponse.SC_SERVER_ERROR,
+                                    FAILED_AT_EVCS_HTTP_REQUEST_SEND));
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), response.get("message"));
         }
 
         @Test

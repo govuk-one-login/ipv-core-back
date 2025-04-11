@@ -11,10 +11,10 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -47,20 +47,17 @@ public class StoreIdentityService {
 
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String userId,
             CandidateIdentityType identityType,
             String deviceInformation,
             List<VerifiableCredential> credentials,
-            AuditEventUser auditEventUser)
+            AuditEventUser auditEventUser,
+            List<EvcsGetUserVCDto> evcsVcs)
             throws EvcsServiceException {
-        String userId = clientOAuthSessionItem.getUserId();
-
         if (identityType == CandidateIdentityType.PENDING) {
-            evcsService.storePendingIdentity(
-                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+            evcsService.storePendingIdentity(userId, credentials, evcsVcs);
         } else {
-            evcsService.storeCompletedIdentity(
-                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+            evcsService.storeCompletedIdentity(userId, credentials, evcsVcs);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
