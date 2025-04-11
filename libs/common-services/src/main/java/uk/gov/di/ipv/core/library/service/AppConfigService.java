@@ -51,6 +51,11 @@ public class AppConfigService extends YamlParametersConfigService {
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
         profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
+        LOGGER.warn(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Mike log 1! applicationId: %s, environmentId: %s, profileId: %s",
+                                applicationId, environmentId, profileId)));
 
         appConfigProvider =
                 ParamManager.getAppConfigProvider(
@@ -91,6 +96,10 @@ public class AppConfigService extends YamlParametersConfigService {
 
     private void reloadParameters() {
         var paramsRaw = appConfigProvider.get(profileId);
+        LOGGER.warn(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Mike log 2! profileId: %s, paramsRaw: %s", profileId, paramsRaw)));
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
             updateParameters(parameters, paramsRaw);
