@@ -1078,6 +1078,15 @@ Resources:
             - UseDynatrace
             - /opt/dynatrace
             - !Ref AWS::NoValue
+          # PYIC-8242 Turn on DT debug logging for single build lambda
+          DT_LOGGING_DESTINATION: !If
+            - IsBuild
+            - "stdout"
+            - !Ref AWS::NoValue
+          DT_LOGGING_JAVA_FLAGS: !If
+            - IsBuild
+            - "log-Transformer=true,log-OpenTelemetryUtils=true,log-AsyncClassRetransformer=true,log-ClassValue=true"
+            - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
