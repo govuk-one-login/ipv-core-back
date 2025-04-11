@@ -9,6 +9,8 @@ Feature: Reprove Identity Journey
         When I start a new 'medium-confidence' journey with reprove identity
         Then I get a 'reprove-identity-start' page response
         When I submit a 'next' event
+        Then I get a 'live-in-uk' page response
+        When I submit a 'uk' event
         Then I get a 'page-ipv-identity-document-start' page response
         When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
@@ -34,6 +36,8 @@ Feature: Reprove Identity Journey
         When I start a new 'medium-confidence' journey with reprove identity
         Then I get a 'reprove-identity-start' page response
         When I submit a 'next' event
+        Then I get a 'live-in-uk' page response
+        When I submit a 'uk' event
         Then I get a 'page-ipv-identity-document-start' page response
         When I submit an 'end' event
         Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -81,7 +85,7 @@ Feature: Reprove Identity Journey
         When I start a new 'medium-confidence' journey with reprove identity
         Then I get a 'reprove-identity-start' page response
         When I submit a 'next' event
-        Then I get a 'page-ipv-identity-document-start' page response
+        Then I get a 'live-in-uk' page response
 
     Rule: F2F journeys are subject to COI checks
         Background:
@@ -93,6 +97,8 @@ Feature: Reprove Identity Journey
             When I start a new 'medium-confidence' journey with reprove identity
             Then I get a 'reprove-identity-start' page response
             When I submit a 'next' event
+            Then I get a 'live-in-uk' page response
+            When I submit a 'uk' event
             Then I get a 'page-ipv-identity-document-start' page response
             When I submit an 'end' event
             Then I get a 'page-ipv-identity-postoffice-start' page response

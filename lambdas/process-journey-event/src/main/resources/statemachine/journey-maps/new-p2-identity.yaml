@@ -24,11 +24,6 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
-  REPROVE_IDENTITY:
-    events:
-      next:
-        targetState: REPROVE_IDENTITY_START
-
   DCMAW_ASYNC_COMPLETE:
     events:
       next:
@@ -67,13 +62,6 @@ states:
         targetState: ERROR
 
   # Journey states
-  REPROVE_IDENTITY_START:
-    response:
-      type: page
-      pageId: reprove-identity-start
-    events:
-      next:
-        targetState: IDENTITY_START_PAGE
 
   RESET_SESSION_IDENTITY:
     response:
