@@ -59,9 +59,25 @@ states:
       repeat-fraud-check:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
-      reprove-identity:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: REPROVE_IDENTITY
+      reprove-identity-gpg45-medium:
+        targetState: REPROVE_IDENTITY_START_P2
       reprove-identity-gpg45-low:
+        targetState: REPROVE_IDENTITY_START_P1
+
+  REPROVE_IDENTITY_START_P1:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
         targetJourney: NEW_P1_IDENTITY
-        targetState: REPROVE_IDENTITY
+        targetState: START
+
+  REPROVE_IDENTITY_START_P2:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: START

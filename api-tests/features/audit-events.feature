@@ -123,6 +123,8 @@ Feature: Audit Events
     And I start a new 'medium-confidence' journey with reprove identity
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
