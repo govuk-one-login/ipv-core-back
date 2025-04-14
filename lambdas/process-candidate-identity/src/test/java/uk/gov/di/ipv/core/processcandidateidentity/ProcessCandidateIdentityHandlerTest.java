@@ -504,9 +504,9 @@ class ProcessCandidateIdentityHandlerTest {
             verify(cimitService, times(2)).fetchContraIndicatorsVc(any(), any(), any(), any());
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test

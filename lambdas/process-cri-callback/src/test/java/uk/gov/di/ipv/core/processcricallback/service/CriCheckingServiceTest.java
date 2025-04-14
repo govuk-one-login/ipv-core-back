@@ -743,7 +743,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void checkVcResponseShouldThrowIfMissingSecurityCheckCredential() throws Exception {
+    void checkVcResponseShouldThrowIfMissingSecurityCheckCredential() {
         // Arrange
         var ipvSessionItem = buildValidIpvSessionItem();
         ipvSessionItem.setSecurityCheckCredential(null);
