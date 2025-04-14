@@ -435,6 +435,43 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
+        void shouldHandleCandidateIdentityTypeIncompleteWithNullSecurityCheckCredential()
+                throws Exception {
+            // Arrange
+            ipvSessionItem.setSecurityCheckCredential(null);
+            var ticfVcs = List.of(vcTicf());
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(cimitService.fetchContraIndicatorsVc(any(), any(), any(), any()))
+                    .thenReturn(vcTicf());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.INCOMPLETE.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+            verify(cimitService, times(2)).fetchContraIndicatorsVc(any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), any(), any());
+            verify(checkCoiService, times(0))
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+        }
+
+        @Test
         void shouldHandleCandidateIdentityTypeUpdateAndReturnJourneyNext() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
