@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
@@ -706,6 +708,29 @@ class CriCheckingServiceTest {
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
     }
 
+    @Test
+    void checkVcResponseShouldThrowIfMissingSecurityCheckCredential() throws Exception {
+        // Arrange
+        var ipvSessionItem = buildValidIpvSessionItem();
+        ipvSessionItem.setSecurityCheckCredential(null);
+
+        var callbackRequest = buildValidCallbackRequest();
+        var vcs = List.of(vcAddressM1a());
+        var sessionVcs = List.of(vcDcmawDrivingPermitDvaM1b());
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        // Act/Assert
+        assertThrows(
+                MissingSecurityCheckCredential.class,
+                () ->
+                        criCheckingService.checkVcResponse(
+                                vcs,
+                                callbackRequest.getIpAddress(),
+                                clientOAuthSessionItem,
+                                ipvSessionItem,
+                                sessionVcs));
+    }
+
     @Nested
     class DrivingLicenceAuthSourceCheck {
 
@@ -1002,6 +1027,7 @@ class CriCheckingServiceTest {
         var ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID);
+        ipvSessionItem.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
         ipvSessionItem.setVot(Vot.P0);
         return ipvSessionItem;
     }

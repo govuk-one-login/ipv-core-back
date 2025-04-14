@@ -18,13 +18,13 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
-import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -245,10 +245,15 @@ public class CriCheckingService {
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
             throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
-                    CredentialParseException, ConfigException {
-        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
+                    CredentialParseException, ConfigException, MissingSecurityCheckCredential {
+        var isReverification = clientOAuthSessionItem.isReverification();
         if (!isReverification) {
+
+            var previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+            if (StringUtils.isBlank(previousSecurityCheckCredential)) {
+                throw new MissingSecurityCheckCredential("Missing security check credential");
+            }
+
             // Get mitigations from old CIMIT VC to compare against the mitigations on the new CIs
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
             var oldMitigations =

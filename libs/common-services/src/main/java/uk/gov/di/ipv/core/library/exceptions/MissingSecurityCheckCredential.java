@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions;
+package uk.gov.di.ipv.core.library.exceptions;
 
 public class MissingSecurityCheckCredential extends Exception {
     public MissingSecurityCheckCredential() {
