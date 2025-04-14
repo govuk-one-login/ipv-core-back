@@ -451,7 +451,8 @@ public class ProcessCandidateIdentityHandler
             // If it is, we need to make a call to CIMIT prior to getting the TICF VC
             // in order to get the mitigation information unaffected by this new VC.
             String previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
-            if (StringUtils.isBlank(previousSecurityCheckCredential)) {
+            if (!clientOAuthSessionItem.isReverification()
+                    && StringUtils.isBlank(previousSecurityCheckCredential)) {
                 previousSecurityCheckCredential =
                         cimitService
                                 .fetchContraIndicatorsVc(
