@@ -72,7 +72,8 @@ core:
       ],
       "NEEDS-ALTERNATE-DOC":[
         {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"},
-        {"event":"/journey/alternate-doc-invalid-passport","document":"passport"}
+        {"event":"/journey/alternate-doc-invalid-passport","document":"passport"},
+        {"event":"/journey/alternate-doc-invalid-nino","document":"socialSecurity"}
       ]
     }'
     apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
