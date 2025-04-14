@@ -279,3 +279,48 @@ Feature: Audit Events
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
     And audit events for 'reverification-failed-journey' are recorded [local only]
+
+  Rule: DWP KBV
+    Background: Start a journey to DWP KBV CRI
+      Given I activate the 'dwpKbvTest' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'page-multiple-doc-check' page response
+      When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+
+    Scenario: DWP KBV - successful response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      And audit events for 'dwp-kbv-successful-journey' are recorded [local only]
+
+    Scenario: DWP KBV - dropout via thin file
+      When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-different-security-questions' page response
+      And audit events for 'dwp-kbv-dropout-via-thin-file' are recorded [local only]
+
+    Scenario: DWP KBV - user abandons CRI
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      And audit events for 'dwp-kbv-dropout-user-abandons-cri' are recorded [local only]

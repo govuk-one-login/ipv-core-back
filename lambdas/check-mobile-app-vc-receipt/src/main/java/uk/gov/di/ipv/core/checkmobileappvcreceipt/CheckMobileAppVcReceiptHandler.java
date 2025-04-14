@@ -214,8 +214,8 @@ public class CheckMobileAppVcReceiptHandler
                         criResponseItem.getStatus(),
                         dcmawAsyncVc.isEmpty(),
                         true,
-                        false,
-                        null);
+                        false);
+
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }

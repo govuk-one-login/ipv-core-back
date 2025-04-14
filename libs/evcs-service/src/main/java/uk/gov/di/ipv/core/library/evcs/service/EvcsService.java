@@ -46,23 +46,19 @@ public class EvcsService {
     }
 
     public void storeCompletedIdentity(
-            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            String userId,
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs)
             throws EvcsServiceException {
-        persistUserVCs(
-                userId,
-                credentials,
-                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
-                false);
+        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, false);
     }
 
     public void storePendingIdentity(
-            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+            String userId,
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs)
             throws EvcsServiceException {
-        persistUserVCs(
-                userId,
-                credentials,
-                getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
-                true);
+        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, true);
     }
 
     public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
@@ -109,16 +105,40 @@ public class EvcsService {
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
-        return getVerifiableCredentialsByState(userId, evcsAccessToken, states).values().stream()
+        return fetchEvcsVerifiableCredentialsByState(userId, evcsAccessToken, states)
+                .values()
+                .stream()
                 .flatMap(List::stream)
                 .toList();
     }
 
-    public Map<EvcsVCState, List<VerifiableCredential>> getVerifiableCredentialsByState(
+    public List<VerifiableCredential> getVerifiableCredentials(
+            String userId, List<EvcsGetUserVCDto> evcsUserVcs, EvcsVCState... states)
+            throws CredentialParseException {
+        var evcsUserVcsByRequiredState =
+                evcsUserVcs.stream()
+                        .filter(evcsVc -> List.of(states).contains(evcsVc.state()))
+                        .toList();
+        return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcsByRequiredState)
+                .values()
+                .stream()
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    public Map<EvcsVCState, List<VerifiableCredential>> fetchEvcsVerifiableCredentialsByState(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
+        var evcsUserVcs = getUserVCs(userId, evcsAccessToken, states);
+        return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcs);
+    }
+
+    private Map<EvcsVCState, List<VerifiableCredential>>
+            getParsedVerifiableCredentialsFromEvcsResponse(
+                    String userId, List<EvcsGetUserVCDto> evcsUserVcs)
+                    throws CredentialParseException {
         Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
-        for (var vc : getUserVCs(userId, evcsAccessToken, states)) {
+        for (var vc : evcsUserVcs) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
@@ -158,7 +178,7 @@ public class EvcsService {
         if (!vcsToUpdates.isEmpty()) evcsClient.updateUserVCs(userId, vcsToUpdates);
     }
 
-    private List<EvcsGetUserVCDto> getUserVCs(
+    public List<EvcsGetUserVCDto> getUserVCs(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws EvcsServiceException {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
