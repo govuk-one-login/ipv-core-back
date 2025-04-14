@@ -2683,6 +2683,9 @@ Resources:
         SSEEnabled: true
         SSEType: KMS
         KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+      Tags:
+        - Key: "BackupFrequency"
+          Value: "Daily"
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
