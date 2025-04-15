@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
+      ENVIRONMENT: ${{ inputs.environment }}
     permissions:
       id-token: write
       packages: read
