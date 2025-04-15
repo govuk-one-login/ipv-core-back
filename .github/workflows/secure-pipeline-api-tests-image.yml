@@ -2,6 +2,10 @@ name: Build api-tests image
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
 
 jobs:
   build-image-and-push:
