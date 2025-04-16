@@ -1133,6 +1133,31 @@ class ProcessCandidateIdentityHandlerTest {
     }
 
     @Test
+    void shouldNotCallTicfIfClientOauthSessionItemIsInvalid() throws Exception {
+        var clientOAuthSessionItem =
+                clientOAuthSessionItemBuilder.isErrorClientSession(true).build();
+        when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var request =
+                requestBuilder
+                        .lambdaInput(
+                                Map.of(
+                                        PROCESS_IDENTITY_TYPE,
+                                        CandidateIdentityType.INCOMPLETE.name()))
+                        .build();
+
+        // Act
+        var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+        // Assert
+        assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+        verify(ticfCriService, times(0)).getTicfVc(any(), any());
+    }
+
+    @Test
     void shouldReturnJourneyErrorIfIdentityTypeIsNotProvided() {
         // Arrange
         var request = requestBuilder.lambdaInput(Map.of()).build();
