@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.tracing;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
+import io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
