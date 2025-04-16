@@ -1134,11 +1134,14 @@ class ProcessCandidateIdentityHandlerTest {
 
     @Test
     void shouldNotCallTicfIfClientOauthSessionItemIsInvalid() throws Exception {
-        var clientOAuthSessionItem =
+        var testClientOAuthSessionItem =
                 clientOAuthSessionItemBuilder.isErrorClientSession(true).build();
+
         when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
+                .thenReturn(testClientOAuthSessionItem);
+        when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                .thenReturn(true);
 
         var request =
                 requestBuilder

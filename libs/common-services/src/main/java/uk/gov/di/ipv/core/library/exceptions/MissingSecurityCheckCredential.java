@@ -1,10 +1,9 @@
 package uk.gov.di.ipv.core.library.exceptions;
 
-public class MissingSecurityCheckCredential extends Exception {
-    public MissingSecurityCheckCredential() {
-        super();
-    }
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@ExcludeFromGeneratedCoverageReport
+public class MissingSecurityCheckCredential extends Exception {
     public MissingSecurityCheckCredential(String message) {
         super(message);
     }
