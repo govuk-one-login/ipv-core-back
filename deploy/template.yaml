@@ -211,6 +211,9 @@ Mappings:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
       s3: "pl-7ca54015"
+  Constants:
+    Urls:
+      pagerDutyRunbook: "https://team-manual.account.gov.uk/teams/IPV-Core-team/Supporting-IPV-Core/pager-duty-runbooks/"
 
 Resources:
   # ssl cert
@@ -2897,6 +2900,9 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
         AlarmName: PrivateApiGateWay5xxAlarm
+        AlarmDescription: !Sub
+          - 'The internal API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
+          - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
         ActionsEnabled: true
         AlarmActions:
           - !ImportValue sns-topics-AlarmTopic
@@ -2930,6 +2936,9 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       AlarmName: ExternalApiGateWay5xxAlarm
+      AlarmDescription: !Sub
+        - 'The external API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
+        - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue sns-topics-AlarmTopic
