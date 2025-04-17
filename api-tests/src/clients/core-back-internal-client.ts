@@ -34,7 +34,6 @@ export const initialiseIpvSession = async (
     `${config.core.internalApiUrl}/session/initialise`,
     internalApiHeaders,
     JSON.stringify(requestBody),
-    await response.text(),
   );
 
   const responseBody = await response.json();
