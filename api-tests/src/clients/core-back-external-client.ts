@@ -82,6 +82,16 @@ export const getIdentity = async (
     throw new Error(`getIdentity request failed: ${response.statusText}`);
   }
 
+  console.log(
+    "MIKE!!! getIdentity",
+    config.core.externalApiUrl,
+    response,
+    response.statusText,
+    response.body,
+    await response.text(),
+    await response.json(),
+  );
+
   const body = await response.json();
   await validateResponseSchema(body, "userIdentityResponse");
 
