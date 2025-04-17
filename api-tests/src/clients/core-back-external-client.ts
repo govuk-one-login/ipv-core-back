@@ -148,7 +148,6 @@ export const jwks = async (): Promise<JSONWebKeySet> => {
     response.statusText,
     response.body,
     await response.text(),
-    await response.json(),
   );
 
   if (!response.ok) {
