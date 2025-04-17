@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "node16",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "outDir": "build",
+    "inlineSourceMap": true,
+    "types": ["node"]
+  },
+  "include": ["src"]
+}
