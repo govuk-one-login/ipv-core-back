@@ -88,6 +88,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionErrorItem.setUserId(null);
         clientOAuthSessionErrorItem.setGovukSigninJourneyId(govukSigninJourneyId);
         clientOAuthSessionErrorItem.setReproveIdentity(null);
+        clientOAuthSessionErrorItem.setErrorClientSession(true);
 
         dataStore.create(clientOAuthSessionErrorItem, BACKEND_SESSION_TTL);
 

@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -259,6 +260,12 @@ public class ProcessCriCallbackHandler
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.IPV_SESSION_NOT_FOUND,
                     Level.ERROR);
+        } catch (MissingSecurityCheckCredential e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL,
+                    Level.ERROR);
         } catch (UncheckedIOException e) {
             // Temporary mitigation to force lambda instance to crash and restart by explicitly
             // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
@@ -293,7 +300,7 @@ public class ProcessCriCallbackHandler
                     CiRetrievalException, CriApiException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
                     UnrecognisedVotException, IpvSessionNotFoundException, CiExtractionException,
-                    CredentialParseException {
+                    CredentialParseException, MissingSecurityCheckCredential {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

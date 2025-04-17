@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -145,6 +146,11 @@ public class CheckMobileAppVcReceiptHandler
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC);
+        } catch (MissingSecurityCheckCredential e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL);
         } catch (UncheckedIOException e) {
             // Temporary mitigation to force lambda instance to crash and restart by explicitly
             // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
@@ -169,7 +175,7 @@ public class CheckMobileAppVcReceiptHandler
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     InvalidCriResponseException, CredentialParseException,
                     VerifiableCredentialException, ConfigException, CiRetrievalException,
-                    EvcsServiceException, CiExtractionException {
+                    EvcsServiceException, CiExtractionException, MissingSecurityCheckCredential {
         // Validate callback sessions
         validateSessionId(request);
 
