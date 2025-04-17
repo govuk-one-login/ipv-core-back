@@ -420,6 +420,41 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NINO
+        checkMitigation:
+          alternate-doc-invalid-nino:
+            targetState: MITIGATION_NINO_NO_MATCH
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-nino
+
+  MITIGATION_NINO_NO_MATCH:
+    response:
+      type: page
+      pageId: pyi-nino-no-match-another-way
+    events:
+      mobileApp:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      passport:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
+      drivingLicence:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
+      postOffice:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      relyingParty:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   ADDRESS_AND_FRAUD_NO_PHOTO_ID:
     nestedJourney: ADDRESS_AND_FRAUD

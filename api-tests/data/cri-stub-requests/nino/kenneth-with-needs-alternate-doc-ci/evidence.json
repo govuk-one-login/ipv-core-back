@@ -3,7 +3,7 @@
   "txn": "RB000117420948",
   "strengthScore": 2,
   "validityScore": 0,
-  "ci": ["BREACHING"],
+  "ci": ["NEEDS-ALTERNATE-DOC"],
   "failedCheckDetails": [
     {
       "checkMethod": "data"
