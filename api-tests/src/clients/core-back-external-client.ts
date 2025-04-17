@@ -82,7 +82,7 @@ export const getIdentity = async (
     throw new Error(`getIdentity request failed: ${response.statusText}`);
   }
 
-  console.log(
+  console.error(
     "MIKE!!! getIdentity",
     config.core.externalApiUrl,
     response,
@@ -139,6 +139,16 @@ export const jwks = async (): Promise<JSONWebKeySet> => {
     {
       method: "GET",
     },
+  );
+
+  console.error(
+    "MIKE!!! jwks",
+    config.core.externalApiUrl,
+    response,
+    response.statusText,
+    response.body,
+    await response.text(),
+    await response.json(),
   );
 
   if (!response.ok) {
