@@ -262,7 +262,6 @@ public class CriCheckingService {
                     CredentialParseException, ConfigException, MissingSecurityCheckCredential {
         var isReverification = clientOAuthSessionItem.isReverification();
         if (!isReverification) {
-
             var previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
             if (StringUtils.isBlank(previousSecurityCheckCredential)) {
                 throw new MissingSecurityCheckCredential("Missing security check credential");

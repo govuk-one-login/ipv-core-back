@@ -476,7 +476,7 @@ public class ProcessCandidateIdentityHandler
             // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
             // validation), we cannot make a request to TICF as we will have missing required
             // properties.
-            if (TRUE.equals(clientOAuthSessionItem.isErrorClientSession())) {
+            if (clientOAuthSessionItem.isErrorClientSession()) {
                 LOGGER.warn(
                         LogHelper.buildLogMessage(
                                 "Invalid ClientOauthSessionItem. Skipping TICF call."));
