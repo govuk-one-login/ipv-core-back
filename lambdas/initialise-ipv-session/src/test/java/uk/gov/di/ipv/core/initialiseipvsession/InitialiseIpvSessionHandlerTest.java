@@ -210,6 +210,7 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setUserId(TEST_USER_ID);
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
+        clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
     }
 
     @AfterEach
@@ -724,7 +725,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of());
 
             // Act
@@ -744,7 +746,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC));
 
             // Act
@@ -765,7 +768,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
             // Act
@@ -788,7 +792,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC));
 
             // Act
@@ -809,7 +814,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
             // Act
@@ -832,7 +838,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL250_MIGRATION_VC));
 
             // Act
@@ -847,7 +854,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(PCL200_MIGRATION_VC, PCL250_MIGRATION_VC));
 
             // Act
@@ -862,7 +870,8 @@ class InitialiseIpvSessionHandlerTest {
             // Arrange
             setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
             when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+            when(mockEvcsService.getVerifiableCredentials(
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of());
 
             // Act
@@ -948,7 +957,7 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_COMPONENT_ID,
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
-            when(mockEvcsService.getVerifiableCredentials(any(), any(), any()))
+            when(mockEvcsService.getVerifiableCredentials(any(), eq(TEST_EVCS_ACCESS_TOKEN), any()))
                     .thenReturn(List.of());
 
             doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_CONSTRUCT_EVCS_URI))

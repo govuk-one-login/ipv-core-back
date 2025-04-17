@@ -10,8 +10,10 @@ export const JOURNEY_TYPES = {
   TECHNICAL_ERROR: "Technical error",
   REPEAT_FRAUD_CHECK: "Repeat fraud check",
   SESSION_TIMEOUT: "Session timeout",
+  F2F_FAILED: "F2F failed",
   F2F_HAND_OFF: "F2F hand off",
   F2F_PENDING: "F2F pending",
+  F2F_FAILED: "F2F failed",
   OPERATIONAL_PROFILE_MIGRATION: "Operational profile migration",
   OPERATIONAL_PROFILE_REUSE: "Operational profile reuse",
   REVERIFICATION: "Reverification",
@@ -24,10 +26,10 @@ export const NESTED_JOURNEY_TYPES = {
   STRATEGIC_APP_HANDLE_RESULT: "Strategic app handle result",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
-  F2F_FAILED: "F2F failed",
 };
 
 export const COMMON_JOURNEY_TYPES = [
+  "NEW_P1_IDENTITY",
   "NEW_P2_IDENTITY",
   "REUSE_EXISTING_IDENTITY",
   "REPEAT_FRAUD_CHECK",

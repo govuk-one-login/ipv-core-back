@@ -2,7 +2,7 @@
 awsSdk = "2.31.3"
 jackson = "2.18.0"
 log4j = "2.24.0"
-mockito = "5.16.0"
+mockito = "5.17.0"
 pact = "4.6.5"
 powertools = "1.20.0"
 
@@ -25,7 +25,7 @@ hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-javalin = "io.javalin:javalin:6.5.0"
+javalin = "io.javalin:javalin:6.6.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.12.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.12.0"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
@@ -36,7 +36,7 @@ mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.23"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
-openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.13.1-alpha"
+openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.15.0-alpha"
 openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }

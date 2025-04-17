@@ -21,6 +21,8 @@ nestedJourneyStates:
         exitEventToEmit: next
       invalid-request:
         targetState: DWP_THIN_FILE_PAGE
+        auditEvents:
+          - IPV_DWP_KBV_CRI_THIN_FILE_ENCOUNTERED
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
       fail-with-ci:

@@ -50,31 +50,34 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      f2f-fail-p1:
-        targetState: F2F_FAILED
-        targetEntryEvent: f2f-fail-p1
-      f2f-fail-p2:
-        targetState: F2F_FAILED
-        targetEntryEvent: f2f-fail-p2
+      f2f-fail:
+        targetJourney: F2F_FAILED
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       repeat-fraud-check:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
-      reprove-identity:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: REPROVE_IDENTITY
+      reprove-identity-gpg45-medium:
+        targetState: REPROVE_IDENTITY_START_P2
       reprove-identity-gpg45-low:
-        targetJourney: NEW_P1_IDENTITY
-        targetState: REPROVE_IDENTITY
+        targetState: REPROVE_IDENTITY_START_P1
 
-  F2F_FAILED:
-    nestedJourney: F2F_FAILED
-    exitEvents:
-      next-p1:
+  REPROVE_IDENTITY_START_P1:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
         targetJourney: NEW_P1_IDENTITY
         targetState: START
-      next-p2:
+
+  REPROVE_IDENTITY_START_P2:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
         targetJourney: NEW_P2_IDENTITY
         targetState: START

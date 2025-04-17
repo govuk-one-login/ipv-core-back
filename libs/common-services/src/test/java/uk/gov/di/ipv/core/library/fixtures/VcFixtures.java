@@ -29,6 +29,7 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -55,6 +56,7 @@ public interface VcFixtures {
     String FRAUD_ISSUER_STAGING = "https://review-f.staging.account.gov.uk";
     String FRAUD_ISSUER_INTEGRATION = "https://review-f.integration.account.gov.uk";
     String EXPERIAN_KBV_ISSUER_INTEGRATION = "https://review-k.integration.account.gov.uk";
+    String DWP_KBV_ISSUER_STAGING = "https://gdskbvauth-test.financial-support.service.dwp.gov.uk";
     String PASSPORT_ISSUER_STAGING = "https://review-p.staging.account.gov.uk";
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
@@ -267,6 +269,64 @@ public interface VcFixtures {
                                 RiskAssessment.builder()
                                         .withType(RISK_ASSESSMENT_EVIDENCE_TYPE)
                                         .withTxn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                                        .build()))
+                .build();
+    }
+
+    private static IdentityCheckCredential vcClaimDwpKbv() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(aliceParkerName()))
+                                .withAddress(List.of(ADDRESS_4))
+                                .withBirthDate(
+                                        List.of(
+                                                BirthDate.builder()
+                                                        .withValue("1970-01-01")
+                                                        .build()))
+                                .build())
+                .withEvidence(
+                        List.of(
+                                IdentityCheck.builder()
+                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
+                                        .withTxn("abc1234")
+                                        .withVerificationScore(2)
+                                        .withCheckDetails(
+                                                List.of(
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(2)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .FREE_TEXT)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(2)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .MULTIPLE_CHOICE)
+                                                                .build(),
+                                                        CheckDetails.builder()
+                                                                .withCheckMethod(
+                                                                        CheckDetails.CheckMethodType
+                                                                                .KBV)
+                                                                .withKbvQuality(1)
+                                                                .withKbvResponseMode(
+                                                                        CheckDetails
+                                                                                .KBVResponseModeType
+                                                                                .MULTIPLE_CHOICE)
+                                                                .build()))
                                         .build()))
                 .build();
     }
@@ -1166,6 +1226,15 @@ public interface VcFixtures {
                 vcClaimExperianKbv(),
                 EXPERIAN_KBV_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1653403140));
+    }
+
+    static VerifiableCredential vcDwpKbv() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DWP_KBV,
+                vcClaimDwpKbv(),
+                DWP_KBV_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
     }
 
     static VerifiableCredential vcDcmawDrivingPermitDvaM1b() {

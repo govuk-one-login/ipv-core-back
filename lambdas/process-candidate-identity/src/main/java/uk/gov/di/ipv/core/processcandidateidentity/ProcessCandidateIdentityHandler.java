@@ -30,7 +30,9 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -82,6 +84,8 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -115,6 +119,7 @@ public class ProcessCandidateIdentityHandler
     private final VotMatcher votMatcher;
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
+    private final EvcsService evcsService;
 
     // Candidate identities that should be subject to a COI check
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
@@ -152,6 +157,7 @@ public class ProcessCandidateIdentityHandler
         this.criStoringService =
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
+        this.evcsService = new EvcsService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -169,7 +175,8 @@ public class ProcessCandidateIdentityHandler
             StoreIdentityService storeIdentityService,
             VotMatcher votMatcher,
             CimitUtilityService cimitUtilityService,
-            TicfCriService ticfCriService) {
+            TicfCriService ticfCriService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
@@ -183,6 +190,7 @@ public class ProcessCandidateIdentityHandler
         this.storeIdentityService = storeIdentityService;
         this.ticfCriService = ticfCriService;
         this.cimitUtilityService = cimitUtilityService;
+        this.evcsService = evcsService;
     }
 
     @Override
@@ -312,11 +320,28 @@ public class ProcessCandidateIdentityHandler
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException, ParseException, CiExtractionException {
+        List<EvcsGetUserVCDto> evcsUserVcs = null;
+        var userId = clientOAuthSessionItem.getUserId();
+
+        // These identity types require the VCs from EVCS. To save multiple calls,
+        // we call for them once here.
+        if (COI_CHECK_TYPES.contains(processIdentityType)
+                || STORE_IDENTITY_TYPES.contains(processIdentityType)
+                || PENDING.equals(processIdentityType)) {
+            evcsUserVcs =
+                    evcsService.getUserVCs(
+                            userId,
+                            clientOAuthSessionItem.getEvcsAccessToken(),
+                            CURRENT,
+                            PENDING_RETURN);
+        }
+
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
                     LogHelper.buildLogMessage("Performing COI check")
                             .with(LOG_CHECK_TYPE.getFieldName(), coiCheckType.name()));
+
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
@@ -324,7 +349,8 @@ public class ProcessCandidateIdentityHandler
                             coiCheckType,
                             deviceInformation,
                             sessionVcs,
-                            auditEventUser);
+                            auditEventUser,
+                            evcsUserVcs);
 
             if (!isCoiCheckSuccessful) {
                 return JOURNEY_COI_CHECK_FAILED;
@@ -362,11 +388,12 @@ public class ProcessCandidateIdentityHandler
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeIdentityService.storeIdentity(
                             ipvSessionItem,
-                            clientOAuthSessionItem,
+                            userId,
                             processIdentityType,
                             deviceInformation,
                             sessionVcs,
-                            auditEventUser);
+                            auditEventUser,
+                            evcsUserVcs);
                 }
                 return journey.toObjectMap();
             }
@@ -377,11 +404,12 @@ public class ProcessCandidateIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    clientOAuthSessionItem,
+                    userId,
                     processIdentityType,
                     deviceInformation,
                     sessionVcs,
-                    auditEventUser);
+                    auditEventUser,
+                    evcsUserVcs);
         }
 
         return JOURNEY_NEXT.toObjectMap();
