@@ -29,6 +29,13 @@ export const initialiseIpvSession = async (
     },
   );
 
+  console.log(
+    "MIKE!!!",
+    `${config.core.internalApiUrl}/session/initialise`,
+    internalApiHeaders,
+    JSON.stringify(requestBody),
+  );
+
   const responseBody = await response.json();
   if (!response.ok) {
     throw new ApiRequestError(

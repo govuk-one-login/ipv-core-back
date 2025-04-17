@@ -57,10 +57,8 @@ public class SsmConfigService extends ConfigService {
     @ExcludeFromGeneratedCoverageReport
     public SsmConfigService() {
         var cacheDuration =
-                getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES) == null
-                        ? DEFAULT_CACHE_DURATION_MINUTES
-                        : Integer.parseInt(
-                                getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES));
+                getIntegerEnvironmentVariable(
+                        CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
 
         this.ssmProvider =
                 ParamManager.getSsmProvider(
