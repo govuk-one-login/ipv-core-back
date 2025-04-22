@@ -473,6 +473,34 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             AuditEventUser auditEventUser) {
         try {
+            // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
+            // validation), we cannot make a request to TICF as we will have missing required
+            // properties.
+            if (clientOAuthSessionItem.isErrorClientSession()) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Invalid ClientOauthSessionItem. Skipping TICF call."));
+                return null;
+            }
+
+            // We must check if the security check credential on the session is empty.
+            // This can happen when an error occurs prior to the first call to get the
+            // security check credential e.g. in the check-existing-identity lambda.
+            // If it is, we need to make a call to CIMIT prior to getting the TICF VC
+            // in order to get the mitigation information unaffected by this new VC.
+            String previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+            if (!clientOAuthSessionItem.isReverification()
+                    && StringUtils.isBlank(previousSecurityCheckCredential)) {
+                previousSecurityCheckCredential =
+                        cimitService
+                                .fetchContraIndicatorsVc(
+                                        clientOAuthSessionItem.getUserId(),
+                                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                        ipAddress,
+                                        ipvSessionItem)
+                                .getVcString();
+            }
+
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
             if (ticfVcs.isEmpty()) {
@@ -496,7 +524,7 @@ public class ProcessCandidateIdentityHandler
                 var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
                 var oldMitigations =
                         cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                ipvSessionItem.getSecurityCheckCredential(),
+                                previousSecurityCheckCredential,
                                 clientOAuthSessionItem.getUserId(),
                                 targetVot);
 
