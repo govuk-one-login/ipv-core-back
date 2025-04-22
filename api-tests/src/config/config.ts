@@ -1,13 +1,17 @@
 import dotenv from "dotenv";
+import dotenvExpand from "dotenv-expand";
+
+dotenvExpand.expand(dotenv.config());
 
 const CORE_ENV = process.env.CORE_ENV;
-
 if (CORE_ENV) {
-  dotenv.config({
-    path: `.env.${CORE_ENV}`,
-  });
+  dotenvExpand.expand(
+    dotenv.config({
+      path: `.env.${CORE_ENV}`,
+      override: true,
+    }),
+  );
 }
-dotenv.config();
 
 const getMandatoryConfig = (key: string): string => {
   const value = process.env[key];
