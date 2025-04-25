@@ -20,14 +20,14 @@
 
 ## Checklists
 
-<!-- Delete if changes DO include secrets -->
-- [ ] No secrets were added
-
-<!-- Delete if changes in README or documentation are not required -->
-- [ ] [README](./blob/main/README.md) and documentation updated where necessary
+<!-- Delete if changes in READMEs or documentation are not required -->
+- [ ] All READMEs and documentation updated where necessary
 
 <!-- Delete if changes don't include risk of credentials being exposed -->
-- [ ] No risk of credentials being exposed through logs
+- [ ] No risk of PII, credentials or anything else sensitive being exposed through logs
 
 <!-- Delete if changes don't apply -->
-- [ ] API/unit tests have been written/updated
+- [ ] API/unit/contract tests have been written/updated
+
+<!-- Delete if changes don't apply -->
+- [ ] Production changes appropriately staged out
