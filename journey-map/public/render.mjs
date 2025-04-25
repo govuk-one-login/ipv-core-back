@@ -92,13 +92,12 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
         Object.values(journeyMap).forEach((journeyDef) => {
           if (journeyDef.events?.[entryEvent]) {
-            const targets = resolveEventTargets(
-              journeyDef.events[entryEvent],
-              formData,
-            ).filter((t) => !t.journeyContext);
-            targets
+            resolveEventTargets(journeyDef.events[entryEvent], formData)
               .filter(
-                (t) => t.targetState === subJourneyState && !t.targetEntryEvent,
+                (t) =>
+                  !t.journeyContext &&
+                  t.targetState === subJourneyState &&
+                  !t.targetEntryEvent,
               )
               .forEach(() => {
                 journeyDef.events[entryEvent] = entryEventDef;
@@ -107,12 +106,10 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
           // Resolve targets with a `targetEntryEvent` override
           Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
-            const targets = resolveEventTargets(eventDef, formData).filter(
-              (t) => !t.journeyContext,
-            );
-            targets
+            resolveEventTargets(eventDef, formData)
               .filter(
                 (t) =>
+                  !t.journey &&
                   t.targetState === subJourneyState &&
                   t.targetEntryEvent === entryEvent,
               )
