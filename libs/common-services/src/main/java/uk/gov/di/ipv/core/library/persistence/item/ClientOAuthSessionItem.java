@@ -8,8 +8,10 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.enums.Vot;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @DynamoDbBean
@@ -44,5 +46,13 @@ public class ClientOAuthSessionItem implements PersistenceItem {
 
     public boolean isReverification() {
         return getScopeClaims().contains(ScopeConstants.REVERIFICATION);
+    }
+
+    public List<Vot> getVtrAsVots() {
+        if (vtr == null || vtr.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return vtr.stream().map(Vot::valueOf).toList();
     }
 }

@@ -29,14 +29,16 @@ public class VotHelper {
             return ipvSessionItem.getVot();
         }
 
-        if (clientOAuthSessionItem.getVtr() == null || clientOAuthSessionItem.getVtr().isEmpty()) {
+        var vtrVots = clientOAuthSessionItem.getVtrAsVots();
+
+        if (vtrVots.isEmpty()) {
             // This may happen on (e.g.) a reverification request
             throw new IllegalStateException("Attempted to calculate threshold VOT with no VTR");
         }
 
         var gpg45Vots =
                 Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
-                        .filter(vot -> clientOAuthSessionItem.getVtr().contains(vot.name()))
+                        .filter(vtrVots::contains)
                         .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                         .toList();
 
