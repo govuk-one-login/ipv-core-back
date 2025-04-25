@@ -1,4 +1,4 @@
-import { getNestedJourneyStates, resolveEventTargets } from "./helpers.mjs";
+import { getNestedJourneyStates, resolveEventTargets } from "./helpers.js";
 
 const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
 const errorJourneys = ["TECHNICAL_ERROR"];
@@ -27,6 +27,7 @@ const expandParents = (journeyStates, otherStates) => {
       }
     }
   });
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
   parentStates.forEach((state) => delete journeyStates[state]);
 };
 
@@ -44,6 +45,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
   Object.entries(journeyMap).forEach(([state, definition]) => {
     if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
       const subJourneyState = state;
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete journeyMap[subJourneyState];
       const subjourney = subjourneys[definition.nestedJourney];
 
@@ -74,6 +76,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                     `Unhandled exit event from ${subJourneyState}:`,
                     exitEvent,
                   );
+                  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                   delete expandedDefinition.events[evt];
                 }
               }
@@ -135,14 +138,13 @@ const renderTransitions = (journeyStates, formData) => {
   const states = [...initialStates];
   const stateTransitions = [];
 
-  for (let i = 0; i < states.length; i++) {
-    const state = states[i];
+  for (const state of states) {
     const definition = journeyStates[state];
     const events = definition.events || definition.exitEvents || {};
 
     const eventsByTarget = {};
     Object.entries(events).forEach(([eventName, def]) => {
-      let resolvedEventTargets = resolveEventTargets(def, formData);
+      const resolvedEventTargets = resolveEventTargets(def, formData);
 
       for (const resolvedTarget of resolvedEventTargets) {
         // Special case for disabling TICF, to match the special case in the journey engine

@@ -1,18 +1,18 @@
-import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-import svgPanZoom from "https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm";
-import yaml from "https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm";
-import { render } from "./render.mjs";
+import mermaid from "mermaid";
+import svgPanZoom from "svg-pan-zoom";
+import yaml from "yaml";
+import { render } from "./render.js";
 import {
   getJourneyContexts,
   getNestedJourneyStates,
   getOptions,
-} from "./helpers.mjs";
+} from "./helpers.js";
 import {
   COMMON_JOURNEY_TYPES,
   CRI_NAMES,
   JOURNEY_TYPES,
   NESTED_JOURNEY_TYPES,
-} from "./constants.mjs";
+} from "./constants.js";
 
 const DEFAULT_JOURNEY_TYPE = "INITIAL_JOURNEY_SELECTION";
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = "nestedJourneyType";
@@ -462,4 +462,4 @@ const initialize = async () => {
   await updateView();
 };
 
-await initialize();
+initialize().catch(console.error);
