@@ -1,8 +1,15 @@
+import {
+  JourneyEvent,
+  JourneyMap,
+  JourneyState,
+  NestedJourneyMap,
+} from "./types.js";
+
 const addDefinitionOptions = (
-  definition,
-  disabledOptions,
-  featureFlagOptions,
-) => {
+  definition: JourneyEvent,
+  disabledOptions: string[],
+  featureFlagOptions: string[],
+): void => {
   Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
     if (!disabledOptions.includes(opt)) {
       disabledOptions.push(opt);
@@ -17,10 +24,18 @@ const addDefinitionOptions = (
   });
 };
 
+export interface JourneyMapOptions {
+  disabledOptions: string[];
+  featureFlagOptions: string[];
+}
+
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMaps, nestedJourneys) => {
-  const disabledOptions = ["ticf"];
-  const featureFlagOptions = [];
+export const getOptions = (
+  journeyMaps: Record<string, JourneyMap>,
+  nestedJourneys: Record<string, NestedJourneyMap>,
+): JourneyMapOptions => {
+  const disabledOptions: string[] = ["ticf"];
+  const featureFlagOptions: string[] = [];
 
   const states = [
     ...Object.values(journeyMaps).flatMap((journeyMap) =>
@@ -50,62 +65,72 @@ export const getOptions = (journeyMaps, nestedJourneys) => {
   return { disabledOptions, featureFlagOptions };
 };
 
+// Resolve all possible targets for a given event, given the current options
+// Multiple results are given for mitigations and journey context routes
 export const resolveEventTargets = (
-  definition,
-  formData,
-  resolvedEventTargets,
-) => {
+  definition: JourneyEvent,
+  formData: FormData,
+  resolvedEventTargets?: JourneyEvent[],
+): JourneyEvent[] => {
   const resolvedTargets = resolvedEventTargets || [];
 
   // Look for an override for disabled CRIs
-  const disabledCris = formData.getAll("disabledCri");
-  const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find(
-    (k) => disabledCris.includes(k),
-  );
-  if (disabledResolution) {
-    // Resolve target and propagate journeyContext property
-    const resolved = definition.checkIfDisabled[disabledResolution];
-    resolved.journeyContext = definition.journeyContext;
+  const disabledCris = formData.getAll("disabledCri") as string[];
+  for (const cri of disabledCris) {
+    if (definition.checkIfDisabled?.[cri]) {
+      // Resolve target and propagate journeyContext and mitigation properties
+      const resolved = definition.checkIfDisabled[cri];
+      resolved.journeyContext = definition.journeyContext;
+      resolved.mitigation = definition.mitigation;
 
-    return resolveEventTargets(resolved, formData, resolvedTargets);
+      return resolveEventTargets(resolved, formData, resolvedTargets);
+    }
   }
 
-  Object.keys(definition.checkJourneyContext || {}).forEach(
-    (journeyContext) => {
+  // Look for an override for journey contexts
+  Object.entries(definition.checkJourneyContext || {}).forEach(
+    ([journeyContext, resolved]) => {
       // Resolve target and set journeyContext property
-      const resolved = definition.checkJourneyContext[journeyContext];
       resolved.journeyContext = journeyContext;
+      resolved.mitigation = definition.mitigation;
 
       const targets = resolveEventTargets(resolved, formData);
       resolvedTargets.push(...targets);
     },
   );
 
-  Object.keys(definition.checkMitigation || {}).forEach((mitigation) => {
-    const resolved = definition.checkMitigation[mitigation];
-    resolved.mitigation = mitigation;
-
-    const targets = resolveEventTargets(resolved, formData);
-    resolvedTargets.push(...targets);
-  });
-
   // Look for an override for feature flags
-  const featureFlags = formData.getAll("featureFlag");
-  const featureFlagResolution = Object.keys(
-    definition.checkFeatureFlag || {},
-  ).find((k) => featureFlags.includes(k));
-  if (featureFlagResolution) {
-    // Resolve target and propagate journeyContext property
-    const resolved = definition.checkFeatureFlag[featureFlagResolution];
-    resolved.journeyContext = definition.journeyContext;
+  const featureFlags = formData.getAll("featureFlag") as string[];
+  for (const featureFlag of featureFlags) {
+    if (definition.checkFeatureFlag?.[featureFlag]) {
+      // Resolve target and propagate journeyContext and mitigation properties
+      const resolved = definition.checkFeatureFlag[featureFlag];
+      resolved.journeyContext = definition.journeyContext;
+      resolved.mitigation = definition.mitigation;
 
-    return resolveEventTargets(resolved, formData, resolvedTargets);
+      return resolveEventTargets(resolved, formData, resolvedTargets);
+    }
   }
+
+  // Look for an override for mitigations
+  Object.entries(definition.checkMitigation || {}).forEach(
+    ([mitigation, resolved]) => {
+      // Resolve target and set mitigation property
+      resolved.mitigation = mitigation;
+      resolved.journeyContext = definition.journeyContext;
+
+      const targets = resolveEventTargets(resolved, formData);
+      resolvedTargets.push(...targets);
+    },
+  );
 
   return [...resolvedTargets, definition];
 };
 
-const addJourneyContextFromDefinition = (definition, journeyContexts) => {
+const addJourneyContextFromDefinition = (
+  definition: JourneyEvent,
+  journeyContexts: string[],
+): void => {
   Object.values(definition.checkIfDisabled || {}).forEach((def) => {
     addJourneyContextFromDefinition(def, journeyContexts);
   });
@@ -122,8 +147,8 @@ const addJourneyContextFromDefinition = (definition, journeyContexts) => {
   });
 };
 
-export const getJourneyContexts = (journeyStates) => {
-  const checkedJourneyContexts = [];
+export const getJourneyContexts = (journeyStates: JourneyState[]): string[] => {
+  const checkedJourneyContexts: string[] = [];
   Object.values(journeyStates).forEach((definition) => {
     const events = definition.events || definition.exitEvents || {};
     Object.values(events).forEach((def) => {
@@ -133,7 +158,9 @@ export const getJourneyContexts = (journeyStates) => {
   return checkedJourneyContexts;
 };
 
-export const getNestedJourneyStates = (nestedJourney) => ({
+export const getNestedJourneyStates = (
+  nestedJourney: NestedJourneyMap,
+): Record<string, JourneyState> => ({
   ...nestedJourney.nestedJourneyStates,
   // Create an entry state for each entry event
   ...Object.fromEntries(
