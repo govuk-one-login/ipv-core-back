@@ -13,6 +13,16 @@ import {
   JOURNEY_TYPES,
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
+import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
+
+type ClickHandler = (e: MouseEvent) => void;
+
+declare global {
+  interface Window {
+    // Used to define a click handler for use in the mermaid
+    onStateClick?: (state: string, encodedDef: string) => void;
+  }
+}
 
 const DEFAULT_JOURNEY_TYPE = "INITIAL_JOURNEY_SELECTION";
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = "nestedJourneyType";
@@ -27,34 +37,59 @@ mermaid.initialize({
 });
 
 // Page elements
-const headerTitleLink = document.getElementById("header-title");
-const headerBar = document.getElementById("header-bar");
-const headerActions = document.getElementById("header-actions");
-const journeySelect = document.getElementById("journey-select");
-const headerContent = document.getElementById("header-content");
-const headerToggle = document.getElementById("header-toggle");
-const form = document.getElementById("configuration-form");
-const disabledInput = document.getElementById("disabledInput");
-const featureFlagInput = document.getElementById("featureFlagInput");
-const otherOptions = document.getElementById("otherOptions");
-const nodeTitle = document.getElementById("nodeTitle");
-const nodeDef = document.getElementById("nodeDef");
-const nodeDesc = document.getElementById("nodeDesc");
-const stateSearch = document.getElementById("state-search");
-const journeyDesc = document.getElementById("journeyDesc");
-const journeyName = document.getElementById("journeyName");
-const journeyContextsList = document.getElementById("journeyContextsList");
+const diagramElement = document.getElementById("diagram") as HTMLDivElement;
+const headerTitleLink = document.getElementById(
+  "header-title",
+) as HTMLAnchorElement;
+const headerBar = document.getElementById("header-bar") as HTMLDivElement;
+const headerActions = document.getElementById(
+  "header-actions",
+) as HTMLDivElement;
+const journeySelect = document.getElementById(
+  "journey-select",
+) as HTMLSelectElement;
+const headerContent = document.getElementById(
+  "header-content",
+) as HTMLDivElement;
+const headerToggle = document.getElementById(
+  "header-toggle",
+) as HTMLButtonElement;
+const form = document.getElementById("configuration-form") as HTMLFormElement;
+const disabledInput = document.getElementById(
+  "disabledInput",
+) as HTMLFieldSetElement;
+const featureFlagInput = document.getElementById(
+  "featureFlagInput",
+) as HTMLFieldSetElement;
+const otherOptions = document.getElementById(
+  "otherOptions",
+) as HTMLFieldSetElement;
+const nodeTitle = document.getElementById("nodeTitle") as HTMLHeadingElement;
+const nodeDef = document.getElementById("nodeDef") as HTMLPreElement;
+const nodeDesc = document.getElementById("nodeDesc") as HTMLDivElement;
+const stateSearch = document.getElementById("state-search") as HTMLInputElement;
+const journeyDesc = document.getElementById("journeyDesc") as HTMLDivElement;
+const journeyName = document.getElementById(
+  "journeyName",
+) as HTMLHeadingElement;
+const journeyContextsList = document.getElementById(
+  "journeyContextsList",
+) as HTMLDivElement;
 
-let svgPanZoomInstance = null;
-let journeyMaps = {};
-let nestedJourneys = {};
+let svgPanZoomInstance: SvgPanZoom.Instance | null = null;
+let journeyMaps: Record<string, JourneyMap> = {};
+let nestedJourneys: Record<string, NestedJourneyMap> = {};
 
-let selectedState = null;
+let selectedState: string | null = null;
 
-const upperToKebab = (str) => str.toLowerCase().replaceAll("_", "-");
+const upperToKebab = (str: string): string =>
+  str.toLowerCase().replaceAll("_", "-");
 
-const loadJourneyMaps = async (journeyTypes, subFolder) => {
-  const maps = {};
+const loadJourneyMaps = async <T>(
+  journeyTypes: Record<string, string>,
+  subFolder?: string,
+): Promise<Record<string, T>> => {
+  const maps: Record<string, T> = {};
   await Promise.all(
     Object.keys(journeyTypes).map(async (journeyType) => {
       const encodedFilePath = encodeURIComponent(upperToKebab(journeyType));
@@ -69,25 +104,28 @@ const loadJourneyMaps = async (journeyTypes, subFolder) => {
   return maps;
 };
 
-const getPageUrl = (id, context) => {
+const getPageUrl = (id: string, context?: string): string => {
   const baseUrl = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
   return context
     ? `${baseUrl}?context=${encodeURIComponent(context)}`
     : baseUrl;
 };
 
-const getJourneyUrl = (id) =>
+const getJourneyUrl = (id: string): string =>
   `?${JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
 
-const getNestedJourneyUrl = (id) =>
+const getNestedJourneyUrl = (id: string): string =>
   `?${NESTED_JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
 
-const switchJourney = async (targetJourney, targetState) => {
+const switchJourney = async (
+  targetJourney: string,
+  targetState?: string,
+): Promise<void> => {
   // Update URL
   const params = new URLSearchParams(window.location.search);
   params.delete(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
   params.set(JOURNEY_TYPE_SEARCH_PARAM, targetJourney);
-  window.history.pushState(undefined, undefined, `?${params.toString()}`);
+  window.history.pushState(undefined, "", `?${params.toString()}`);
 
   // Update journey map graph
   await updateView();
@@ -102,11 +140,13 @@ const switchJourney = async (targetJourney, targetState) => {
   nodeDesc.innerHTML = "";
 };
 
-const switchToNestedJourney = async (targetNestedJourney) => {
+const switchToNestedJourney = async (
+  targetNestedJourney: string,
+): Promise<void> => {
   // Update URL
   const params = new URLSearchParams(window.location.search);
   params.set(NESTED_JOURNEY_TYPE_SEARCH_PARAM, targetNestedJourney);
-  window.history.pushState(undefined, undefined, `?${params.toString()}`);
+  window.history.pushState(undefined, "", `?${params.toString()}`);
 
   // Update journey map graph
   await updateView();
@@ -116,7 +156,7 @@ const switchToNestedJourney = async (targetNestedJourney) => {
   nodeDesc.innerHTML = "";
 };
 
-const setupHeader = () => {
+const setupHeader = (): void => {
   // Add header entries for most common journeys
   COMMON_JOURNEY_TYPES.forEach((id) => {
     const link = document.createElement("a");
@@ -125,7 +165,7 @@ const setupHeader = () => {
     link.innerText = label;
     link.onclick = async (e) => {
       e.preventDefault();
-      await switchJourney(id, null);
+      await switchJourney(id);
     };
     headerBar.insertBefore(link, headerActions);
   });
@@ -138,7 +178,7 @@ const setupHeader = () => {
     journeySelect.append(option);
   });
   journeySelect.onchange = async () => {
-    await switchJourney(journeySelect.value, null);
+    await switchJourney(journeySelect.value);
   };
   // Handle user navigating back/forwards
   window.addEventListener("popstate", async () => {
@@ -146,17 +186,23 @@ const setupHeader = () => {
   });
 };
 
-const optionOnChangeHandler = (name, input) => () => {
-  const params = new URLSearchParams(window.location.search);
-  if (input.checked) {
-    params.append(name, input.value);
-  } else {
-    params.delete(name, input.value);
-  }
-  window.history.replaceState(undefined, undefined, `?${params.toString()}`);
-};
+const optionOnChangeHandler =
+  (name: string, input: HTMLInputElement) => (): void => {
+    const params = new URLSearchParams(window.location.search);
+    if (input.checked) {
+      params.append(name, input.value);
+    } else {
+      params.delete(name, input.value);
+    }
+    window.history.replaceState(undefined, "", `?${params.toString()}`);
+  };
 
-const setupOptions = (name, options, fieldset, labels) => {
+const setupOptions = (
+  name: string,
+  options: string[],
+  fieldset: HTMLFieldSetElement,
+  labels?: Record<string, string>,
+): void => {
   const selectedOptions =
     new URLSearchParams(window.location.search).getAll(name) || [];
   if (options.length) {
@@ -166,7 +212,7 @@ const setupOptions = (name, options, fieldset, labels) => {
       input.name = name;
       input.value = option;
       input.id = option;
-      input.checked = selectedOptions.includes(option) ? "checked" : undefined;
+      input.checked = selectedOptions.includes(option);
       input.onchange = optionOnChangeHandler(name, input);
 
       const label = document.createElement("label");
@@ -183,18 +229,16 @@ const setupOptions = (name, options, fieldset, labels) => {
   }
 };
 
-const setupOtherOptions = () => {
+const setupOtherOptions = (): void => {
   const selectedOptions =
     new URLSearchParams(window.location.search).getAll("otherOption") || [];
   for (const input of otherOptions.getElementsByTagName("input")) {
-    input.checked = selectedOptions.includes(input.value)
-      ? "checked"
-      : undefined;
+    input.checked = selectedOptions.includes(input.value);
     input.onchange = optionOnChangeHandler("otherOption", input);
   }
 };
 
-const displayJourneyContextInfo = (ctxOptions) => {
+const displayJourneyContextInfo = (ctxOptions: string[]): void => {
   journeyContextsList.innerText = "";
   const ctxHeader = document.createElement("h3");
   ctxHeader.innerText = "Journey Contexts";
@@ -214,7 +258,7 @@ const displayJourneyContextInfo = (ctxOptions) => {
   });
 };
 
-const updateView = async () => {
+const updateView = async (): Promise<void> => {
   const formData = new FormData(form);
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
@@ -252,14 +296,17 @@ const updateView = async () => {
 };
 
 // Render the journey map SVG
-const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
+const renderSvg = async (
+  selectedJourney: string,
+  selectedNestedJourney: string | null,
+  formData: FormData,
+): Promise<void> => {
   const diagram = render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
     formData,
   );
-  const diagramElement = document.getElementById("diagram");
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);
   diagramElement.innerHTML = svg;
   if (bindFunctions) {
@@ -274,7 +321,7 @@ const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
   svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
 };
 
-const highlightState = (state) => {
+const highlightState = (state: string): void => {
   // Remove existing highlights
   Array.from(document.getElementsByClassName("highlight")).forEach((edge) =>
     edge.classList.remove("highlight", "outgoingEdge", "incomingEdge"),
@@ -292,7 +339,11 @@ const highlightState = (state) => {
     .forEach((node) => node.classList.add("highlight"));
 };
 
-const createLink = (text, href, onClick) => {
+const createLink = (
+  text: string,
+  href: string,
+  onClick?: ClickHandler,
+): HTMLAnchorElement => {
   const link = document.createElement("a");
   link.innerText = text;
   link.href = href;
@@ -305,8 +356,8 @@ const createLink = (text, href, onClick) => {
 };
 
 // Set up the click handlers that mermaid binds to each node
-const setupMermaidClickHandlers = () => {
-  const getDesc = (response) => {
+const setupMermaidClickHandlers = (): void => {
+  const getDesc = (response: JourneyResponse): string => {
     switch (response.type) {
       case "process":
         return `Process node executing the '${response.lambda}' lambda.`;
@@ -323,7 +374,10 @@ const setupMermaidClickHandlers = () => {
     }
   };
 
-  window.onStateClick = async (state, encodedDef) => {
+  window.onStateClick = async (
+    state: string,
+    encodedDef: string,
+  ): Promise<void> => {
     const def = JSON.parse(atob(encodedDef));
 
     // Clicking a node twice opens the link
@@ -389,7 +443,7 @@ const setupMermaidClickHandlers = () => {
   };
 };
 
-const setupHeaderToggleClickHandlers = () => {
+const setupHeaderToggleClickHandlers = (): void => {
   headerToggle.addEventListener("click", () => {
     if (headerContent.classList.toggle("hidden")) {
       headerToggle.innerText = "Show header";
@@ -399,7 +453,7 @@ const setupHeaderToggleClickHandlers = () => {
   });
 };
 
-const setupSearchHandler = () => {
+const setupSearchHandler = (): void => {
   stateSearch.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") {
       return;
@@ -410,30 +464,31 @@ const setupSearchHandler = () => {
       console.log(`No state found with selector: g[data-id="${searchTerm}"]`);
       return;
     }
-    stateElement.querySelector("span").click(); // Cause the state to be highlighted
+    stateElement.querySelector("span")?.click(); // Cause the state to be highlighted
 
-    const position = stateElement
-      .getAttribute("transform")
-      .split("translate(")[1]
-      .split(")")[0]
-      .split(",");
-    const posX = position[0];
-    const posY = position[1];
+    // TODO: does anyone actually use the search bar? If so, sort this out...
+    // const position = stateElement
+    //   .getAttribute("transform")
+    //   .split("translate(")[1]
+    //   .split(")")[0]
+    //   .split(",");
+    // const posX = position[0];
+    // const posY = position[1];
 
-    const currentZoom = svgPanZoomInstance.getZoom();
-    const realZoom = svgPanZoomInstance.getSizes().realZoom;
-    svgPanZoomInstance.pan({
-      x: -(posX * realZoom) + svgPanZoomInstance.getSizes().width / 2,
-      y:
-        -(posY * realZoom) +
-        svgPanZoomInstance.getSizes().height / 2 +
-        headerContent.offsetHeight / 2,
-    });
-    svgPanZoomInstance.zoom(currentZoom);
+    // const currentZoom = svgPanZoomInstance.getZoom();
+    // const realZoom = svgPanZoomInstance.getSizes().realZoom;
+    // svgPanZoomInstance.pan({
+    //   x: -(posX * realZoom) + svgPanZoomInstance.getSizes().width / 2,
+    //   y:
+    //     -(posY * realZoom) +
+    //     svgPanZoomInstance.getSizes().height / 2 +
+    //     headerContent.offsetHeight / 2,
+    // });
+    // svgPanZoomInstance.zoom(currentZoom);
   });
 };
 
-const initialize = async () => {
+const initialize = async (): Promise<void> => {
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
   nestedJourneys = await loadJourneyMaps(

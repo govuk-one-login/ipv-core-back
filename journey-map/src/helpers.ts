@@ -147,7 +147,9 @@ const addJourneyContextFromDefinition = (
   });
 };
 
-export const getJourneyContexts = (journeyStates: JourneyState[]): string[] => {
+export const getJourneyContexts = (
+  journeyStates: Record<string, JourneyState>,
+): string[] => {
   const checkedJourneyContexts: string[] = [];
   Object.values(journeyStates).forEach((definition) => {
     const events = definition.events || definition.exitEvents || {};

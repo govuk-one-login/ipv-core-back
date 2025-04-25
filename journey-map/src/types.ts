@@ -23,12 +23,12 @@ export interface NestedJourneyState {
   exitEvents: Record<string, JourneyEvent>;
 }
 
-// Artificial state used when rendering nested journeys
+// Synthetic state used when rendering nested journeys
 export interface EntryJourneyState extends BasicJourneyState {
   entryEvent: string;
 }
 
-// Artificial state used when rendering nested journeys
+// Synthetic state used when rendering nested journeys
 export interface ExitJourneyState extends BasicJourneyState {
   exitEvent: string;
 }
@@ -37,7 +37,9 @@ export type JourneyResponse =
   | PageResponse
   | ProcessResponse
   | CriResponse
-  | ErrorResponse;
+  | ErrorResponse
+  | TransitionResponse
+  | NestedJourneyResponse;
 
 export interface PageResponse {
   type: "page";
@@ -60,6 +62,19 @@ export interface ErrorResponse {
   type: "error";
   pageId: string;
   statusCode: number;
+}
+
+// Synthetic response used when rendering journey transitions
+export interface TransitionResponse {
+  type: "journeyTransition";
+  targetJourney: string;
+  targetState: string;
+}
+
+// Synthetic response used when rendering journey transitions
+export interface NestedJourneyResponse {
+  type: "nestedJourney";
+  nestedJourney: string;
 }
 
 export interface JourneyEvent {
