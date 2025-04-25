@@ -10,7 +10,6 @@ export const JOURNEY_TYPES = {
   TECHNICAL_ERROR: "Technical error",
   REPEAT_FRAUD_CHECK: "Repeat fraud check",
   SESSION_TIMEOUT: "Session timeout",
-  F2F_FAILED: "F2F failed",
   F2F_HAND_OFF: "F2F hand off",
   F2F_PENDING: "F2F pending",
   F2F_FAILED: "F2F failed",

@@ -92,30 +92,31 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
         Object.values(journeyMap).forEach((journeyDef) => {
           if (journeyDef.events?.[entryEvent]) {
-            const target = resolveEventTargets(
-              journeyDef.events[entryEvent],
-              formData,
-            ).find((t) => !t.journeyContext);
-            if (
-              target.targetState === subJourneyState &&
-              !target.targetEntryEvent
-            ) {
-              journeyDef.events[entryEvent] = entryEventDef;
-            }
+            resolveEventTargets(journeyDef.events[entryEvent], formData)
+              .filter(
+                (t) =>
+                  !t.journeyContext &&
+                  t.targetState === subJourneyState &&
+                  !t.targetEntryEvent,
+              )
+              .forEach(() => {
+                journeyDef.events[entryEvent] = entryEventDef;
+              });
           }
 
           // Resolve targets with a `targetEntryEvent` override
           Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
-            const target = resolveEventTargets(eventDef, formData).find(
-              (t) => !t.journeyContext,
-            );
-            if (
-              target.targetState === subJourneyState &&
-              target.targetEntryEvent === entryEvent
-            ) {
-              Object.assign(target, entryEventDef);
-              delete target.targetEntryEvent;
-            }
+            resolveEventTargets(eventDef, formData)
+              .filter(
+                (t) =>
+                  !t.journey &&
+                  t.targetState === subJourneyState &&
+                  t.targetEntryEvent === entryEvent,
+              )
+              .forEach((t) => {
+                Object.assign(t, entryEventDef);
+                delete t.targetEntryEvent;
+              });
           });
         });
       });
