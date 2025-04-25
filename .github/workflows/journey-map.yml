@@ -45,3 +45,46 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-aws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: eu-west-2
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up AWS creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_JOURNEY_MAP }}
+          aws-region: eu-west-2
+
+      - name: Set up esbuild
+        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
+
+      - name: Add esbuild to path
+        run: echo "${GITHUB_WORKSPACE}" >> $GITHUB_PATH
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v2
+
+      - name: SAM Validate
+        working-directory: ./journey-map/deploy
+        run: sam validate --region ${{ env.AWS_REGION }}
+
+      - name: SAM build and test
+        working-directory: ./journey-map/deploy
+        run: sam build
+
+      - name: Deploy SAM app
+        uses: govuk-one-login/devplatform-upload-action@v3.9
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_JOURNEY_MAP }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          working-directory: ./journey-map/deploy
+          template-file: .aws-sam/build/template.yaml
