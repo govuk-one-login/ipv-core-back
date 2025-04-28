@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
@@ -95,6 +96,28 @@ class VotMatcherTest {
                 new VotMatchingResult(
                         Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
                         Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        GPG_45_SCORES),
+                votMatch);
+    }
+
+    @Test
+    void shouldIgnoreWeakererMatchingGpg45Vots() throws Exception {
+        when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
+        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.of(M1A));
+        // We have to use lenient here as the point of this test is to check that we ignore the P1 vot match
+        lenient().when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.of(L1A));
+
+        var votMatch = votMatcher.findStrongestMatches(List.of(P2), gpg45Vcs, List.of(), true);
+
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
                         GPG_45_SCORES),
                 votMatch);
     }
