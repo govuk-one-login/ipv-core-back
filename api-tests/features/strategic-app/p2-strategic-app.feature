@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState @MikeC
+@Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys
 
   Rule: UK user
