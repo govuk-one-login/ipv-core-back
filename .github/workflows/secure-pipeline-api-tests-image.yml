@@ -37,13 +37,13 @@ jobs:
           SHA: ${{ github.sha }}
           BUILD_CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
         run: |
-          docker build --build-arg GITHUB_PAT=${{ secrets.GITHUB_TOKEN }} \
-            -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest \
-            -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA \
+          docker build --build-arg GITHUB_PAT="${{ secrets.GITHUB_TOKEN }}" \
+            -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest" \
+            -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}" \
             -f api-tests/secure-pipeline/api-tests.Dockerfile .
 
-          docker push $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest
-          docker push $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA
+          docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
+          docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"
 
-          cosign sign --key awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest
-          cosign sign --key awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA
+          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
+          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"
