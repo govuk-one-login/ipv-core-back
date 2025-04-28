@@ -62,8 +62,8 @@ Resources:
               - !ImportValue Dev02StubsHostedZoneId
             - !If
               - IsProduction
-              - RootPublicHostedZoneId
-              - BuildPublicHostedZoneId
+              - !ImportValue RootPublicHostedZoneId
+              - !ImportValue BuildPublicHostedZoneId
       ValidationMethod: DNS
 
   # api domain entries / mapping
@@ -99,9 +99,15 @@ Resources:
       Type: A
       Name: !Ref JourneyMapApiDomain
       HostedZoneId: !If
-        - IsDev01
-        - !ImportValue Dev01StubsHostedZoneId
-        - !ImportValue Dev02StubsHostedZoneId
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !ImportValue Dev01StubsHostedZoneId
+          - !ImportValue Dev02StubsHostedZoneId
+        - !If
+          - IsProduction
+          - !ImportValue RootPublicHostedZoneId
+          - !ImportValue BuildPublicHostedZoneId
       AliasTarget:
         DNSName: !GetAtt JourneyMapApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt JourneyMapApiDomain.RegionalHostedZoneId
