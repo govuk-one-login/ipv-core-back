@@ -33,6 +33,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1C;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
 @ExtendWith(MockitoExtension.class)
 class VotMatcherTest {
@@ -65,10 +67,36 @@ class VotMatcherTest {
                 .thenReturn(Optional.of(L1A));
 
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, List.of(), true);
 
-        assertEquals(Optional.of(new VotMatchingResult(P1, L1A, GPG_45_SCORES)), votMatch);
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        GPG_45_SCORES),
+                votMatch);
+    }
+
+    @Test
+    void shouldReturnStrongerMatchedGpg45VotThanRequested() throws Exception {
+        when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
+        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.of(M1A));
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.of(L1A));
+
+        var votMatch = votMatcher.findStrongestMatches(List.of(P1), gpg45Vcs, List.of(), true);
+
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        GPG_45_SCORES),
+                votMatch);
     }
 
     @Test
@@ -76,22 +104,46 @@ class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
 
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                         Stream.concat(gpg45Vcs.stream(), Stream.of(pcl200vc)).toList(),
                         List.of(),
                         true);
 
-        assertEquals(Optional.of(new VotMatchingResult(PCL200, null, null)), votMatch);
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL200, Optional.empty())),
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL200, Optional.empty())),
+                        null),
+                votMatch);
     }
 
     @Test
-    void shouldReturnEmptyOptionalIfNoVotMatched() throws Exception {
+    void shouldReturnStrongerMatchedOperationalVotThanRequested() throws Exception {
+        when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
+
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
+                        List.of(PCL200),
+                        Stream.concat(gpg45Vcs.stream(), Stream.of(pcl250vc, pcl200vc)).toList(),
+                        List.of(),
+                        true);
+
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL250, Optional.empty())),
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL200, Optional.empty())),
+                        null),
+                votMatch);
+    }
+
+    @Test
+    void shouldReturnEmptyResultIfNoVotMatched() throws Exception {
+        var votMatch =
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, List.of(), List.of(), true);
 
-        assertEquals(Optional.empty(), votMatch);
+        assertEquals(new VotMatchingResult(Optional.empty(), Optional.empty(), null), votMatch);
     }
 
     @Test
@@ -109,10 +161,15 @@ class VotMatcherTest {
         when(mockCimitUtilityService.isBreachingCiThreshold(contraIndicators, P2)).thenReturn(true);
 
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, contraIndicators, true);
 
-        assertEquals(Optional.of(new VotMatchingResult(P1, L1A, GPG_45_SCORES)), votMatch);
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        GPG_45_SCORES),
+                votMatch);
     }
 
     @Test
@@ -123,13 +180,18 @@ class VotMatcherTest {
                 .thenReturn(true);
 
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                         Stream.concat(gpg45Vcs.stream(), Stream.of(pcl250vc, pcl200vc)).toList(),
                         contraIndicators,
                         true);
 
-        assertEquals(Optional.of(new VotMatchingResult(PCL200, null, null)), votMatch);
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL200, Optional.empty())),
+                        Optional.of(new VotMatchingResult.VotAndProfile(PCL200, Optional.empty())),
+                        null),
+                votMatch);
     }
 
     @Test
@@ -137,18 +199,17 @@ class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(true);
 
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, List.of(), true);
 
-        assertEquals(Optional.empty(), votMatch);
+        assertEquals(new VotMatchingResult(Optional.empty(), Optional.empty(), null), votMatch);
     }
 
     @Test
     void shouldMatchM1cIfFraudCheckUnavailable() throws Exception {
         // Arrange
         var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudApplicableAuthoritativeSourceFailed());
-        var expectedProfiles =
-                List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
+        var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
@@ -156,21 +217,24 @@ class VotMatcherTest {
 
         // Act
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true);
 
         // Assert
         verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
         assertEquals(
-                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M1C, GPG_45_SCORES)), votMatch);
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        GPG_45_SCORES),
+                votMatch);
     }
 
     @Test
     void shouldMatchM1cIfFraudCheckAuthoritativeUnavailable() throws Exception {
         // Arrange
         var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudAvailableAuthoritativeFailed());
-        var expectedProfiles =
-                List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
+        var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
@@ -178,32 +242,40 @@ class VotMatcherTest {
 
         // Act
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true);
 
         // Assert
         verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
         assertEquals(
-                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M1C, GPG_45_SCORES)), votMatch);
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        GPG_45_SCORES),
+                votMatch);
     }
 
     @Test
     void shouldNotMatchM1cIfFraudCheckAvailable() throws Exception {
         // Arrange
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
-        var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
+        var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
-                .thenReturn(Optional.of(Gpg45Profile.M2B));
+                .thenReturn(Optional.of(M2B));
 
         // Act
         var votMatch =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, List.of(), true);
 
         // Assert
         verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
         assertEquals(
-                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M2B, GPG_45_SCORES)), votMatch);
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M2B))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M2B))),
+                        GPG_45_SCORES),
+                votMatch);
     }
 }

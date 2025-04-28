@@ -42,6 +42,8 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -57,7 +59,6 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
-import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
@@ -441,23 +442,25 @@ public class ProcessCandidateIdentityHandler
                         ipvSessionItem.getSecurityCheckCredential(),
                         clientOAuthSessionItem.getUserId());
 
-        var votResult =
-                votMatcher.matchFirstVot(
-                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
+        var votMatches =
+                votMatcher.findStrongestMatches(
+                        clientOAuthSessionItem.getVtrAsVots(),
                         sessionVcs,
                         contraIndicators,
                         areVcsCorrelated);
 
-        if (votResult.isEmpty()) {
+        if (votMatches.strongestRequestedMatch().isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
 
-        ipvSessionItem.setVot(votResult.get().vot());
+        var matchedVot = votMatches.strongestRequestedMatch().get();
+        ipvSessionItem.setVot(matchedVot.vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (votResult.get().vot().getProfileType() == ProfileType.GPG45) {
+        if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
             sendProfileMatchedAuditEvent(
-                    votResult.get(),
+                    matchedVot.profile().get(),
+                    votMatches.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
                     auditEventUser,
                     deviceInformation);
@@ -573,7 +576,8 @@ public class ProcessCandidateIdentityHandler
     }
 
     private void sendProfileMatchedAuditEvent(
-            VotMatchingResult votMatchingResult,
+            Gpg45Profile matchedProfile,
+            Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation) {
@@ -583,8 +587,8 @@ public class ProcessCandidateIdentityHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionGpg45ProfileMatched(
-                                votMatchingResult.gpg45Profile(),
-                                votMatchingResult.gpg45Scores(),
+                                matchedProfile,
+                                gpg45Scores,
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);

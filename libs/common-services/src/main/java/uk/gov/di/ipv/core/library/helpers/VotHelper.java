@@ -5,18 +5,8 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
-import java.util.List;
-
 public class VotHelper {
     private VotHelper() {}
-
-    /** Gets the available VOTs by descending strength */
-    public static List<Vot> getVotsByStrengthDescending(
-            ClientOAuthSessionItem clientOAuthSessionItem) {
-        return Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
-                .filter(vot -> clientOAuthSessionItem.getVtr().contains(vot.name()))
-                .toList();
-    }
 
     /**
      * Gets the VOT to be used as the minimum threshold for passing checks. This will either be the

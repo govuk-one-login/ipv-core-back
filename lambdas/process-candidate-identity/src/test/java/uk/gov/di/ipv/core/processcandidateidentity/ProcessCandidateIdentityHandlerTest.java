@@ -90,6 +90,12 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CO
 class ProcessCandidateIdentityHandlerTest {
     private static ProcessRequest.ProcessRequestBuilder requestBuilder;
 
+    private static VotMatchingResult P2_M1A_VOT_MATCH_RESULT =
+            new VotMatchingResult(
+                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                    M1A.getScores());
+
     private static final String SESSION_ID = "session-id";
     private static final String IP_ADDRESS = "ip-address";
     private static final String DEVICE_INFORMATION = "device_information";
@@ -166,8 +172,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -265,7 +271,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
@@ -327,7 +333,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
@@ -391,7 +397,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
@@ -417,8 +423,8 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(votMatcher.matchFirstVot(List.of(P2), List.of(), List.of(), true))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
 
             var request =
                     requestBuilder
@@ -465,7 +471,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
@@ -502,7 +508,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(cimitService, times(2)).fetchContraIndicatorsVc(any(), any(), any(), any());
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
@@ -522,8 +528,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -593,7 +599,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
@@ -690,8 +696,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.empty());
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
 
             var request =
@@ -724,8 +730,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -776,8 +782,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -832,8 +838,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -1003,8 +1009,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -1051,8 +1057,8 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class),
                             any()))
                     .thenReturn(true);
-            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
