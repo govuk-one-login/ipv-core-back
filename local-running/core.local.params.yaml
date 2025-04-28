@@ -368,7 +368,11 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
+    storedIdentityServiceEnabled: false
   features:
+    storedIdentityService:
+      featureFlags:
+        storedIdentityServiceEnabled: true
     internationalAddress:
       featureFlags:
         internationalAddressEnabled: true
