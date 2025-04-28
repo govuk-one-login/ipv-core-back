@@ -44,44 +44,26 @@ public class VotMatcher {
         Optional<VotMatchingResult.VotAndProfile> strongestMatchedVot = Optional.empty();
         Optional<VotMatchingResult.VotAndProfile> strongestRequestedMatchedVot = Optional.empty();
 
+        var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
         var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcs, GPG45);
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
-        var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
 
         for (Vot vot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
-            // Check whether this VOT would be useful to match
-            if (strongestMatchedVot.isEmpty()
-                    || (requestedVots.contains(vot) && strongestRequestedMatchedVot.isEmpty())) {
-                if (vot.getProfileType().equals(GPG45) && areGpg45VcsCorrelated) {
-                    var matchedGpg45Profile =
-                            achievedWithGpg45Profile(vot, gpg45Vcs, gpg45Scores, contraIndicators);
+            var potentialMatch =
+                    checkMatch(
+                            vot,
+                            gpg45Scores,
+                            operationalVcs,
+                            gpg45Vcs,
+                            contraIndicators,
+                            areGpg45VcsCorrelated);
 
-                    if (matchedGpg45Profile.isPresent()) {
-                        if (strongestMatchedVot.isEmpty()) {
-                            strongestMatchedVot =
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    vot, matchedGpg45Profile));
-                        }
-                        if (requestedVots.contains(vot) && strongestRequestedMatchedVot.isEmpty()) {
-                            strongestRequestedMatchedVot =
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    vot, matchedGpg45Profile));
-                        }
-                    }
-                } else if (vot.getProfileType() == OPERATIONAL_HMRC
-                        && hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
-                    if (strongestMatchedVot.isEmpty()) {
-                        strongestMatchedVot =
-                                Optional.of(
-                                        new VotMatchingResult.VotAndProfile(vot, Optional.empty()));
-                    }
-                    if (requestedVots.contains(vot) && strongestRequestedMatchedVot.isEmpty()) {
-                        strongestRequestedMatchedVot =
-                                Optional.of(
-                                        new VotMatchingResult.VotAndProfile(vot, Optional.empty()));
-                    }
+            if (potentialMatch.isPresent()) {
+                if (strongestMatchedVot.isEmpty()) {
+                    strongestMatchedVot = potentialMatch;
+                }
+                if (requestedVots.contains(vot)) {
+                    strongestRequestedMatchedVot = potentialMatch;
                 }
             }
 
@@ -92,6 +74,31 @@ public class VotMatcher {
 
         return new VotMatchingResult(
                 strongestMatchedVot, strongestRequestedMatchedVot, gpg45Scores);
+    }
+
+    private Optional<VotMatchingResult.VotAndProfile> checkMatch(
+            Vot vot,
+            Gpg45Scores gpg45Scores,
+            List<VerifiableCredential> operationalVcs,
+            List<VerifiableCredential> gpg45Vcs,
+            List<ContraIndicator> contraIndicators,
+            boolean areGpg45VcsCorrelated)
+            throws ParseException {
+
+        if (vot.getProfileType().equals(GPG45) && areGpg45VcsCorrelated) {
+            @SuppressWarnings("java:S1854")
+            var matchedGpg45Profile =
+                    achievedWithGpg45Profile(vot, gpg45Vcs, gpg45Scores, contraIndicators);
+
+            if (matchedGpg45Profile.isPresent()) {
+                return Optional.of(new VotMatchingResult.VotAndProfile(vot, matchedGpg45Profile));
+            }
+        } else if (vot.getProfileType() == OPERATIONAL_HMRC
+                && hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
+            return Optional.of(new VotMatchingResult.VotAndProfile(vot, Optional.empty()));
+        }
+
+        return Optional.empty();
     }
 
     private Optional<Gpg45Profile> achievedWithGpg45Profile(

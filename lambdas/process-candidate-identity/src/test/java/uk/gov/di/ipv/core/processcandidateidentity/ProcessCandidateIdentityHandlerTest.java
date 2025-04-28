@@ -90,7 +90,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CO
 class ProcessCandidateIdentityHandlerTest {
     private static ProcessRequest.ProcessRequestBuilder requestBuilder;
 
-    private static VotMatchingResult P2_M1A_VOT_MATCH_RESULT =
+    private static final VotMatchingResult P2_M1A_VOT_MATCH_RESULT =
             new VotMatchingResult(
                     Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
                     Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),

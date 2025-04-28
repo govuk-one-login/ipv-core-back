@@ -423,6 +423,7 @@ public class CheckExistingIdentityHandler
             return Optional.empty();
         }
 
+        @SuppressWarnings("java:S3655")
         var requestedMatch = votMatchingResult.strongestRequestedMatch().get();
 
         // vot achieved for vtr

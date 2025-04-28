@@ -416,6 +416,10 @@ public class ProcessCandidateIdentityHandler
         return JOURNEY_NEXT.toObjectMap();
     }
 
+    // Ideally we wouldn't suppress this for the entire method but there doesn't seem to be a way to
+    // suppress the
+    // warning on the call to sendProfileMatchedAuditEvent()
+    @SuppressWarnings("java:S3655")
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -458,6 +462,10 @@ public class ProcessCandidateIdentityHandler
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
+            if (matchedVot.profile().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Matched GPG45 vot result does not have a profile");
+            }
             sendProfileMatchedAuditEvent(
                     matchedVot.profile().get(),
                     votMatches.gpg45Scores(),

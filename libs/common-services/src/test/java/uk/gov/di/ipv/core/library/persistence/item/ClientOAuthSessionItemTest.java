@@ -21,7 +21,7 @@ class ClientOAuthSessionItemTest {
     private ClientOAuthSessionItem underTest;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         underTest = new ClientOAuthSessionItem();
     }
 
