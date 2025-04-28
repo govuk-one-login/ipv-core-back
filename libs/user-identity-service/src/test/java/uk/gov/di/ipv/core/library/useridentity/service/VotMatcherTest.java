@@ -105,11 +105,14 @@ class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
+                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(M1A));
-        // We have to use lenient here as the point of this test is to check that we ignore the P1 vot match
-        lenient().when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
+        // We have to use lenient here as the point of this test is to check that we ignore the P1
+        // vot match
+        lenient()
+                .when(
+                        mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                                GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(L1A));
 
         var votMatch = votMatcher.findStrongestMatches(List.of(P2), gpg45Vcs, List.of(), true);
