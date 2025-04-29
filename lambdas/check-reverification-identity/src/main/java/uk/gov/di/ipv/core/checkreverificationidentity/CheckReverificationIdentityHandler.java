@@ -169,17 +169,17 @@ public class CheckReverificationIdentityHandler
     private boolean hasReverificationIdentity(List<VerifiableCredential> vcs)
             throws ParseException, HttpResponseExceptionWithErrorBody {
         var matchedVot =
-                votMatcher.matchFirstVot(
+                votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                         vcs,
                         List.of(),
                         userIdentityService.areVcsCorrelated(
                                 VcHelper.filterVCBasedOnProfileType(vcs, GPG45)));
 
-        if (matchedVot.isEmpty()) {
+        if (matchedVot.strongestRequestedMatch().isEmpty()) {
             LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));
         }
 
-        return matchedVot.isPresent();
+        return matchedVot.strongestRequestedMatch().isPresent();
     }
 }

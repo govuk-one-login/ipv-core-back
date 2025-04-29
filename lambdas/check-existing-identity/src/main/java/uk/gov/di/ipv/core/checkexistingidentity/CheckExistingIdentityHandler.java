@@ -412,23 +412,25 @@ public class CheckExistingIdentityHandler
             List<ContraIndicator> contraIndicators)
             throws ParseException, VerifiableCredentialException {
         // Check for attained vot from requested vots
-        var maybeVotMatchingResult =
-                votMatcher.matchFirstVot(
-                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
+        var votMatchingResult =
+                votMatcher.findStrongestMatches(
+                        clientOAuthSessionItem.getVtrAsVots(),
                         credentialBundle.credentials,
                         contraIndicators,
                         areGpg45VcsCorrelated);
 
-        if (maybeVotMatchingResult.isEmpty()) {
+        if (votMatchingResult.strongestRequestedMatch().isEmpty()) {
             return Optional.empty();
         }
 
-        var votMatchingResult = maybeVotMatchingResult.get();
+        // Suppress incorrect warning about strongestRequestedMatch() possibly being empty
+        @SuppressWarnings("java:S3655")
+        var requestedMatch = votMatchingResult.strongestRequestedMatch().get();
 
         // vot achieved for vtr
         return Optional.of(
                 buildReuseResponse(
-                        votMatchingResult.vot(),
+                        requestedMatch.vot(),
                         ipvSessionItem,
                         credentialBundle,
                         auditEventUser,

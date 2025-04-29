@@ -137,14 +137,20 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(p2Vcs);
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             p2Vcs,
                             EMPTY_CONTRA_INDICATORS,
                             true))
                     .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
+                            new VotMatchingResult(
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    P2, Optional.of(M1A))),
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    P2, Optional.of(M1A))),
+                                    Gpg45Scores.builder().build()));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -160,14 +166,20 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(p1Vcs);
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             p1Vcs,
                             EMPTY_CONTRA_INDICATORS,
                             true))
                     .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(P1, L1A, Gpg45Scores.builder().build())));
+                            new VotMatchingResult(
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    P1, Optional.of(L1A))),
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    P1, Optional.of(L1A))),
+                                    Gpg45Scores.builder().build()));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -181,12 +193,20 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(pcl250vc));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(pcl250vc),
                             EMPTY_CONTRA_INDICATORS,
                             false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL250, null, null)));
+                    .thenReturn(
+                            new VotMatchingResult(
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    PCL250, Optional.empty())),
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    PCL250, Optional.empty())),
+                                    null));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -199,12 +219,20 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(pcl200vc));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(pcl200vc),
                             EMPTY_CONTRA_INDICATORS,
                             false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL200, null, null)));
+                    .thenReturn(
+                            new VotMatchingResult(
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    PCL200, Optional.empty())),
+                                    Optional.of(
+                                            new VotMatchingResult.VotAndProfile(
+                                                    PCL200, Optional.empty())),
+                                    null));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -214,12 +242,12 @@ class CheckReverificationIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyNotFoundWhenNoVotMatched() throws Exception {
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(),
                             EMPTY_CONTRA_INDICATORS,
                             false))
-                    .thenReturn(Optional.empty());
+                    .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -326,7 +354,7 @@ class CheckReverificationIdentityHandlerTest {
             when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSession);
             when(mockClientSessionService.getClientOAuthSession(TEST_CLIENT_SESSION_ID))
                     .thenReturn(clientSession);
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(),
                             EMPTY_CONTRA_INDICATORS,

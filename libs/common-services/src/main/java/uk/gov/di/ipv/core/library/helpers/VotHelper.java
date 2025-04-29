@@ -5,18 +5,8 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
-import java.util.List;
-
 public class VotHelper {
     private VotHelper() {}
-
-    /** Gets the available VOTs by descending strength */
-    public static List<Vot> getVotsByStrengthDescending(
-            ClientOAuthSessionItem clientOAuthSessionItem) {
-        return Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
-                .filter(vot -> clientOAuthSessionItem.getVtr().contains(vot.name()))
-                .toList();
-    }
 
     /**
      * Gets the VOT to be used as the minimum threshold for passing checks. This will either be the
@@ -29,14 +19,16 @@ public class VotHelper {
             return ipvSessionItem.getVot();
         }
 
-        if (clientOAuthSessionItem.getVtr() == null || clientOAuthSessionItem.getVtr().isEmpty()) {
+        var vtrVots = clientOAuthSessionItem.getVtrAsVots();
+
+        if (vtrVots.isEmpty()) {
             // This may happen on (e.g.) a reverification request
             throw new IllegalStateException("Attempted to calculate threshold VOT with no VTR");
         }
 
         var gpg45Vots =
                 Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
-                        .filter(vot -> clientOAuthSessionItem.getVtr().contains(vot.name()))
+                        .filter(vtrVots::contains)
                         .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                         .toList();
 
