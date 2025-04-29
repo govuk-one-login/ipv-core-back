@@ -416,9 +416,10 @@ public class ProcessCandidateIdentityHandler
         return JOURNEY_NEXT.toObjectMap();
     }
 
+    // This warning is about Optionals possibly being empty when accessed, but here the warnings are
+    // wrong as we return or throw an exception if the optionals are empty.
     // Ideally we wouldn't suppress this for the entire method but there doesn't seem to be a way to
-    // suppress the
-    // warning on the call to sendProfileMatchedAuditEvent()
+    // suppress the warning on the call to sendProfileMatchedAuditEvent()
     @SuppressWarnings("java:S3655")
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,

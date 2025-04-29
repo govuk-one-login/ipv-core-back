@@ -423,6 +423,7 @@ public class CheckExistingIdentityHandler
             return Optional.empty();
         }
 
+        // Suppress incorrect warning about strongestRequestedMatch() possibly being empty
         @SuppressWarnings("java:S3655")
         var requestedMatch = votMatchingResult.strongestRequestedMatch().get();
 
