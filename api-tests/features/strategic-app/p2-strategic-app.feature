@@ -119,11 +119,13 @@ Feature: M2B Strategic App Journeys
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces an 'error' error response
-      # And the user returns from the app to core-front
+      # To fetch the oauth state to callback with
+      When the async DCMAW CRI produces a 'pending' error response
       And I pass on the DCMAW callback
       Then I get an 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
+      # To update the state for an error
+      When the async DCMAW CRI produces an 'error' error response
+      And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get an 'pyi-technical' page response
