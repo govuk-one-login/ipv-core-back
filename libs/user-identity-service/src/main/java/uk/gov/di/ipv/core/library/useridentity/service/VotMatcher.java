@@ -86,7 +86,6 @@ public class VotMatcher {
             throws ParseException {
 
         if (vot.getProfileType().equals(GPG45) && areGpg45VcsCorrelated) {
-            @SuppressWarnings("java:S1854")
             var matchedGpg45Profile =
                     achievedWithGpg45Profile(vot, gpg45Vcs, gpg45Scores, contraIndicators);
 
