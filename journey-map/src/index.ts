@@ -364,7 +364,7 @@ const setupMermaidClickHandlers = (): void => {
       case "page":
         return `Page node displaying the '${response.pageId}' screen in IPV Core.`;
       case "cri":
-        return `CRI node routing to the ${CRI_NAMES[response.criId] || `'${response.criId}' CRI`}.`;
+        return `CRI node routing to the ${CRI_NAMES[response.criId as string] || `'${response.criId}' CRI`}.`;
       case "journeyTransition":
         return `Journey transition to the ${response.targetJourney} journey type (${response.targetState}).`;
       case "nestedJourney":

@@ -1,18 +1,19 @@
 {
   "name": "ipv-core-journey-map",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Generate an interactive IPV core journey map",
   "main": "src/server.ts",
   "author": "Government Digital Service",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/application.ts --bundle --minify --sourcemap --outfile=public/application.js",
-    "start": "NODE_ENV=development tsx src/server.ts",
-    "start-build": "node --enable-source-maps build/server.js",
-    "tsc": "tsc",
-    "lint": "eslint src && prettier src --check",
-    "lint-fix": "eslint --fix src && prettier src --write"
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=chrome135,firefox137,safari18,edge135 --outfile=public/application.js",
+    "build-server": "tsc --project tsconfig.server.json",
+    "start": "NODE_ENV=development tsx server/app.ts",
+    "start-build": "node --enable-source-maps build/app.js",
+    "tsc": "tsc && tsc --project tsconfig.server.json --noEmit",
+    "lint": "eslint src server && prettier src server --check",
+    "lint-fix": "eslint --fix src server && prettier src server --write"
   },
   "dependencies": {
     "express": "5.0.1",

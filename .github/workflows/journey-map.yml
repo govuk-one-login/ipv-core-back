@@ -52,12 +52,6 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Set up esbuild
-        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
-
-      - name: Add esbuild to path
-        run: echo "${GITHUB_WORKSPACE}" >> $GITHUB_PATH
-
       - name: Deploy SAM app to ECR
         uses: govuk-one-login/devplatform-upload-action-ecr@v1.3.0
         with:

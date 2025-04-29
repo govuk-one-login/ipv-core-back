@@ -14,7 +14,7 @@ COPY journey-map/public ./public
 # Build code
 COPY journey-map/src ./src
 COPY journey-map/tsconfig.json ./
-RUN npm run tsc
+RUN npm run build-server
 
 # 'npm install --omit=dev' does not prune test packages which are necessary
 RUN npm install --omit=dev

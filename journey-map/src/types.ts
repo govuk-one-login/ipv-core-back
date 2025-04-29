@@ -23,7 +23,7 @@ export interface JourneyState {
 }
 
 // This could be a union type, but our logic makes heavy use of mutation which is easier on a single type
-interface JourneyResponse {
+export interface JourneyResponse {
   // journeyTransition and nestedJourney are synthetic responses for rendering
   type:
     | "page"
