@@ -364,10 +364,17 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyReuseWithStoreResponseIfIsF2fPendingReturn() throws Exception {
-            var vcs = List.of(gpg45Vc, vcF2fPassportPhotoM1a());
+            var vcs = List.of(f2fVc);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.matchFirstVot(List.of(P2), vcs, List.of(), true))
@@ -387,11 +394,18 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
             var inheritedIdentityVc = vcHmrcMigrationPCL200();
-            var vcs = List.of(gpg45Vc, f2fVc);
+            var vcs = List.of(f2fVc);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs, CURRENT, List.of(inheritedIdentityVc)));
-            var combinedVcs = List.of(inheritedIdentityVc, gpg45Vc, f2fVc);
+            var combinedVcs = List.of(inheritedIdentityVc, f2fVc);
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, combinedVcs, true))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -590,6 +604,13 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(F2F.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -626,6 +647,13 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
                 .thenReturn(
                         CriResponseItem.builder().oauthState(TEST_CRI_OAUTH_SESSION_ID).build());
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(DCMAW_ASYNC.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
                 .thenReturn(
                         CriOAuthSessionItem.builder()
@@ -688,6 +716,13 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDrivingPermitDva())));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(DCMAW_ASYNC.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(emptyAsyncCriStatus);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -920,6 +955,13 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(F2F.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -949,6 +991,13 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(F2F.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -977,6 +1026,13 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(F2F.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(emptyAsyncCriStatus);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1252,10 +1308,17 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            var vcs = new ArrayList<>(List.of(gpg45Vc));
+            var vcs = new ArrayList<>(List.of(f2fVc));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -1340,6 +1403,13 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(
                         Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                CriResponseItem.builder()
+                                        .credentialIssuer(F2F.getId())
+                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                        .build()));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
@@ -1352,6 +1422,33 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
+    }
+
+    @Test
+    void shouldReturnNewIdentityJourneyWhenPendingReturnVcNotAssociatedWithPendingRecord()
+            throws Exception {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc))));
+        when(criResponseService.getCriResponseItems(TEST_USER_ID)).thenReturn(List.of());
+        when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                .thenReturn(
+                        new AsyncCriStatus(
+                                F2F, AsyncCriStatus.STATUS_PENDING, false, false, false));
+        when(cimitUtilityService.isBreachingCiThreshold(List.of(), P2)).thenReturn(false);
+
+        // Act
+        var journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        // Assert
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
     }
 
     @Test

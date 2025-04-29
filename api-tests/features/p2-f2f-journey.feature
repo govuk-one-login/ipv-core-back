@@ -168,13 +168,25 @@ Feature: P2 F2F journey
 
   Scenario: F2F PYI escape route
     Given I start a new 'medium-confidence' journey
-      Then I get a 'live-in-uk' page response
-      When I submit a 'uk' event
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-no-photo-id' page response
+
+  Scenario: F2F discounts VC when no associated pending record
+    Given the subject already has the following credentials
+      | CRI     | scenario               |
+      | f2f     | kenneth-passport-valid |
+      | address | kenneth-current        |
+      | fraud   | kenneth-no-applicable  |
+
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
 
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification

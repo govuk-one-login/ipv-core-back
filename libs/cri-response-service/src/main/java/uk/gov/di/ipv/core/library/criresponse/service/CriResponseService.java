@@ -51,7 +51,11 @@ public class CriResponseService {
     }
 
     public List<CriResponseItem> getCriResponseItems(String userId) {
-        return dataStore.getItems(userId);
+        var criResponseItems = dataStore.getItems(userId);
+        if (criResponseItems == null) {
+            return List.of();
+        }
+        return criResponseItems;
     }
 
     public CriResponseItem getCriResponseItem(String userId, Cri cri) {

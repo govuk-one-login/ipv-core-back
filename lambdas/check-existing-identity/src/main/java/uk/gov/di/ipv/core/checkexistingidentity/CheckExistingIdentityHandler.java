@@ -393,7 +393,7 @@ public class CheckExistingIdentityHandler
                         .map(Cri::fromId)
                         .toList();
         var validPendingReturnVcs =
-                vcs.get(PENDING_RETURN).stream()
+                vcs.getOrDefault(PENDING_RETURN, List.of()).stream()
                         .filter(vc -> pendingRecordCris.contains(vc.getCri()))
                         .toList();
         var hasValidPendingReturnVcs = !isNullOrEmpty(validPendingReturnVcs);
