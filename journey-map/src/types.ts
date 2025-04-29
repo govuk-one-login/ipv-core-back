@@ -4,77 +4,55 @@ export interface JourneyMap {
   states: Record<string, JourneyState>;
 }
 
-export type JourneyState =
-  | BasicJourneyState
-  | NestedJourneyState
-  | EntryJourneyState
-  | ExitJourneyState;
-
-export interface BasicJourneyState {
+// This could be a union type, but our logic makes heavy use of mutation which is easier on a single type
+export interface JourneyState {
+  parent?: string;
   journeyContext?: string;
+
+  // For standard states
   response?: JourneyResponse;
-  events: Record<string, JourneyEvent>;
-  exitEvents?: undefined;
+  events?: Record<string, JourneyEvent>;
+
+  // For nested states
+  nestedJourney?: string;
+  exitEvents?: Record<string, JourneyEvent>;
+
+  // Synthetic states used for rendering nested journeys
+  entryEvent?: string;
+  exitEvent?: string;
 }
 
-export interface NestedJourneyState {
-  nestedJourney: string;
-  events?: undefined;
-  exitEvents: Record<string, JourneyEvent>;
-}
+// This could be a union type, but our logic makes heavy use of mutation which is easier on a single type
+interface JourneyResponse {
+  // journeyTransition and nestedJourney are synthetic responses for rendering
+  type:
+    | "page"
+    | "process"
+    | "cri"
+    | "error"
+    | "journeyTransition"
+    | "nestedJourney";
 
-// Synthetic state used when rendering nested journeys
-export interface EntryJourneyState extends BasicJourneyState {
-  entryEvent: string;
-}
-
-// Synthetic state used when rendering nested journeys
-export interface ExitJourneyState extends BasicJourneyState {
-  exitEvent: string;
-}
-
-export type JourneyResponse =
-  | PageResponse
-  | ProcessResponse
-  | CriResponse
-  | ErrorResponse
-  | TransitionResponse
-  | NestedJourneyResponse;
-
-export interface PageResponse {
-  type: "page";
-  pageId: string;
+  // Page states
+  pageId?: string;
   context?: string;
-}
 
-export interface ProcessResponse {
-  type: "process";
-  lambda: string;
+  // Process states
+  lambda?: string;
   lambdaInput?: object;
-}
 
-export interface CriResponse {
-  type: "cri";
-  criId: string;
-}
+  // CRI states
+  criId?: string;
 
-export interface ErrorResponse {
-  type: "error";
-  pageId: string;
-  statusCode: number;
-}
+  // Error states
+  statusCode?: number;
 
-// Synthetic response used when rendering journey transitions
-export interface TransitionResponse {
-  type: "journeyTransition";
-  targetJourney: string;
-  targetState: string;
-}
+  // Synthetic response for rendering journey transitions
+  targetJourney?: string;
+  targetState?: string;
 
-// Synthetic response used when rendering journey transitions
-export interface NestedJourneyResponse {
-  type: "nestedJourney";
-  nestedJourney: string;
+  // Synthetic response for rendering nested journeys
+  nestedJourney?: string;
 }
 
 export interface JourneyEvent {
@@ -86,6 +64,8 @@ export interface JourneyEvent {
   checkFeatureFlag?: Record<string, JourneyEvent>;
   checkJourneyContext?: Record<string, JourneyEvent>;
   checkMitigation?: Record<string, JourneyEvent>;
+
+  exitEventToEmit?: string;
 
   auditEvents?: string[];
   auditContext?: Record<string, string>;

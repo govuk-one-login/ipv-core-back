@@ -1,4 +1,10 @@
 import { getNestedJourneyStates, resolveEventTargets } from "./helpers.js";
+import {
+  JourneyEvent,
+  JourneyMap,
+  JourneyState,
+  NestedJourneyMap,
+} from "./types.js";
 
 const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
 const errorJourneys = ["TECHNICAL_ERROR"];
@@ -7,10 +13,16 @@ const failureJourneys = ["INELIGIBLE", "FAILED"];
 const JOURNEY_CONTEXT_TRANSITION_CLASSNAME = "journeyCtxTransition";
 const MITIGATIONS_TRANSITION_CLASSNAME = "mitigationTransition";
 
+// Simple deep clone - N.B. this will only work with pure JSON objects
+const deepCloneJson = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+
 // Expand out parent states
 // Will also search 'otherStates' (e.g. for nested journeys)
-const expandParents = (journeyStates, otherStates) => {
-  const parentStates = [];
+const expandParents = (
+  journeyStates: Record<string, JourneyState>,
+  otherStates: Record<string, JourneyState>,
+): void => {
+  const parentStates: string[] = [];
   Object.entries(journeyStates).forEach(([state, definition]) => {
     if (definition.parent) {
       const parent =
@@ -31,7 +43,11 @@ const expandParents = (journeyStates, otherStates) => {
   parentStates.forEach((state) => delete journeyStates[state]);
 };
 
-const mapTargetStateToExpandedState = (eventDef, subJourneyState, formData) => {
+const mapTargetStateToExpandedState = (
+  eventDef: JourneyEvent,
+  subJourneyState: string,
+  formData: FormData,
+): void => {
   // Map target states to expanded states
   resolveEventTargets(eventDef, formData).forEach((targetDef) => {
     if (targetDef.targetState && !targetDef.targetJourney) {
@@ -41,7 +57,11 @@ const mapTargetStateToExpandedState = (eventDef, subJourneyState, formData) => {
 };
 
 // Expand out nested states
-const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
+const expandNestedJourneys = (
+  journeyMap: Record<string, JourneyState>,
+  subjourneys: Record<string, NestedJourneyMap>,
+  formData: FormData,
+): void => {
   Object.entries(journeyMap).forEach(([state, definition]) => {
     if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
       const subJourneyState = state;
@@ -53,9 +73,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
       Object.entries(subjourney.nestedJourneyStates).forEach(
         ([nestedState, nestedDefinition]) => {
           // Copy to avoid mutating different versions of the expanded definition
-          const expandedDefinition = JSON.parse(
-            JSON.stringify(nestedDefinition),
-          );
+          const expandedDefinition = deepCloneJson(nestedDefinition);
 
           Object.entries(expandedDefinition.events || {}).forEach(
             ([evt, eventDef]) => {
@@ -69,15 +87,14 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
               const exitEvent = eventDef.exitEventToEmit;
               if (exitEvent) {
                 delete eventDef.exitEventToEmit;
-                if (definition.exitEvents[exitEvent]) {
+                if (definition.exitEvents?.[exitEvent]) {
                   Object.assign(eventDef, definition.exitEvents[exitEvent]);
                 } else {
                   console.warn(
                     `Unhandled exit event from ${subJourneyState}:`,
                     exitEvent,
                   );
-                  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                  delete expandedDefinition.events[evt];
+                  delete expandedDefinition.events?.[evt];
                 }
               }
             },
@@ -88,7 +105,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
       );
 
       // Make a copy of the entry events to avoid mutating the original
-      const entryEvents = JSON.parse(JSON.stringify(subjourney.entryEvents));
+      const entryEvents = deepCloneJson(subjourney.entryEvents);
       // Update entry events on other states to expanded states
       Object.entries(entryEvents).forEach(([entryEvent, entryEventDef]) => {
         mapTargetStateToExpandedState(entryEventDef, subJourneyState, formData);
@@ -97,13 +114,10 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
           if (journeyDef.events?.[entryEvent]) {
             resolveEventTargets(journeyDef.events[entryEvent], formData)
               .filter(
-                (t) =>
-                  !t.journeyContext &&
-                  t.targetState === subJourneyState &&
-                  !t.targetEntryEvent,
+                (t) => t.targetState === subJourneyState && !t.targetEntryEvent,
               )
-              .forEach(() => {
-                journeyDef.events[entryEvent] = entryEventDef;
+              .forEach((t) => {
+                Object.assign(t, entryEventDef);
               });
           }
 
@@ -112,7 +126,6 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
             resolveEventTargets(eventDef, formData)
               .filter(
                 (t) =>
-                  !t.journey &&
                   t.targetState === subJourneyState &&
                   t.targetEntryEvent === entryEvent,
               )
@@ -127,41 +140,34 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
   });
 };
 
+interface TransitionsOutput {
+  transitionsMermaid: string;
+  states: string[];
+}
+
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
-const renderTransitions = (journeyStates, formData) => {
+const renderTransitions = (
+  journeyStates: Record<string, JourneyState>,
+  formData: FormData,
+): TransitionsOutput => {
   // Initial states have no response or nested journey
   const initialStates = Object.keys(journeyStates).filter(
     (s) => !journeyStates[s].response && !journeyStates[s].nestedJourney,
   );
 
   const states = [...initialStates];
-  const stateTransitions = [];
+  const stateTransitions: string[] = [];
 
   for (const state of states) {
     const definition = journeyStates[state];
     const events = definition.events || definition.exitEvents || {};
 
-    const eventsByTarget = {};
+    const eventsByTarget: Record<string, string[]> = {};
     Object.entries(events).forEach(([eventName, def]) => {
       const resolvedEventTargets = resolveEventTargets(def, formData);
 
       for (const resolvedTarget of resolvedEventTargets) {
-        // Special case for disabling TICF, to match the special case in the journey engine
-        if (
-          journeyStates[resolvedTarget.targetState]?.response?.lambda ===
-            "call-ticf-cri" &&
-          formData.getAll("disabledCri").includes("ticf")
-        ) {
-          resolvedEventTargets.push(
-            ...resolveEventTargets(
-              journeyStates[resolvedTarget.targetState].events.next,
-              formData,
-            ),
-          );
-          continue;
-        }
-
         const {
           targetJourney,
           targetState,
@@ -178,13 +184,13 @@ const renderTransitions = (journeyStates, formData) => {
             : targetState;
 
         if (
-          errorJourneys.includes(targetJourney) &&
+          errorJourneys.includes(targetJourney as string) &&
           !formData.getAll("otherOption").includes("includeErrors")
         ) {
           continue;
         }
         if (
-          failureJourneys.includes(targetJourney) &&
+          failureJourneys.includes(targetJourney as string) &&
           !formData.getAll("otherOption").includes("includeFailures")
         ) {
           continue;
@@ -234,15 +240,26 @@ const renderTransitions = (journeyStates, formData) => {
   return { transitionsMermaid: stateTransitions.join("\n"), states };
 };
 
+interface TransitionMeta {
+  eventName: string;
+  targetEntryEvent?: string;
+  journeyContext?: string;
+  mitigation?: string;
+}
+
 const createTransitionLabel = ({
   eventName,
   targetEntryEvent,
   journeyContext,
   mitigation,
-}) => {
+}: TransitionMeta): string => {
   const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
 
-  const labelWithClass = (className, label, value) =>
+  const labelWithClass = (
+    className: string,
+    label: string,
+    value: string,
+  ): string =>
     `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
 
   if (journeyContext) {
@@ -264,7 +281,10 @@ const createTransitionLabel = ({
   return eventLabel;
 };
 
-const renderClickHandler = (state, definition) => {
+const renderClickHandler = (
+  state: string,
+  definition: JourneyState,
+): string => {
   if (definition.nestedJourney) {
     definition.response = {
       type: "nestedJourney",
@@ -275,7 +295,7 @@ const renderClickHandler = (state, definition) => {
   return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify(definition.response ?? {}))})`;
 };
 
-const renderState = (state, definition) => {
+const renderState = (state: string, definition: JourneyState): string => {
   // Special cases for nested journeys
   if (definition.nestedJourney) {
     return `    ${state}(${state}):::nested_journey`;
@@ -301,15 +321,12 @@ const renderState = (state, definition) => {
       const contextInfo = definition.response.context
         ? `\\n context: ${definition.response.context}`
         : "";
-      const scopeInfo = definition.response.scope
-        ? `\\n scope: ${definition.response.scope}`
-        : "";
-      return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}${scopeInfo}]):::cri`;
+      return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}]):::cri`;
     }
     case "journeyTransition": {
       const { targetJourney, targetState } = definition.response;
-      return failureJourneys.includes(targetJourney) ||
-        errorJourneys.includes(targetJourney)
+      return failureJourneys.includes(targetJourney as string) ||
+        errorJourneys.includes(targetJourney as string)
         ? `    ${state}(${targetJourney}\\n${targetState}):::error_transition`
         : `    ${state}(${targetJourney}\\n${targetState}):::journey_transition`;
     }
@@ -318,7 +335,10 @@ const renderState = (state, definition) => {
   }
 };
 
-const renderStates = (journeyMapStates, states) => {
+const renderStates = (
+  journeyMapStates: Record<string, JourneyState>,
+  states: string[],
+): string => {
   const mermaids = states.flatMap((state) => {
     const definition = journeyMapStates[state];
 
@@ -328,10 +348,12 @@ const renderStates = (journeyMapStates, states) => {
     ];
   });
 
-  return { statesMermaid: mermaids.join("\n") };
+  return mermaids.join("\n");
 };
 
-const resolveAllPossibleEventTargets = (eventDefinition) => [
+const resolveAllPossibleEventTargets = (
+  eventDefinition: JourneyEvent,
+): string[] => [
   eventDefinition.targetState,
   ...Object.values(eventDefinition.checkIfDisabled || {}).flatMap(
     resolveAllPossibleEventTargets,
@@ -341,7 +363,9 @@ const resolveAllPossibleEventTargets = (eventDefinition) => [
   ),
 ];
 
-const calcOrphanStates = (journeyMap) => {
+const calcOrphanStates = (
+  journeyMap: Record<string, JourneyState>,
+): string[] => {
   const targetedStates = [
     ...Object.values(journeyMap).flatMap((stateDefinition) => [
       ...Object.values(stateDefinition.events || {}).flatMap(
@@ -360,7 +384,11 @@ const calcOrphanStates = (journeyMap) => {
   );
 };
 
-const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
+const getMermaidGraph = (
+  graphDirection: "TD" | "LR",
+  statesMermaid: string,
+  transitionsMermaid: string,
+): string =>
   // These styles should be kept in sync with the key in style.css
   `graph ${graphDirection}
                 classDef process fill:#ffa,stroke:#000;
@@ -375,21 +403,19 @@ const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
             `;
 
 export const render = (
-  selectedJourney,
-  journeyMap,
-  nestedJourneys,
+  selectedJourney: string,
+  journeyMap: JourneyMap,
+  nestedJourneys: Record<string, NestedJourneyMap>,
   formData = new FormData(),
-) => {
+): string => {
   const isNestedJourney = selectedJourney in nestedJourneys;
   const direction = topDownJourneys.includes(selectedJourney) ? "TD" : "LR";
 
   // Copy to avoid mutating the input
-  const journeyStates = JSON.parse(
-    JSON.stringify(
-      isNestedJourney
-        ? getNestedJourneyStates(nestedJourneys[selectedJourney])
-        : journeyMap.states,
-    ),
+  const journeyStates = deepCloneJson(
+    isNestedJourney
+      ? getNestedJourneyStates(nestedJourneys[selectedJourney])
+      : journeyMap.states,
   );
 
   if (
@@ -415,7 +441,7 @@ export const render = (
     ? { transitionsMermaid: "", states: calcOrphanStates(journeyStates) }
     : renderTransitions(journeyStates, formData);
 
-  const { statesMermaid } = renderStates(journeyStates, states);
+  const statesMermaid = renderStates(journeyStates, states);
 
   return getMermaidGraph(direction, statesMermaid, transitionsMermaid);
 };
