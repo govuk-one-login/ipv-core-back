@@ -112,22 +112,6 @@ Feature: M2B Strategic App Journeys
       When I submit the returned journey event
       Then I get an 'pyi-no-match' page response
 
-    Scenario: MAM journey fails without a VC
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces an 'error' error response
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get an 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get an 'pyi-technical' page response
-
     Scenario: MAM journey abandoned without a VC
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
