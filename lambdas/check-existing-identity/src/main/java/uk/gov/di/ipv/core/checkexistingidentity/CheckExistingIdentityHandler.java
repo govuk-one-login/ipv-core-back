@@ -424,7 +424,7 @@ public class CheckExistingIdentityHandler
         if (strongestRequestedMatch.isEmpty()) {
             return Optional.empty();
         }
-        
+
         var requestedMatch = strongestRequestedMatch.get();
 
         // vot achieved for vtr
