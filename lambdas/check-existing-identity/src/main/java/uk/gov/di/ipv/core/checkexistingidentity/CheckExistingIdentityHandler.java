@@ -419,13 +419,13 @@ public class CheckExistingIdentityHandler
                         contraIndicators,
                         areGpg45VcsCorrelated);
 
-        if (votMatchingResult.strongestRequestedMatch().isEmpty()) {
+        var strongestRequestedMatch = votMatchingResult.strongestRequestedMatch();
+
+        if (strongestRequestedMatch.isEmpty()) {
             return Optional.empty();
         }
-
-        // Suppress incorrect warning about strongestRequestedMatch() possibly being empty
-        @SuppressWarnings("java:S3655")
-        var requestedMatch = votMatchingResult.strongestRequestedMatch().get();
+        
+        var requestedMatch = strongestRequestedMatch.get();
 
         // vot achieved for vtr
         return Optional.of(
