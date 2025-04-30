@@ -97,6 +97,7 @@ public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final List<Cri> ASYNC_CRIS = List.of(F2F, DCMAW_ASYNC);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
@@ -386,7 +387,7 @@ public class CheckExistingIdentityHandler
                 evcsService.fetchEvcsVerifiableCredentialsByState(
                         userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-        // PENDING_RETURN vcs need a pending record to be valid
+        // PENDING_RETURN async vcs need a pending record to be valid
         var pendingRecordCris =
                 criResponseService.getCriResponseItems(userId).stream()
                         .map(CriResponseItem::getCredentialIssuer)
@@ -394,7 +395,10 @@ public class CheckExistingIdentityHandler
                         .toList();
         var validPendingReturnVcs =
                 vcs.getOrDefault(PENDING_RETURN, List.of()).stream()
-                        .filter(vc -> pendingRecordCris.contains(vc.getCri()))
+                        .filter(
+                                vc ->
+                                        !ASYNC_CRIS.contains(vc.getCri())
+                                                || pendingRecordCris.contains(vc.getCri()))
                         .toList();
         var hasValidPendingReturnVcs = !isNullOrEmpty(validPendingReturnVcs);
 
