@@ -181,7 +181,7 @@ Feature: P2 F2F journey
       | CRI     | scenario               |
       | f2f     | kenneth-passport-valid |
       | address | kenneth-current        |
-      | fraud   | kenneth-no-applicable  |
+      | fraud   | kenneth-score-2        |
 
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
