@@ -364,7 +364,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyReuseWithStoreResponseIfIsF2fPendingReturn() throws Exception {
-            var vcs = List.of(f2fVc);
+            var vcs = List.of(gpg45Vc, vcF2fPassportPhotoM1a());
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -394,11 +394,11 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
             var inheritedIdentityVc = vcHmrcMigrationPCL200();
-            var vcs = List.of(f2fVc);
+            var vcs = List.of(gpg45Vc, f2fVc);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs, CURRENT, List.of(inheritedIdentityVc)));
-            var combinedVcs = List.of(inheritedIdentityVc, f2fVc);
+            var combinedVcs = List.of(inheritedIdentityVc, gpg45Vc, f2fVc);
             when(criResponseService.getCriResponseItems(TEST_USER_ID))
                     .thenReturn(
                             List.of(
