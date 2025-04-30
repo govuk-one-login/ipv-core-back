@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +31,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_
 class StateMachineTest {
     private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
             new EventResolveParameters(
-                    "journeyContext", new IpvSessionItem(), new ClientOAuthSessionItem());
+                    List.of("journeyContext"), new IpvSessionItem(), new ClientOAuthSessionItem());
     @Mock private EventResolver eventResolver;
 
     @Test

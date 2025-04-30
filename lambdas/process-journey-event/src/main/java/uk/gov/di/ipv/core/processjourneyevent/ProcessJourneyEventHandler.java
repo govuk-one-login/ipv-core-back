@@ -332,7 +332,7 @@ public class ProcessJourneyEventHandler
                         journeyEvent,
                         currentPage,
                         new EventResolveParameters(
-                                ipvSessionItem.getJourneyContext(),
+                                ipvSessionItem.getActiveJourneyContexts(),
                                 ipvSessionItem,
                                 clientOAuthSessionItem),
                         eventResolver);

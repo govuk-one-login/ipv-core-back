@@ -58,7 +58,7 @@ public class EventResolver {
             BasicEvent event, EventResolveParameters resolveParameters)
             throws UnknownEventException, JourneyEngineException {
         try {
-            var journeyContext = resolveParameters.journeyContext();
+            var journeyContexts = resolveParameters.journeyContexts();
 
             if (event.getCheckIfDisabled() != null) {
                 var checkIfDisabled = event.getCheckIfDisabled();
@@ -76,11 +76,11 @@ public class EventResolver {
                     return resolve(checkIfDisabled.get(disabledCriId), resolveParameters);
                 }
             }
-            if (event.getCheckJourneyContext() != null && !StringUtils.isEmpty(journeyContext)) {
+            if (event.getCheckJourneyContext() != null && !journeyContexts.isEmpty()) {
                 var checkJourneyContext = event.getCheckJourneyContext();
                 Optional<String> matchingContext =
                         checkJourneyContext.keySet().stream()
-                                .filter(ctx -> ctx.equals(journeyContext))
+                                .filter(journeyContexts::contains)
                                 .findFirst();
                 if (matchingContext.isPresent()) {
                     String contextValue = matchingContext.get();

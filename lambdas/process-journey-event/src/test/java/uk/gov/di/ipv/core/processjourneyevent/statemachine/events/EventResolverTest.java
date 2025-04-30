@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class EventResolverTest {
                             .build();
 
             eventResolveParameters =
-                    new EventResolveParameters("", new IpvSessionItem(), clientOAuthSessionItem);
+                    new EventResolveParameters(Collections.emptyList(), new IpvSessionItem(), clientOAuthSessionItem);
         }
 
         @Test
@@ -140,7 +141,7 @@ public class EventResolverTest {
 
             var testParams =
                     new EventResolveParameters(
-                            "test-context",
+                            List.of("test-context"),
                             new IpvSessionItem(),
                             ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build());
             var result = eventResolver.resolve(defaultEvent, testParams);
@@ -183,7 +184,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"), ipvSessionItem, clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(alternativeTargetState, result.state());
@@ -211,7 +212,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"), ipvSessionItem, clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(originalTargetStateObj, result.state());
@@ -240,7 +241,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"), ipvSessionItem, clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(originalTargetStateObj, result.state());
@@ -265,7 +266,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext",
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         ClientOAuthSessionItem.builder()
                                                 .scope(ScopeConstants.REVERIFICATION)
@@ -294,7 +295,7 @@ public class EventResolverTest {
                                         eventResolver.resolve(
                                                 basicEventWithCheckMitigationConfigured,
                                                 new EventResolveParameters(
-                                                        "journeyContext",
+                                                        List.of("journeyContext"),
                                                         ipvSessionWithMissingSecurityCheckCredential,
                                                         clientOAuthSessionItem)));
 
@@ -311,7 +312,7 @@ public class EventResolverTest {
             clientOAuthSessionItem = new ClientOAuthSessionItem();
             eventResolveParameters =
                     new EventResolveParameters(
-                            "journeyContext", new IpvSessionItem(), clientOAuthSessionItem);
+                            List.of("journeyContext"), new IpvSessionItem(), clientOAuthSessionItem);
         }
 
         @Test
