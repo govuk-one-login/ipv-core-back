@@ -1,4 +1,4 @@
-import { getNestedJourneyStates } from "./helpers/uplift-nested.js";
+import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import { resolveVisibleEventTargets } from "./helpers/event-resolver.js";
 import { expandNestedJourneys } from "./helpers/expand-nested.js";
 import { expandParents } from "./helpers/expand-parents.js";
@@ -94,6 +94,7 @@ const renderTransitions = (
               },
             };
           } else if (exitEventToEmit) {
+            // TODO: move some of this logic into uplift-nested.js?
             journeyStates[target] = {
               exitEvent: exitEventToEmit,
             };
@@ -255,9 +256,9 @@ export const render = (
   // Copy to avoid mutating the input
   const journeyStates = deepCloneJson(
     isNestedJourney
-      ? getNestedJourneyStates(nestedJourneys[selectedJourney])
-      : journeyMap.states,
-  );
+      ? getAsFullJourneyMap(nestedJourneys[selectedJourney])
+      : journeyMap,
+  ).states;
 
   if (!isNestedJourney && options.expandNestedJourneys) {
     // Expand nested journeys first, to allow for two levels of nesting

@@ -2,7 +2,7 @@ import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import yaml from "yaml";
 import { render } from "./render.js";
-import { getNestedJourneyStates } from "./helpers/uplift-nested.js";
+import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
   CRI_NAMES,
@@ -270,24 +270,15 @@ const updateView = async (): Promise<void> => {
       JOURNEY_TYPE_SEARCH_PARAM,
     ) || DEFAULT_JOURNEY_TYPE;
 
-  if (selectedNestedJourney) {
-    const nestedJourneyName =
-      nestedJourneys[selectedNestedJourney].name || "Details";
-    journeyName.innerText = `${nestedJourneyName} (${journeyMaps[selectedJourney].name})`;
-    journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
-  } else {
-    journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
-    const desc = journeyMaps[selectedJourney].description;
+  const journeyMap = selectedNestedJourney
+    ? getAsFullJourneyMap(nestedJourneys[selectedNestedJourney])
+    : journeyMaps[selectedJourney];
 
-    journeySelect.value = selectedJourney;
-    journeyDesc.innerText = desc || "";
-  }
+  journeyName.innerText = journeyMap.name || "Details";
+  journeySelect.value = selectedJourney;
+  journeyDesc.innerText = journeyMap.description || "";
 
-  const ctxOptions = getJourneyContexts(
-    selectedNestedJourney
-      ? getNestedJourneyStates(nestedJourneys[selectedNestedJourney])
-      : journeyMaps[selectedJourney].states,
-  );
+  const ctxOptions = getJourneyContexts(journeyMap.states);
   if (ctxOptions.length > 0) {
     displayJourneyContextInfo(ctxOptions);
   } else {

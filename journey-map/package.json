@@ -13,7 +13,8 @@
     "start-build": "node --enable-source-maps build/app.js",
     "tsc": "tsc && tsc --project tsconfig.server.json --noEmit",
     "lint": "eslint src server && prettier src server --check",
-    "lint-fix": "eslint --fix src server && prettier src server --write"
+    "lint-fix": "eslint --fix src server && prettier src server --write",
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "express": "5.0.1",
