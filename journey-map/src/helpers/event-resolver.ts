@@ -1,8 +1,8 @@
-import { JourneyEvent } from "../types.js";
+import { JourneyEvent, JourneyState } from "../types.js";
 import { RenderOptions } from "./options.js";
 
 // Resolve all possible targets for a given event, with any options
-export const resolveAllEventTargets = (
+const resolveAllEventTargets = (
   eventDefinition: JourneyEvent,
 ): JourneyEvent[] => [
   eventDefinition,
@@ -19,6 +19,16 @@ export const resolveAllEventTargets = (
     resolveAllEventTargets,
   ),
 ];
+
+// Resolve all possible targets for a journey map, with any options
+export const resolveAllTargets = (
+  states: Record<string, JourneyState>,
+): JourneyEvent[] =>
+  Object.values(states).flatMap((state) => {
+    return Object.values(state.events || state.exitEvents || {}).flatMap(
+      resolveAllEventTargets,
+    );
+  });
 
 // Resolve all visible targets for a given event, with the current options
 // Multiple results are possible for mitigations and journey context routes

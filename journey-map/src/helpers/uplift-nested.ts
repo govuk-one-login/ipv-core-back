@@ -1,6 +1,6 @@
 import { JourneyMap, JourneyState, NestedJourneyMap } from "../types.js";
 import { deepCloneJson } from "./deep-clone.js";
-import { resolveAllEventTargets } from "./event-resolver.js";
+import { resolveAllTargets } from "./event-resolver.js";
 
 const buildSyntheticEntryStates = (
   nestedJourney: NestedJourneyMap,
@@ -20,22 +20,15 @@ const buildSyntheticExitStates = (
 ): Record<string, JourneyState> => {
   const states: Record<string, JourneyState> = {};
 
-  // Traverse all event targets and point towards a new exit state
-  Object.values(nestedJourney.nestedJourneyStates).forEach((state) => {
-    const events = state.events || state.exitEvents || {};
-    Object.values(events).forEach((event) => {
-      const targets = resolveAllEventTargets(event);
-      targets.forEach((target) => {
-        if (target.exitEventToEmit) {
-          const exitState = `exit_${target.exitEventToEmit}`.toUpperCase();
-          target.targetState = exitState;
-          states[exitState] = {
-            exitEvent: target.exitEventToEmit,
-          };
-          delete target.exitEventToEmit;
-        }
-      });
-    });
+  resolveAllTargets(nestedJourney.nestedJourneyStates).forEach((target) => {
+    if (target.exitEventToEmit) {
+      const exitState = `exit_${target.exitEventToEmit}`.toUpperCase();
+      target.targetState = exitState;
+      states[exitState] = {
+        exitEvent: target.exitEventToEmit,
+      };
+      delete target.exitEventToEmit;
+    }
   });
 
   return states;
