@@ -1,7 +1,6 @@
-// Expand out parent states
-
 import { JourneyState } from "../types.js";
 
+// Expand out parent states
 // Will also search 'otherStates' (e.g. for nested journeys)
 export const expandParents = (
   journeyStates: Record<string, JourneyState>,
@@ -15,11 +14,17 @@ export const expandParents = (
       if (!parent) {
         console.warn(`Missing parent ${definition.parent} of state ${state}`);
       } else {
-        definition.events = {
-          ...parent.events,
-          ...definition.events,
+        // Merge parent into existing definition
+        const newDefinition = {
+          ...parent,
+          ...definition,
+          events: {
+            ...parent.events,
+            ...definition.events,
+          },
         };
-        journeyStates[state] = { ...parent, ...definition };
+        delete newDefinition.parent;
+        journeyStates[state] = newDefinition;
         parentStates.push(definition.parent);
       }
     }
