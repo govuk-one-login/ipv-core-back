@@ -11,25 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class VotHelperTest {
-    @Test
-    void getVotsByStrengthDescendingOrdersVotsCorrectly() {
-        var clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder().vtr(List.of("P1", "P2", "PCL250")).build();
-
-        var vots = VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem);
-
-        assertEquals(List.of(Vot.P2, Vot.PCL250, Vot.P1), vots);
-    }
-
-    @Test
-    void getVotsByStrengthDescendingSkipsUnknownVots() {
-        var clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder().vtr(List.of("P1", "UNKNOWN", "P2")).build();
-
-        var vots = VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem);
-
-        assertEquals(List.of(Vot.P2, Vot.P1), vots);
-    }
 
     @Test
     void getThresholdVotUsesAchievedIfNotP0() {

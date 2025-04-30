@@ -20,16 +20,14 @@
 
 ## Checklists
 
-### Environment variables or secrets
+<!-- Delete if changes in READMEs or documentation are not required -->
+- [ ] All READMEs and documentation updated where necessary
 
-<!-- Delete if changes DO include new environment variables or secrets -->
-- [ ] No environment variables or secrets were added or changed
+<!-- Delete if changes don't include risk of credentials being exposed -->
+- [ ] No risk of PII, credentials or anything else sensitive being exposed through logs
 
-<!-- Delete if changes DO NOT include new environment variables or secrets -->
-- [ ] Documented in the [README](./blob/main/README.md)
-- [ ] Added to deployment repository
-- [ ] Added to local startup repository
+<!-- Delete if changes don't apply -->
+- [ ] API/unit/contract tests have been written/updated
 
-### Other considerations
-
-- [ ] Update [README](./blob/main/README.md) with any new instructions or tasks
+<!-- Delete if changes don't apply -->
+- [ ] Production changes appropriately staged out

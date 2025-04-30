@@ -73,6 +73,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -220,7 +221,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @BeforeEach
-    void setUpEach() {
+    void setUpEach() throws ParseException {
         event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_SESSION_ID)
@@ -233,6 +234,10 @@ class CheckExistingIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setVot(Vot.P0);
+
+        lenient()
+                .when(mockVotMatcher.findStrongestMatches(any(), any(), any(), anyBoolean()))
+                .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -332,12 +337,9 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, hmrcMigrationVC)));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2), List.of(gpg45Vc, hmrcMigrationVC), List.of(), true))
-                    .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(
-                                            P2, matchedProfile, Gpg45Scores.builder().build())));
+                    .thenReturn(buildMatchResultFor(P2, matchedProfile));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
             var journeyResponse =
@@ -370,10 +372,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(emptyAsyncCriStatus);
-            when(mockVotMatcher.matchFirstVot(List.of(P2), vcs, List.of(), true))
-                    .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             var journeyResponse =
@@ -406,12 +406,12 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl200Vc)));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2, PCL250, PCL200),
                             List.of(gpg45Vc, pcl200Vc),
                             List.of(),
                             false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL200, null, null)));
+                    .thenReturn(buildMatchResultFor(PCL200, null));
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name(), Vot.PCL200.name()));
             ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
 
@@ -438,9 +438,9 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl250Vc)));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2, PCL250), List.of(gpg45Vc, pcl250Vc), List.of(), false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL250, null, null)));
+                    .thenReturn(buildMatchResultFor(PCL250, null));
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
             ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
 
@@ -468,9 +468,9 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(pcl250Vc)));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2, PCL250), List.of(pcl250Vc), List.of(), false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL250, null, null)));
+                    .thenReturn(buildMatchResultFor(PCL250, null));
 
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
             ipvSessionItem.setInheritedIdentityReceivedThisSession(false);
@@ -494,12 +494,12 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl200Vc)));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2, PCL250, PCL200),
                             List.of(gpg45Vc, pcl200Vc),
                             List.of(),
                             false))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL200, null, null)));
+                    .thenReturn(buildMatchResultFor(PCL200, null));
             ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name(), PCL200.name()));
 
@@ -525,9 +525,9 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, pcl250Vc)));
-            when(mockVotMatcher.matchFirstVot(
+            when(mockVotMatcher.findStrongestMatches(
                             List.of(P2, PCL250), List.of(gpg45Vc, pcl250Vc), List.of(), true))
-                    .thenReturn(Optional.of(new VotMatchingResult(PCL250, null, null)));
+                    .thenReturn(buildMatchResultFor(PCL250, null));
 
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), Vot.PCL250.name()));
@@ -553,10 +553,8 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnErrorResponseIfVcCanNotBeStoredInSessionCredentialTable()
                 throws Exception {
-            when(mockVotMatcher.matchFirstVot(List.of(P2), List.of(), List.of(), true))
-                    .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             doThrow(
                             new VerifiableCredentialException(
@@ -1369,9 +1367,8 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, vcs));
 
-        when(mockVotMatcher.matchFirstVot(List.of(P2), vcs, List.of(), true))
-                .thenReturn(
-                        Optional.of(new VotMatchingResult(P2, M1B, Gpg45Scores.builder().build())));
+        when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
+                .thenReturn(buildMatchResultFor(P2, M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -1401,9 +1398,8 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
 
-        when(mockVotMatcher.matchFirstVot(List.of(P2), VCS_FROM_STORE, List.of(), true))
-                .thenReturn(
-                        Optional.of(new VotMatchingResult(P2, M1B, Gpg45Scores.builder().build())));
+        when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
+                .thenReturn(buildMatchResultFor(P2, M1B));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1482,5 +1478,16 @@ class CheckExistingIdentityHandlerTest {
 
     private static ECDSASigner createJwtSigner() throws Exception {
         return new ECDSASigner(ECKey.parse(EC_PRIVATE_KEY_JWK).toECPrivateKey());
+    }
+
+    private static VotMatchingResult buildMatchResultFor(Vot vot, Gpg45Profile profile) {
+        return new VotMatchingResult(
+                Optional.of(
+                        new VotMatchingResult.VotAndProfile(
+                                vot, profile == null ? Optional.empty() : Optional.of(profile))),
+                Optional.of(
+                        new VotMatchingResult.VotAndProfile(
+                                vot, profile == null ? Optional.empty() : Optional.of(profile))),
+                Gpg45Scores.builder().build());
     }
 }

@@ -42,6 +42,8 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -57,7 +59,6 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
-import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
@@ -415,6 +416,11 @@ public class ProcessCandidateIdentityHandler
         return JOURNEY_NEXT.toObjectMap();
     }
 
+    // This warning is about Optionals possibly being empty when accessed, but here the warnings are
+    // wrong as we return or throw an exception if the optionals are empty.
+    // Ideally we wouldn't suppress this for the entire method but there doesn't seem to be a way to
+    // suppress the warning on the call to sendProfileMatchedAuditEvent()
+    @SuppressWarnings("java:S3655")
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -441,23 +447,29 @@ public class ProcessCandidateIdentityHandler
                         ipvSessionItem.getSecurityCheckCredential(),
                         clientOAuthSessionItem.getUserId());
 
-        var votResult =
-                votMatcher.matchFirstVot(
-                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
+        var votMatches =
+                votMatcher.findStrongestMatches(
+                        clientOAuthSessionItem.getVtrAsVots(),
                         sessionVcs,
                         contraIndicators,
                         areVcsCorrelated);
 
-        if (votResult.isEmpty()) {
+        if (votMatches.strongestRequestedMatch().isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
 
-        ipvSessionItem.setVot(votResult.get().vot());
+        var matchedVot = votMatches.strongestRequestedMatch().get();
+        ipvSessionItem.setVot(matchedVot.vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (votResult.get().vot().getProfileType() == ProfileType.GPG45) {
+        if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
+            if (matchedVot.profile().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Matched GPG45 vot result does not have a profile");
+            }
             sendProfileMatchedAuditEvent(
-                    votResult.get(),
+                    matchedVot.profile().get(),
+                    votMatches.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
                     auditEventUser,
                     deviceInformation);
@@ -473,6 +485,34 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             AuditEventUser auditEventUser) {
         try {
+            // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
+            // validation), we cannot make a request to TICF as we will have missing required
+            // properties.
+            if (clientOAuthSessionItem.isErrorClientSession()) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Invalid ClientOauthSessionItem. Skipping TICF call."));
+                return null;
+            }
+
+            // We must check if the security check credential on the session is empty.
+            // This can happen when an error occurs prior to the first call to get the
+            // security check credential e.g. in the check-existing-identity lambda.
+            // If it is, we need to make a call to CIMIT prior to getting the TICF VC
+            // in order to get the mitigation information unaffected by this new VC.
+            String previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+            if (!clientOAuthSessionItem.isReverification()
+                    && StringUtils.isBlank(previousSecurityCheckCredential)) {
+                previousSecurityCheckCredential =
+                        cimitService
+                                .fetchContraIndicatorsVc(
+                                        clientOAuthSessionItem.getUserId(),
+                                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                        ipAddress,
+                                        ipvSessionItem)
+                                .getVcString();
+            }
+
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
             if (ticfVcs.isEmpty()) {
@@ -496,7 +536,7 @@ public class ProcessCandidateIdentityHandler
                 var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
                 var oldMitigations =
                         cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                ipvSessionItem.getSecurityCheckCredential(),
+                                previousSecurityCheckCredential,
                                 clientOAuthSessionItem.getUserId(),
                                 targetVot);
 
@@ -545,7 +585,8 @@ public class ProcessCandidateIdentityHandler
     }
 
     private void sendProfileMatchedAuditEvent(
-            VotMatchingResult votMatchingResult,
+            Gpg45Profile matchedProfile,
+            Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation) {
@@ -555,8 +596,8 @@ public class ProcessCandidateIdentityHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionGpg45ProfileMatched(
-                                votMatchingResult.gpg45Profile(),
-                                votMatchingResult.gpg45Scores(),
+                                matchedProfile,
+                                gpg45Scores,
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);

@@ -45,3 +45,30 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-aws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: eu-west-2
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Set up esbuild
+        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
+
+      - name: Add esbuild to path
+        run: echo "${GITHUB_WORKSPACE}" >> $GITHUB_PATH
+
+      - name: Deploy SAM app to ECR
+        uses: govuk-one-login/devplatform-upload-action-ecr@v1.3.0
+        with:
+          artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_JOURNEY_MAP }}
+          container-sign-kms-key-arn: ${{ secrets.CONTAINER_SIGN_KMS_KEY_JOURNEY_MAP }}
+          working-directory: ./journey-map/deploy
+          dockerfile: journey-map.Dockerfile
+          docker-build-path: .
+          template-file: template.yaml
+          role-to-assume-arn: ${{ secrets.GH_ACTIONS_ROLE_ARN_JOURNEY_MAP }}
+          ecr-repo-name: ${{ secrets.ECR_REPOSITORY_JOURNEY_MAP }}

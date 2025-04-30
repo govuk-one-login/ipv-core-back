@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
         with:
           cosign-release: 'v1.9.0'
 
@@ -44,12 +44,12 @@ jobs:
           BUILD_CONTAINER_SIGN_KMS_KEY: ${{ env.ENVIRONMENT == 'build' && secrets.CONTAINER_SIGN_KMS_KEY || secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
         run: |
           docker build --build-arg GITHUB_PAT="${{ secrets.GITHUB_TOKEN }}" \
-          -t "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest" \
-          -t "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA" \
-          -f api-tests/secure-pipeline/api-tests.Dockerfile .
+            -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest" \
+            -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}" \
+            -f api-tests/secure-pipeline/api-tests.Dockerfile .
 
-          docker push "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest"
-          docker push "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA"
+          docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
+          docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"
 
-          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest"
-          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "$BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA"
+          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
+          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"

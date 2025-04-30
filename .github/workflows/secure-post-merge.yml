@@ -32,7 +32,7 @@ jobs:
         env:
           CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
         run: |
-          for file in ${CHANGED_FILES}; do
+          for file in $CHANGED_FILES; do
             echo "$file was changed"
           done
 
@@ -63,7 +63,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -78,15 +78,16 @@ jobs:
           python-version: "3.8"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
           gradle-version: 8.2.1
 
-      - name: Set up SAM cli
+      - name: Set up SAM CLI
         uses: aws-actions/setup-sam@v2
 
-      - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
-        run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
+      - name: Fix SAM cryptography issue https://github.com/aws/aws-sam-cli/issues/4527
+        run: |
+          "$(dirname "$(readlink "$(which sam)")")/pip" install --force-reinstall "cryptography==38.0.4"
 
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v4
@@ -96,7 +97,7 @@ jobs:
 
       - name: SAM validate
         working-directory: ./deploy
-        run: sam validate --region ${{ env.AWS_REGION }}
+        run: sam validate --region "${{ env.AWS_REGION }}"
 
       - name: SAM build and test
         working-directory: ./deploy
