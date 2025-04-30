@@ -4,8 +4,8 @@ import { RenderOptions } from "./options.js";
 // Resolve all possible targets for a given event, with any options
 export const resolveAllEventTargets = (
   eventDefinition: JourneyEvent,
-): string[] => [
-  eventDefinition.targetState,
+): JourneyEvent[] => [
+  eventDefinition,
   ...Object.values(eventDefinition.checkIfDisabled || {}).flatMap(
     resolveAllEventTargets,
   ),

@@ -13,7 +13,7 @@ export const findOrphanStates = (
         resolveAllEventTargets,
       ),
     ]),
-  ];
+  ].map((event) => event.targetState);
 
   const uniqueTargetedStates = [...new Set(targetedStates)];
 

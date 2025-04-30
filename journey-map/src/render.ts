@@ -46,16 +46,14 @@ const renderTransitions = (
           targetJourney,
           targetState,
           targetEntryEvent,
-          exitEventToEmit,
           journeyContext,
           mitigation,
         } = resolvedTarget;
 
-        const target = exitEventToEmit
-          ? `exit_${exitEventToEmit}`.toUpperCase()
-          : targetJourney
-            ? `${targetJourney}__${targetState}`
-            : targetState;
+        // TODO: move this to a separate transformation pass?
+        const target = targetJourney
+          ? `${targetJourney}__${targetState}`
+          : targetState;
 
         if (
           errorJourneys.includes(targetJourney as string) &&
@@ -92,11 +90,6 @@ const renderTransitions = (
                 targetJourney,
                 targetState,
               },
-            };
-          } else if (exitEventToEmit) {
-            // TODO: move some of this logic into uplift-nested.js?
-            journeyStates[target] = {
-              exitEvent: exitEventToEmit,
             };
           } else {
             throw new Error(`Failed to resolve state ${target} from ${state}`);
