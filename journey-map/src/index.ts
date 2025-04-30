@@ -2,11 +2,7 @@ import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import yaml from "yaml";
 import { render } from "./render.js";
-import {
-  getJourneyContexts,
-  getNestedJourneyStates,
-  getOptions,
-} from "./helpers.js";
+import { getNestedJourneyStates } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
   CRI_NAMES,
@@ -14,6 +10,12 @@ import {
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
+import {
+  getAvailableOptions,
+  parseOptions,
+  RenderOptions,
+} from "./helpers/options.js";
+import { getJourneyContexts } from "./helpers/journey-context.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -259,7 +261,7 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 };
 
 const updateView = async (): Promise<void> => {
-  const formData = new FormData(form);
+  const options = parseOptions(new FormData(form));
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
   );
@@ -292,20 +294,20 @@ const updateView = async (): Promise<void> => {
     journeyContextsList.innerText = "";
   }
 
-  await renderSvg(selectedJourney, selectedNestedJourney, formData);
+  await renderSvg(selectedJourney, selectedNestedJourney, options);
 };
 
 // Render the journey map SVG
 const renderSvg = async (
   selectedJourney: string,
   selectedNestedJourney: string | null,
-  formData: FormData,
+  options: RenderOptions,
 ): Promise<void> => {
   const diagram = render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
-    formData,
+    options,
   );
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);
   diagramElement.innerHTML = svg;
@@ -496,12 +498,12 @@ const initialize = async (): Promise<void> => {
     "nested-journeys",
   );
 
-  const { disabledOptions, featureFlagOptions } = getOptions(
+  const { disabledCris, featureFlags } = getAvailableOptions(
     journeyMaps,
     nestedJourneys,
   );
-  setupOptions("disabledCri", disabledOptions, disabledInput, CRI_NAMES);
-  setupOptions("featureFlag", featureFlagOptions, featureFlagInput);
+  setupOptions("disabledCri", disabledCris, disabledInput, CRI_NAMES);
+  setupOptions("featureFlag", featureFlags, featureFlagInput);
   setupOtherOptions();
   setupMermaidClickHandlers();
   setupHeaderToggleClickHandlers();
