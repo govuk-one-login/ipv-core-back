@@ -10,7 +10,7 @@ Globals:
       ApplyOn: PublishedVersions
     Architectures:
       - arm64
-    MemorySize: !If [IsPerformanceSensitive, 3072, 1024]
+    MemorySize: 3072
     Runtime: java17
     Environment:
       Variables:
@@ -51,10 +51,7 @@ Globals:
         POWERTOOLS_METRICS_NAMESPACE: !Sub CoreBackEmbeddedMetrics-${Environment}
         POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
         POWERTOOLS_TRACER_CAPTURE_ERROR: false
-        CONFIG_SERVICE_CACHE_DURATION_MINUTES: !If
-          - IsPerformanceSensitive
-          - 3
-          - 0
+        CONFIG_SERVICE_CACHE_DURATION_MINUTES: 3
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
@@ -141,10 +138,7 @@ Conditions:
   UseCanaryDeploymentAlarms: !Or
     - !Not [ !Equals [ !Ref StepFunctionDeploymentPreference, ALL_AT_ONCE ]]
     - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ]]
-  IsPerformanceSensitive: !Or
-    - !Not [ !Condition IsDevelopment ]
-    - !Equals [ !Ref Environment, "dev-perf" ]
-  UseDynatrace: !Condition IsPerformanceSensitive
+  UseDynatrace: !Equals [ !Ref Environment, "temp" ]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
