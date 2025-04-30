@@ -416,11 +416,6 @@ public class ProcessCandidateIdentityHandler
         return JOURNEY_NEXT.toObjectMap();
     }
 
-    // This warning is about Optionals possibly being empty when accessed, but here the warnings are
-    // wrong as we return or throw an exception if the optionals are empty.
-    // Ideally we wouldn't suppress this for the entire method but there doesn't seem to be a way to
-    // suppress the warning on the call to sendProfileMatchedAuditEvent()
-    @SuppressWarnings("java:S3655")
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -454,21 +449,23 @@ public class ProcessCandidateIdentityHandler
                         contraIndicators,
                         areVcsCorrelated);
 
-        if (votMatches.strongestRequestedMatch().isEmpty()) {
+        var strongestRequestedMatch = votMatches.strongestRequestedMatch();
+        if (strongestRequestedMatch.isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
 
-        var matchedVot = votMatches.strongestRequestedMatch().get();
+        var matchedVot = strongestRequestedMatch.get();
         ipvSessionItem.setVot(matchedVot.vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
-            if (matchedVot.profile().isEmpty()) {
+            var profile = matchedVot.profile();
+            if (profile.isEmpty()) {
                 throw new IllegalArgumentException(
                         "Matched GPG45 vot result does not have a profile");
             }
             sendProfileMatchedAuditEvent(
-                    matchedVot.profile().get(),
+                    profile.get(),
                     votMatches.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
                     auditEventUser,
