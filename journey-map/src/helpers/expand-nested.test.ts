@@ -4,15 +4,6 @@ import yaml from "yaml";
 import { JourneyState, NestedJourneyMap } from "../types.js";
 import { expandNestedJourneys } from "./expand-nested.js";
 
-const DEFAULT_OPTIONS = {
-  disabledCris: [],
-  featureFlags: [],
-  includeErrors: false,
-  includeFailures: false,
-  expandNestedJourneys: true,
-  onlyOrphanStates: false,
-};
-
 describe("expandNested", () => {
   it("should expand nested journeys with an implicit entry event", () => {
     // Arrange
@@ -67,11 +58,7 @@ describe("expandNested", () => {
     `);
 
     // Act
-    expandNestedJourneys(
-      states,
-      { TEST_NESTED: nestedDefinition },
-      DEFAULT_OPTIONS,
-    );
+    expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
     assert.deepEqual(states, expected);
@@ -147,18 +134,13 @@ describe("expandNested", () => {
     `);
 
     // Act
-    expandNestedJourneys(
-      states,
-      { TEST_NESTED: nestedDefinition },
-      DEFAULT_OPTIONS,
-    );
+    expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
     assert.deepEqual(states, expected);
   });
 
-  // TODO: rework method to make this work
-  it.skip("should expand nested journeys behind conditions", () => {
+  it("should expand nested journeys behind conditions", () => {
     // Arrange
     const states: Record<string, JourneyState> = yaml.parse(`
       ENTRY_STATE:
@@ -235,18 +217,7 @@ describe("expandNested", () => {
     `);
 
     // Act
-    expandNestedJourneys(
-      states,
-      { TEST_NESTED: nestedDefinition },
-      {
-        disabledCris: ["test-cri"],
-        featureFlags: ["test-feature"],
-        includeErrors: false,
-        includeFailures: false,
-        expandNestedJourneys: true,
-        onlyOrphanStates: false,
-      },
-    );
+    expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
     assert.deepEqual(states, expected);
@@ -324,7 +295,7 @@ describe("expandNested", () => {
     };
 
     // Act
-    expandNestedJourneys(states, nestedJourneys, DEFAULT_OPTIONS);
+    expandNestedJourneys(states, nestedJourneys);
 
     // Assert
     assert.deepEqual(states, expected);
@@ -395,11 +366,7 @@ describe("expandNested", () => {
     `);
 
     // Act
-    expandNestedJourneys(
-      states,
-      { TEST_NESTED: nestedDefinition },
-      DEFAULT_OPTIONS,
-    );
+    expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
     assert.deepEqual(states, expected);

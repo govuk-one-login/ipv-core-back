@@ -240,7 +240,7 @@ export const render = (
   ).states;
 
   if (!isNestedJourney && options.expandNestedJourneys) {
-    expandNestedJourneys(journeyStates, nestedJourneys, options);
+    expandNestedJourneys(journeyStates, nestedJourneys);
   }
 
   expandParents(journeyStates, journeyMap.states);

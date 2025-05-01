@@ -1,17 +1,12 @@
 import { JourneyEvent, JourneyState, NestedJourneyMap } from "../types.js";
 import { deepCloneJson } from "./deep-clone.js";
-import { resolveVisibleEventTargets } from "./event-resolver.js";
-import { RenderOptions } from "./options.js";
-
-// TODO: do we need options here? Can we just expand _everything_?
+import { resolveAllEventTargets } from "./event-resolver.js";
 
 const mapTargetStateToExpandedState = (
   eventDef: JourneyEvent,
   subJourneyState: string,
-  options: RenderOptions,
 ): void => {
-  // Map target states to expanded states
-  resolveVisibleEventTargets(eventDef, options).forEach((targetDef) => {
+  resolveAllEventTargets(eventDef).forEach((targetDef) => {
     if (targetDef.targetState && !targetDef.targetJourney) {
       targetDef.targetState = `${subJourneyState}/${targetDef.targetState}`;
     }
@@ -22,7 +17,6 @@ const mapTargetStateToExpandedState = (
 export const expandNestedJourneys = (
   journeyMap: Record<string, JourneyState>,
   subjourneys: Record<string, NestedJourneyMap>,
-  options: RenderOptions,
 ): void => {
   let didExpand = false;
   Object.entries(journeyMap).forEach(([state, definition]) => {
@@ -42,7 +36,7 @@ export const expandNestedJourneys = (
           Object.entries(
             expandedDefinition.events || expandedDefinition.exitEvents || {},
           ).forEach(([evt, eventDef]) => {
-            mapTargetStateToExpandedState(eventDef, subJourneyState, options);
+            mapTargetStateToExpandedState(eventDef, subJourneyState);
 
             // Map exit events to targets in the parent definition
             const exitEvent = eventDef.exitEventToEmit;
@@ -66,30 +60,25 @@ export const expandNestedJourneys = (
 
       // Make a copy of the entry events to avoid mutating the original
       const entryEvents = deepCloneJson(subjourney.entryEvents);
+
       // Update entry events on other states to expanded states
       Object.entries(entryEvents).forEach(([entryEvent, entryEventDef]) => {
-        mapTargetStateToExpandedState(entryEventDef, subJourneyState, options);
+        mapTargetStateToExpandedState(entryEventDef, subJourneyState);
 
         Object.values(journeyMap).forEach((journeyDef) => {
-          const eventsToUpdate =
-            journeyDef.events ?? journeyDef.exitEvents ?? {};
-          if (eventsToUpdate[entryEvent]) {
-            resolveVisibleEventTargets(eventsToUpdate[entryEvent], options)
+          Object.entries(
+            journeyDef.events ?? journeyDef.exitEvents ?? {},
+          ).forEach(([implicitEntryEvent, eventDef]) => {
+            resolveAllEventTargets(eventDef)
+              // Find targets that hit the nested journey
               .filter(
-                (t) => t.targetState === subJourneyState && !t.targetEntryEvent,
+                (t) => !t.targetJourney && t.targetState === subJourneyState,
               )
-              .forEach((t) => {
-                Object.assign(t, entryEventDef);
-              });
-          }
-
-          // Resolve targets with a `targetEntryEvent` override
-          Object.values(eventsToUpdate).forEach((eventDef) => {
-            resolveVisibleEventTargets(eventDef, options)
+              // Match either the targetEntryEvent or the implicit entry event
               .filter(
                 (t) =>
-                  t.targetState === subJourneyState &&
-                  t.targetEntryEvent === entryEvent,
+                  t.targetEntryEvent === entryEvent ||
+                  (!t.targetEntryEvent && implicitEntryEvent === entryEvent),
               )
               .forEach((t) => {
                 Object.assign(t, entryEventDef);
@@ -104,6 +93,6 @@ export const expandNestedJourneys = (
   // Recursively expand again
   // Would be neater to do this recursively inside the loop, but this is simpler
   if (didExpand) {
-    expandNestedJourneys(journeyMap, subjourneys, options);
+    expandNestedJourneys(journeyMap, subjourneys);
   }
 };

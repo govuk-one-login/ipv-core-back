@@ -2,7 +2,7 @@ import { JourneyEvent, JourneyState } from "../types.js";
 import { RenderOptions } from "./options.js";
 
 // Resolve all possible targets for a given event, with any options
-const resolveAllEventTargets = (
+export const resolveAllEventTargets = (
   eventDefinition: JourneyEvent,
 ): JourneyEvent[] => [
   eventDefinition,
