@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
@@ -95,6 +97,7 @@ public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final List<Cri> ASYNC_CRIS = List.of(F2F, DCMAW_ASYNC);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
@@ -384,22 +387,35 @@ public class CheckExistingIdentityHandler
                 evcsService.fetchEvcsVerifiableCredentialsByState(
                         userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-        var isPendingReturn = !isNullOrEmpty(vcs.get(PENDING_RETURN));
+        // PENDING_RETURN async vcs need a pending record to be valid
+        var pendingRecordCris =
+                criResponseService.getCriResponseItems(userId).stream()
+                        .map(CriResponseItem::getCredentialIssuer)
+                        .map(Cri::fromId)
+                        .toList();
+        var validPendingReturnVcs =
+                vcs.getOrDefault(PENDING_RETURN, List.of()).stream()
+                        .filter(
+                                vc ->
+                                        !ASYNC_CRIS.contains(vc.getCri())
+                                                || pendingRecordCris.contains(vc.getCri()))
+                        .toList();
+        var hasValidPendingReturnVcs = !isNullOrEmpty(validPendingReturnVcs);
 
         var evcsIdentityVcs = new ArrayList<VerifiableCredential>();
-        if (isPendingReturn) {
+        if (hasValidPendingReturnVcs) {
             // + inherited VCs & pending VCs
             evcsIdentityVcs.addAll(
                     vcs.getOrDefault(CURRENT, List.of()).stream()
                             .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                             .toList());
-            evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
+            evcsIdentityVcs.addAll(validPendingReturnVcs);
         } else {
             // + all vcs
             evcsIdentityVcs.addAll(vcs.getOrDefault(CURRENT, List.of()));
         }
 
-        return new VerifiableCredentialBundle(evcsIdentityVcs, isPendingReturn);
+        return new VerifiableCredentialBundle(evcsIdentityVcs, hasValidPendingReturnVcs);
     }
 
     private Optional<JourneyResponse> checkForProfileMatch(
