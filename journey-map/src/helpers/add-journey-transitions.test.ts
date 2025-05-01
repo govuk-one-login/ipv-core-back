@@ -9,9 +9,6 @@ describe("addJourneyTransitions", () => {
     // Arrange
     const states: Record<string, JourneyState> = yaml.parse(`
       ENTRY_STATE:
-        response:
-          type: page
-          pageId: test-page
         events:
           next:
             targetState: NEW_STATE
@@ -20,9 +17,6 @@ describe("addJourneyTransitions", () => {
 
     const expected: Record<string, JourneyState> = yaml.parse(`
       ENTRY_STATE:
-        response:
-          type: page
-          pageId: test-page
         events:
           next:
             targetState: NEW_JOURNEY__NEW_STATE

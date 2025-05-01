@@ -240,14 +240,6 @@ export const render = (
   ).states;
 
   if (!isNestedJourney && options.expandNestedJourneys) {
-    // Expand nested journeys first, to allow for two levels of nesting
-    Object.values(nestedJourneys).forEach((nestedJourney) =>
-      expandNestedJourneys(
-        nestedJourney.nestedJourneyStates,
-        nestedJourneys,
-        options,
-      ),
-    );
     expandNestedJourneys(journeyStates, nestedJourneys, options);
   }
 

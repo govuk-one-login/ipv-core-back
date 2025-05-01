@@ -3,6 +3,8 @@ import { deepCloneJson } from "./deep-clone.js";
 import { resolveVisibleEventTargets } from "./event-resolver.js";
 import { RenderOptions } from "./options.js";
 
+// TODO: do we need options here? Can we just expand _everything_?
+
 const mapTargetStateToExpandedState = (
   eventDef: JourneyEvent,
   subJourneyState: string,
@@ -22,8 +24,10 @@ export const expandNestedJourneys = (
   subjourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
 ): void => {
+  let didExpand = false;
   Object.entries(journeyMap).forEach(([state, definition]) => {
     if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
+      didExpand = true;
       const subJourneyState = state;
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete journeyMap[subJourneyState];
@@ -35,26 +39,26 @@ export const expandNestedJourneys = (
           // Copy to avoid mutating different versions of the expanded definition
           const expandedDefinition = deepCloneJson(nestedDefinition);
 
-          Object.entries(expandedDefinition.events || {}).forEach(
-            ([evt, eventDef]) => {
-              mapTargetStateToExpandedState(eventDef, subJourneyState, options);
+          Object.entries(
+            expandedDefinition.events || expandedDefinition.exitEvents || {},
+          ).forEach(([evt, eventDef]) => {
+            mapTargetStateToExpandedState(eventDef, subJourneyState, options);
 
-              // Map exit events to targets in the parent definition
-              const exitEvent = eventDef.exitEventToEmit;
-              if (exitEvent) {
-                delete eventDef.exitEventToEmit;
-                if (definition.exitEvents?.[exitEvent]) {
-                  Object.assign(eventDef, definition.exitEvents[exitEvent]);
-                } else {
-                  console.warn(
-                    `Unhandled exit event from ${subJourneyState}:`,
-                    exitEvent,
-                  );
-                  delete expandedDefinition.events?.[evt];
-                }
+            // Map exit events to targets in the parent definition
+            const exitEvent = eventDef.exitEventToEmit;
+            if (exitEvent) {
+              delete eventDef.exitEventToEmit;
+              if (definition.exitEvents?.[exitEvent]) {
+                Object.assign(eventDef, definition.exitEvents[exitEvent]);
+              } else {
+                console.warn(
+                  `Unhandled exit event from ${subJourneyState}:`,
+                  exitEvent,
+                );
+                delete expandedDefinition.events?.[evt];
               }
-            },
-          );
+            }
+          });
 
           journeyMap[`${subJourneyState}/${nestedState}`] = expandedDefinition;
         },
@@ -67,8 +71,10 @@ export const expandNestedJourneys = (
         mapTargetStateToExpandedState(entryEventDef, subJourneyState, options);
 
         Object.values(journeyMap).forEach((journeyDef) => {
-          if (journeyDef.events?.[entryEvent]) {
-            resolveVisibleEventTargets(journeyDef.events[entryEvent], options)
+          const eventsToUpdate =
+            journeyDef.events ?? journeyDef.exitEvents ?? {};
+          if (eventsToUpdate[entryEvent]) {
+            resolveVisibleEventTargets(eventsToUpdate[entryEvent], options)
               .filter(
                 (t) => t.targetState === subJourneyState && !t.targetEntryEvent,
               )
@@ -78,7 +84,7 @@ export const expandNestedJourneys = (
           }
 
           // Resolve targets with a `targetEntryEvent` override
-          Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
+          Object.values(eventsToUpdate).forEach((eventDef) => {
             resolveVisibleEventTargets(eventDef, options)
               .filter(
                 (t) =>
@@ -94,4 +100,10 @@ export const expandNestedJourneys = (
       });
     }
   });
+
+  // Recursively expand again
+  // Would be neater to do this recursively inside the loop, but this is simpler
+  if (didExpand) {
+    expandNestedJourneys(journeyMap, subjourneys, options);
+  }
 };
