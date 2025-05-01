@@ -18,7 +18,7 @@ generate_traffic() {
 [ -e "$TEST_REPORT_ABSOLUTE_DIR" ] && mkdir -p "$TEST_REPORT_ABSOLUTE_DIR"
 
 ENVIRONMENT_SECRET=$(aws secretsmanager get-secret-value --secret-id ApiTestEnvironment | jq -r .SecretString)
-if [[ "$ENVIRONMENT_SECRET" == "dev01" ]]; then # pragma: allowlist secret
+if echo "$ENVIRONMENT_SECRET" | grep -qi "dev01"; then
   TEST_ENV="dev01"
 else
   TEST_ENV="build"
