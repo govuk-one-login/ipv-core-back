@@ -154,6 +154,34 @@ class CriResponseServiceTest {
         assertEquals(criResponseItem2, criResponseItem.get());
     }
 
+    @Test
+    void getCriResponseItemsShouldGetCorrectItems() {
+        // Arrange
+        var expectedCriResponseItems =
+                List.of(
+                        createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now()),
+                        createCriResponseStoreItem(vcWebPassportSuccessful(), Instant.now()));
+        when(mockDataStore.getItems(USER_ID_1)).thenReturn(expectedCriResponseItems);
+
+        // Act
+        var criResponseItems = criResponseService.getCriResponseItems(USER_ID_1);
+
+        // Assert
+        assertEquals(expectedCriResponseItems, criResponseItems);
+    }
+
+    @Test
+    void getCriResponseItemsShouldDefaultToEmptyList() {
+        // Arrange
+        when(mockDataStore.getItems(USER_ID_1)).thenReturn(null);
+
+        // Act
+        var criResponseItems = criResponseService.getCriResponseItems(USER_ID_1);
+
+        // Assert
+        assertEquals(List.of(), criResponseItems);
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void getF2FAsyncResponseStatusShouldGetStatus(boolean hasVc) {

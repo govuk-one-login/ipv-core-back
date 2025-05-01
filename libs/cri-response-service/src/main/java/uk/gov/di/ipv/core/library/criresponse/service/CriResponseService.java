@@ -50,6 +50,14 @@ public class CriResponseService {
                 .findFirst();
     }
 
+    public List<CriResponseItem> getCriResponseItems(String userId) {
+        var criResponseItems = dataStore.getItems(userId);
+        if (criResponseItems == null) {
+            return List.of();
+        }
+        return criResponseItems;
+    }
+
     public CriResponseItem getCriResponseItem(String userId, Cri cri) {
         return dataStore.getItem(userId, cri.getId());
     }
