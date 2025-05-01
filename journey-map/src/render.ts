@@ -6,6 +6,7 @@ import { RenderOptions } from "./helpers/options.js";
 import { findOrphanStates } from "./helpers/orphans.js";
 import { JourneyMap, JourneyState, NestedJourneyMap } from "./types.js";
 import { deepCloneJson } from "./helpers/deep-clone.js";
+import { addJourneyTransitions } from "./helpers/add-journey-transitions.js";
 
 const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
 const errorJourneys = ["TECHNICAL_ERROR"];
@@ -42,38 +43,37 @@ const renderTransitions = (
       const resolvedEventTargets = resolveVisibleEventTargets(def, options);
 
       for (const resolvedTarget of resolvedEventTargets) {
-        const {
-          targetJourney,
-          targetState,
-          targetEntryEvent,
-          journeyContext,
-          mitigation,
-        } = resolvedTarget;
+        const { targetState, targetEntryEvent, journeyContext, mitigation } =
+          resolvedTarget;
 
-        // TODO: move this to a separate transformation pass?
-        const target = targetJourney
-          ? `${targetJourney}__${targetState}`
-          : targetState;
-
-        if (
-          errorJourneys.includes(targetJourney as string) &&
+        // Check the target state resolves properly and is not hidden
+        const resolvedTargetState = journeyStates[targetState];
+        if (!resolvedTargetState) {
+          throw new Error(
+            `Failed to resolve state ${targetState} from ${state}`,
+          );
+        } else if (
+          errorJourneys.includes(
+            resolvedTargetState.response?.targetJourney as string,
+          ) &&
           !options.includeErrors
         ) {
           continue;
-        }
-        if (
-          failureJourneys.includes(targetJourney as string) &&
+        } else if (
+          failureJourneys.includes(
+            resolvedTargetState.response?.targetJourney as string,
+          ) &&
           !options.includeFailures
         ) {
           continue;
         }
 
-        if (!states.includes(target)) {
-          states.push(target);
+        if (!states.includes(targetState)) {
+          states.push(targetState);
         }
 
-        eventsByTarget[target] = eventsByTarget[target] || [];
-        eventsByTarget[target].push(
+        eventsByTarget[targetState] = eventsByTarget[targetState] || [];
+        eventsByTarget[targetState].push(
           createTransitionLabel({
             eventName,
             targetEntryEvent,
@@ -81,20 +81,6 @@ const renderTransitions = (
             mitigation,
           }),
         );
-
-        if (!journeyStates[target]) {
-          if (targetJourney) {
-            journeyStates[target] = {
-              response: {
-                type: "journeyTransition",
-                targetJourney,
-                targetState,
-              },
-            };
-          } else {
-            throw new Error(`Failed to resolve state ${target} from ${state}`);
-          }
-        }
       }
     });
 
@@ -266,6 +252,7 @@ export const render = (
   }
 
   expandParents(journeyStates, journeyMap.states);
+  addJourneyTransitions(journeyStates);
 
   const { transitionsMermaid, states } = options.onlyOrphanStates
     ? { transitionsMermaid: "", states: findOrphanStates(journeyStates) }
