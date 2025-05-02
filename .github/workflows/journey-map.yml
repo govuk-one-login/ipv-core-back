@@ -1,5 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy Journey Map
 
 on:
   # Runs on pushes targeting the default branch
@@ -34,14 +33,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Copy yaml
-        run: 'cp -r ./lambdas/process-journey-event/src/main/resources/statemachine/journey-maps/* ./journey-map/public/'
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './journey-map/public/'
+          path: './journey-map/redirect/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
