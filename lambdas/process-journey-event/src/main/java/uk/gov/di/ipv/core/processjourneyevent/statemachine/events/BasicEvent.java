@@ -16,6 +16,8 @@ public class BasicEvent implements Event {
     private String targetJourney;
     private String targetState;
     private String targetEntryEvent;
+    private String journeyContextToSet;
+    private String journeyContextToUnset;
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;

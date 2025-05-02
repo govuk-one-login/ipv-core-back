@@ -18,9 +18,9 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -53,7 +53,7 @@ public class IpvSessionItem implements PersistenceItem {
      * and can be used to re-route particular contexts
      * @see uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent#TransitionResult
      */
-    @Builder.Default private Map<String, Boolean> journeyContexts = new HashMap<>();
+    @Builder.Default private Set<String> journeyContexts = new HashSet<>();
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
@@ -117,10 +117,14 @@ public class IpvSessionItem implements PersistenceItem {
     }
 
     public void setJourneyContext(String journeyContext) {
-        this.journeyContexts.put(journeyContext, true);
+        this.journeyContexts.add(journeyContext);
     }
 
-    public List<String> getActiveJourneyContexts() {
-        return this.journeyContexts.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
+    public void unsetJourneyContext(String journeyContext) {
+        this.journeyContexts.remove(journeyContext);
+    }
+
+    public Set<String> getActiveJourneyContexts() {
+        return this.journeyContexts;
     }
 }

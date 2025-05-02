@@ -295,7 +295,6 @@ public class ProcessJourneyEventHandler
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private State executeStateTransition(
             JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
@@ -344,13 +343,18 @@ public class ProcessJourneyEventHandler
             }
         }
 
+        // PYIC-7902 This needs some unit tests. It seems that the existing tests just use the real
+        // journey maps so it's not immediately obvious how to test journey contexts fully
+        if (!isNullOrEmpty(result.journeyContextsToSet())) {
+            result.journeyContextsToSet().forEach(ipvSessionItem::setJourneyContext);
+        }
+        if (!isNullOrEmpty(result.journeyContextsToUnset())) {
+            result.journeyContextsToUnset().forEach(ipvSessionItem::unsetJourneyContext);
+        }
+
         if (result.state() instanceof BasicState basicState) {
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
-            var ctx = basicState.getJourneyContext();
-            if (ctx != null && !ctx.isEmpty()) {
-                ipvSessionItem.setJourneyContext(ctx);
-            }
         }
 
         return result.state();

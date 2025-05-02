@@ -10,6 +10,7 @@ states:
     events:
       next:
         targetState: CONFIRM_DETAILS
+        journeyContextToSet: rfc
 
   # Parent States
 
@@ -46,7 +47,6 @@ states:
   # Journey States
 
   CONFIRM_DETAILS:
-    journeyContext: rfc
     response:
       type: page
       pageId: confirm-your-details

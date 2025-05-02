@@ -22,6 +22,7 @@ import java.util.Map;
 import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.collections.Merging.mergeLists;
 import static uk.gov.di.ipv.core.library.collections.Merging.mergeMaps;
+import static uk.gov.di.ipv.core.library.collections.Merging.mergeSets;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 public class StateMachine {
@@ -72,7 +73,11 @@ public class StateMachine {
                     nestedResult.state(),
                     mergeLists(result.auditEvents(), nestedResult.auditEvents()),
                     mergeMaps(result.auditContext(), nestedResult.auditContext()),
-                    nestedResult.targetEntryEvent());
+                    nestedResult.targetEntryEvent(),
+                    mergeSets(result.journeyContextsToSet(), nestedResult.journeyContextsToSet()),
+                    mergeSets(
+                            result.journeyContextsToUnset(),
+                            nestedResult.journeyContextsToUnset()));
         }
 
         return result;

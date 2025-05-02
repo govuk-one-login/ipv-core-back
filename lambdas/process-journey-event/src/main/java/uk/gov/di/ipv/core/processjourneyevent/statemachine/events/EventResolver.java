@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
@@ -116,11 +117,25 @@ public class EventResolver {
                 }
             }
 
+            Set<String> journeyContextsToSet = new java.util.HashSet<>();
+            var eventContextToSet = event.getJourneyContextToSet();
+            if (eventContextToSet != null && !eventContextToSet.isEmpty()) {
+                journeyContextsToSet.add(eventContextToSet);
+            }
+
+            Set<String> journeyContextsToUnset = new java.util.HashSet<>();
+            var eventContextToUnset = event.getJourneyContextToUnset();
+            if (eventContextToUnset != null && !eventContextToUnset.isEmpty()) {
+                journeyContextsToUnset.add(eventContextToUnset);
+            }
+
             return new TransitionResult(
                     event.getTargetStateObj(),
                     event.getAuditEvents(),
                     event.getAuditContext(),
-                    event.getTargetEntryEvent());
+                    event.getTargetEntryEvent(),
+                    journeyContextsToSet,
+                    journeyContextsToUnset);
         } catch (MissingSecurityCheckCredential
                 | CiExtractionException
                 | CredentialParseException
