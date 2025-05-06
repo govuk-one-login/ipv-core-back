@@ -69,7 +69,6 @@ const otherOptions = document.getElementById(
 const nodeTitle = document.getElementById("nodeTitle") as HTMLHeadingElement;
 const nodeDef = document.getElementById("nodeDef") as HTMLPreElement;
 const nodeDesc = document.getElementById("nodeDesc") as HTMLDivElement;
-const stateSearch = document.getElementById("state-search") as HTMLInputElement;
 const journeyDesc = document.getElementById("journeyDesc") as HTMLDivElement;
 const journeyName = document.getElementById(
   "journeyName",
@@ -446,41 +445,6 @@ const setupHeaderToggleClickHandlers = (): void => {
   });
 };
 
-const setupSearchHandler = (): void => {
-  stateSearch.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter") {
-      return;
-    }
-    const searchTerm = stateSearch.value.toUpperCase();
-    const stateElement = document.querySelector(`g[data-id="${searchTerm}"]`);
-    if (!stateElement) {
-      console.log(`No state found with selector: g[data-id="${searchTerm}"]`);
-      return;
-    }
-    stateElement.querySelector("span")?.click(); // Cause the state to be highlighted
-
-    // TODO: does anyone actually use the search bar? If so, sort this out...
-    // const position = stateElement
-    //   .getAttribute("transform")
-    //   .split("translate(")[1]
-    //   .split(")")[0]
-    //   .split(",");
-    // const posX = position[0];
-    // const posY = position[1];
-
-    // const currentZoom = svgPanZoomInstance.getZoom();
-    // const realZoom = svgPanZoomInstance.getSizes().realZoom;
-    // svgPanZoomInstance.pan({
-    //   x: -(posX * realZoom) + svgPanZoomInstance.getSizes().width / 2,
-    //   y:
-    //     -(posY * realZoom) +
-    //     svgPanZoomInstance.getSizes().height / 2 +
-    //     headerContent.offsetHeight / 2,
-    // });
-    // svgPanZoomInstance.zoom(currentZoom);
-  });
-};
-
 const initialize = async (): Promise<void> => {
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
@@ -502,7 +466,6 @@ const initialize = async (): Promise<void> => {
     event.preventDefault();
     await updateView();
   });
-  setupSearchHandler();
   headerTitleLink.onclick = async (e) => {
     e.preventDefault();
     await switchJourney(DEFAULT_JOURNEY_TYPE);

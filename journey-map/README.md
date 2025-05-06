@@ -9,8 +9,24 @@ This is a small JavaScript-based tool to display the journey map in an interacti
 ## Running the map
 
 - Run `npm install` to install dependencies.
-- Run `npm start` to load the application
+- Run `npm run dev` to start the application in watch mode
 - Open [http://localhost:3000] in a web browser
+
+### Tests
+
+The unit tests can be run with `npm run test`, and use the built-in node test runner.
+
+Linting and typechecking are available with `npm run lint` and `npm run tsc`.
+
+### Build process
+
+To build
+- `npm run build` will build the frontend JavaScript into `/public`
+- `npm run build-server` will build the server code into `/build`
+
+Use `npm start` to run the built code.
+
+In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
 
 ## Using the map
 

@@ -81,5 +81,5 @@ export interface NestedJourneyMap {
   name: string;
   description: string;
   entryEvents: Record<string, JourneyEvent>;
-  nestedJourneyStates: Record<string, JourneyState>; // TODO: do we need a nested state here, which allows for exit events?
+  nestedJourneyStates: Record<string, JourneyState>;
 }
