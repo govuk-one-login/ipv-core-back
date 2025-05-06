@@ -23,10 +23,12 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
@@ -99,8 +101,8 @@ public class AppConfigService extends YamlParametersConfigService {
     private static String getParamsRawHash(String appConfigYaml) {
         try {
             var messageDigest = MessageDigest.getInstance("SHA-256");
-            messageDigest.digest(appConfigYaml.getBytes());
-            return new String(messageDigest.digest());
+            byte[] digest = messageDigest.digest(appConfigYaml.getBytes(UTF_8));
+            return Base64.getEncoder().encodeToString(digest);
         } catch (NoSuchAlgorithmException e) {
             throw new ConfigParseException(e.getMessage());
         }

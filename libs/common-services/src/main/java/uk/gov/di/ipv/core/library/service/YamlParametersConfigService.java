@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,15 +45,6 @@ public abstract class YamlParametersConfigService extends ConfigService {
                 .collect(
                         Collectors.toMap(
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
-    }
-
-    protected void updateParameters(Map<String, String> map, File yamlFile) {
-        try {
-            String yamlContent = Files.readString(yamlFile.toPath());
-            updateParameters(map, yamlContent);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read parameters yaml file", e);
-        }
     }
 
     protected void updateParameters(Map<String, String> map, String yaml) {

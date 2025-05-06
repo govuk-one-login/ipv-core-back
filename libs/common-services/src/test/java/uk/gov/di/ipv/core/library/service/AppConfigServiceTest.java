@@ -5,6 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
@@ -32,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -183,6 +187,32 @@ class AppConfigServiceTest {
         assertEquals(List.of("a", "list", "of", "strings"), value);
     }
 
+    // Updated config
+
+    @Test
+    void getParameterReturnsUpdatedParameters() {
+        // Act
+        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+
+        // Assert
+        assertEquals("test-component-id", param);
+
+        // Arrange
+        when(appConfigProvider.get(any()))
+                .thenReturn(
+                        """
+          core:
+            self:
+              componentId: "different-component-id"
+        """);
+
+        // Act
+        param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+
+        // Assert
+        assertEquals("different-component-id", param);
+    }
+
     // Feature flags
 
     @Test
@@ -226,94 +256,43 @@ class AppConfigServiceTest {
 
     // Secrets
 
-    @Test
-    void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
+    @ParameterizedTest
+    @MethodSource("SecretsManagerExceptions")
+    void shouldReturnNullOnExceptionFromSecretsManager(Exception exception) {
         // Arrange
-        when(secretsProvider.get(any()))
-                .thenThrow(
+        when(secretsProvider.get(any())).thenThrow(exception);
+
+        // Act
+        var apiKey =
+                configService.getSecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
+
+        // Assert
+        assertNull(apiKey);
+    }
+
+    private static Stream<Arguments> SecretsManagerExceptions() {
+        return Stream.of(
+                Arguments.of(
                         DecryptionFailureException.builder()
                                 .message("Test decryption error")
-                                .build());
-
-        // Act
-        var apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        // Assert
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInternalServiceErrorExceptionFromSecretsManager() {
-        // Arrange
-        when(secretsProvider.get(any()))
-                .thenThrow(
+                                .build()),
+                Arguments.of(
                         InternalServiceErrorException.builder()
                                 .message("Test internal service error")
-                                .build());
-
-        // Act
-        var apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        // Assert
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInvalidParameterExceptionFromSecretsManager() {
-        // Arrange
-        when(secretsProvider.get(any()))
-                .thenThrow(
+                                .build()),
+                Arguments.of(
                         InvalidParameterException.builder()
                                 .message("Test invalid parameter error")
-                                .build());
-
-        // Act
-        var apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        // Assert
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInvalidRequestExceptionFromSecretsManager() {
-        // Arrange
-        when(secretsProvider.get(any()))
-                .thenThrow(
+                                .build()),
+                Arguments.of(
                         InvalidRequestException.builder()
                                 .message("Test invalid request error")
-                                .build());
-
-        // Act
-        var apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        // Assert
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnResourceNotFoundExceptionFromSecretsManager() {
-        // Arrange
-        when(secretsProvider.get(any()))
-                .thenThrow(
+                                .build()),
+                Arguments.of(
                         ResourceNotFoundException.builder()
                                 .message("Test resource not found error")
-                                .build());
-
-        // Act
-        var apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        // Assert
-        assertNull(apiKey);
+                                .build()));
     }
 
     // CI config

@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,15 @@ public class YamlConfigService extends YamlParametersConfigService {
     public YamlConfigService(File parametersFile, File secretsFile) {
         updateParameters(parameters, parametersFile);
         updateParameters(secrets, secretsFile);
+    }
+
+    private void updateParameters(Map<String, String> map, File yamlFile) {
+        try {
+            String yamlContent = Files.readString(yamlFile.toPath());
+            updateParameters(map, yamlContent);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read parameters yaml file", e);
+        }
     }
 
     @Override
