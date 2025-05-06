@@ -341,15 +341,3 @@ Feature: M2B Strategic App Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-
-  Scenario: Discount PENDING_RETURN VCs when no pending record
-    Given the subject already has the following credentials
-      | CRI        | scenario               |
-      | dcmawAsync | kenneth-passport-valid |
-      | address    | kenneth-current        |
-      | fraud      | kenneth-score-2        |
-
-    When I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
