@@ -386,7 +386,7 @@ public class CheckExistingIdentityHandler
 
         // PENDING_RETURN vcs need a pending record to be valid
         var pendingRecords = criResponseService.getCriResponseItems(userId);
-        var pendingReturnVcs = vcs.getOrDefault(PENDING_RETURN, List.of()).stream().toList();
+        var pendingReturnVcs = vcs.getOrDefault(PENDING_RETURN, List.of());
         var hasValidPendingReturnVcs =
                 !pendingRecords.isEmpty() && !isNullOrEmpty(pendingReturnVcs);
 
