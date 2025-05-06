@@ -42,7 +42,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2A;
 
 @ExtendWith(MockitoExtension.class)
-public class StoredIdentityServiceTest {
+class StoredIdentityServiceTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String USER_ID = "user-id";
@@ -152,7 +152,7 @@ public class StoredIdentityServiceTest {
     }
 
     @Test
-    void getStoredIdentityForEvcsShouldThrowIfMissingStongestVotMatch() throws Exception {
+    void getStoredIdentityForEvcsShouldThrowIfMissingStongestVotMatch() {
         // Arrange
         var testVot =
                 new VotMatchingResult(
@@ -172,7 +172,7 @@ public class StoredIdentityServiceTest {
     }
 
     @Test
-    void getStoredIdentityForEvcsShouldThrowIfMissingStongestRequestedVotMatch() throws Exception {
+    void getStoredIdentityForEvcsShouldThrowIfMissingStongestRequestedVotMatch() {
         // Arrange
         var testVot =
                 new VotMatchingResult(

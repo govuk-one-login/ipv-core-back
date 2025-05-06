@@ -47,6 +47,7 @@ public class StoreIdentityService {
         this.evcsService = evcsService;
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
