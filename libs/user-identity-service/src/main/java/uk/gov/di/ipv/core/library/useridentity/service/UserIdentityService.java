@@ -288,7 +288,9 @@ public class UserIdentityService {
     public List<Object> getUserClaimsForStoredIdentity(
             Vot achievedVot, List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        var userIdentityBuilder = UserIdentity.builder();
+        // Substituting arbitrary values into vcs, sub and vtm as they are required
+        // properties for the builder. We just need the builder to add claims to.
+        var userIdentityBuilder = UserIdentity.builder().vcs(List.of()).sub("").vtm("");
         var profile = achievedVot.getProfileType();
 
         addUserIdentityClaims(profile, vcs, userIdentityBuilder);

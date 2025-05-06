@@ -15,6 +15,7 @@ import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -89,7 +90,11 @@ public class UserIdentity {
 
     @JsonIgnore
     public List<Object> getAllClaims() {
-        return Stream.of(identityClaim, addressClaim, passportClaim, drivingPermitClaim, ninoClaim)
+        var flattenedClaims =
+                Stream.of(addressClaim, passportClaim, drivingPermitClaim, ninoClaim)
+                        .filter(Objects::nonNull)
+                        .flatMap(Collection::stream);
+        return Stream.concat(Stream.of(identityClaim), flattenedClaims)
                 .filter(Objects::nonNull)
                 .toList();
     }

@@ -240,7 +240,7 @@ public class EvcsService {
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
                 EvcsStoredIdentityDto storedIdentityJwt = null;
-                if (!isPendingIdentity || votMatchingResult == null) {
+                if (!isPendingIdentity) {
                     storedIdentityJwt =
                             storedIdentityService.getStoredIdentityForEvcs(
                                     clientOAuthSessionItem, credentials, votMatchingResult, null);
