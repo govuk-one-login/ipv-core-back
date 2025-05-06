@@ -327,9 +327,7 @@ public class ProcessCandidateIdentityHandler
 
         // These identity types require the VCs from EVCS. To save multiple calls,
         // we call for them once here.
-        if (COI_CHECK_TYPES.contains(processIdentityType)
-                || STORE_IDENTITY_TYPES.contains(processIdentityType)
-                || PENDING.equals(processIdentityType)) {
+        if (requiresExistingVcsFromEvcs(processIdentityType)) {
             evcsUserVcs =
                     evcsService.getUserVCs(
                             userId,
@@ -359,15 +357,33 @@ public class ProcessCandidateIdentityHandler
             }
         }
 
+        boolean areVcsCorrelated = false;
+        VotMatchingResult votMatchingResult = null;
+        if (requiresVotMatchingResult(processIdentityType)) {
+            if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+                return new JourneyErrorResponse(
+                                JOURNEY_ERROR_PATH,
+                                HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                MISSING_SECURITY_CHECK_CREDENTIAL)
+                        .toObjectMap();
+            }
+
+            areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+            votMatchingResult =
+                    getVotMatchingResult(
+                            ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
+        }
+
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Performing profile evaluation"));
             var journey =
                     getJourneyResponseForProfileMatching(
                             ipvSessionItem,
-                            clientOAuthSessionItem,
                             deviceInformation,
                             sessionVcs,
-                            auditEventUser);
+                            auditEventUser,
+                            areVcsCorrelated,
+                            votMatchingResult);
 
             if (journey != null) {
                 return journey.toObjectMap();
@@ -388,14 +404,15 @@ public class ProcessCandidateIdentityHandler
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-                    storeIdentity(
+                    storeIdentityService.storeIdentity(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             processIdentityType,
                             deviceInformation,
                             sessionVcs,
                             auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs,
+                            null);
                 }
                 return journey.toObjectMap();
             }
@@ -404,45 +421,46 @@ public class ProcessCandidateIdentityHandler
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-            storeIdentity(
+            storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
                     processIdentityType,
                     deviceInformation,
                     sessionVcs,
                     auditEventUser,
-                    evcsUserVcs);
+                    evcsUserVcs,
+                    votMatchingResult);
         }
 
         return JOURNEY_NEXT.toObjectMap();
     }
 
+    private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
+        return (STORE_IDENTITY_TYPES.contains(processIdentityType)
+                        && !PENDING.equals(processIdentityType))
+                || PROFILE_MATCHING_TYPES.contains(processIdentityType);
+    }
+
+    private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
+        return COI_CHECK_TYPES.contains(processIdentityType)
+                || STORE_IDENTITY_TYPES.contains(processIdentityType)
+                || PENDING.equals(processIdentityType);
+    }
+
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
-                    CiExtractionException {
-        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    MISSING_SECURITY_CHECK_CREDENTIAL);
-        }
-
-        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+            AuditEventUser auditEventUser,
+            boolean areVcsCorrelated,
+            VotMatchingResult votMatchingResult) {
 
         if (!areVcsCorrelated) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        var votMatches =
-                getVotMatchingResult(
-                        ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
+        var strongestRequestedMatch = votMatchingResult.strongestRequestedMatch();
 
-        var strongestRequestedMatch = votMatches.strongestRequestedMatch();
         if (strongestRequestedMatch.isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
@@ -459,7 +477,7 @@ public class ProcessCandidateIdentityHandler
             }
             sendProfileMatchedAuditEvent(
                     profile.get(),
-                    votMatches.gpg45Scores(),
+                    votMatchingResult.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
                     auditEventUser,
                     deviceInformation);
@@ -572,36 +590,6 @@ public class ProcessCandidateIdentityHandler
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
         }
-    }
-
-    private void storeIdentity(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            CandidateIdentityType processIdentityType,
-            String deviceInformation,
-            List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser,
-            List<EvcsGetUserVCDto> evcsUserVcs)
-            throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiExtractionException,
-                    CredentialParseException, ParseException {
-        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
-
-        VotMatchingResult matchingVot = null;
-        if (!PENDING.equals(processIdentityType)) {
-            matchingVot =
-                    getVotMatchingResult(
-                            ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
-        }
-
-        storeIdentityService.storeIdentity(
-                ipvSessionItem,
-                clientOAuthSessionItem,
-                processIdentityType,
-                deviceInformation,
-                sessionVcs,
-                auditEventUser,
-                evcsUserVcs,
-                matchingVot);
     }
 
     private void sendProfileMatchedAuditEvent(
