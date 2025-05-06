@@ -195,6 +195,7 @@ public class ProcessCandidateIdentityHandler
         this.evcsService = evcsService;
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
