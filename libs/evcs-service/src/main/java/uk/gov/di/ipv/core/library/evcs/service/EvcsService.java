@@ -179,16 +179,11 @@ public class EvcsService {
     }
 
     public void storePendingVc(VerifiableCredential credential) throws EvcsServiceException {
-        var userVcToStore =
+        evcsClient.storeUserVCs(
+                credential.getUserId(),
                 List.of(
                         new EvcsCreateUserVCsDto(
-                                credential.getVcString(), PENDING_RETURN, null, OFFLINE));
-        if (configService.enabled(STORED_IDENTITY_SERVICE)) {
-            evcsClient.storeUserVCs(
-                    new EvcsPutUserVCsDto(credential.getUserId(), userVcToStore, null));
-        } else {
-            evcsClient.storeUserVCs(credential.getUserId(), userVcToStore);
-        }
+                                credential.getVcString(), PENDING_RETURN, null, OFFLINE)));
     }
 
     public void abandonPendingIdentity(String userId, String evcsAccessToken)
@@ -218,27 +213,20 @@ public class EvcsService {
             throws EvcsServiceException {
         try {
             var userId = clientOAuthSessionItem.getUserId();
-            List<EvcsCreateUserVCsDto> userVCsToStore =
-                    credentials.stream()
-                            .filter(
-                                    credential ->
-                                            existingEvcsUserVCs.stream()
-                                                    .noneMatch(
-                                                            evcsVC ->
-                                                                    evcsVC.vc()
-                                                                            .equals(
-                                                                                    credential
-                                                                                            .getVcString())))
-                            .map(
-                                    vc ->
-                                            new EvcsCreateUserVCsDto(
-                                                    vc.getVcString(),
-                                                    isPendingIdentity ? PENDING_RETURN : CURRENT,
-                                                    null,
-                                                    ONLINE))
-                            .toList();
-
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+                List<EvcsCreateUserVCsDto> userVCsToStore =
+                        credentials.stream()
+                                .map(
+                                        vc ->
+                                                new EvcsCreateUserVCsDto(
+                                                        vc.getVcString(),
+                                                        isPendingIdentity
+                                                                ? PENDING_RETURN
+                                                                : CURRENT,
+                                                        null,
+                                                        ONLINE))
+                                .toList();
+
                 EvcsStoredIdentityDto storedIdentityJwt = null;
                 if (!isPendingIdentity) {
                     storedIdentityJwt =
@@ -250,6 +238,27 @@ public class EvcsService {
 
                 evcsClient.storeUserVCs(putUserVcsDto);
             } else {
+                List<EvcsCreateUserVCsDto> userVCsToStore =
+                        credentials.stream()
+                                .filter(
+                                        credential ->
+                                                existingEvcsUserVCs.stream()
+                                                        .noneMatch(
+                                                                evcsVC ->
+                                                                        evcsVC.vc()
+                                                                                .equals(
+                                                                                        credential
+                                                                                                .getVcString())))
+                                .map(
+                                        vc ->
+                                                new EvcsCreateUserVCsDto(
+                                                        vc.getVcString(),
+                                                        isPendingIdentity
+                                                                ? PENDING_RETURN
+                                                                : CURRENT,
+                                                        null,
+                                                        ONLINE))
+                                .toList();
                 if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
                     updateExistingUserVCs(
                             userId, credentials, existingEvcsUserVCs, isPendingIdentity);

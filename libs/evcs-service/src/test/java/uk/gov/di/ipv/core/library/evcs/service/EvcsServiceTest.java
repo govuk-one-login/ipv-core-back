@@ -422,28 +422,6 @@ class EvcsServiceTest {
     }
 
     @Test
-    void storePendingVcShouldStoreVcWithPutMethod() throws Exception {
-        // Assert
-        when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-
-        // Act
-        evcsService.storePendingVc(VC_ADDRESS_TEST);
-
-        // Assert
-        verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
-
-        assertEquals(VC_ADDRESS_TEST.getUserId(), evcsPutUserVCsDtoCaptor.getValue().userId());
-        assertEquals(
-                VC_ADDRESS_TEST.getVcString(),
-                evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
-        assertEquals(PENDING_RETURN, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
-        assertEquals(OFFLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
-        assertNull(evcsPutUserVCsDtoCaptor.getValue().si());
-
-        verify(mockEvcsClient, never()).storeUserVCs(any(), any());
-    }
-
-    @Test
     void updatePendingIdentityShouldUpdateStateToAbandoned() throws EvcsServiceException {
         EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
                 new EvcsGetUserVCsDto(
