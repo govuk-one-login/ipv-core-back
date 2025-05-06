@@ -195,7 +195,6 @@ public class ProcessCandidateIdentityHandler
         this.evcsService = evcsService;
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
@@ -313,6 +312,7 @@ public class ProcessCandidateIdentityHandler
         return CoiCheckType.STANDARD;
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private Map<String, Object> processCandidateThroughJourney(
             CandidateIdentityType processIdentityType,
             IpvSessionItem ipvSessionItem,
