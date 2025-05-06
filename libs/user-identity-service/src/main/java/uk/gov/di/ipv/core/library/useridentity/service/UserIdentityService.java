@@ -285,6 +285,17 @@ public class UserIdentityService {
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
+    public List<Object> getUserClaimsForStoredIdentity(
+            Vot achievedVot, List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        var userIdentityBuilder = UserIdentity.builder();
+        var profile = achievedVot.getProfileType();
+
+        addUserIdentityClaims(profile, vcs, userIdentityBuilder);
+
+        return userIdentityBuilder.build().getAllClaims();
+    }
+
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForNameCorrelation(vcs);

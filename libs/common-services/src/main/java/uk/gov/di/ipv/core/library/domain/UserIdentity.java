@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -15,6 +16,8 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.DRIVING_PERMIT_CLAIM_NAME;
@@ -82,5 +85,12 @@ public class UserIdentity {
         this.vot = vot;
         this.vtm = vtm;
         this.returnCode = returnCode;
+    }
+
+    @JsonIgnore
+    public List<Object> getAllClaims() {
+        return Stream.of(identityClaim, addressClaim, passportClaim, drivingPermitClaim, ninoClaim)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

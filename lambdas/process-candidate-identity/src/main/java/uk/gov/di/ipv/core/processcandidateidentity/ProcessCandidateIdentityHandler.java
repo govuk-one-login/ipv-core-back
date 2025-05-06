@@ -59,6 +59,7 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
@@ -387,9 +388,9 @@ public class ProcessCandidateIdentityHandler
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-                    storeIdentityService.storeIdentity(
+                    storeIdentity(
                             ipvSessionItem,
-                            userId,
+                            clientOAuthSessionItem,
                             processIdentityType,
                             deviceInformation,
                             sessionVcs,
@@ -403,9 +404,9 @@ public class ProcessCandidateIdentityHandler
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-            storeIdentityService.storeIdentity(
+            storeIdentity(
                     ipvSessionItem,
-                    userId,
+                    clientOAuthSessionItem,
                     processIdentityType,
                     deviceInformation,
                     sessionVcs,
@@ -437,17 +438,9 @@ public class ProcessCandidateIdentityHandler
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        var contraIndicators =
-                cimitUtilityService.getContraIndicatorsFromVc(
-                        ipvSessionItem.getSecurityCheckCredential(),
-                        clientOAuthSessionItem.getUserId());
-
         var votMatches =
-                votMatcher.findStrongestMatches(
-                        clientOAuthSessionItem.getVtrAsVots(),
-                        sessionVcs,
-                        contraIndicators,
-                        areVcsCorrelated);
+                getVotMatchingResult(
+                        ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
 
         var strongestRequestedMatch = votMatches.strongestRequestedMatch();
         if (strongestRequestedMatch.isEmpty()) {
@@ -581,6 +574,36 @@ public class ProcessCandidateIdentityHandler
         }
     }
 
+    private void storeIdentity(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            CandidateIdentityType processIdentityType,
+            String deviceInformation,
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser,
+            List<EvcsGetUserVCDto> evcsUserVcs)
+            throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiExtractionException,
+                    CredentialParseException, ParseException {
+        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+
+        VotMatchingResult matchingVot = null;
+        if (!PENDING.equals(processIdentityType)) {
+            matchingVot =
+                    getVotMatchingResult(
+                            ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
+        }
+
+        storeIdentityService.storeIdentity(
+                ipvSessionItem,
+                clientOAuthSessionItem,
+                processIdentityType,
+                deviceInformation,
+                sessionVcs,
+                auditEventUser,
+                evcsUserVcs,
+                matchingVot);
+    }
+
     private void sendProfileMatchedAuditEvent(
             Gpg45Profile matchedProfile,
             Gpg45Scores gpg45Scores,
@@ -598,5 +621,24 @@ public class ProcessCandidateIdentityHandler
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private VotMatchingResult getVotMatchingResult(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            boolean areVcsCorrelated)
+            throws CiExtractionException, CredentialParseException, ParseException {
+
+        var contraIndicators =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        ipvSessionItem.getSecurityCheckCredential(),
+                        clientOAuthSessionItem.getUserId());
+
+        return votMatcher.findStrongestMatches(
+                clientOAuthSessionItem.getVtrAsVots(),
+                sessionVcs,
+                contraIndicators,
+                areVcsCorrelated);
     }
 }
