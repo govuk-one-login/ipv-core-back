@@ -1,4 +1,5 @@
 import { JourneyState } from "../types.js";
+import { deepCloneJson } from "./deep-clone.js";
 
 // Expand out parent states
 // Will also search 'otherStates' (e.g. for nested journeys)
@@ -9,8 +10,10 @@ export const expandParents = (
   const parentStates: string[] = [];
   Object.entries(journeyStates).forEach(([state, definition]) => {
     if (definition.parent) {
-      const parent =
-        journeyStates[definition.parent] ?? otherStates[definition.parent];
+      // Clone so each state gets an independent copy of the parent targets
+      const parent = deepCloneJson(
+        journeyStates[definition.parent] ?? otherStates[definition.parent],
+      );
       if (!parent) {
         console.warn(`Missing parent ${definition.parent} of state ${state}`);
       } else {
