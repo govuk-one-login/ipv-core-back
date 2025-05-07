@@ -79,7 +79,7 @@ core:
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
   storedIdentityService:
-    componentId: "PLACEHOLDER-VALUE"
+    componentId: "https://reuse-identity.build.account.gov.uk"
   credentialIssuers:
     address:
       id: address
