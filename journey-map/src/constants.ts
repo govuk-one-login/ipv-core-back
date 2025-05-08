@@ -1,4 +1,4 @@
-export const JOURNEY_TYPES = {
+export const JOURNEY_TYPES: Record<string, string> = {
   INITIAL_JOURNEY_SELECTION: "Initial journey selection",
   NEW_P1_IDENTITY: "New P1 identity",
   NEW_P2_IDENTITY: "New P2 identity",
@@ -18,7 +18,7 @@ export const JOURNEY_TYPES = {
   REVERIFICATION: "Reverification",
 };
 
-export const NESTED_JOURNEY_TYPES = {
+export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   ADDRESS_AND_FRAUD: "Address and fraud",
   APP_DOC_CHECK: "App doc check",
   KBVS: "KBVs",
@@ -27,7 +27,7 @@ export const NESTED_JOURNEY_TYPES = {
   WEB_DL_OR_PASSPORT: "Web DL or passport",
 };
 
-export const COMMON_JOURNEY_TYPES = [
+export const COMMON_JOURNEY_TYPES: string[] = [
   "NEW_P1_IDENTITY",
   "NEW_P2_IDENTITY",
   "REUSE_EXISTING_IDENTITY",
@@ -37,7 +37,7 @@ export const COMMON_JOURNEY_TYPES = [
   "UPDATE_NAME",
 ];
 
-export const CRI_NAMES = {
+export const CRI_NAMES: Record<string, string> = {
   address: "Address",
   claimedIdentity: "Claimed Identity",
   bav: "Bank account",
