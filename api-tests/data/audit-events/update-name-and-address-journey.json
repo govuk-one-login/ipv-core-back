@@ -524,7 +524,8 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "identity_type": "update",
-      "vot": "P2"
+      "vot": "P2",
+      "sis_record_created": false
     },
     "restricted": {
       "device_information": {}

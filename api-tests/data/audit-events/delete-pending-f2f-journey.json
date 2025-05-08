@@ -205,7 +205,8 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "identity_type": "pending",
-      "vot": null
+      "vot": null,
+      "sis_record_created": false
     },
     "restricted": {
       "device_information": {}
