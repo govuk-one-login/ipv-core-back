@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +66,7 @@ class StoreIdentityServiceTest {
     private AuditEventUser testAuditEventUser;
     private SharedAuditEventParameters sharedAuditEventParameters;
 
+    @Mock HttpResponse<String> httpResponse;
     @Mock ConfigService configService;
     @Mock AuditService auditService;
     @Mock EvcsService evcsService;
@@ -197,7 +199,7 @@ class StoreIdentityServiceTest {
                     VCS,
                     List.of(),
                     P0,
-                    STRONGEST_MATCHED_VOT,
+                    null,
                     CandidateIdentityType.PENDING,
                     sharedAuditEventParameters);
 
@@ -221,13 +223,15 @@ class StoreIdentityServiceTest {
         void
                 shouldSendAuditEventWithNullVotAndIdentityTypeExtensionWhenIdentityPendingWithFailedVot()
                         throws Exception {
+            // Arrange
+
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
                     VCS,
                     List.of(),
                     P0,
-                    STRONGEST_MATCHED_VOT,
+                    null,
                     CandidateIdentityType.PENDING,
                     sharedAuditEventParameters);
 
@@ -280,6 +284,11 @@ class StoreIdentityServiceTest {
 
         @Test
         void shouldStoreCompletedIdentityWithPutEndpoint() throws Exception {
+            // Arrange
+            when(httpResponse.statusCode()).thenReturn(202);
+            when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
@@ -292,8 +301,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             verify(evcsService, times(0))
                     .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -315,9 +323,7 @@ class StoreIdentityServiceTest {
                     sharedAuditEventParameters);
 
             // Assert
-            verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, true);
+            verify(evcsService, times(1)).storePendingIdentityWithPut(USER_ID, VCS);
             verify(evcsService, times(0))
                     .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -331,8 +337,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(EvcsServiceException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
 
             // Act
             storeIdentityService.storeIdentity(
@@ -357,8 +362,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(FailedToCreateStoredIdentityForEvcsException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
 
             // Act
             storeIdentityService.storeIdentity(
@@ -383,8 +387,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(FailedToCreateStoredIdentityForEvcsException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             doThrow(EvcsServiceException.class)
                     .when(evcsService)
                     .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);

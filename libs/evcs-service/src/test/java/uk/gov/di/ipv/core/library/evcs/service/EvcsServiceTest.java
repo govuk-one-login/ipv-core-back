@@ -340,8 +340,7 @@ class EvcsServiceTest {
             var testVcs = List.of(VC_ADDRESS_TEST);
 
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPut(
-                    TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT, true);
+            evcsService.storePendingIdentityWithPut(TEST_USER_ID, testVcs);
 
             // Assert
             verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
@@ -369,8 +368,8 @@ class EvcsServiceTest {
                     .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
 
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPut(
-                    TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT, false);
+            evcsService.storeCompletedIdentityWithPut(
+                    TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
 
             // Assert
             verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());

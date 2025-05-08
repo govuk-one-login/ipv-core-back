@@ -1,5 +1,6 @@
 Feature: Audit Events
   Scenario: New identity - p2 app journey
+    Given I activate the 'storedIdentityService' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
