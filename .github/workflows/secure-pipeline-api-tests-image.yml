@@ -2,11 +2,17 @@ name: Build api-tests image
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
 
 jobs:
   build-image-and-push:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
     permissions:
       id-token: write
       packages: read
@@ -23,7 +29,7 @@ jobs:
       - name: Set up build AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
+          role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN || secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV }}
           aws-region: eu-west-2
 
       - name: Login to build ECR
@@ -33,9 +39,9 @@ jobs:
       - name: Build, tag, push, and sign api testing image to build
         env:
           BUILD_ECR_REG: ${{ steps.login-build-ecr.outputs.registry }}
-          BUILD_API_TESTS_ECR_REPO: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
+          BUILD_API_TESTS_ECR_REPO: ${{ env.ENVIRONMENT == 'build' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME || secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV }}
           SHA: ${{ github.sha }}
-          BUILD_CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
+          BUILD_CONTAINER_SIGN_KMS_KEY: ${{ env.ENVIRONMENT == 'build' && secrets.CONTAINER_SIGN_KMS_KEY || secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
         run: |
           docker build --build-arg GITHUB_PAT="${{ secrets.GITHUB_TOKEN }}" \
             -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest" \

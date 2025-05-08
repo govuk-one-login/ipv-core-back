@@ -92,7 +92,7 @@ npm run lint-fix
 ```
 
 [create-pat]: https://docs.github.com/en/enterprise-server@3.9/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token
-[dev02-config]: https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/config-mgmt/app/configs/core.dev01.params.yaml#L720
+[dev01-config]: https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/config-mgmt/app/configs/core.dev01.params.yaml#L720
 [dotenv]: https://github.com/motdotla/dotenv#readme
 [cucumberjs]: https://plugins.jetbrains.com/plugin/7418-cucumber-js
 [cucumber]: https://marketplace.visualstudio.com/items?itemName=CucumberOpen.cucumber-official

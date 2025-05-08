@@ -386,73 +386,43 @@ class SsmConfigServiceTest {
         return testConfiguration;
     }
 
-    @Test
-    void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
-        DecryptionFailureException decryptionFailureException =
-                DecryptionFailureException.builder().message("Test decryption error").build();
-        when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
+    @ParameterizedTest
+    @MethodSource("SecretsManagerExceptions")
+    void shouldReturnNullOnExceptionFromSecretsManager(Exception exception) {
+        // Arrange
+        when(secretsProvider.get(any())).thenThrow(exception);
 
+        // Act
         String apiKey =
                 configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
+        // Assert
         assertNull(apiKey);
     }
 
-    @Test
-    void shouldReturnNullOnInternalServiceErrorExceptionFromSecretsManager() {
-        InternalServiceErrorException internalServiceErrorException =
-                InternalServiceErrorException.builder()
-                        .message("Test internal service error")
-                        .build();
-        when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
-
-        String apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInvalidParameterExceptionFromSecretsManager() {
-        InvalidParameterException invalidParameterException =
-                InvalidParameterException.builder().message("Test invalid parameter error").build();
-        when(secretsProvider.get(any())).thenThrow(invalidParameterException);
-
-        String apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInvalidRequestExceptionFromSecretsManager() {
-        InvalidRequestException invalidRequestException =
-                InvalidRequestException.builder().message("Test invalid request error").build();
-        when(secretsProvider.get(any())).thenThrow(invalidRequestException);
-
-        String apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnResourceNotFoundExceptionFromSecretsManager() {
-        ResourceNotFoundException resourceNotFoundException =
-                ResourceNotFoundException.builder()
-                        .message("Test resource not found error")
-                        .build();
-        when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
-
-        String apiKey =
-                configService.getSecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertNull(apiKey);
+    private static Stream<Arguments> SecretsManagerExceptions() {
+        return Stream.of(
+                Arguments.of(
+                        DecryptionFailureException.builder()
+                                .message("Test decryption error")
+                                .build()),
+                Arguments.of(
+                        InternalServiceErrorException.builder()
+                                .message("Test internal service error")
+                                .build()),
+                Arguments.of(
+                        InvalidParameterException.builder()
+                                .message("Test invalid parameter error")
+                                .build()),
+                Arguments.of(
+                        InvalidRequestException.builder()
+                                .message("Test invalid request error")
+                                .build()),
+                Arguments.of(
+                        ResourceNotFoundException.builder()
+                                .message("Test resource not found error")
+                                .build()));
     }
 
     @Test

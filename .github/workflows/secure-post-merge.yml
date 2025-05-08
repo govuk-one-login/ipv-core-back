@@ -40,6 +40,8 @@ jobs:
     needs: check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    with:
+      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
     secrets: inherit # pragma: allowlist secret
     permissions:
       id-token: write
