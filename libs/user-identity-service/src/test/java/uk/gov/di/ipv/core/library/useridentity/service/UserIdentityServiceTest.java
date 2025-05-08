@@ -1700,6 +1700,54 @@ class UserIdentityServiceTest {
         assertFalse(result.isEmpty());
     }
 
+    @Test
+    void getUserClaimsForStoredIdentityShouldReturnListOfUserClaims() throws Exception {
+        // Arrange
+        var testVcs =
+                List.of(
+                        vcWebPassportSuccessful(),
+                        vcWebDrivingPermitDvlaValid(),
+                        vcNinoIdentityCheckSuccessful(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
+
+        // Act
+        var result = userIdentityService.getUserClaimsForStoredIdentity(Vot.P2, testVcs);
+
+        // Assert
+        assertEquals(5, result.size());
+        // First element in the array is the identity claim
+        assertEquals("KENNETH DECERQUEIRA", ((IdentityClaim) result.get(0)).getFullName());
+        // Second element in the array is the address claim if it exists
+        assertEquals("IDSWORTH ROAD", ((PostalAddress) result.get(1)).getStreetName());
+        // Third element is the passport claim if it exists
+        assertEquals("321654987", ((PassportDetails) result.get(2)).getDocumentNumber());
+        // Fourth element is the driving permit claim if it exists
+        assertEquals(
+                "PARKE710112PBFGA", ((DrivingPermitDetails) result.get(3)).getPersonalNumber());
+        // Fifth element if the nino claim if it exists
+        assertEquals(
+                "AA000003D", ((SocialSecurityRecordDetails) result.get(4)).getPersonalNumber());
+    }
+
+    @Test
+    void getUserClaimsForStoredIdentityShouldFilterMissingClaims() throws Exception {
+        // Arrange
+        var testVcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
+
+        // Act
+        var result = userIdentityService.getUserClaimsForStoredIdentity(Vot.P2, testVcs);
+
+        // Assert
+        assertEquals(3, result.size());
+        // First element in the array is the identity claim
+        assertEquals("KENNETH DECERQUEIRA", ((IdentityClaim) result.get(0)).getFullName());
+        // Second element in the array is the address claim if it exists
+        assertEquals("IDSWORTH ROAD", ((PostalAddress) result.get(1)).getStreetName());
+        // Third element is the passport claim if it exists
+        assertEquals("321654987", ((PassportDetails) result.get(2)).getDocumentNumber());
+    }
+
     @Nested
     class AreNamesAndDobCorrelatedForReverification {
         @BeforeEach

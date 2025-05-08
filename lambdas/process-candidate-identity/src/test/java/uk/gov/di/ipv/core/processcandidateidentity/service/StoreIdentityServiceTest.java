@@ -19,16 +19,19 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,10 +40,12 @@ import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_S
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 
 @ExtendWith(MockitoExtension.class)
 class StoreIdentityServiceTest {
@@ -53,7 +58,13 @@ class StoreIdentityServiceTest {
     private static final String DEVICE_INFORMATION = "device-information";
     private static final List<VerifiableCredential> VCS =
             List.of(vcWebPassportSuccessful(), vcExperianFraudM1aExpired(), vcAddressM1a());
+    private static final VotMatchingResult VOT_MATCHING_RESULT =
+            new VotMatchingResult(
+                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                    Gpg45Scores.builder().build());
     @Spy private static IpvSessionItem ipvSessionItem;
+    private static ClientOAuthSessionItem clientOAuthSessionItem;
     private AuditEventUser testAuditEventUser;
 
     @Mock ConfigService configService;
@@ -68,6 +79,8 @@ class StoreIdentityServiceTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
+
+        clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(USER_ID).build();
     }
 
     @Nested
@@ -93,15 +106,16 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    USER_ID,
+                    clientOAuthSessionItem,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
-                    List.of());
+                    List.of(),
+                    VOT_MATCHING_RESULT);
 
             // Assert
-            verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
         }
 
         @Test
@@ -122,12 +136,13 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    USER_ID,
+                    clientOAuthSessionItem,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
-                    List.of());
+                    List.of(),
+                    VOT_MATCHING_RESULT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -142,7 +157,7 @@ class StoreIdentityServiceTest {
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
-            verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
         }
 
         @Test
@@ -151,12 +166,13 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    USER_ID,
+                    clientOAuthSessionItem,
                     CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
-                    List.of());
+                    List.of(),
+                    VOT_MATCHING_RESULT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -171,7 +187,7 @@ class StoreIdentityServiceTest {
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
-            verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
         }
 
         @Test
@@ -183,12 +199,13 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    USER_ID,
+                    clientOAuthSessionItem,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
-                    List.of());
+                    List.of(),
+                    VOT_MATCHING_RESULT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -209,12 +226,13 @@ class StoreIdentityServiceTest {
             // Act
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    USER_ID,
+                    clientOAuthSessionItem,
                     CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
-                    List.of());
+                    List.of(),
+                    VOT_MATCHING_RESULT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -229,7 +247,8 @@ class StoreIdentityServiceTest {
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
 
-            verify(evcsService, times(1)).storePendingIdentity(USER_ID, VCS, List.of());
+            verify(evcsService, times(1))
+                    .storePendingIdentity(clientOAuthSessionItem, VCS, List.of());
         }
     }
 
@@ -240,7 +259,7 @@ class StoreIdentityServiceTest {
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(evcsService)
-                .storePendingIdentity(USER_ID, VCS, List.of());
+                .storePendingIdentity(clientOAuthSessionItem, VCS, List.of());
 
         // Assert
         assertThrows(
@@ -248,11 +267,12 @@ class StoreIdentityServiceTest {
                 () ->
                         storeIdentityService.storeIdentity(
                                 ipvSessionItem,
-                                USER_ID,
+                                clientOAuthSessionItem,
                                 CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
                                 VCS,
                                 testAuditEventUser,
-                                List.of()));
+                                List.of(),
+                                VOT_MATCHING_RESULT));
     }
 }

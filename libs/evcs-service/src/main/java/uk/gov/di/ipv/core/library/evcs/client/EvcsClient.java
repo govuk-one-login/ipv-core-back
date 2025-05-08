@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -106,6 +107,31 @@ public class EvcsClient {
         }
     }
 
+    public void storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs) throws EvcsServiceException {
+        LOGGER.info(LogHelper.buildLogMessage("Preparing to store user VCs using PUT method"));
+
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getUri())
+                            .PUT(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
+    }
+
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
         LOGGER.info(
@@ -161,13 +187,20 @@ public class EvcsClient {
         }
     }
 
+    private URI getUri() throws URISyntaxException {
+        return getUri(null, null);
+    }
+
     private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
-        var baseUri =
-                "%s/vcs/%s"
-                        .formatted(
-                                configService.getParameter(EVCS_APPLICATION_URL),
-                                URLEncoder.encode(userId, StandardCharsets.UTF_8));
+
+        var baseUri = "%s/vcs".formatted(configService.getParameter(EVCS_APPLICATION_URL));
+
+        if (userId != null) {
+            baseUri =
+                    (baseUri + "/%s").formatted(URLEncoder.encode(userId, StandardCharsets.UTF_8));
+        }
+
         var uriBuilder = new URIBuilder(baseUri);
         if (vcStatesToQueryFor != null) {
             uriBuilder.addParameter(

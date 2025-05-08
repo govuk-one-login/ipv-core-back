@@ -15,9 +15,11 @@ import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
 import java.util.List;
 
@@ -45,19 +47,22 @@ public class StoreIdentityService {
         this.evcsService = evcsService;
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
-            String userId,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             CandidateIdentityType identityType,
             String deviceInformation,
             List<VerifiableCredential> credentials,
             AuditEventUser auditEventUser,
-            List<EvcsGetUserVCDto> evcsVcs)
+            List<EvcsGetUserVCDto> evcsVcs,
+            VotMatchingResult matchingVot)
             throws EvcsServiceException {
         if (identityType == CandidateIdentityType.PENDING) {
-            evcsService.storePendingIdentity(userId, credentials, evcsVcs);
+            evcsService.storePendingIdentity(clientOAuthSessionItem, credentials, evcsVcs);
         } else {
-            evcsService.storeCompletedIdentity(userId, credentials, evcsVcs);
+            evcsService.storeCompletedIdentity(
+                    clientOAuthSessionItem, credentials, evcsVcs, matchingVot);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));

@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.evcs.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -64,57 +68,46 @@ class EvcsClientTest {
             "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg"; // pragma: allowlist secret
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
+    private static final Map<String, Object> TEST_METADATA =
+            Map.of(
+                    "reason", "testing",
+                    "txmaEventId", "txma-event-id-2",
+                    "timestampMs", "1714478033959");
     private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
             new EvcsGetUserVCsDto(
                     List.of(
                             new EvcsGetUserVCDto(
                                     VcFixtures.vcAddressOne().getVcString(),
                                     EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
+                                    TEST_METADATA),
                             new EvcsGetUserVCDto(
                                     VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959"))));
+                                    TEST_METADATA)));
     private static final List<EvcsCreateUserVCsDto> EVCS_CREATE_USER_VCS_DTO =
             List.of(
                     new EvcsCreateUserVCsDto(
                             VcFixtures.vcAddressOne().getVcString(),
                             EvcsVCState.CURRENT,
-                            Map.of(
-                                    "reason", "testing",
-                                    "txmaEventId", "txma-event-id-2",
-                                    "timestampMs", "1714478033959"),
+                            TEST_METADATA,
                             null),
                     new EvcsCreateUserVCsDto(
                             VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                             EvcsVCState.CURRENT,
-                            Map.of(
-                                    "reason", "testing",
-                                    "txmaEventId", "txma-event-id-2",
-                                    "timestampMs", "1714478033959"),
+                            TEST_METADATA,
                             null));
     private static final List<EvcsUpdateUserVCsDto> EVCS_UPDATE_USER_VCS_DTO =
             List.of(
+                    new EvcsUpdateUserVCsDto("VC_Signature1", EvcsVCState.HISTORIC, TEST_METADATA),
                     new EvcsUpdateUserVCsDto(
-                            "VC_Signature1",
-                            EvcsVCState.HISTORIC,
-                            Map.of(
-                                    "reason", "testing",
-                                    "txmaEventId", "txma-event-id-2",
-                                    "timestampMs", "1714478033959")),
-                    new EvcsUpdateUserVCsDto(
-                            "VC_Signature2",
-                            EvcsVCState.ABANDONED,
-                            Map.of(
-                                    "reason", "testing",
-                                    "txmaEventId", "txma-event-id-2",
-                                    "timestampMs", "1714478033959")));
+                            "VC_Signature2", EvcsVCState.ABANDONED, TEST_METADATA));
+    private static final EvcsPutUserVCsDto EVCS_PUT_USER_VCS_DTO =
+            new EvcsPutUserVCsDto(
+                    TEST_USER_ID,
+                    List.of(
+                            new EvcsCreateUserVCsDto(
+                                    "VC_Signature1", EvcsVCState.CURRENT, TEST_METADATA, null)),
+                    new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2, TEST_METADATA));
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(CURRENT, PENDING_RETURN);
 
     @Mock private ConfigService mockConfigService;
@@ -325,6 +318,51 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.storeUserVCs("user%^", EVCS_CREATE_USER_VCS_DTO));
+    }
+
+    @Test
+    void storeUserVcs_shouldSubmitVcs_ifValidRequest() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            evcsClient.storeUserVCs(EVCS_PUT_USER_VCS_DTO);
+
+            // Assert
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("PUT", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var userVCsForEvcs =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getValue(), new TypeReference<EvcsPutUserVCsDto>() {});
+            assertEquals(EVCS_PUT_USER_VCS_DTO.vcs().get(0).vc(), userVCsForEvcs.vcs().get(0).vc());
+            assertEquals(EVCS_PUT_USER_VCS_DTO.si().jwt(), userVCsForEvcs.si().jwt());
+            assertEquals(EVCS_PUT_USER_VCS_DTO.userId(), userVCsForEvcs.userId());
+        }
+    }
+
+    @Test
+    void storeUserVcs_shouldThrowException_ifBadUrl() {
+        // Arrange
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
+
+        // Act/Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> evcsClient.storeUserVCs(EVCS_PUT_USER_VCS_DTO));
+
+        assertEquals(ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
     @Test

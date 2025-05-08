@@ -10,7 +10,8 @@ dependencies {
 			libs.bundles.log4j,
 			libs.jacksonDatabind,
 			project(":libs:common-services"),
-			project(":libs:verifiable-credentials")
+			project(":libs:verifiable-credentials"),
+			project(":libs:user-identity-service")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok

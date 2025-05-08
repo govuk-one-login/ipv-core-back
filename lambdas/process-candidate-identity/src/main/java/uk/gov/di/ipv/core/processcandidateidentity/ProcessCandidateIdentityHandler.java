@@ -59,6 +59,7 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
@@ -311,6 +312,7 @@ public class ProcessCandidateIdentityHandler
         return CoiCheckType.STANDARD;
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private Map<String, Object> processCandidateThroughJourney(
             CandidateIdentityType processIdentityType,
             IpvSessionItem ipvSessionItem,
@@ -326,9 +328,7 @@ public class ProcessCandidateIdentityHandler
 
         // These identity types require the VCs from EVCS. To save multiple calls,
         // we call for them once here.
-        if (COI_CHECK_TYPES.contains(processIdentityType)
-                || STORE_IDENTITY_TYPES.contains(processIdentityType)
-                || PENDING.equals(processIdentityType)) {
+        if (requiresExistingVcsFromEvcs(processIdentityType)) {
             evcsUserVcs =
                     evcsService.getUserVCs(
                             userId,
@@ -358,15 +358,33 @@ public class ProcessCandidateIdentityHandler
             }
         }
 
+        boolean areVcsCorrelated = false;
+        VotMatchingResult votMatchingResult = null;
+        if (requiresVotMatchingResult(processIdentityType)) {
+            if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+                return new JourneyErrorResponse(
+                                JOURNEY_ERROR_PATH,
+                                HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                MISSING_SECURITY_CHECK_CREDENTIAL)
+                        .toObjectMap();
+            }
+
+            areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+            votMatchingResult =
+                    getVotMatchingResult(
+                            ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
+        }
+
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Performing profile evaluation"));
             var journey =
                     getJourneyResponseForProfileMatching(
                             ipvSessionItem,
-                            clientOAuthSessionItem,
                             deviceInformation,
                             sessionVcs,
-                            auditEventUser);
+                            auditEventUser,
+                            areVcsCorrelated,
+                            votMatchingResult);
 
             if (journey != null) {
                 return journey.toObjectMap();
@@ -389,12 +407,13 @@ public class ProcessCandidateIdentityHandler
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeIdentityService.storeIdentity(
                             ipvSessionItem,
-                            userId,
+                            clientOAuthSessionItem,
                             processIdentityType,
                             deviceInformation,
                             sessionVcs,
                             auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs,
+                            null);
                 }
                 return journey.toObjectMap();
             }
@@ -405,51 +424,44 @@ public class ProcessCandidateIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
-                    userId,
+                    clientOAuthSessionItem,
                     processIdentityType,
                     deviceInformation,
                     sessionVcs,
                     auditEventUser,
-                    evcsUserVcs);
+                    evcsUserVcs,
+                    votMatchingResult);
         }
 
         return JOURNEY_NEXT.toObjectMap();
     }
 
+    private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
+        return (STORE_IDENTITY_TYPES.contains(processIdentityType)
+                        && !PENDING.equals(processIdentityType))
+                || PROFILE_MATCHING_TYPES.contains(processIdentityType);
+    }
+
+    private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
+        return COI_CHECK_TYPES.contains(processIdentityType)
+                || STORE_IDENTITY_TYPES.contains(processIdentityType)
+                || PENDING.equals(processIdentityType);
+    }
+
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
-                    CiExtractionException {
-        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    MISSING_SECURITY_CHECK_CREDENTIAL);
-        }
-
-        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+            AuditEventUser auditEventUser,
+            boolean areVcsCorrelated,
+            VotMatchingResult votMatchingResult) {
 
         if (!areVcsCorrelated) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        var contraIndicators =
-                cimitUtilityService.getContraIndicatorsFromVc(
-                        ipvSessionItem.getSecurityCheckCredential(),
-                        clientOAuthSessionItem.getUserId());
+        var strongestRequestedMatch = votMatchingResult.strongestRequestedMatch();
 
-        var votMatches =
-                votMatcher.findStrongestMatches(
-                        clientOAuthSessionItem.getVtrAsVots(),
-                        sessionVcs,
-                        contraIndicators,
-                        areVcsCorrelated);
-
-        var strongestRequestedMatch = votMatches.strongestRequestedMatch();
         if (strongestRequestedMatch.isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
@@ -466,7 +478,7 @@ public class ProcessCandidateIdentityHandler
             }
             sendProfileMatchedAuditEvent(
                     profile.get(),
-                    votMatches.gpg45Scores(),
+                    votMatchingResult.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
                     auditEventUser,
                     deviceInformation);
@@ -598,5 +610,24 @@ public class ProcessCandidateIdentityHandler
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private VotMatchingResult getVotMatchingResult(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            boolean areVcsCorrelated)
+            throws CiExtractionException, CredentialParseException, ParseException {
+
+        var contraIndicators =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        ipvSessionItem.getSecurityCheckCredential(),
+                        clientOAuthSessionItem.getUserId());
+
+        return votMatcher.findStrongestMatches(
+                clientOAuthSessionItem.getVtrAsVots(),
+                sessionVcs,
+                contraIndicators,
+                areVcsCorrelated);
     }
 }
