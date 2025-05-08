@@ -8,15 +8,14 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
@@ -24,7 +23,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
-import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 
 public class StoreIdentityService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -49,7 +47,6 @@ public class StoreIdentityService {
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public void storeIdentity(
-            IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             CandidateIdentityType identityType,
             String deviceInformation,
@@ -67,22 +64,29 @@ public class StoreIdentityService {
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
-        sendIdentityStoredEvent(ipvSessionItem, identityType, deviceInformation, auditEventUser);
+        sendIdentityStoredEvent(identityType, deviceInformation, auditEventUser, matchingVot);
     }
 
     private void sendIdentityStoredEvent(
-            IpvSessionItem ipvSessionItem,
             CandidateIdentityType identityType,
             String deviceInformation,
-            AuditEventUser auditEventUser) {
-        Vot vot = ipvSessionItem.getVot();
+            AuditEventUser auditEventUser,
+            VotMatchingResult matchingVot) {
+
+        var vot =
+                matchingVot.strongestMatch().map(VotMatchingResult.VotAndProfile::vot).orElse(null);
+
+        boolean sisRecordCreated =
+                configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)
+                        && identityType != CandidateIdentityType.PENDING;
+
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionCandidateIdentityType(
-                                identityType, vot.equals(P0) ? null : vot),
+                                identityType, vot, sisRecordCreated),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 }

@@ -8,5 +8,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 @ExcludeFromGeneratedCoverageReport
 public record AuditExtensionCandidateIdentityType(
         @JsonProperty(value = "identity_type", required = true) CandidateIdentityType identityType,
-        @JsonProperty(required = false) Vot vot)
+        @JsonProperty(required = false) Vot vot,
+        @JsonProperty(value = "sis_record_created", required = true) Boolean sisRecordCreated)
         implements AuditExtensions {}

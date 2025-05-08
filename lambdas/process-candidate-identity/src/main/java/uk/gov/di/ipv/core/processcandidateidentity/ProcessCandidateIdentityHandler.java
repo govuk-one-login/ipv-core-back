@@ -33,14 +33,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
-import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.exceptions.*;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -75,12 +68,7 @@ import java.util.Set;
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.*;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.EXISTING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
@@ -406,7 +394,6 @@ public class ProcessCandidateIdentityHandler
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeIdentityService.storeIdentity(
-                            ipvSessionItem,
                             clientOAuthSessionItem,
                             processIdentityType,
                             deviceInformation,
@@ -423,7 +410,6 @@ public class ProcessCandidateIdentityHandler
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
                     processIdentityType,
                     deviceInformation,

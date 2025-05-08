@@ -39,13 +39,13 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
-import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 @ExtendWith(MockitoExtension.class)
 class StoreIdentityServiceTest {
@@ -60,7 +60,7 @@ class StoreIdentityServiceTest {
             List.of(vcWebPassportSuccessful(), vcExperianFraudM1aExpired(), vcAddressM1a());
     private static final VotMatchingResult VOT_MATCHING_RESULT =
             new VotMatchingResult(
-                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
                     Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
                     Gpg45Scores.builder().build());
     @Spy private static IpvSessionItem ipvSessionItem;
@@ -78,7 +78,7 @@ class StoreIdentityServiceTest {
         testAuditEventUser = new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS);
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
-        ipvSessionItem.setVot(P2);
+        ipvSessionItem.setVot(P1);
 
         clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(USER_ID).build();
     }
@@ -105,7 +105,6 @@ class StoreIdentityServiceTest {
 
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
@@ -121,21 +120,17 @@ class StoreIdentityServiceTest {
         @Test
         void shouldSendAuditEventWithVotExtensionWhenIdentityAchieved() throws Exception {
             // Arrange
-            VCS.stream()
-                    .map(
-                            credential -> {
-                                if (credential.getCri().equals(EXPERIAN_FRAUD)) {
-                                    credential.setMigrated(null);
-                                } else {
-                                    credential.setMigrated(Instant.now());
-                                }
-                                return credential;
-                            })
-                    .toList();
+            VCS.forEach(
+                    credential -> {
+                        if (credential.getCri().equals(EXPERIAN_FRAUD)) {
+                            credential.setMigrated(null);
+                        } else {
+                            credential.setMigrated(Instant.now());
+                        }
+                    });
 
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
@@ -165,7 +160,6 @@ class StoreIdentityServiceTest {
                 throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
                     CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
@@ -194,18 +188,19 @@ class StoreIdentityServiceTest {
         void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityIncomplete()
                 throws Exception {
             // Arrange
-            ipvSessionItem.setVot(P0);
+            var votMatchingResult =
+                    new VotMatchingResult(
+                            Optional.empty(), Optional.empty(), Gpg45Scores.builder().build());
 
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
-                    CandidateIdentityType.NEW,
+                    CandidateIdentityType.INCOMPLETE,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    votMatchingResult);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -214,7 +209,7 @@ class StoreIdentityServiceTest {
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
             assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
-                    CandidateIdentityType.NEW,
+                    CandidateIdentityType.INCOMPLETE,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
@@ -225,7 +220,6 @@ class StoreIdentityServiceTest {
         void shouldStoreIdentityInEvcsAndSendAuditEventForPendingVc() throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
                     clientOAuthSessionItem,
                     CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
@@ -266,7 +260,6 @@ class StoreIdentityServiceTest {
                 EvcsServiceException.class,
                 () ->
                         storeIdentityService.storeIdentity(
-                                ipvSessionItem,
                                 clientOAuthSessionItem,
                                 CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
@@ -274,5 +267,29 @@ class StoreIdentityServiceTest {
                                 testAuditEventUser,
                                 List.of(),
                                 VOT_MATCHING_RESULT));
+    }
+
+    @Test
+    void shouldStoreIdentityInEvcsAndSendAuditEventWithStrongestVot() throws Exception {
+        // arrange
+        ipvSessionItem.setVot(P1);
+        var votMatchingResult =
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(L1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
+                        Gpg45Scores.builder().build());
+
+        // act
+        storeIdentityService.storeIdentity(
+                clientOAuthSessionItem,
+                CandidateIdentityType.NEW,
+                DEVICE_INFORMATION,
+                VCS,
+                testAuditEventUser,
+                List.of(),
+                votMatchingResult);
+
+        // assert
+
     }
 }
