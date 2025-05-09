@@ -348,7 +348,7 @@ class StoreIdentityServiceTest {
 
     @Test
     void
-            shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsEnabled_ForPendingCandidateIdentityType()
+            shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsEnabledAndNullVot_ForPendingCandidateIdentityType()
                     throws EvcsServiceException {
         // arrange
         when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(true);
@@ -361,7 +361,7 @@ class StoreIdentityServiceTest {
                 VCS,
                 testAuditEventUser,
                 List.of(),
-                VOT_MATCHING_RESULT);
+                null);
 
         // assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -370,5 +370,6 @@ class StoreIdentityServiceTest {
         assertFalse(
                 ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                         .sisRecordCreated());
+        assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
     }
 }

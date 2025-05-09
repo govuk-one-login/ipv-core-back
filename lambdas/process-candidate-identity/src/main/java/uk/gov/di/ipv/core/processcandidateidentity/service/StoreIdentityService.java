@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
 import java.util.List;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 
@@ -74,7 +75,12 @@ public class StoreIdentityService {
             VotMatchingResult matchingVot) {
 
         var vot =
-                matchingVot.strongestMatch().map(VotMatchingResult.VotAndProfile::vot).orElse(null);
+                Objects.isNull(matchingVot)
+                        ? null
+                        : matchingVot
+                                .strongestMatch()
+                                .map(VotMatchingResult.VotAndProfile::vot)
+                                .orElse(null);
 
         boolean sisRecordCreated =
                 configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)
