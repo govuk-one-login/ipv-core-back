@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -270,12 +271,11 @@ class StoreIdentityServiceTest {
     }
 
     @Test
-    void shouldStoreIdentityInEvcsAndSendAuditEventWithStrongestVot() throws Exception {
+    void shouldSendAuditEventWithStrongestVot() throws Exception {
         // arrange
-        ipvSessionItem.setVot(P1);
         var votMatchingResult =
                 new VotMatchingResult(
-                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(L1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
                         Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
                         Gpg45Scores.builder().build());
 
@@ -290,6 +290,85 @@ class StoreIdentityServiceTest {
                 votMatchingResult);
 
         // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
 
+        assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+        assertEquals(P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+    }
+
+    @Test
+    void shouldSetSisRecordCreatedFlagToTrueWhenFeatureFlagIsEnabled() throws EvcsServiceException {
+        // arrange
+        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(true);
+
+        // act
+        storeIdentityService.storeIdentity(
+                clientOAuthSessionItem,
+                CandidateIdentityType.NEW,
+                DEVICE_INFORMATION,
+                VCS,
+                testAuditEventUser,
+                List.of(),
+                VOT_MATCHING_RESULT);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertTrue(
+                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                        .sisRecordCreated());
+    }
+
+    @Test
+    void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
+            throws EvcsServiceException {
+        // arrange
+        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
+
+        // act
+        storeIdentityService.storeIdentity(
+                clientOAuthSessionItem,
+                CandidateIdentityType.NEW,
+                DEVICE_INFORMATION,
+                VCS,
+                testAuditEventUser,
+                List.of(),
+                VOT_MATCHING_RESULT);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertFalse(
+                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                        .sisRecordCreated());
+    }
+
+    @Test
+    void
+            shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsEnabled_ForPendingCandidateIdentityType()
+                    throws EvcsServiceException {
+        // arrange
+        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(true);
+
+        // act
+        storeIdentityService.storeIdentity(
+                clientOAuthSessionItem,
+                CandidateIdentityType.PENDING,
+                DEVICE_INFORMATION,
+                VCS,
+                testAuditEventUser,
+                List.of(),
+                VOT_MATCHING_RESULT);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertFalse(
+                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                        .sisRecordCreated());
     }
 }
