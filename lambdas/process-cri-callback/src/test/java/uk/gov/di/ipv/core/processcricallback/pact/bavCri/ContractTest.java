@@ -60,9 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
@@ -359,8 +359,7 @@ class ContractTest {
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
         return builder.given(VALID_AUTH_CODE + " is a valid authorization code")
                 .given("dummyApiKey is a valid api key")
-                .given("dummyBavComponentId is the BAV CRI component ID")
-                .given("BAV CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .given("https://review-bav.dev.account.gov.uk is the BAV CRI component ID")
                 .uponReceiving("Valid auth code")
                 .path("/token")
                 .method("POST")
@@ -402,19 +401,24 @@ class ContractTest {
                 .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
+        when(mockSecureTokenHelper.generate()).thenReturn(SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockSignerFactory,
+                        mockSecureTokenHelper,
+                        CLIENT_ASSERTION_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -430,8 +434,7 @@ class ContractTest {
     public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
-                .given("dummyBavComponentId is the BAV CRI component ID")
-                .given("BAV CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
+                .given("https://review-bav.dev.account.gov.uk is the BAV CRI component ID")
                 .uponReceiving("Invalid auth code")
                 .path("/token")
                 .method("POST")
@@ -463,19 +466,24 @@ class ContractTest {
                 .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
+        when(mockSecureTokenHelper.generate()).thenReturn(SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+                        mockConfigService,
+                        mockSignerFactory,
+                        mockSecureTokenHelper,
+                        CLIENT_ASSERTION_TIME);
 
         // Act
         CriApiException exception =
@@ -541,7 +549,7 @@ class ContractTest {
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(EC_PRIVATE_KEY_JWK)
                 .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
-                .componentId(TEST_ISSUER)
+                .componentId(CLIENT_ASSERTION_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav"))
@@ -552,7 +560,6 @@ class ContractTest {
 
     private static final String TEST_USER = "test-subject";
     private static final String TEST_ISSUER = "dummyBavComponentId";
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final String VALID_AUTH_CODE = "1e93b714-4838-4ced-9567-6da749f1c616";
     private static final String VALID_ACCESS_TOKEN =
@@ -565,12 +572,23 @@ class ContractTest {
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", BAV.getId(), "dummyConnection", 900);
 
-    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    // These values have come from the CRI team as the JWT needs to be signed by the key in their
+    // test environment
+    private static final String IPV_CORE_CLIENT_ID = "https://ipv.core.account.gov.uk";
+    private static final String SECURE_TOKEN =
+            "8f2eaa7cc25e28d75a1548020aa00eb1"; // pragma: allowlist secret
+    private static final String CLIENT_ASSERTION_ISSUER = "https://review-bav.dev.account.gov.uk";
+    private static final Clock CLIENT_ASSERTION_TIME =
+            Clock.fixed(Instant.parse("2025-05-09T09:02:12.00Z"), ZoneOffset.UTC);
+    private static final String CLIENT_ASSERTION_SIGNING_KID =
+            // pragma: allowlist nextline secret
+            "99915e7a1e122b4fd733da3ce24e527464c97d94211be29fe67087f7465883a6";
+    private static final String CLIENT_ASSERTION_HEADER =
+            "eyJraWQiOiI5OTkxNWU3YTFlMTIyYjRmZDczM2RhM2NlMjRlNTI3NDY0Yzk3ZDk0MjExYmUyOWZlNjcwODdmNzQ2NTg4M2E2IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
     private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlCYXZDb21wb25lbnRJZCIsImV4cCI6NDA3MDkwOTcwMCwianRpIjoiU2NuRjRkR1h0aFpZWFNfNWs4NU9iRW9TVTA0Vy1IM3FhX3A2bnB2MlpVWSJ9"; // pragma: allowlist secret
-    // Signature generated using JWT.io
+            "eyJpc3MiOiJodHRwczovL2lwdi5jb3JlLmFjY291bnQuZ292LnVrIiwic3ViIjoiaHR0cHM6Ly9pcHYuY29yZS5hY2NvdW50Lmdvdi51ayIsImF1ZCI6Imh0dHBzOi8vcmV2aWV3LWJhdi5kZXYuYWNjb3VudC5nb3YudWsiLCJleHAiOjE3NDY3ODIyMzIsImp0aSI6IjhmMmVhYTdjYzI1ZTI4ZDc1YTE1NDgwMjBhYTAwZWIxIn0"; // pragma: allowlist secret
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "Cg7VaW9q94XBCp3XhYRyifqAEASrg1HIYxhHdcJ949lqpFjmvuDM5T1Dh4OzNAQWe5LqoWpA4IGwhklnuKcilA"; // pragma: allowlist secret
+            "Fa-k-rH7Ygi4zdt_Yo0Kd2HTqFhY6A9aI6bPI1-JuNCS9pelGFM88rYpYcJWXukyJsxVuCLKpug70y1q4t0EJw"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
