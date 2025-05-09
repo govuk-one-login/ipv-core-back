@@ -7,38 +7,46 @@ import { findOrphanStates } from "./helpers/orphans.js";
 import { JourneyMap, JourneyState, NestedJourneyMap } from "./types.js";
 import { deepCloneJson } from "./helpers/deep-clone.js";
 import { addJourneyTransitions } from "./helpers/add-journey-transitions.js";
+import {
+  getMermaidHeader,
+  renderClickHandler,
+  renderState,
+  renderTransition,
+  StateNode,
+  TransitionEdge,
+  TransitionEvent,
+} from "./helpers/mermaid.js";
+import {
+  ERROR_JOURNEYS,
+  FAILURE_JOURNEYS,
+  TOP_DOWN_JOURNEYS,
+} from "./constants.js";
+import { contractNestedJourneys } from "./helpers/contract-nested.js";
 
-const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
-const errorJourneys = ["TECHNICAL_ERROR"];
-const failureJourneys = ["INELIGIBLE", "FAILED"];
-
-const JOURNEY_CONTEXT_TRANSITION_CLASSNAME = "journeyCtxTransition";
-const MITIGATIONS_TRANSITION_CLASSNAME = "mitigationTransition";
-
-interface TransitionsOutput {
-  transitionsMermaid: string;
-  states: string[];
+interface RenderableMap {
+  transitions: TransitionEdge[];
+  states: StateNode[];
 }
 
-// Render the transitions into mermaid, while tracking the states traced from the initial states
+// Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
-const renderTransitions = (
+const getVisibleEdgesAndNodes = (
   journeyStates: Record<string, JourneyState>,
   options: RenderOptions,
-): TransitionsOutput => {
+): RenderableMap => {
   // Initial states have no response or nested journey
   const initialStates = Object.keys(journeyStates).filter(
     (s) => !journeyStates[s].response && !journeyStates[s].nestedJourney,
   );
 
   const states = [...initialStates];
-  const stateTransitions: string[] = [];
+  const transitions: TransitionEdge[] = [];
 
-  for (const state of states) {
-    const definition = journeyStates[state];
+  for (const sourceState of states) {
+    const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
 
-    const eventsByTarget: Record<string, string[]> = {};
+    const eventsByTarget: Record<string, TransitionEvent[]> = {};
     Object.entries(events).forEach(([eventName, def]) => {
       const resolvedEventTargets = resolveVisibleEventTargets(def, options);
 
@@ -50,17 +58,17 @@ const renderTransitions = (
         const resolvedTargetState = journeyStates[targetState];
         if (!resolvedTargetState) {
           throw new Error(
-            `Failed to resolve state ${targetState} from ${state}`,
+            `Failed to resolve state ${targetState} from ${sourceState}`,
           );
         } else if (
-          errorJourneys.includes(
+          ERROR_JOURNEYS.includes(
             resolvedTargetState.response?.targetJourney as string,
           ) &&
           !options.includeErrors
         ) {
           continue;
         } else if (
-          failureJourneys.includes(
+          FAILURE_JOURNEYS.includes(
             resolvedTargetState.response?.targetJourney as string,
           ) &&
           !options.includeFailures
@@ -73,155 +81,31 @@ const renderTransitions = (
         }
 
         eventsByTarget[targetState] = eventsByTarget[targetState] || [];
-        eventsByTarget[targetState].push(
-          createTransitionLabel({
-            eventName,
-            targetEntryEvent,
-            journeyContext,
-            mitigation,
-          }),
-        );
+        eventsByTarget[targetState].push({
+          eventName,
+          targetEntryEvent,
+          journeyContext,
+          mitigation,
+        });
       }
     });
 
-    Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
-      stateTransitions.push(
-        `    ${state}-->|${eventNames.join("\\n")}|${target}`,
-      );
-    });
-  }
-
-  return { transitionsMermaid: stateTransitions.join("\n"), states };
-};
-
-interface TransitionMeta {
-  eventName: string;
-  targetEntryEvent?: string;
-  journeyContext?: string;
-  mitigation?: string;
-}
-
-const createTransitionLabel = ({
-  eventName,
-  targetEntryEvent,
-  journeyContext,
-  mitigation,
-}: TransitionMeta): string => {
-  const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
-
-  const labelWithClass = (
-    className: string,
-    label: string,
-    value: string,
-  ): string =>
-    `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
-
-  if (journeyContext) {
-    return labelWithClass(
-      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
-      "journeyContext",
-      journeyContext,
+    Object.entries(eventsByTarget).forEach(
+      ([targetState, transitionEvents]) => {
+        transitions.push({
+          sourceState,
+          targetState,
+          transitionEvents,
+        });
+      },
     );
   }
 
-  if (mitigation) {
-    return labelWithClass(
-      MITIGATIONS_TRANSITION_CLASSNAME,
-      "mitigation",
-      mitigation,
-    );
-  }
-
-  return eventLabel;
+  return {
+    transitions,
+    states: states.map((name) => ({ name, definition: journeyStates[name] })),
+  };
 };
-
-const renderClickHandler = (
-  state: string,
-  definition: JourneyState,
-): string => {
-  if (definition.nestedJourney) {
-    definition.response = {
-      type: "nestedJourney",
-      nestedJourney: definition.nestedJourney,
-    };
-  }
-  // Click handler serializes the definition to Base64-encoded JSON to avoid escaping issues
-  return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify(definition.response ?? {}))})`;
-};
-
-const renderState = (state: string, definition: JourneyState): string => {
-  // Special cases for nested journeys
-  if (definition.nestedJourney) {
-    return `    ${state}(${state}):::nested_journey`;
-  }
-  if (definition.exitEvent) {
-    return `    ${state}[EXIT\\n${definition.exitEvent}]:::other`;
-  }
-  if (definition.entryEvent) {
-    return `    ${state}[ENTRY\\n${definition.entryEvent}]:::other`;
-  }
-
-  // Types for basic nodes
-  // process - response.type = process, response.lambda = <lambda>
-  // page    - response.type = page, response.pageId = 'page-id'
-  // cri     - response.type = cri,
-  switch (definition.response?.type) {
-    case "process":
-      return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
-    case "page":
-    case "error":
-      return `    ${state}[${state}\\n${definition.response.pageId}]:::page`;
-    case "cri": {
-      const contextInfo = definition.response.context
-        ? `\\n context: ${definition.response.context}`
-        : "";
-      return `    ${state}([${state}\\n${definition.response.criId}${contextInfo}]):::cri`;
-    }
-    case "journeyTransition": {
-      const { targetJourney, targetState } = definition.response;
-      return failureJourneys.includes(targetJourney as string) ||
-        errorJourneys.includes(targetJourney as string)
-        ? `    ${state}(${targetJourney}\\n${targetState}):::error_transition`
-        : `    ${state}(${targetJourney}\\n${targetState}):::journey_transition`;
-    }
-    default:
-      return `    ${state}:::other`;
-  }
-};
-
-const renderStates = (
-  journeyMapStates: Record<string, JourneyState>,
-  states: string[],
-): string => {
-  const mermaids = states.flatMap((state) => {
-    const definition = journeyMapStates[state];
-
-    return [
-      renderState(state, definition),
-      renderClickHandler(state, definition),
-    ];
-  });
-
-  return mermaids.join("\n");
-};
-
-const getMermaidGraph = (
-  graphDirection: "TD" | "LR",
-  statesMermaid: string,
-  transitionsMermaid: string,
-): string =>
-  // These styles should be kept in sync with the key in style.css
-  `graph ${graphDirection}
-                classDef process fill:#ffa,stroke:#000;
-                classDef page fill:#ae8,stroke:#000;
-                classDef cri fill:#faf,stroke:#000;
-                classDef journey_transition fill:#aaf,stroke:#000;
-                classDef error_transition fill:#f99,stroke:#000;
-                classDef other fill:#f3f2f1,stroke:#000;
-                classDef nested_journey fill:#aaedff,stroke:#000;
-            ${statesMermaid}
-            ${transitionsMermaid}
-            `;
 
 export const render = (
   selectedJourney: string,
@@ -230,7 +114,7 @@ export const render = (
   options: RenderOptions,
 ): string => {
   const isNestedJourney = selectedJourney in nestedJourneys;
-  const direction = topDownJourneys.includes(selectedJourney) ? "TD" : "LR";
+  const direction = TOP_DOWN_JOURNEYS.includes(selectedJourney) ? "TD" : "LR";
 
   // Copy to avoid mutating the input
   const journeyStates = deepCloneJson(
@@ -239,18 +123,22 @@ export const render = (
       : journeyMap,
   ).states;
 
-  if (!isNestedJourney && options.expandNestedJourneys) {
+  if (options.expandNestedJourneys) {
     expandNestedJourneys(journeyStates, nestedJourneys);
+  } else {
+    contractNestedJourneys(journeyStates);
   }
 
   expandParents(journeyStates, journeyMap.states);
   addJourneyTransitions(journeyStates);
 
-  const { transitionsMermaid, states } = options.onlyOrphanStates
-    ? { transitionsMermaid: "", states: findOrphanStates(journeyStates) }
-    : renderTransitions(journeyStates, options);
+  const { transitions, states } = options.onlyOrphanStates
+    ? { transitions: [], states: findOrphanStates(journeyStates) }
+    : getVisibleEdgesAndNodes(journeyStates, options);
 
-  const statesMermaid = renderStates(journeyStates, states);
-
-  return getMermaidGraph(direction, statesMermaid, transitionsMermaid);
+  return `${getMermaidHeader(direction)}
+    ${states.map(renderState).join("\n")}
+    ${states.map(renderClickHandler).join("\n")}
+    ${transitions.map(renderTransition).join("\n")}
+  `;
 };

@@ -25,13 +25,13 @@ describe("findOrphanStates", () => {
           pageId: test-page
       `);
 
-    const expected = ["ENTRY_STATE", "ORPHAN"];
-
     // Act
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    assert.strictEqual(actual.length, 2);
+    assert.strictEqual(actual[0].name, "ENTRY_STATE");
+    assert.strictEqual(actual[1].name, "ORPHAN");
   });
 
   it("should not include states referenced via checks", () => {
@@ -82,13 +82,13 @@ describe("findOrphanStates", () => {
           pageId: test-page
       `);
 
-    const expected = ["ENTRY_STATE", "ORPHAN"];
-
     // Act
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    assert.strictEqual(actual.length, 2);
+    assert.strictEqual(actual[0].name, "ENTRY_STATE");
+    assert.strictEqual(actual[1].name, "ORPHAN");
   });
 
   it("should include states even if they are referenced in other journeys", () => {
@@ -108,12 +108,12 @@ describe("findOrphanStates", () => {
           pageId: test-page
       `);
 
-    const expected = ["ENTRY_STATE", "ORPHAN"];
-
     // Act
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    assert.strictEqual(actual.length, 2);
+    assert.strictEqual(actual[0].name, "ENTRY_STATE");
+    assert.strictEqual(actual[1].name, "ORPHAN");
   });
 });

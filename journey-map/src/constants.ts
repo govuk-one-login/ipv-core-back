@@ -51,3 +51,7 @@ export const CRI_NAMES: Record<string, string> = {
   ukPassport: "Passport (web)",
   ticf: "TICF",
 };
+
+export const TOP_DOWN_JOURNEYS = ["INITIAL_JOURNEY_SELECTION"];
+export const ERROR_JOURNEYS = ["TECHNICAL_ERROR"];
+export const FAILURE_JOURNEYS = ["INELIGIBLE", "FAILED"];
