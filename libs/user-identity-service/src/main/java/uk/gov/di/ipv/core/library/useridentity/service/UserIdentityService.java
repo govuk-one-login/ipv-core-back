@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.UserClaims;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -92,7 +93,7 @@ public class UserIdentityService {
         var vtm = configService.getParameter(CORE_VTM_CLAIM);
 
         var userIdentityBuilder =
-                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
+                UserIdentity.UserIdentityBuilder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
 
         buildUserIdentityBasedOnProfileType(
                 achievedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
@@ -246,26 +247,31 @@ public class UserIdentityService {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
             var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
-            addUserIdentityClaims(profileType, successfulVcs, userIdentityBuilder);
-            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+            var userClaims = getUserClaims(profileType, successfulVcs);
+            userIdentityBuilder
+                    .identityClaim(userClaims.getIdentityClaim())
+                    .addressClaim(userClaims.getAddressClaim())
+                    .passportClaim(userClaims.getPassportClaim())
+                    .drivingPermitClaim(userClaims.getDrivingPermitClaim())
+                    .ninoClaim(userClaims.getNinoClaim())
+                    .returnCode(getSuccessReturnCode(contraIndicators));
         }
     }
 
-    private void addUserIdentityClaims(
-            ProfileType profileType,
-            List<VerifiableCredential> vcs,
-            UserIdentity.UserIdentityBuilder userIdentityBuilder)
+    private UserClaims getUserClaims(ProfileType profileType, List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        var userClaimsBuilder = UserClaims.builder();
+
         Optional<IdentityClaim> identityClaim = findIdentityClaim(vcs);
-        identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+        identityClaim.ifPresent(userClaimsBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
             Optional<List<PostalAddress>> addressClaim = getAddressClaim(vcs);
-            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+            addressClaim.ifPresent(userClaimsBuilder::addressClaim);
 
             Optional<List<PassportDetails>> passportClaim =
                     getFirstClaim(vcs, IdentityCheckSubject::getPassport);
-            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+            passportClaim.ifPresent(userClaimsBuilder::passportClaim);
 
             Optional<List<DrivingPermitDetails>> drivingPermitClaim =
                     getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
@@ -276,26 +282,22 @@ public class UserIdentityService {
                                     permit.setFullAddress(null);
                                     permit.setIssueDate(null);
                                 });
-                        userIdentityBuilder.drivingPermitClaim(drivingPermit);
+                        userClaimsBuilder.drivingPermitClaim(drivingPermit);
                     });
         }
 
         Optional<List<SocialSecurityRecordDetails>> ninoClaim =
                 getFirstClaim(vcs, IdentityCheckSubject::getSocialSecurityRecord);
-        ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
+        ninoClaim.ifPresent(userClaimsBuilder::ninoClaim);
+
+        return userClaimsBuilder.build();
     }
 
-    public List<Object> getUserClaimsForStoredIdentity(
+    public UserClaims getUserClaimsForStoredIdentity(
             Vot achievedVot, List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        // Substituting arbitrary values into vcs, sub and vtm as they are required
-        // properties for the builder. We just need the builder to add claims to.
-        var userIdentityBuilder = UserIdentity.builder().vcs(List.of()).sub("").vtm("");
-        var profile = achievedVot.getProfileType();
-
-        addUserIdentityClaims(profile, vcs, userIdentityBuilder);
-
-        return userIdentityBuilder.build().getAllClaims();
+        var profileType = achievedVot.getProfileType();
+        return getUserClaims(profileType, vcs);
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)

@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -15,10 +14,7 @@ import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.DRIVING_PERMIT_CLAIM_NAME;
@@ -32,27 +28,11 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 @Getter
 @Setter
 @ExcludeFromGeneratedCoverageReport
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserIdentity {
+public class UserIdentity extends UserClaims {
 
     @JsonProperty(VCS_CLAIM_NAME)
     private List<String> vcs;
-
-    @JsonProperty(IDENTITY_CLAIM_NAME)
-    private IdentityClaim identityClaim;
-
-    @JsonProperty(ADDRESS_CLAIM_NAME)
-    private List<PostalAddress> addressClaim;
-
-    @JsonProperty(PASSPORT_CLAIM_NAME)
-    private List<PassportDetails> passportClaim;
-
-    @JsonProperty(DRIVING_PERMIT_CLAIM_NAME)
-    private List<DrivingPermitDetails> drivingPermitClaim;
-
-    @JsonProperty(NINO_CLAIM_NAME)
-    private List<SocialSecurityRecordDetails> ninoClaim;
 
     @JsonProperty private String sub;
 
@@ -64,6 +44,7 @@ public class UserIdentity {
     private List<ReturnCode> returnCode;
 
     @JsonCreator
+    @Builder(builderMethodName = "UserIdentityBuilder")
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
@@ -76,26 +57,11 @@ public class UserIdentity {
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
             @JsonProperty(value = RETURN_CODE_NAME) List<ReturnCode> returnCode) {
+        super(identityClaim, addressClaim, passportClaim, drivingPermitClaim, ninoClaim);
         this.vcs = new ArrayList<>(vcs);
-        this.identityClaim = identityClaim;
-        this.addressClaim = addressClaim;
-        this.passportClaim = passportClaim;
-        this.drivingPermitClaim = drivingPermitClaim;
-        this.ninoClaim = ninoClaim;
         this.sub = sub;
         this.vot = vot;
         this.vtm = vtm;
         this.returnCode = returnCode;
-    }
-
-    @JsonIgnore
-    public List<Object> getAllClaims() {
-        var flattenedClaims =
-                Stream.of(addressClaim, passportClaim, drivingPermitClaim, ninoClaim)
-                        .filter(Objects::nonNull)
-                        .flatMap(Collection::stream);
-        return Stream.concat(Stream.of(identityClaim), flattenedClaims)
-                .filter(Objects::nonNull)
-                .toList();
     }
 }
