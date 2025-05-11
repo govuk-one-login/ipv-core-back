@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
-import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -18,6 +17,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 
 import java.util.List;
 
@@ -45,41 +45,40 @@ public class StoreIdentityService {
         this.evcsService = evcsService;
     }
 
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public void storeIdentity(
-            Vot achievedVot,
             String userId,
-            CandidateIdentityType identityType,
-            String deviceInformation,
-            List<VerifiableCredential> credentials,
-            AuditEventUser auditEventUser,
+            List<VerifiableCredential> sessionCredentials,
             List<EvcsGetUserVCDto> evcsVcs,
-            VotMatchingResult.VotAndProfile strongestMatchedVot)
+            Vot achievedVot,
+            VotMatchingResult.VotAndProfile strongestMatchedVot,
+            CandidateIdentityType identityType,
+            SharedAuditEventParameters auditEventParameters)
             throws EvcsServiceException {
+
         if (identityType == CandidateIdentityType.PENDING) {
-            evcsService.storePendingIdentity(userId, credentials, evcsVcs, achievedVot);
+            evcsService.storePendingIdentity(userId, sessionCredentials, evcsVcs, achievedVot);
         } else {
             evcsService.storeCompletedIdentity(
-                    userId, credentials, evcsVcs, strongestMatchedVot, achievedVot);
+                    userId, sessionCredentials, evcsVcs, strongestMatchedVot, achievedVot);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
-        sendIdentityStoredEvent(achievedVot, identityType, deviceInformation, auditEventUser);
+        sendIdentityStoredEvent(achievedVot, identityType, auditEventParameters);
     }
 
     private void sendIdentityStoredEvent(
             Vot achievedVot,
             CandidateIdentityType identityType,
-            String deviceInformation,
-            AuditEventUser auditEventUser) {
+            SharedAuditEventParameters auditEventParameters) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
+                        auditEventParameters.auditEventUser(),
                         new AuditExtensionCandidateIdentityType(
                                 identityType, achievedVot.equals(P0) ? null : achievedVot),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
+                        new AuditRestrictedDeviceInformation(
+                                auditEventParameters.deviceInformation())));
     }
 }

@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 
 import java.time.Instant;
 import java.util.List;
@@ -61,6 +62,7 @@ class StoreIdentityServiceTest {
             new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A));
     @Spy private static IpvSessionItem ipvSessionItem;
     private AuditEventUser testAuditEventUser;
+    private SharedAuditEventParameters sharedAuditEventParameters;
 
     @Mock ConfigService configService;
     @Mock AuditService auditService;
@@ -82,6 +84,8 @@ class StoreIdentityServiceTest {
         void setUpEach() {
             when(configService.getParameter(ConfigurationVariable.COMPONENT_ID))
                     .thenReturn(COMPONENT_ID);
+            sharedAuditEventParameters =
+                    new SharedAuditEventParameters(testAuditEventUser, DEVICE_INFORMATION);
         }
 
         @Test
@@ -98,14 +102,13 @@ class StoreIdentityServiceTest {
 
             // Act
             storeIdentityService.storeIdentity(
-                    P2,
                     USER_ID,
-                    CandidateIdentityType.NEW,
-                    DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser,
                     List.of(),
-                    STRONGEST_MATCHED_VOT);
+                    P2,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.NEW,
+                    sharedAuditEventParameters);
 
             // Assert
             verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any(), any());
@@ -128,14 +131,13 @@ class StoreIdentityServiceTest {
 
             // Act
             storeIdentityService.storeIdentity(
-                    P2,
                     USER_ID,
-                    CandidateIdentityType.NEW,
-                    DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser,
                     List.of(),
-                    STRONGEST_MATCHED_VOT);
+                    P2,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.NEW,
+                    sharedAuditEventParameters);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -158,14 +160,13 @@ class StoreIdentityServiceTest {
                 throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    P2,
                     USER_ID,
-                    CandidateIdentityType.UPDATE,
-                    DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser,
                     List.of(),
-                    STRONGEST_MATCHED_VOT);
+                    P2,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.UPDATE,
+                    sharedAuditEventParameters);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -188,14 +189,13 @@ class StoreIdentityServiceTest {
                 throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    P0,
                     USER_ID,
-                    CandidateIdentityType.NEW,
-                    DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser,
                     List.of(),
-                    STRONGEST_MATCHED_VOT);
+                    P0,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.NEW,
+                    sharedAuditEventParameters);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -215,14 +215,13 @@ class StoreIdentityServiceTest {
         void shouldStoreIdentityInEvcsAndSendAuditEventForPendingVc() throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    P2,
                     USER_ID,
-                    CandidateIdentityType.PENDING,
-                    DEVICE_INFORMATION,
                     VCS,
-                    testAuditEventUser,
                     List.of(),
-                    STRONGEST_MATCHED_VOT);
+                    P2,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.PENDING,
+                    sharedAuditEventParameters);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -243,7 +242,7 @@ class StoreIdentityServiceTest {
     }
 
     @Test
-    void shouldNotReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_forPendingF2f() throws Exception {
+    void shouldThrowIfEvcsFailsToStorePendingIdentity() throws Exception {
         // Arrange
         doThrow(
                         new EvcsServiceException(
@@ -256,13 +255,12 @@ class StoreIdentityServiceTest {
                 EvcsServiceException.class,
                 () ->
                         storeIdentityService.storeIdentity(
-                                P2,
                                 USER_ID,
-                                CandidateIdentityType.PENDING,
-                                DEVICE_INFORMATION,
                                 VCS,
-                                testAuditEventUser,
                                 List.of(),
-                                STRONGEST_MATCHED_VOT));
+                                P0,
+                                null,
+                                CandidateIdentityType.PENDING,
+                                sharedAuditEventParameters));
     }
 }

@@ -62,6 +62,7 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
 
@@ -325,6 +326,8 @@ public class ProcessCandidateIdentityHandler
                     CredentialParseException, ParseException, CiExtractionException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
+        var auditEventParameters =
+                new SharedAuditEventParameters(auditEventUser, deviceInformation);
 
         // These identity types require the VCs from EVCS. To save multiple calls,
         // we call for them once here.
@@ -397,15 +400,14 @@ public class ProcessCandidateIdentityHandler
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-                    storeIdentityService.storeIdentity(
-                            ipvSessionItem.getVot(),
+                    storeCandidateIdentity(
                             userId,
-                            processIdentityType,
-                            deviceInformation,
+                            ipvSessionItem.getVot(),
+                            null,
                             sessionVcs,
-                            auditEventUser,
                             evcsUserVcs,
-                            null);
+                            processIdentityType,
+                            auditEventParameters);
                 }
                 return journey.toObjectMap();
             }
@@ -414,22 +416,40 @@ public class ProcessCandidateIdentityHandler
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-            VotMatchingResult.VotAndProfile strongestMatchedVot =
-                    Objects.isNull(votMatchingResult)
-                            ? null
-                            : votMatchingResult.strongestRequestedMatch().orElse(null);
-            storeIdentityService.storeIdentity(
-                    ipvSessionItem.getVot(),
+            storeCandidateIdentity(
                     userId,
-                    processIdentityType,
-                    deviceInformation,
+                    ipvSessionItem.getVot(),
+                    votMatchingResult,
                     sessionVcs,
-                    auditEventUser,
                     evcsUserVcs,
-                    strongestMatchedVot);
+                    processIdentityType,
+                    auditEventParameters);
         }
 
         return JOURNEY_NEXT.toObjectMap();
+    }
+
+    private void storeCandidateIdentity(
+            String userId,
+            Vot achievedVot,
+            VotMatchingResult votMatchingResult,
+            List<VerifiableCredential> sessionVcs,
+            List<EvcsGetUserVCDto> evcsUserVcs,
+            CandidateIdentityType processIdentityType,
+            SharedAuditEventParameters auditEventParameters)
+            throws EvcsServiceException {
+        VotMatchingResult.VotAndProfile strongestMatchedVot =
+                Objects.isNull(votMatchingResult)
+                        ? null
+                        : votMatchingResult.strongestRequestedMatch().orElse(null);
+        storeIdentityService.storeIdentity(
+                userId,
+                sessionVcs,
+                evcsUserVcs,
+                achievedVot,
+                strongestMatchedVot,
+                processIdentityType,
+                auditEventParameters);
     }
 
     private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {

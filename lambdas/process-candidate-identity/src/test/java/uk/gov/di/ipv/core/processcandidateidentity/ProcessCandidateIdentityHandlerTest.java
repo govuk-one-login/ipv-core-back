@@ -205,13 +205,12 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(P2),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.NEW),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
-                            any(),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.NEW),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -278,13 +277,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(P0),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.PENDING),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
-                            any(),
+                            eq(List.of()),
+                            eq(P0),
+                            eq(null),
+                            eq(CandidateIdentityType.PENDING),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -340,15 +338,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
-                    .storeIdentity(
-                            eq(P2),
-                            eq(USER_ID),
-                            eq(CandidateIdentityType.PENDING),
-                            eq(DEVICE_INFORMATION),
-                            eq(List.of()),
-                            any(AuditEventUser.class),
-                            any(),
-                            any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -405,7 +395,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -447,7 +437,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
@@ -479,7 +469,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
@@ -516,7 +506,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(cimitService, times(2)).fetchContraIndicatorsVc(any(), any(), any(), any());
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
         }
@@ -566,13 +556,12 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(P2),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.UPDATE),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
-                            any(),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.UPDATE),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -608,7 +597,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
             verify(ticfCriService, times(0)).getTicfVc(any(), any());
@@ -646,7 +635,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -682,7 +671,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -720,7 +709,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_PROFILE_UNMET_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -772,7 +761,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -824,7 +813,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -869,14 +858,13 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(P2),
                             eq(USER_ID),
+                            eq(List.of()),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
                             eq(CandidateIdentityType.NEW),
-                            eq(DEVICE_INFORMATION),
-                            eq(List.of()),
-                            any(AuditEventUser.class),
-                            eq(List.of()),
-                            eq(STRONGEST_MATCHED_VOT));
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -917,7 +905,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -957,7 +945,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -995,7 +983,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(MISSING_SECURITY_CHECK_CREDENTIAL.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -1043,7 +1031,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -1080,7 +1068,7 @@ class ProcessCandidateIdentityHandlerTest {
                             new EvcsServiceException(
                                     SC_SERVER_ERROR, RECEIVED_NON_200_RESPONSE_STATUS_CODE))
                     .when(storeIdentityService)
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
 
             var request =
                     requestBuilder
