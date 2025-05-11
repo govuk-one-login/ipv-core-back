@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
@@ -27,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 import uk.gov.di.model.PostalAddress;
 
 import java.util.List;
@@ -74,10 +74,9 @@ public class CheckCoiService {
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSession,
             CoiCheckType checkType,
-            String deviceInformation,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser,
-            List<EvcsGetUserVCDto> evcsUserVcs)
+            List<EvcsGetUserVCDto> evcsUserVcs,
+            SharedAuditEventParameters sharedAuditEventParameters)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
 
         var userId = clientOAuthSession.getUserId();
@@ -93,10 +92,9 @@ public class CheckCoiService {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                 checkType,
                 null,
-                auditEventUser,
                 null,
                 null,
-                deviceInformation);
+                sharedAuditEventParameters);
 
         var oldVcs = evcsService.getVerifiableCredentials(userId, evcsUserVcs, CURRENT);
         var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
@@ -114,10 +112,9 @@ public class CheckCoiService {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 checkType,
                 successfulCheck,
-                auditEventUser,
                 oldVcs,
                 sessionVcs,
-                deviceInformation);
+                sharedAuditEventParameters);
 
         if (clientOAuthSession.isReverification()) {
             ipvSessionItem.setReverificationStatus(
@@ -148,11 +145,12 @@ public class CheckCoiService {
             AuditEventTypes auditEventType,
             CoiCheckType coiCheckType,
             Boolean coiCheckSuccess,
-            AuditEventUser auditEventUser,
             List<VerifiableCredential> oldVcs,
             List<VerifiableCredential> sessionsVcs,
-            String deviceInformation)
+            SharedAuditEventParameters sharedAuditEventParameters)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        var deviceInformation = sharedAuditEventParameters.deviceInformation();
+        var auditEventUser = sharedAuditEventParameters.auditEventUser();
 
         var restrictedData =
                 auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END

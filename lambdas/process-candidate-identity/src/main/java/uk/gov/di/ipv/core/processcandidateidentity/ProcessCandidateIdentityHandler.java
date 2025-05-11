@@ -351,10 +351,9 @@ public class ProcessCandidateIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             coiCheckType,
-                            deviceInformation,
                             sessionVcs,
-                            auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs,
+                            auditEventParameters);
 
             if (!isCoiCheckSuccessful) {
                 return JOURNEY_COI_CHECK_FAILED;
@@ -375,11 +374,10 @@ public class ProcessCandidateIdentityHandler
             var journey =
                     getJourneyResponseForProfileMatching(
                             ipvSessionItem,
-                            deviceInformation,
                             sessionVcs,
-                            auditEventUser,
                             areVcsCorrelated,
-                            votMatchingResult);
+                            votMatchingResult,
+                            auditEventParameters);
 
             if (journey != null) {
                 return journey.toObjectMap();
@@ -392,9 +390,8 @@ public class ProcessCandidateIdentityHandler
                     getJourneyResponseFromTicfCall(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            deviceInformation,
                             ipAddress,
-                            auditEventUser);
+                            auditEventParameters);
 
             if (journey != null) {
                 // We still store a pending identity - it might be mitigating an existing CI
@@ -466,11 +463,10 @@ public class ProcessCandidateIdentityHandler
 
     private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
-            String deviceInformation,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser,
             boolean areVcsCorrelated,
-            VotMatchingResult votMatchingResult) {
+            VotMatchingResult votMatchingResult,
+            SharedAuditEventParameters sharedAuditEventParameters) {
 
         if (!areVcsCorrelated) {
             return JOURNEY_VCS_NOT_CORRELATED;
@@ -496,8 +492,7 @@ public class ProcessCandidateIdentityHandler
                     profile.get(),
                     votMatchingResult.gpg45Scores(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
-                    auditEventUser,
-                    deviceInformation);
+                    sharedAuditEventParameters);
         }
 
         return null;
@@ -506,9 +501,8 @@ public class ProcessCandidateIdentityHandler
     public JourneyResponse getJourneyResponseFromTicfCall(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String deviceInformation,
             String ipAddress,
-            AuditEventUser auditEventUser) {
+            SharedAuditEventParameters sharedAuditEventParameters) {
         try {
             // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
             // validation), we cannot make a request to TICF as we will have missing required
@@ -548,12 +542,12 @@ public class ProcessCandidateIdentityHandler
             criStoringService.storeVcs(
                     TICF,
                     ipAddress,
-                    deviceInformation,
+                    sharedAuditEventParameters.deviceInformation(),
                     ticfVcs,
                     clientOAuthSessionItem,
                     ipvSessionItem,
                     List.of(),
-                    auditEventUser);
+                    sharedAuditEventParameters.auditEventUser());
 
             if (!clientOAuthSessionItem.isReverification()) {
                 // Get mitigations from old CIMIT VC to compare against the mitigations on the new
@@ -613,18 +607,18 @@ public class ProcessCandidateIdentityHandler
             Gpg45Profile matchedProfile,
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation) {
+            SharedAuditEventParameters sharedAuditEventParameters) {
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
+                        sharedAuditEventParameters.auditEventUser(),
                         new AuditExtensionGpg45ProfileMatched(
                                 matchedProfile,
                                 gpg45Scores,
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
-                        new AuditRestrictedDeviceInformation(deviceInformation));
+                        new AuditRestrictedDeviceInformation(
+                                sharedAuditEventParameters.deviceInformation()));
         auditService.sendAuditEvent(auditEvent);
     }
 
