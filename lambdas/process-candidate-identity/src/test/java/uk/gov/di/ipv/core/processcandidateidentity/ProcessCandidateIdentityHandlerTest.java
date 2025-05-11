@@ -74,6 +74,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
@@ -90,10 +91,12 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CO
 class ProcessCandidateIdentityHandlerTest {
     private static ProcessRequest.ProcessRequestBuilder requestBuilder;
 
+    private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
+            new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A));
     private static final VotMatchingResult P2_M1A_VOT_MATCH_RESULT =
             new VotMatchingResult(
-                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
-                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                    Optional.of(STRONGEST_MATCHED_VOT),
+                    Optional.of(STRONGEST_MATCHED_VOT),
                     M1A.getScores());
 
     private static final String SESSION_ID = "session-id";
@@ -202,8 +205,8 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(P2),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.NEW),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
@@ -275,8 +278,8 @@ class ProcessCandidateIdentityHandlerTest {
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(P0),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.PENDING),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
@@ -338,8 +341,8 @@ class ProcessCandidateIdentityHandlerTest {
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(P2),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.PENDING),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
@@ -563,8 +566,8 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
+                            eq(P2),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.UPDATE),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
@@ -866,14 +869,14 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(reproveIdentityClientOAuthSessionItem),
+                            eq(P2),
+                            eq(USER_ID),
                             eq(CandidateIdentityType.NEW),
                             eq(DEVICE_INFORMATION),
                             eq(List.of()),
                             any(AuditEventUser.class),
                             eq(List.of()),
-                            eq(P2_M1A_VOT_MATCH_RESULT));
+                            eq(STRONGEST_MATCHED_VOT));
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),

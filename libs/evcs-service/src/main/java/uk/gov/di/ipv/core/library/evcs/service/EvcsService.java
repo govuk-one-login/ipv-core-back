@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
@@ -17,7 +18,6 @@ import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityFor
 import uk.gov.di.ipv.core.library.evcs.metadata.InheritedIdentityMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
@@ -60,25 +60,28 @@ public class EvcsService {
     }
 
     public void storeCompletedIdentity(
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> currentAndPendingEvcsVcs,
-            VotMatchingResult votMatchingResult)
+            VotMatchingResult.VotAndProfile strongestMatchedVot,
+            Vot achievedVot)
             throws EvcsServiceException {
         persistUserVCs(
-                clientOAuthSessionItem,
+                userId,
                 credentials,
                 currentAndPendingEvcsVcs,
-                votMatchingResult,
+                strongestMatchedVot,
+                achievedVot,
                 false);
     }
 
     public void storePendingIdentity(
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String userId,
             List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs)
+            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs,
+            Vot achievedVot)
             throws EvcsServiceException {
-        persistUserVCs(clientOAuthSessionItem, credentials, currentAndPendingEvcsVcs, null, true);
+        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, null, achievedVot, true);
     }
 
     public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
@@ -205,14 +208,14 @@ public class EvcsService {
     }
 
     private void persistUserVCs(
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
-            VotMatchingResult votMatchingResult,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot,
             boolean isPendingIdentity)
             throws EvcsServiceException {
         try {
-            var userId = clientOAuthSessionItem.getUserId();
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
                 List<EvcsCreateUserVCsDto> userVCsToStore =
                         credentials.stream()
@@ -231,7 +234,7 @@ public class EvcsService {
                 if (!isPendingIdentity) {
                     storedIdentityJwt =
                             storedIdentityService.getStoredIdentityForEvcs(
-                                    clientOAuthSessionItem, credentials, votMatchingResult, null);
+                                    userId, credentials, strongestAchievedVot, achievedVot);
                 }
                 var putUserVcsDto =
                         new EvcsPutUserVCsDto(userId, userVCsToStore, storedIdentityJwt);

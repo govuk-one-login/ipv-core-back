@@ -107,7 +107,7 @@ class EvcsClientTest {
                     List.of(
                             new EvcsCreateUserVCsDto(
                                     "VC_Signature1", EvcsVCState.CURRENT, TEST_METADATA, null)),
-                    new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2, TEST_METADATA));
+                    new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(CURRENT, PENDING_RETURN);
 
     @Mock private ConfigService mockConfigService;

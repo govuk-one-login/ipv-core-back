@@ -70,6 +70,7 @@ import java.text.ParseException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.lang.Boolean.TRUE;
@@ -312,7 +313,6 @@ public class ProcessCandidateIdentityHandler
         return CoiCheckType.STANDARD;
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private Map<String, Object> processCandidateThroughJourney(
             CandidateIdentityType processIdentityType,
             IpvSessionItem ipvSessionItem,
@@ -361,14 +361,6 @@ public class ProcessCandidateIdentityHandler
         boolean areVcsCorrelated = false;
         VotMatchingResult votMatchingResult = null;
         if (requiresVotMatchingResult(processIdentityType)) {
-            if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
-                return new JourneyErrorResponse(
-                                JOURNEY_ERROR_PATH,
-                                HttpStatusCode.INTERNAL_SERVER_ERROR,
-                                MISSING_SECURITY_CHECK_CREDENTIAL)
-                        .toObjectMap();
-            }
-
             areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
             votMatchingResult =
                     getVotMatchingResult(
@@ -406,8 +398,8 @@ public class ProcessCandidateIdentityHandler
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeIdentityService.storeIdentity(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
+                            ipvSessionItem.getVot(),
+                            userId,
                             processIdentityType,
                             deviceInformation,
                             sessionVcs,
@@ -422,15 +414,19 @@ public class ProcessCandidateIdentityHandler
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
+            VotMatchingResult.VotAndProfile strongestMatchedVot =
+                    Objects.isNull(votMatchingResult)
+                            ? null
+                            : votMatchingResult.strongestRequestedMatch().orElse(null);
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    ipvSessionItem.getVot(),
+                    userId,
                     processIdentityType,
                     deviceInformation,
                     sessionVcs,
                     auditEventUser,
                     evcsUserVcs,
-                    votMatchingResult);
+                    strongestMatchedVot);
         }
 
         return JOURNEY_NEXT.toObjectMap();
@@ -617,7 +613,12 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated)
-            throws CiExtractionException, CredentialParseException, ParseException {
+            throws CiExtractionException, CredentialParseException, ParseException,
+                    HttpResponseExceptionWithErrorBody {
+        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, MISSING_SECURITY_CHECK_CREDENTIAL);
+        }
 
         var contraIndicators =
                 cimitUtilityService.getContraIndicatorsFromVc(

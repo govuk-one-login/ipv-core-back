@@ -19,8 +19,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -32,6 +30,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,13 +57,9 @@ class StoreIdentityServiceTest {
     private static final String DEVICE_INFORMATION = "device-information";
     private static final List<VerifiableCredential> VCS =
             List.of(vcWebPassportSuccessful(), vcExperianFraudM1aExpired(), vcAddressM1a());
-    private static final VotMatchingResult VOT_MATCHING_RESULT =
-            new VotMatchingResult(
-                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
-                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
-                    Gpg45Scores.builder().build());
+    private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
+            new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A));
     @Spy private static IpvSessionItem ipvSessionItem;
-    private static ClientOAuthSessionItem clientOAuthSessionItem;
     private AuditEventUser testAuditEventUser;
 
     @Mock ConfigService configService;
@@ -79,8 +74,6 @@ class StoreIdentityServiceTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
-
-        clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(USER_ID).build();
     }
 
     @Nested
@@ -105,17 +98,17 @@ class StoreIdentityServiceTest {
 
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    P2,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    STRONGEST_MATCHED_VOT);
 
             // Assert
-            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any(), any());
         }
 
         @Test
@@ -135,14 +128,14 @@ class StoreIdentityServiceTest {
 
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    P2,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    STRONGEST_MATCHED_VOT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -157,7 +150,7 @@ class StoreIdentityServiceTest {
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
-            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any(), any());
         }
 
         @Test
@@ -165,14 +158,14 @@ class StoreIdentityServiceTest {
                 throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    P2,
+                    USER_ID,
                     CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    STRONGEST_MATCHED_VOT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -187,25 +180,22 @@ class StoreIdentityServiceTest {
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
-            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any());
+            verify(evcsService, times(1)).storeCompletedIdentity(any(), any(), any(), any(), any());
         }
 
         @Test
         void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityIncomplete()
                 throws Exception {
-            // Arrange
-            ipvSessionItem.setVot(P0);
-
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    P0,
+                    USER_ID,
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    STRONGEST_MATCHED_VOT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -225,14 +215,14 @@ class StoreIdentityServiceTest {
         void shouldStoreIdentityInEvcsAndSendAuditEventForPendingVc() throws Exception {
             // Act
             storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
+                    P2,
+                    USER_ID,
                     CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
                     VCS,
                     testAuditEventUser,
                     List.of(),
-                    VOT_MATCHING_RESULT);
+                    STRONGEST_MATCHED_VOT);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -248,7 +238,7 @@ class StoreIdentityServiceTest {
             assertEquals(testAuditEventUser, auditEvent.getUser());
 
             verify(evcsService, times(1))
-                    .storePendingIdentity(clientOAuthSessionItem, VCS, List.of());
+                    .storePendingIdentity(eq(USER_ID), eq(VCS), eq(List.of()), any());
         }
     }
 
@@ -259,20 +249,20 @@ class StoreIdentityServiceTest {
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(evcsService)
-                .storePendingIdentity(clientOAuthSessionItem, VCS, List.of());
+                .storePendingIdentity(eq(USER_ID), eq(VCS), eq(List.of()), any());
 
         // Assert
         assertThrows(
                 EvcsServiceException.class,
                 () ->
                         storeIdentityService.storeIdentity(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
+                                P2,
+                                USER_ID,
                                 CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
                                 VCS,
                                 testAuditEventUser,
                                 List.of(),
-                                VOT_MATCHING_RESULT));
+                                STRONGEST_MATCHED_VOT));
     }
 }

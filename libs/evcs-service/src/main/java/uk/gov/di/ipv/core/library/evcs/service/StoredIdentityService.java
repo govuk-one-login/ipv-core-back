@@ -1,84 +1,90 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.STORED_IDENTITY_SERVICE_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
 public class StoredIdentityService {
+    public static final String VOT_CLAIM = "vot";
+    public static final String CREDENTIALS_CLAIM = "credentials";
+    public static final String CLAIMS_CLAIM = "claims";
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final SignerFactory signerFactory;
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
+    private final Clock clock;
 
     public StoredIdentityService(
-            SignerFactory signerFactory,
             ConfigService configService,
-            UserIdentityService userIdentityService) {
+            SignerFactory signerFactory,
+            UserIdentityService userIdentityService,
+            Clock clock) {
         this.signerFactory = signerFactory;
         this.configService = configService;
         this.userIdentityService = userIdentityService;
+        this.clock = clock;
     }
 
     public StoredIdentityService(ConfigService configService) {
         this.signerFactory = new SignerFactory(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.configService = configService;
+        this.clock = Clock.systemDefaultZone();
     }
 
     private JWTClaimsSet createStoredIdentityJwt(
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            List<VerifiableCredential> vcs,
-            VotMatchingResult votMatchingResult)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                    FailedToCreateStoredIdentityForEvcsException {
-        Instant now = Instant.now();
+            String userId, List<VerifiableCredential> vcs, Vot achievedVot)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        Instant now = Instant.now(clock);
 
-        var strongestRequestedVot = votMatchingResult.strongestRequestedMatch();
-        if (strongestRequestedVot.isEmpty()) {
-            throw new FailedToCreateStoredIdentityForEvcsException(
-                    "No strongest requested matched vot found for user");
-        }
-
-        var claims =
-                userIdentityService.getUserClaimsForStoredIdentity(
-                        strongestRequestedVot.get().vot(), vcs);
+        var parsedUserClaims =
+                OBJECT_MAPPER.convertValue(
+                        userIdentityService.getUserClaimsForStoredIdentity(achievedVot, vcs),
+                        new TypeReference<>() {});
 
         return new JWTClaimsSet.Builder()
                 .issuer(configService.getParameter(COMPONENT_ID))
                 .audience(configService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
-                .subject(clientOAuthSessionItem.getUserId())
+                .subject(userId)
                 .notBeforeTime(Date.from(now))
                 .issueTime(Date.from(now))
-                .claim("vot", strongestRequestedVot.get().vot())
-                .claim("credentials", vcs.stream().map(VerifiableCredential::getVcString).toList())
-                .claim("claims", claims)
+                .claim(VOT_CLAIM, achievedVot)
+                .claim(
+                        CREDENTIALS_CLAIM,
+                        vcs.stream()
+                                .map(vc -> vc.getSignedJwt().getSignature().toString())
+                                .toList())
+                .claim(CLAIMS_CLAIM, parsedUserClaims)
                 .build();
     }
 
-    private String getSignedStoredIdentity(
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            List<VerifiableCredential> vcs,
-            VotMatchingResult votMatchingResult)
+    private String getSignedStoredIdentityForEvcs(
+            String userId, List<VerifiableCredential> vcs, Vot achievedVot)
             throws FailedToCreateStoredIdentityForEvcsException {
         try {
-            var storedIdentity =
-                    createStoredIdentityJwt(clientOAuthSessionItem, vcs, votMatchingResult);
+            var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
 
             return createSignedJwt(storedIdentity, signerFactory.getSigner(), false).serialize();
         } catch (CredentialParseException e) {
@@ -93,19 +99,18 @@ public class StoredIdentityService {
     }
 
     public EvcsStoredIdentityDto getStoredIdentityForEvcs(
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String userId,
             List<VerifiableCredential> vcs,
-            VotMatchingResult votMatchingResult,
-            Object metadata)
+            VotMatchingResult.VotAndProfile strongestMatchedVot,
+            Vot achievedVot)
             throws FailedToCreateStoredIdentityForEvcsException {
-        var strongestMatchedVot = votMatchingResult.strongestMatch();
-        if (strongestMatchedVot.isEmpty()) {
+        if (Objects.isNull(strongestMatchedVot)) {
             throw new FailedToCreateStoredIdentityForEvcsException(
                     "No strongest matched vot found for user");
         }
 
-        var signedSiJwt = getSignedStoredIdentity(clientOAuthSessionItem, vcs, votMatchingResult);
+        var signedSiJwt = getSignedStoredIdentityForEvcs(userId, vcs, achievedVot);
 
-        return new EvcsStoredIdentityDto(signedSiJwt, strongestMatchedVot.get().vot(), metadata);
+        return new EvcsStoredIdentityDto(signedSiJwt, strongestMatchedVot.vot());
     }
 }

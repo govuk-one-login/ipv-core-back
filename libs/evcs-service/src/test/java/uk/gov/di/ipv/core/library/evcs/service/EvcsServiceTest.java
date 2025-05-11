@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
@@ -22,7 +23,6 @@ import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
@@ -111,11 +111,9 @@ class EvcsServiceTest {
                                     "txmaEventId", "txma-event-id-2",
                                     "timestampMs", "1714478033959")));
 
-    private static final VotMatchingResult VOT_MATCHING_RESULT =
-            new VotMatchingResult(
-                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
-                    Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
-                    Gpg45Scores.builder().build());
+    private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
+            new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A));
+    private static final Vot ACHIEVED_VOT = P1;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
@@ -138,7 +136,11 @@ class EvcsServiceTest {
         // Arrange
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem, VERIFIABLE_CREDENTIALS, List.of(), VOT_MATCHING_RESULT);
+                TEST_USER_ID,
+                VERIFIABLE_CREDENTIALS,
+                List.of(),
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
@@ -161,7 +163,7 @@ class EvcsServiceTest {
         // Arrange
         // Act
         evcsService.storePendingIdentity(
-                clientOAuthSessionItem, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, List.of());
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, List.of(), ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -183,7 +185,7 @@ class EvcsServiceTest {
 
         // Act
         evcsService.storePendingIdentity(
-                clientOAuthSessionItem, List.of(VC_ADDRESS_TEST), List.of());
+                TEST_USER_ID, List.of(VC_ADDRESS_TEST), List.of(), ACHIEVED_VOT);
 
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
@@ -207,10 +209,11 @@ class EvcsServiceTest {
     void testStoreIdentity_for_6MFCJourney() throws Exception {
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem,
+                TEST_USER_ID,
                 VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
                 EVCS_GET_USER_VC_DTO,
-                VOT_MATCHING_RESULT);
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -253,10 +256,11 @@ class EvcsServiceTest {
                                 Map.of("reason", "testing")));
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem,
+                TEST_USER_ID,
                 VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
                 evcsGetUserVcsWithCurrentStateAllExistingDto,
-                VOT_MATCHING_RESULT);
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
@@ -283,10 +287,11 @@ class EvcsServiceTest {
                                 Map.of("reason", "testing")));
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem,
+                TEST_USER_ID,
                 VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
                 evcsGetUserVcsWithPendingAllExistingDto,
-                VOT_MATCHING_RESULT);
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -321,10 +326,11 @@ class EvcsServiceTest {
                                 Map.of("reason", "testing")));
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem,
+                TEST_USER_ID,
                 Collections.emptyList(),
                 evcsGetUserVcsWithPendingAllExistingDto,
-                VOT_MATCHING_RESULT);
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
@@ -349,10 +355,11 @@ class EvcsServiceTest {
                                 Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId())));
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem,
+                TEST_USER_ID,
                 VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
                 vcsInEvcs,
-                VOT_MATCHING_RESULT);
+                STRONGEST_MATCHED_VOT,
+                ACHIEVED_VOT);
         // Assert
         InOrder mockOrderVerifier = inOrder(mockEvcsClient);
 
@@ -367,12 +374,12 @@ class EvcsServiceTest {
         var testSiJwt = "test.si.jwt";
         when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(mockStoredIdentityService.getStoredIdentityForEvcs(
-                        clientOAuthSessionItem, testVcs, VOT_MATCHING_RESULT, null))
-                .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1, null));
+                        TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT))
+                .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
 
         // Act
         evcsService.storeCompletedIdentity(
-                clientOAuthSessionItem, testVcs, List.of(), VOT_MATCHING_RESULT);
+                TEST_USER_ID, testVcs, List.of(), STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
 
         // Assert
         verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
