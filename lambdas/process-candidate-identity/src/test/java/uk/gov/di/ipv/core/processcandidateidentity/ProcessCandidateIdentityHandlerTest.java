@@ -74,6 +74,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
@@ -90,10 +91,12 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CO
 class ProcessCandidateIdentityHandlerTest {
     private static ProcessRequest.ProcessRequestBuilder requestBuilder;
 
+    private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
+            new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A));
     private static final VotMatchingResult P2_M1A_VOT_MATCH_RESULT =
             new VotMatchingResult(
-                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
-                    Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                    Optional.of(STRONGEST_MATCHED_VOT),
+                    Optional.of(STRONGEST_MATCHED_VOT),
                     M1A.getScores());
 
     private static final String SESSION_ID = "session-id";
@@ -167,9 +170,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -202,12 +204,12 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.NEW),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.NEW),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -231,9 +233,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -274,12 +275,12 @@ class ProcessCandidateIdentityHandlerTest {
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.PENDING),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            eq(List.of()),
+                            eq(P0),
+                            eq(null),
+                            eq(CandidateIdentityType.PENDING),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -301,9 +302,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -335,14 +335,7 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
-                    .storeIdentity(
-                            eq(ipvSessionItem),
-                            eq(USER_ID),
-                            eq(CandidateIdentityType.PENDING),
-                            eq(DEVICE_INFORMATION),
-                            eq(List.of()),
-                            any(AuditEventUser.class),
-                            any());
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -367,9 +360,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(REVERIFICATION),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -443,7 +435,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -475,7 +467,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -512,7 +504,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -523,9 +515,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -560,12 +551,12 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.UPDATE),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.UPDATE),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -601,9 +592,9 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
-                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any(), any());
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
             verify(ticfCriService, times(0)).getTicfVc(any(), any());
         }
 
@@ -620,9 +611,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(false);
 
@@ -639,7 +629,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -655,9 +645,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(false);
@@ -675,7 +664,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -691,9 +680,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -713,7 +701,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_PROFILE_UNMET_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -725,9 +713,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
@@ -765,7 +752,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -777,9 +764,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
@@ -817,7 +803,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -833,9 +819,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(reproveIdentityClientOAuthSessionItem),
                             eq(ACCOUNT_INTERVENTION),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -862,12 +847,12 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            eq(ipvSessionItem),
                             eq(USER_ID),
-                            eq(CandidateIdentityType.NEW),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.NEW),
                             any());
             verify(criStoringService, times(1))
                     .storeVcs(
@@ -890,8 +875,7 @@ class ProcessCandidateIdentityHandlerTest {
                             EvcsVCState.CURRENT,
                             EvcsVCState.PENDING_RETURN))
                     .thenReturn(List.of());
-            when(checkCoiService.isCoiCheckSuccessful(
-                            any(), any(), any(), any(), any(), any(), any()))
+            when(checkCoiService.isCoiCheckSuccessful(any(), any(), any(), any(), any(), any()))
                     .thenThrow(new CredentialParseException("Unable to parse credentials"));
 
             var request =
@@ -909,7 +893,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -925,9 +909,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
@@ -949,7 +932,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -966,9 +949,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
 
@@ -987,7 +969,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(MISSING_SECURITY_CHECK_CREDENTIAL.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -1004,9 +986,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -1035,7 +1016,7 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
         }
 
         @Test
@@ -1052,9 +1033,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
                             eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
                             eq(List.of()),
-                            any(AuditEventUser.class),
+                            any(),
                             any()))
                     .thenReturn(true);
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
@@ -1072,7 +1052,7 @@ class ProcessCandidateIdentityHandlerTest {
                             new EvcsServiceException(
                                     SC_SERVER_ERROR, RECEIVED_NON_200_RESPONSE_STATUS_CODE))
                     .when(storeIdentityService)
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any(), any());
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
 
             var request =
                     requestBuilder

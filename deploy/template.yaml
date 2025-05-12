@@ -2737,6 +2737,12 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:

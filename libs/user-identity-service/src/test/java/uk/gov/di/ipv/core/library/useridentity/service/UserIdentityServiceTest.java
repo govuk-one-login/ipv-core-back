@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.AddressAssertion;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -1698,6 +1699,56 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcHmrcMigrationPCL250NoEvidence());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs);
         assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void getUserClaimsForStoredIdentityShouldReturnListOfUserClaims() throws Exception {
+        // Arrange
+        var drivingPermitVc = vcWebDrivingPermitDvlaValid();
+        var testVcs =
+                List.of(
+                        vcWebPassportSuccessful(),
+                        vcWebDrivingPermitDvlaValid(),
+                        vcNinoIdentityCheckSuccessful(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
+
+        // Act
+        var result = userIdentityService.getUserClaimsForStoredIdentity(Vot.P2, testVcs);
+
+        // Assert
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getName(),
+                result.getIdentityClaim().getName());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getBirthDate(),
+                result.getIdentityClaim().getBirthDate());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getPassport(),
+                result.getPassportClaim());
+        assertEquals(
+                ((IdentityCheckSubject) drivingPermitVc.getCredential().getCredentialSubject())
+                        .getDrivingPermit()
+                        .get(0)
+                        .getPersonalNumber(),
+                result.getDrivingPermitClaim().get(0).getPersonalNumber());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcNinoIdentityCheckSuccessful()
+                                        .getCredential()
+                                        .getCredentialSubject())
+                        .getSocialSecurityRecord(),
+                result.getNinoClaim());
+        assertEquals(
+                ((AddressAssertion) vcAddressOne().getCredential().getCredentialSubject())
+                        .getAddress(),
+                result.getAddressClaim());
     }
 
     @Nested

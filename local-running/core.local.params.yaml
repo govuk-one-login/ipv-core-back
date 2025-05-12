@@ -78,6 +78,8 @@ core:
     apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
+  storedIdentityService:
+    componentId: "https://reuse-identity.build.account.gov.uk"
   credentialIssuers:
     address:
       id: address
