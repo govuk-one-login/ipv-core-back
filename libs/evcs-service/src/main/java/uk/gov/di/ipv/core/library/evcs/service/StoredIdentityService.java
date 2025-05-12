@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
@@ -30,6 +33,7 @@ public class StoredIdentityService {
     public static final String CREDENTIALS_CLAIM = "credentials";
     public static final String CLAIMS_CLAIM = "claims";
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final SignerFactory signerFactory;
     private final ConfigService configService;
@@ -88,12 +92,15 @@ public class StoredIdentityService {
 
             return createSignedJwt(storedIdentity, signerFactory.getSigner(), false).serialize();
         } catch (CredentialParseException e) {
+            LOGGER.error(LogHelper.buildLogMessage("Unable to parse user credentials"));
             throw new FailedToCreateStoredIdentityForEvcsException(
                     "Unable to parse user credentials");
         } catch (HttpResponseExceptionWithErrorBody e) {
+            LOGGER.error(LogHelper.buildLogMessage(e.getErrorResponse().getMessage()));
             throw new FailedToCreateStoredIdentityForEvcsException(
                     e.getErrorResponse().getMessage());
         } catch (JOSEException e) {
+            LOGGER.error(LogHelper.buildLogMessage("Failed to create signed JWT"));
             throw new FailedToCreateStoredIdentityForEvcsException("Failed to create signed JWT");
         }
     }
@@ -105,6 +112,7 @@ public class StoredIdentityService {
             Vot achievedVot)
             throws FailedToCreateStoredIdentityForEvcsException {
         if (Objects.isNull(strongestMatchedVot)) {
+            LOGGER.error(LogHelper.buildLogMessage("No strongest matched vot found for user"));
             throw new FailedToCreateStoredIdentityForEvcsException(
                     "No strongest matched vot found for user");
         }
