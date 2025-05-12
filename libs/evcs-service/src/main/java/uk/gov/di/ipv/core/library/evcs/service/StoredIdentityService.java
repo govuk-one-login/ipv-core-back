@@ -63,6 +63,10 @@ public class StoredIdentityService {
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         Instant now = Instant.now(clock);
 
+        // the serialiseNullClaims(false) on JWTClaimsSet.Builder doesn't work to
+        // remove null properties within the claims value (only if the claims value
+        // is null itself) so we do this prior to passing it into JWTClaimsSet.Builder
+        // with jackson.
         var parsedUserClaims =
                 OBJECT_MAPPER.convertValue(
                         userIdentityService.getUserClaimsForStoredIdentity(achievedVot, vcs),
