@@ -27,6 +27,8 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
+import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -65,9 +67,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
@@ -102,6 +104,7 @@ public class InitialiseIpvSessionHandler
 
     private final JarValidator jarValidator;
     private final AuditService auditService;
+    private final AisService aisService;
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
@@ -117,6 +120,7 @@ public class InitialiseIpvSessionHandler
                         new OAuthKeyService(configService));
         this.auditService = AuditService.create(configService);
         this.evcsService = new EvcsService(configService);
+        this.aisService = new AisService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -128,7 +132,8 @@ public class InitialiseIpvSessionHandler
             VerifiableCredentialValidator verifiableCredentialValidator,
             JarValidator jarValidator,
             AuditService auditService,
-            EvcsService evcsService) {
+            EvcsService evcsService,
+            AisService aisService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
@@ -137,6 +142,7 @@ public class InitialiseIpvSessionHandler
         this.jarValidator = jarValidator;
         this.auditService = auditService;
         this.evcsService = evcsService;
+        this.aisService = aisService;
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
@@ -202,6 +208,19 @@ public class InitialiseIpvSessionHandler
                                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                     claimsSet));
 
+            if (configService.enabled(AIS_ENABLED)) {
+                // If this is a reverification journey then we can skip the call to AIS
+                var aisReproveIdentity =
+                        isReverification
+                                ? false
+                                : aisService.needsToReproveIdentity(
+                                        clientOAuthSessionItem.getUserId());
+                clientOAuthSessionItem.setReproveIdentity(aisReproveIdentity);
+                clientOAuthSessionService.updateClientSessionDetails(clientOAuthSessionItem);
+            }
+
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             clientOAuthSessionItem.getUserId(),
@@ -223,7 +242,6 @@ public class InitialiseIpvSessionHandler
                 }
             }
 
-            var isReproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
                     new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
 
@@ -319,6 +337,11 @@ public class InitialiseIpvSessionHandler
             LOGGER.error("Crashing on UncheckedIOException", e);
             System.exit(1);
             return null;
+        } catch (AisClientException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to call AIS API", e));
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

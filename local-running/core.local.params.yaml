@@ -62,6 +62,8 @@ core:
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
+  ais:
+    apiBaseUrl: "https://ais.stubs.account.gov.uk"
   cimit:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"

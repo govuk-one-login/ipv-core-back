@@ -108,7 +108,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
@@ -303,6 +302,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
+        clientOAuthSessionItem.setReproveIdentity(true);
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
@@ -310,7 +310,7 @@ class InitialiseIpvSessionHandlerTest {
                         any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(getValidClaimsBuilder().claim(REPROVE_IDENTITY_KEY, true).build());
+                .thenReturn(signedJWT.getJWTClaimsSet());
 
         // Act
         APIGatewayProxyResponseEvent response =
