@@ -12,7 +12,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'dcmaw' CRI response
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped passport
-      When I activate the 'storedIdentityService' feature set
       And I submit 'kenneth-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
@@ -25,7 +24,6 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped BRP
       When I submit 'kenneth-brp-valid' details to the CRI stub
@@ -42,7 +40,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'P2' identity
 
     Scenario: Unsuccessful M1C P2 identity via web DL using DL
-      When I activate the 'storedIdentityService' feature set
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'drivingLicence' event
@@ -57,7 +54,6 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And I don't have a stored identity in EVCS
 
   Rule: Returning existing M1C unavailable user goes through details confirmation
 
