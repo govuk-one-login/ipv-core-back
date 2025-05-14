@@ -38,7 +38,6 @@ Feature: P2 App journey
     When I use the OAuth response to get my identity
 
   Scenario: Successful P2 international identity via DCMAW using passport
-    When I activate the 'storedIdentityService' feature set
     And I submit an 'international' event
     Then I get a 'non-uk-app-intro' page response
     When I submit a 'useApp' event
@@ -57,7 +56,6 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
 
   Scenario: User looks for alternative methods to prove identity without using the app
     When I submit an 'international' event

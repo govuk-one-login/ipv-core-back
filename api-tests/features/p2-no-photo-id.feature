@@ -15,7 +15,6 @@ Feature: P2 no photo id journey
 
     Scenario: P2 no photo id journey - Experian - Happy path
       Then I get a 'claimedIdentity' CRI response
-      When I activate the 'storedIdentityService' feature set
       And I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -40,7 +39,6 @@ Feature: P2 no photo id journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
 
     Scenario: P2 no photo id journey - Experian - BAV dropout:
       Then I get a 'claimedIdentity' CRI response

@@ -2,7 +2,7 @@
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey
-    Given I activate the 'p1Journeys,storedIdentityService' feature set
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -31,7 +31,6 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P1' vot
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
     Given I activate the 'p1Journeys' feature set

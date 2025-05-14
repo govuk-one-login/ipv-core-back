@@ -2,7 +2,7 @@
 Feature: P1 app journey
 
   Scenario: P1 App Journey
-    Given I activate the 'p1Journeys,storedIdentityService' feature sets
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -23,7 +23,6 @@ Feature: P1 app journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
 
   Scenario Outline: <error> from DCMAW
     When I start a new 'low-confidence' journey

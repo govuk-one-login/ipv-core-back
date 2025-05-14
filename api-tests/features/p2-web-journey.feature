@@ -61,7 +61,6 @@ Feature: P2 Web document journey
     Then I get a 'P2' identity
 
   Scenario Outline: Successful P2 identity via Web using <cri>
-    And I activate the 'storedIdentityService' feature set
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
     When I submit '<details>' details to the CRI stub
@@ -80,7 +79,6 @@ Feature: P2 Web document journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
 
     Examples:
       | cri            | details                      |
