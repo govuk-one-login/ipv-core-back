@@ -197,13 +197,6 @@ When(
   },
 );
 
-When(
-  "I wait for {int} seconds for the async credential to be processed",
-  async (delayInSeconds: number) => {
-    await delay(delayInSeconds * 1000);
-  },
-);
-
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
   /I start new '([\w-]+)' journeys( with reprove identity)? until I get a '([\w-]+)' page response$/,
