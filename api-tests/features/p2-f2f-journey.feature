@@ -59,6 +59,7 @@ Feature: P2 F2F journey
     Scenario Outline: Successful P2 identity via F2F using <doc>
       # Initial journey
       Given I start a new 'medium-confidence' journey
+      And I activate the 'storedIdentityService' feature set
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -76,6 +77,7 @@ Feature: P2 F2F journey
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
+      And I don't have a stored identity in EVCS
 
       # Return journey
       When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
@@ -83,6 +85,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a 'GPG45' stored identity record type with a 'P2' vot
 
       Examples:
         | doc      | details                      |

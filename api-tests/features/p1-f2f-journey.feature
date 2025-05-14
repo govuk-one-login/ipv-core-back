@@ -76,10 +76,12 @@ Feature: P1 F2F journey
       Then I get a 'page-ipv-pending' page response
 
     Scenario: P1 F2F Journey - successful
+      And I activate the 'storedIdentityService' feature set
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'page-face-to-face-handoff' page response
+      And I don't have a stored identity in EVCS
 
       # Return journey
       When I start a new 'low-confidence' journey and return to a 'page-ipv-reuse' page response
@@ -87,3 +89,4 @@ Feature: P1 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
+      And I have a 'GPG45' stored identity record type with a 'P1' vot
