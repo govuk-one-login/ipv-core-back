@@ -59,7 +59,7 @@ Feature: Audit Events
     # starting a new session. This will hopefully reduce flakiness with this test where we expect the
     # events to be in a certain order.
     When I wait for 3 seconds for the async credential to be processed
-    And I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+    And I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
     And I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
