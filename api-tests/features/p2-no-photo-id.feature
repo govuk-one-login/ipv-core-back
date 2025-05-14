@@ -15,7 +15,7 @@ Feature: P2 no photo id journey
 
     Scenario: P2 no photo id journey - Experian - Happy path
       Then I get a 'claimedIdentity' CRI response
-      And I submit 'kenneth-current' details with attributes to the CRI stub
+      When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
       Then I get a 'bav' CRI response

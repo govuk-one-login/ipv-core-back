@@ -12,7 +12,7 @@ Feature: M1C Unavailable Journeys
       Then I get a 'dcmaw' CRI response
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped passport
-      And I submit 'kenneth-passport-valid' details to the CRI stub
+      When I submit 'kenneth-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response

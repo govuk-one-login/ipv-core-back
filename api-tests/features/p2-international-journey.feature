@@ -38,7 +38,7 @@ Feature: P2 App journey
     When I use the OAuth response to get my identity
 
   Scenario: Successful P2 international identity via DCMAW using passport
-    And I submit an 'international' event
+    When I submit an 'international' event
     Then I get a 'non-uk-app-intro' page response
     When I submit a 'useApp' event
     Then I get a 'dcmaw' CRI response
