@@ -149,6 +149,7 @@ public class BuildCriOauthRequestHandler
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
         try {
             // Parse input
