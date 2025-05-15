@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,7 +28,6 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +35,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,7 +44,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
@@ -131,271 +129,266 @@ class EvcsServiceTest {
         clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
     }
 
-    @Test
-    void testStoreIdentity_whenNoExistingEvcsUserVCs() throws Exception {
-        // Arrange
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS,
-                List.of(),
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
-        var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                3,
-                (userVCsForEvcs.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
-                        .count()));
-        assertFalse(
-                userVCsForEvcs.stream().anyMatch(dto -> !dto.state().equals(EvcsVCState.CURRENT)));
-        assertFalse(userVCsForEvcs.stream().anyMatch(dto -> !dto.provenance().equals(ONLINE)));
+    @Nested
+    class StoreIdentityWithPost {
+        @Test
+        void testStoreIdentity_whenNoExistingEvcsUserVCs() throws Exception {
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID, VERIFIABLE_CREDENTIALS, List.of(), false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
+            mockOrderVerifier
+                    .verify(mockEvcsClient)
+                    .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
+            var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
+            assertEquals(
+                    3,
+                    (userVCsForEvcs.stream()
+                            .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
+                            .count()));
+            assertFalse(
+                    userVCsForEvcs.stream()
+                            .anyMatch(dto -> !dto.state().equals(EvcsVCState.CURRENT)));
+            assertFalse(userVCsForEvcs.stream().anyMatch(dto -> !dto.provenance().equals(ONLINE)));
+        }
+
+        @Test
+        void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() throws Exception {
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, List.of(), true);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier
+                    .verify(mockEvcsClient, times(0))
+                    .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
+            mockOrderVerifier
+                    .verify(mockEvcsClient)
+                    .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
+            var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
+            assertFalse(
+                    userVCsForEvcs.stream()
+                            .anyMatch(dto -> !dto.state().equals(EvcsVCState.PENDING_RETURN)));
+        }
+
+        @Test
+        void testStoreIdentity_for_6MFCJourney() throws Exception {
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID,
+                    VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
+                    EVCS_GET_USER_VC_DTO,
+                    false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier
+                    .verify(mockEvcsClient)
+                    .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
+            mockOrderVerifier
+                    .verify(mockEvcsClient)
+                    .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
+
+            var evcsUserVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
+            assertEquals(
+                    1,
+                    (evcsUserVCsToUpdate.stream()
+                            .filter(dto -> dto.state().equals(EvcsVCState.HISTORIC))
+                            .count()));
+            var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
+            assertEquals(
+                    3,
+                    (userVCsForEvcs.stream()
+                            .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
+                            .count()));
+        }
+
+        @Test
+        void testStoreCompleteIdentity_whenAllVCsExistInEvcs_withCurrentState() throws Exception {
+            // Arrange
+            List<EvcsGetUserVCDto> evcsGetUserVcsWithCurrentStateAllExistingDto =
+                    List.of(
+                            new EvcsGetUserVCDto(
+                                    VC_ADDRESS_TEST.getVcString(),
+                                    EvcsVCState.CURRENT,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_DRIVING_PERMIT_TEST.getVcString(),
+                                    EvcsVCState.CURRENT,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_F2F.getVcString(),
+                                    EvcsVCState.CURRENT,
+                                    Map.of("reason", "testing")));
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID,
+                    VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
+                    evcsGetUserVcsWithCurrentStateAllExistingDto,
+                    false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
+            mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+        }
+
+        @Test
+        void testStoreCompleteIdentity_whenAllVCsExistInEvcs_inSession_withPendingReturnState()
+                throws Exception {
+            // Arrange
+            List<EvcsGetUserVCDto> evcsGetUserVcsWithPendingAllExistingDto =
+                    List.of(
+                            new EvcsGetUserVCDto(
+                                    VC_ADDRESS_TEST.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_DRIVING_PERMIT_TEST.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_F2F.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")));
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID,
+                    VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
+                    evcsGetUserVcsWithPendingAllExistingDto,
+                    false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier
+                    .verify(mockEvcsClient, times(1))
+                    .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
+            var userVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
+            assertEquals(
+                    3,
+                    (userVCsToUpdate.stream()
+                            .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
+                            .count()));
+            mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+        }
+
+        @Test
+        void testStoreCompleteIdentity_whenAllVCsExistInEvcs_notInSession_withPendingReturnState()
+                throws Exception {
+            // Arrange
+            List<EvcsGetUserVCDto> evcsGetUserVcsWithPendingAllExistingDto =
+                    List.of(
+                            new EvcsGetUserVCDto(
+                                    VC_ADDRESS_TEST.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_DRIVING_PERMIT_TEST.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")),
+                            new EvcsGetUserVCDto(
+                                    VC_F2F.getVcString(),
+                                    EvcsVCState.PENDING_RETURN,
+                                    Map.of("reason", "testing")));
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID, List.of(), evcsGetUserVcsWithPendingAllExistingDto, false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+            mockOrderVerifier
+                    .verify(mockEvcsClient, times(1))
+                    .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
+            var userVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
+            assertEquals(
+                    3,
+                    (userVCsToUpdate.stream()
+                            .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
+                            .count()));
+            mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+        }
+
+        @Test
+        void storeCompletedIdentityShouldNotUpdateInheritedIdentity() throws Exception {
+            var vcsInEvcs =
+                    List.of(
+                            new EvcsGetUserVCDto(
+                                    vcHmrcMigrationPCL200().getVcString(),
+                                    EvcsVCState.CURRENT,
+                                    Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId())));
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, vcsInEvcs, false);
+
+            // Assert
+            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+
+            mockOrderVerifier.verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+            mockOrderVerifier.verify(mockEvcsClient, times(1)).storeUserVCs(any(), any());
+        }
     }
 
-    @Test
-    void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() throws Exception {
-        // Arrange
-        // Act
-        evcsService.storePendingIdentity(
-                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, List.of(), ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient, times(0))
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
-        var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
-        assertFalse(
-                userVCsForEvcs.stream()
-                        .anyMatch(dto -> !dto.state().equals(EvcsVCState.PENDING_RETURN)));
-    }
+    @Nested
+    class StoreIdentityWithPutMethod {
+        @Test
+        void shouldStorePendingIdentityWithPutMethod() throws Exception {
+            // Arrange
+            var testVcs = List.of(VC_ADDRESS_TEST);
 
-    @Test
-    void storePendingIdentityShouldStorePendingIdentityWithPutMethod() throws Exception {
-        // Arrange
-        when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPut(
+                    TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT, true);
 
-        // Act
-        evcsService.storePendingIdentity(
-                TEST_USER_ID, List.of(VC_ADDRESS_TEST), List.of(), ACHIEVED_VOT);
+            // Assert
+            verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
 
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient, times(0))
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
-        mockOrderVerifier.verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
+            assertEquals(
+                    clientOAuthSessionItem.getUserId(),
+                    evcsPutUserVCsDtoCaptor.getValue().userId());
+            assertEquals(
+                    VC_ADDRESS_TEST.getVcString(),
+                    evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
+            assertEquals(PENDING_RETURN, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
+            assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
 
-        assertEquals(
-                clientOAuthSessionItem.getUserId(), evcsPutUserVCsDtoCaptor.getValue().userId());
-        assertEquals(
-                VC_ADDRESS_TEST.getVcString(),
-                evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
-        assertEquals(PENDING_RETURN, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
-        assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
-        assertNull(evcsPutUserVCsDtoCaptor.getValue().si());
-    }
+            verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+            verify(mockEvcsClient, never()).storeUserVCs(any(), any());
+        }
 
-    @Test
-    void testStoreIdentity_for_6MFCJourney() throws Exception {
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
-                EVCS_GET_USER_VC_DTO,
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        mockOrderVerifier
-                .verify(mockEvcsClient)
-                .storeUserVCs(any(), evcsCreateUserVCsDtosCaptor.capture());
+        @Test
+        void shouldStoreCompletedIdentityWithPutMethod() throws Exception {
+            // Arrange
+            var testVcs = List.of(VC_ADDRESS_TEST);
+            var testSiJwt = "test.si.jwt";
+            when(mockStoredIdentityService.getStoredIdentityForEvcs(
+                            TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT))
+                    .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
 
-        var evcsUserVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                1,
-                (evcsUserVCsToUpdate.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.HISTORIC))
-                        .count()));
-        var userVCsForEvcs = evcsCreateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                3,
-                (userVCsForEvcs.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
-                        .count()));
-    }
+            // Act
+            evcsService.storeCompletedOrPendingIdentityWithPut(
+                    TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT, false);
 
-    @Test
-    void testStoreCompleteIdentity_whenAllVCsExistInEvcs_withCurrentState() throws Exception {
-        // Arrange
-        List<EvcsGetUserVCDto> evcsGetUserVcsWithCurrentStateAllExistingDto =
-                List.of(
-                        new EvcsGetUserVCDto(
-                                VC_ADDRESS_TEST.getVcString(),
-                                EvcsVCState.CURRENT,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_DRIVING_PERMIT_TEST.getVcString(),
-                                EvcsVCState.CURRENT,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_F2F.getVcString(),
-                                EvcsVCState.CURRENT,
-                                Map.of("reason", "testing")));
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
-                evcsGetUserVcsWithCurrentStateAllExistingDto,
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).updateUserVCs(any(), any());
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
-    }
+            // Assert
+            verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
 
-    @Test
-    void testStoreCompleteIdentity_whenAllVCsExistInEvcs_inSession_withPendingReturnState()
-            throws Exception {
-        // Arrange
-        List<EvcsGetUserVCDto> evcsGetUserVcsWithPendingAllExistingDto =
-                List.of(
-                        new EvcsGetUserVCDto(
-                                VC_ADDRESS_TEST.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_DRIVING_PERMIT_TEST.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_F2F.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")));
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
-                evcsGetUserVcsWithPendingAllExistingDto,
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient, times(1))
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        var userVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                3,
-                (userVCsToUpdate.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.CURRENT))
-                        .count()));
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
-    }
+            assertEquals(
+                    clientOAuthSessionItem.getUserId(),
+                    evcsPutUserVCsDtoCaptor.getValue().userId());
+            assertEquals(
+                    VC_ADDRESS_TEST.getVcString(),
+                    evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
+            assertEquals(CURRENT, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
+            assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
+            assertEquals(testSiJwt, evcsPutUserVCsDtoCaptor.getValue().si().jwt());
+            assertEquals(P1, evcsPutUserVCsDtoCaptor.getValue().si().vot());
 
-    @Test
-    void testStoreCompleteIdentity_whenAllVCsExistInEvcs_notInSession_withPendingReturnState()
-            throws Exception {
-        // Arrange
-        List<EvcsGetUserVCDto> evcsGetUserVcsWithPendingAllExistingDto =
-                List.of(
-                        new EvcsGetUserVCDto(
-                                VC_ADDRESS_TEST.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_DRIVING_PERMIT_TEST.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")),
-                        new EvcsGetUserVCDto(
-                                VC_F2F.getVcString(),
-                                EvcsVCState.PENDING_RETURN,
-                                Map.of("reason", "testing")));
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                Collections.emptyList(),
-                evcsGetUserVcsWithPendingAllExistingDto,
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-        mockOrderVerifier
-                .verify(mockEvcsClient, times(1))
-                .updateUserVCs(any(), evcsUpdateUserVCsDtosCaptor.capture());
-        var userVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
-        assertEquals(
-                3,
-                (userVCsToUpdate.stream()
-                        .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
-                        .count()));
-        mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
-    }
-
-    @Test
-    void storeCompletedIdentityShouldNotUpdateInheritedIdentity() throws Exception {
-        var vcsInEvcs =
-                List.of(
-                        new EvcsGetUserVCDto(
-                                vcHmrcMigrationPCL200().getVcString(),
-                                EvcsVCState.CURRENT,
-                                Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId())));
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID,
-                VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
-                vcsInEvcs,
-                STRONGEST_MATCHED_VOT,
-                ACHIEVED_VOT);
-        // Assert
-        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-
-        mockOrderVerifier.verify(mockEvcsClient, never()).updateUserVCs(any(), any());
-        mockOrderVerifier.verify(mockEvcsClient, times(1)).storeUserVCs(any(), any());
-    }
-
-    @Test
-    void storeCompletedIdentityShouldStoreCompletedIdentityWithPutMethod() throws Exception {
-        // Arrange
-        var testVcs = List.of(VC_ADDRESS_TEST);
-        var testSiJwt = "test.si.jwt";
-        when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-        when(mockStoredIdentityService.getStoredIdentityForEvcs(
-                        TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT))
-                .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
-
-        // Act
-        evcsService.storeCompletedIdentity(
-                TEST_USER_ID, testVcs, List.of(), STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
-
-        // Assert
-        verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
-
-        assertEquals(
-                clientOAuthSessionItem.getUserId(), evcsPutUserVCsDtoCaptor.getValue().userId());
-        assertEquals(
-                VC_ADDRESS_TEST.getVcString(),
-                evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
-        assertEquals(CURRENT, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
-        assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
-        assertEquals(testSiJwt, evcsPutUserVCsDtoCaptor.getValue().si().jwt());
-        assertEquals(P1, evcsPutUserVCsDtoCaptor.getValue().si().vot());
-
-        verify(mockEvcsClient, never()).updateUserVCs(any(), any());
-        verify(mockEvcsClient, never()).storeUserVCs(any(), any());
+            verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+            verify(mockEvcsClient, never()).storeUserVCs(any(), any());
+        }
     }
 
     @Test
