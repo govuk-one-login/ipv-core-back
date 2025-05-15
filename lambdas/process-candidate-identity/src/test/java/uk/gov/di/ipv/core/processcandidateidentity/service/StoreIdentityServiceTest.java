@@ -217,6 +217,36 @@ class StoreIdentityServiceTest {
             verify(evcsService, times(1))
                     .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), true);
         }
+
+        @Test
+        void
+                shouldSendAuditEventWithNullVotAndIdentityTypeExtensionWhenIdentityPendingWithFailedVot()
+                        throws Exception {
+            // Act
+            storeIdentityService.storeIdentity(
+                    USER_ID,
+                    VCS,
+                    List.of(),
+                    P0,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.PENDING,
+                    sharedAuditEventParameters);
+
+            // Assert
+            verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+            var auditEvent = auditEventCaptor.getValue();
+
+            assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertEquals(
+                    CandidateIdentityType.PENDING,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .identityType());
+            assertEquals(COMPONENT_ID, auditEvent.getComponentId());
+            assertEquals(testAuditEventUser, auditEvent.getUser());
+            verify(evcsService, times(1))
+                    .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
+        }
     }
 
     @Test
