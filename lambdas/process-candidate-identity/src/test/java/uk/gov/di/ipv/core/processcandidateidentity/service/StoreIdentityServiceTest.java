@@ -196,7 +196,7 @@ class StoreIdentityServiceTest {
                     USER_ID,
                     VCS,
                     List.of(),
-                    P2,
+                    P0,
                     STRONGEST_MATCHED_VOT,
                     CandidateIdentityType.PENDING,
                     sharedAuditEventParameters);
@@ -205,8 +205,7 @@ class StoreIdentityServiceTest {
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertEquals(
-                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
                     CandidateIdentityType.PENDING,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
