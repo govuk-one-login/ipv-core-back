@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -42,8 +43,8 @@ import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_S
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
-import static uk.gov.di.ipv.core.library.enums.Vot.P0;
-import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.enums.Vot.*;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
@@ -405,5 +406,104 @@ class StoreIdentityServiceTest {
                                     CandidateIdentityType.NEW,
                                     sharedAuditEventParameters));
         }
+
+        @Test
+        void shouldSetSisRecordCreatedFlagToTrueWhenFeatureFlagIsEnabled()
+                throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
+            // arrange
+            when(httpResponse.statusCode()).thenReturn(202);
+            when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+
+            // act
+            storeIdentityService.storeIdentity(
+                    USER_ID,
+                    VCS,
+                    List.of(),
+                    P1,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.NEW,
+                    sharedAuditEventParameters);
+
+            // assert
+            verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+            var auditEvent = auditEventCaptor.getValue();
+
+            assertTrue(
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .sisRecordCreated());
+        }
+
+        @Test
+        void
+                shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsEnabled_forPendingCandidateIdentity()
+                        throws EvcsServiceException {
+
+            // Act
+            storeIdentityService.storeIdentity(
+                    USER_ID,
+                    VCS,
+                    List.of(),
+                    P0,
+                    null,
+                    CandidateIdentityType.PENDING,
+                    sharedAuditEventParameters);
+
+            // Assert
+            verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+            var auditEvent = auditEventCaptor.getValue();
+
+            assertFalse(
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .sisRecordCreated());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+        }
+    }
+
+    @Test
+    void shouldSendAuditEventWithStrongestVot() throws Exception {
+        // arrange
+        var strongestVot = new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A));
+
+        storeIdentityService.storeIdentity(
+                USER_ID,
+                VCS,
+                List.of(),
+                P1,
+                strongestVot,
+                CandidateIdentityType.NEW,
+                sharedAuditEventParameters);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+        assertEquals(P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+    }
+
+    @Test
+    void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
+            throws EvcsServiceException {
+        // arrange
+        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
+
+        // act
+        storeIdentityService.storeIdentity(
+                USER_ID,
+                VCS,
+                List.of(),
+                P1,
+                STRONGEST_MATCHED_VOT,
+                CandidateIdentityType.NEW,
+                sharedAuditEventParameters);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertFalse(
+                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                        .sisRecordCreated());
     }
 }

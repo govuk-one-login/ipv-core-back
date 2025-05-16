@@ -180,7 +180,7 @@ public class EvcsService {
     }
 
     public void storePendingIdentityWithPut(String userId, List<VerifiableCredential> credentials)
-            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
+            throws EvcsServiceException {
         var putUserVcsDto = createPendingPutUserVcsDto(userId, credentials);
         evcsClient.storeUserVCs(putUserVcsDto);
     }
@@ -258,32 +258,6 @@ public class EvcsService {
                         .toList();
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
             updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
-        if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
-    }
-
-    public void storeCompletedIdentityWithPost(
-            String userId,
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs)
-            throws EvcsServiceException {
-        List<EvcsCreateUserVCsDto> userVCsToStore =
-                credentials.stream()
-                        .filter(
-                                credential ->
-                                        existingEvcsUserVCs.stream()
-                                                .noneMatch(
-                                                        evcsVC ->
-                                                                evcsVC.vc()
-                                                                        .equals(
-                                                                                credential
-                                                                                        .getVcString())))
-                        .map(
-                                vc ->
-                                        new EvcsCreateUserVCsDto(
-                                                vc.getVcString(), CURRENT, null, ONLINE))
-                        .toList();
-        if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
-            updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, false);
         if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
     }
 
