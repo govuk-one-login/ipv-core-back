@@ -55,8 +55,13 @@ Feature: Audit Events
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    And I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
-    And I submit a 'next' event
+    # We want to wait a suitable period of time to let the request to the process-async-cri lambda to finish before
+    # starting a new session. This will hopefully reduce flakiness with this test where we expect an exact sequence
+    # of audit events to be generated.
+    When I wait for 3 seconds for the async credential to be processed
+    And I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
