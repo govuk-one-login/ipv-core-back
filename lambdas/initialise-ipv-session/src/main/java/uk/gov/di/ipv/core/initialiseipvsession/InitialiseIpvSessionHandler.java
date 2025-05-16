@@ -210,11 +210,11 @@ public class InitialiseIpvSessionHandler
 
             if (configService.enabled(AIS_ENABLED)) {
                 // If this is a reverification journey then we can skip the call to AIS
-                var aisReproveIdentity =
-                        isReverification
-                                ? false
-                                : aisService.needsToReproveIdentity(
-                                        clientOAuthSessionItem.getUserId());
+                var aisReproveIdentity = false;
+                if (!isReverification) {
+                    aisReproveIdentity =
+                            aisService.needsToReproveIdentity(clientOAuthSessionItem.getUserId());
+                }
                 clientOAuthSessionItem.setReproveIdentity(aisReproveIdentity);
                 clientOAuthSessionService.updateClientSessionDetails(clientOAuthSessionItem);
             }

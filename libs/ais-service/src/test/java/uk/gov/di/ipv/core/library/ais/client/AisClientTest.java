@@ -101,8 +101,7 @@ class AisClientTest {
 
         // Assert
         verify(httpClient).send(httpRequestArgumentCaptor.capture(), any());
-        assertThat(httpRequestArgumentCaptor.getValue().uri().toString())
-                .isEqualTo(AIS_ENDPOINT_URL);
+        assertThat(httpRequestArgumentCaptor.getValue().uri()).hasToString(AIS_ENDPOINT_URL);
     }
 
     @Test
