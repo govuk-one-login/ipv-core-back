@@ -88,6 +88,7 @@ public class IssueClientAccessTokenHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
         try {
             tokenRequestValidator.authenticateClient(input.getBody());

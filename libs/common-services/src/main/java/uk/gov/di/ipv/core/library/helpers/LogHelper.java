@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import io.opentelemetry.api.trace.Span;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -78,7 +79,9 @@ public class LogHelper {
         LOG_SCORE_TYPE("scoreType"),
         LOG_SECRET_ID("secretId"),
         LOG_SHA256_ACCESS_TOKEN("sha256AccessToken"),
+        LOG_SPAN_ID("dt.span_id"),
         LOG_STATUS_CODE("statusCode"),
+        LOG_TRACE_ID("dt.trace_id"),
         LOG_UNCORRELATABLE_DATA("uncorrelatableData"),
         LOG_USER_STATE("userState"),
         LOG_VOT("vot");
@@ -96,6 +99,16 @@ public class LogHelper {
 
     private LogHelper() {
         throw new IllegalStateException("Utility class");
+    }
+
+    public static void attachTraceId() {
+        // Adapted from
+        // https://docs.dynatrace.com/docs/analyze-explore-automate/logs/lma-log-enrichment#retrieve-span-and-trace-ids
+        var spanContext = Span.current().getSpanContext();
+        if (spanContext.isValid()) {
+            attachFieldToLogs(LogField.LOG_TRACE_ID, spanContext.getTraceId());
+            attachFieldToLogs(LogField.LOG_SPAN_ID, spanContext.getSpanId());
+        }
     }
 
     public static void attachComponentId(ConfigService configService) {

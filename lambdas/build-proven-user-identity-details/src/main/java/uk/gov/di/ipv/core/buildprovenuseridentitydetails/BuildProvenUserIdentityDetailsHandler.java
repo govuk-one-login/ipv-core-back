@@ -76,6 +76,7 @@ public class BuildProvenUserIdentityDetailsHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
