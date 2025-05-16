@@ -40,6 +40,8 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
+import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
@@ -95,6 +97,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -108,6 +111,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
@@ -170,6 +174,7 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private VerifiableCredentialValidator mockVerifiableCredentialValidator;
     @Mock private EvcsService mockEvcsService;
+    @Mock private AisService mockAisService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     @Captor private ArgumentCaptor<ErrorObject> errorObjectArgumentCaptor;
@@ -339,6 +344,57 @@ class InitialiseIpvSessionHandlerTest {
         verify(mockClientOAuthSessionDetailsService)
                 .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
         assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
+    }
+
+    @Test
+    void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequestUsingAis()
+            throws JsonProcessingException, JarValidationException, ParseException,
+                    AisClientException {
+        // Arrange
+        clientOAuthSessionItem.setReproveIdentity(false);
+        when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
+        when(mockConfigService.enabled(AIS_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
+                        any(), any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+        when(mockAisService.needsToReproveIdentity(TEST_USER_ID)).thenReturn(true);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedValues = auditEventCaptor.getAllValues();
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                capturedValues.get(1).getEventName());
+
+        AuditExtensionAccountIntervention extensions =
+                (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
+        assertEquals("reprove_identity", extensions.getType());
+        assertNull(extensions.getSuccess());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
+
+        var clientOAuthSessionDetailsCaptor = ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
+        verify(mockClientOAuthSessionDetailsService)
+                .updateClientSessionDetails(clientOAuthSessionDetailsCaptor.capture());
+        assertTrue(clientOAuthSessionDetailsCaptor.getValue().getReproveIdentity());
     }
 
     @Test
@@ -712,6 +768,7 @@ class InitialiseIpvSessionHandlerTest {
         @BeforeEach
         void setUp() throws Exception {
             when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
+            when(mockConfigService.enabled(CoreFeatureFlag.AIS_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                     .thenReturn(ipvSessionItem);
