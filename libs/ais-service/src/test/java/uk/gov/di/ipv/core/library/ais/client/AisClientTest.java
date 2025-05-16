@@ -38,7 +38,7 @@ class AisClientTest {
     private static final String TEST_BASE_URL = "https://example.com";
     private static final String TEST_USER_ID = "testUserId";
     private static final String AIS_ENDPOINT_URL = TEST_BASE_URL + "/ais/" + TEST_USER_ID;
-    private static final String AIS_RESPONSE_INVALID = "{badProperty: 'value'}";
+    private static final String AIS_RESPONSE_INVALID = "{'message': 'test message'}";
 
     @Mock HttpClient httpClient;
     @Captor private ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor;
@@ -111,7 +111,7 @@ class AisClientTest {
             throws IOException, InterruptedException, AisClientException {
         // Arrange
         HttpResponse<String> badAisResponse = mock(HttpResponse.class);
-        when(badAisResponse.body()).thenReturn(AIS_RESPONSE_REPROVE_IDENTITY);
+        when(badAisResponse.body()).thenReturn(AIS_RESPONSE_INVALID);
         when(badAisResponse.statusCode()).thenReturn(SC_SERVER_ERROR);
         HttpResponse<String> goodAisResponse = mock(HttpResponse.class);
         when(goodAisResponse.body()).thenReturn(AIS_RESPONSE_NO_INTERVENTION);
@@ -128,11 +128,30 @@ class AisClientTest {
     }
 
     @Test
-    void getAccountInterventionStatus_whenCalledForAValidUser_doesntRetryFatalAisErrors()
+    void getAccountInterventionStatus_whenCalledForAValidUser_retriesIoExceptions()
+            throws IOException, InterruptedException, AisClientException {
+        // Arrange
+        HttpResponse<String> goodAisResponse = mock(HttpResponse.class);
+        when(goodAisResponse.body()).thenReturn(AIS_RESPONSE_NO_INTERVENTION);
+        when(goodAisResponse.statusCode()).thenReturn(SC_OK);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandlers.ofString().getClass())))
+                .thenThrow(new IOException("test"))
+                .thenReturn(goodAisResponse);
+
+        // Act
+        var result = underTest.getAccountInterventionStatus(TEST_USER_ID);
+
+        // Assert
+        assertThat(result).isEqualToComparingFieldByFieldRecursively(AIS_NO_INTERVENTION_DTO);
+        verify(httpClient, times(2)).send(any(), any());
+    }
+
+    @Test
+    void getAccountInterventionStatus_whenAisReturnsABadResponse_doesntRetryFatalAisErrors()
             throws IOException, InterruptedException {
         // Arrange
         HttpResponse<String> badAisResponse = mock(HttpResponse.class);
-        when(badAisResponse.body()).thenReturn(AIS_RESPONSE_REPROVE_IDENTITY);
+        when(badAisResponse.body()).thenReturn(AIS_RESPONSE_INVALID);
         when(badAisResponse.statusCode()).thenReturn(SC_NOT_FOUND);
         when(httpClient.send(any(), any(HttpResponse.BodyHandlers.ofString().getClass())))
                 .thenReturn(badAisResponse);
