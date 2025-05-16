@@ -197,6 +197,8 @@ When(
   },
 );
 
+// Currently this method is only needed for audit log tests where an exact list of audit events is needed.
+// For other tests you probably want to use the "I start new '<journey>' journeys until I get a '<page>' page response" step
 When(
   "I wait for {int} seconds for the async credential to be processed",
   async (delayInSeconds: number) => {
@@ -206,7 +208,7 @@ When(
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  /I start a new '([\w-]+)' journey( with reprove identity)? and return to a '([\w-]+)' page response$/,
+  /I start new '([\w-]+)' journeys( with reprove identity)? until I get a '([\w-]+)' page response$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,

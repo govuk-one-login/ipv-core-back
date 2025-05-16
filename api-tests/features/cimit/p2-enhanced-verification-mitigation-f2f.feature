@@ -35,7 +35,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -61,7 +61,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -74,7 +74,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
       When I submit a 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
 
@@ -91,7 +91,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -117,7 +117,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -161,7 +161,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -188,7 +188,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -215,7 +215,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

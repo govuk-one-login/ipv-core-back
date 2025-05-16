@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum ConfigurationVariable {
+    AIS_API_BASE_URL("ais/apiBaseUrl"),
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     BACKEND_SESSION_TIMEOUT("self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("self/backendSessionTtl"),
