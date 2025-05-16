@@ -16,12 +16,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_NO_INTERVENTION_DTO;
@@ -122,6 +124,25 @@ class AisClientTest {
 
         // Assert
         assertThat(result).isEqualToComparingFieldByFieldRecursively(AIS_NO_INTERVENTION_DTO);
+        verify(httpClient, times(4)).send(any(), any());
+    }
+
+    @Test
+    void getAccountInterventionStatus_whenCalledForAValidUser_doesntRetryFatalAisErrors()
+            throws IOException, InterruptedException {
+        // Arrange
+        HttpResponse<String> badAisResponse = mock(HttpResponse.class);
+        when(badAisResponse.body()).thenReturn(AIS_RESPONSE_REPROVE_IDENTITY);
+        when(badAisResponse.statusCode()).thenReturn(SC_NOT_FOUND);
+        when(httpClient.send(any(), any(HttpResponse.BodyHandlers.ofString().getClass())))
+                .thenReturn(badAisResponse);
+
+        // Act & Assert
+        assertThrows(
+                AisClientException.class,
+                () -> underTest.getAccountInterventionStatus(TEST_USER_ID));
+
+        verify(httpClient, times(1)).send(any(), any());
     }
 
     @Test
