@@ -58,22 +58,20 @@ public class StoreIdentityService {
             throws EvcsServiceException {
 
         boolean isSiRecordCreated = false;
+        boolean isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
         if (configService.enabled(STORED_IDENTITY_SERVICE)) {
             isSiRecordCreated =
-                    storeIdentityWithPutOrPost(
+                    tryStoreIdentityWithPutOrFallbackToPost(
                             userId,
                             sessionCredentials,
                             evcsVcs,
                             achievedVot,
                             strongestMatchedVot,
-                            identityType);
+                            isPendingIdentity);
         } else {
             LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
             evcsService.storeCompletedOrPendingIdentityWithPost(
-                    userId,
-                    sessionCredentials,
-                    evcsVcs,
-                    identityType.equals(CandidateIdentityType.PENDING));
+                    userId, sessionCredentials, evcsVcs, isPendingIdentity);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
@@ -82,36 +80,33 @@ public class StoreIdentityService {
                 strongestMatchedVot, identityType, auditEventParameters, isSiRecordCreated);
     }
 
-    private boolean storeIdentityWithPutOrPost(
+    private boolean tryStoreIdentityWithPutOrFallbackToPost(
             String userId,
             List<VerifiableCredential> sessionCredentials,
             List<EvcsGetUserVCDto> evcsVcs,
             Vot achievedVot,
             VotMatchingResult.VotAndProfile strongestMatchedVot,
-            CandidateIdentityType identityType)
+            boolean isPendingIdentity)
             throws EvcsServiceException {
-        boolean isStoredIdentityRecordCreated = false;
         try {
             LOGGER.info(LogHelper.buildLogMessage("Attempting to store user VCs with PUT"));
-            if (identityType == CandidateIdentityType.PENDING) {
+            if (isPendingIdentity) {
                 evcsService.storePendingIdentityWithPut(userId, sessionCredentials);
+                return false;
             } else {
                 var httpResponse =
                         evcsService.storeCompletedIdentityWithPut(
                                 userId, sessionCredentials, strongestMatchedVot, achievedVot);
-                isStoredIdentityRecordCreated = httpResponse.statusCode() == 202;
+                return httpResponse.statusCode() == 202;
             }
         } catch (FailedToCreateStoredIdentityForEvcsException | EvcsServiceException e) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
                             "Failed to store user VCs with PUT, falling back to POST method"));
             evcsService.storeCompletedOrPendingIdentityWithPost(
-                    userId,
-                    sessionCredentials,
-                    evcsVcs,
-                    identityType.equals(CandidateIdentityType.PENDING));
+                    userId, sessionCredentials, evcsVcs, isPendingIdentity);
+            return false;
         }
-        return isStoredIdentityRecordCreated;
     }
 
     private void sendIdentityStoredEvent(
