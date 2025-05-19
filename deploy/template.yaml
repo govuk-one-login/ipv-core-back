@@ -2296,7 +2296,7 @@ Resources:
                     - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
                       - !Sub "_${Environment}"
                   - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: f2fAsyncCriResponseQueuePermission
               Effect: Allow
               Action:
@@ -2306,7 +2306,7 @@ Resources:
               Resource: !If
                 - IsStagingIntProd
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, f2fAsyncCriResponseQueueArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: dcmawAsyncCriResponseQueuePermission
               Effect: Allow
               Action:
@@ -2316,7 +2316,7 @@ Resources:
               Resource: !If
                 - IsStagingIntProd
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: sharedStubAsyncCriResponseQueueKmsKeyPermission
               Effect: Allow
               Action:
@@ -2324,7 +2324,7 @@ Resources:
               Resource: !If
                 - IsDevOrBuild
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueKmsKeyArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: f2fAsyncCriResponseQueueKmsKeyPermission
               Effect: Allow
               Action:
@@ -2332,7 +2332,7 @@ Resources:
               Resource: !If
                 - IsStagingIntProd
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, f2fAsyncCriResponseQueueKmsKeyArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: dcmawAsyncCriResponseQueueKmsKeyPermission
               Effect: Allow
               Action:
@@ -2340,7 +2340,7 @@ Resources:
               Resource: !If
                 - IsStagingIntProd
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueKmsKeyArn ]
-                - ""
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
       AutoPublishAlias: live
 
   ProcessAsyncCriCredentialFunctionLogGroup:
