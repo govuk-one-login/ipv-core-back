@@ -2291,10 +2291,9 @@ Resources:
                 - IsDevOrBuild
                 - !If
                   - IsDevelopment
-                  - !Join
-                    - ''
-                    - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
-                      - !Sub "_${Environment}"
+                  - !Sub
+                    - "${BaseArn}_${Environment}"
+                    - BaseArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
                   - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
                 - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: f2fAsyncCriResponseQueuePermission
@@ -2365,10 +2364,9 @@ Resources:
       FunctionName: !Ref ProcessAsyncCriCredentialFunction
       EventSourceArn: !If
         - IsDevelopment
-        - !Join
-          - ''
-          - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
-            - !Sub "_${Environment}"
+        - !Sub
+          - "${BaseArn}_${Environment}"
+          - BaseArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
         - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
       BatchSize: 1
       Enabled: true
