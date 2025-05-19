@@ -172,10 +172,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-      # PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: PYI_ESCAPE
 
@@ -542,10 +538,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -557,10 +549,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-      # PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -668,10 +656,6 @@ states:
       next:
         targetJourney: F2F_HAND_OFF
         targetState: START
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
