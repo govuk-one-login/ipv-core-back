@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processcandidateidentity.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
@@ -57,17 +58,26 @@ public class StoreIdentityService {
             SharedAuditEventParameters auditEventParameters)
             throws EvcsServiceException {
 
-        boolean isSiRecordCreated = false;
-        boolean isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
+        var hasStoredSiObject = false;
+        var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
         if (configService.enabled(STORED_IDENTITY_SERVICE)) {
-            isSiRecordCreated =
-                    tryStoreIdentityWithPutOrFallbackToPost(
-                            userId,
-                            sessionCredentials,
-                            evcsVcs,
-                            achievedVot,
-                            strongestMatchedVot,
-                            isPendingIdentity);
+            try {
+                LOGGER.info(LogHelper.buildLogMessage("Attempting to store user VCs with PUT"));
+                if (isPendingIdentity) {
+                    evcsService.storePendingIdentityWithPut(userId, sessionCredentials);
+                } else {
+                    var httpResponse =
+                            evcsService.storeCompletedIdentityWithPut(
+                                    userId, sessionCredentials, strongestMatchedVot, achievedVot);
+                    hasStoredSiObject = httpResponse.statusCode() == HttpStatusCode.ACCEPTED;
+                }
+            } catch (FailedToCreateStoredIdentityForEvcsException | EvcsServiceException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Failed to store user VCs with PUT, falling back to POST method"));
+                evcsService.storeCompletedOrPendingIdentityWithPost(
+                        userId, sessionCredentials, evcsVcs, isPendingIdentity);
+            }
         } else {
             LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
             evcsService.storeCompletedOrPendingIdentityWithPost(
@@ -77,36 +87,7 @@ public class StoreIdentityService {
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
         sendIdentityStoredEvent(
-                strongestMatchedVot, identityType, auditEventParameters, isSiRecordCreated);
-    }
-
-    private boolean tryStoreIdentityWithPutOrFallbackToPost(
-            String userId,
-            List<VerifiableCredential> sessionCredentials,
-            List<EvcsGetUserVCDto> evcsVcs,
-            Vot achievedVot,
-            VotMatchingResult.VotAndProfile strongestMatchedVot,
-            boolean isPendingIdentity)
-            throws EvcsServiceException {
-        try {
-            LOGGER.info(LogHelper.buildLogMessage("Attempting to store user VCs with PUT"));
-            if (isPendingIdentity) {
-                evcsService.storePendingIdentityWithPut(userId, sessionCredentials);
-                return false;
-            } else {
-                var httpResponse =
-                        evcsService.storeCompletedIdentityWithPut(
-                                userId, sessionCredentials, strongestMatchedVot, achievedVot);
-                return httpResponse.statusCode() == 202;
-            }
-        } catch (FailedToCreateStoredIdentityForEvcsException | EvcsServiceException e) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "Failed to store user VCs with PUT, falling back to POST method"));
-            evcsService.storeCompletedOrPendingIdentityWithPost(
-                    userId, sessionCredentials, evcsVcs, isPendingIdentity);
-            return false;
-        }
+                strongestMatchedVot, identityType, auditEventParameters, hasStoredSiObject);
     }
 
     private void sendIdentityStoredEvent(

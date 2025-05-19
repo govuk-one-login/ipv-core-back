@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
@@ -43,8 +44,9 @@ import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_S
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
-import static uk.gov.di.ipv.core.library.enums.Vot.*;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
@@ -224,8 +226,6 @@ class StoreIdentityServiceTest {
         void
                 shouldSendAuditEventWithNullVotAndIdentityTypeExtensionWhenIdentityPendingWithFailedVot()
                         throws Exception {
-            // Arrange
-
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
@@ -286,7 +286,7 @@ class StoreIdentityServiceTest {
         @Test
         void shouldStoreCompletedIdentityWithPutEndpoint() throws Exception {
             // Arrange
-            when(httpResponse.statusCode()).thenReturn(202);
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
             when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
 
@@ -411,7 +411,7 @@ class StoreIdentityServiceTest {
         void shouldSetSisRecordCreatedFlagToTrueWhenFeatureFlagIsEnabled()
                 throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
             // arrange
-            when(httpResponse.statusCode()).thenReturn(202);
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
             when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
 
@@ -429,9 +429,12 @@ class StoreIdentityServiceTest {
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
 
+            assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
             assertTrue(
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .sisRecordCreated());
+            assertEquals(
+                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
         }
 
         @Test
@@ -458,28 +461,6 @@ class StoreIdentityServiceTest {
                             .sisRecordCreated());
             assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
         }
-    }
-
-    @Test
-    void shouldSendAuditEventWithStrongestVot() throws Exception {
-        // arrange
-        var strongestVot = new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A));
-
-        storeIdentityService.storeIdentity(
-                USER_ID,
-                VCS,
-                List.of(),
-                P1,
-                strongestVot,
-                CandidateIdentityType.NEW,
-                sharedAuditEventParameters);
-
-        // assert
-        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
-        var auditEvent = auditEventCaptor.getValue();
-
-        assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-        assertEquals(P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
     }
 
     @Test
