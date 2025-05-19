@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -22,6 +23,7 @@ import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParame
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 
 public class StoreIdentityService {
@@ -55,11 +57,22 @@ public class StoreIdentityService {
             SharedAuditEventParameters auditEventParameters)
             throws EvcsServiceException {
 
-        if (identityType == CandidateIdentityType.PENDING) {
-            evcsService.storePendingIdentity(userId, sessionCredentials, evcsVcs, achievedVot);
+        var isPending = identityType.equals(CandidateIdentityType.PENDING);
+        if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+            try {
+                LOGGER.info(LogHelper.buildLogMessage("Attempting to store user VCs with PUT"));
+                evcsService.storeCompletedOrPendingIdentityWithPut(
+                        userId, sessionCredentials, strongestMatchedVot, achievedVot, isPending);
+            } catch (FailedToCreateStoredIdentityForEvcsException | EvcsServiceException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Failed to store user VCs with PUT, falling back to POST method"));
+                evcsService.storeCompletedOrPendingIdentityWithPost(
+                        userId, sessionCredentials, evcsVcs, isPending);
+            }
         } else {
-            evcsService.storeCompletedIdentity(
-                    userId, sessionCredentials, evcsVcs, strongestMatchedVot, achievedVot);
+            evcsService.storeCompletedOrPendingIdentityWithPost(
+                    userId, sessionCredentials, evcsVcs, isPending);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));

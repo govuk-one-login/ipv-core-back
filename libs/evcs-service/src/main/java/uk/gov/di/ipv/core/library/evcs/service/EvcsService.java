@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -10,7 +9,6 @@ import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -27,8 +25,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
@@ -57,31 +53,6 @@ public class EvcsService {
         this.evcsClient = new EvcsClient(configService);
         this.configService = configService;
         this.storedIdentityService = new StoredIdentityService(configService);
-    }
-
-    public void storeCompletedIdentity(
-            String userId,
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs,
-            VotMatchingResult.VotAndProfile strongestMatchedVot,
-            Vot achievedVot)
-            throws EvcsServiceException {
-        persistUserVCs(
-                userId,
-                credentials,
-                currentAndPendingEvcsVcs,
-                strongestMatchedVot,
-                achievedVot,
-                false);
-    }
-
-    public void storePendingIdentity(
-            String userId,
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs,
-            Vot achievedVot)
-            throws EvcsServiceException {
-        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, null, achievedVot, true);
     }
 
     public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
@@ -207,70 +178,84 @@ public class EvcsService {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
-    private void persistUserVCs(
+    public void storeCompletedOrPendingIdentityWithPut(
             String userId,
             List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs,
             VotMatchingResult.VotAndProfile strongestAchievedVot,
             Vot achievedVot,
             boolean isPendingIdentity)
+            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
+        var putUserVcsDto =
+                isPendingIdentity
+                        ? createPendingPutUserVcsDto(userId, credentials)
+                        : createCompletedPutUserVcsDto(
+                                userId, credentials, strongestAchievedVot, achievedVot);
+
+        evcsClient.storeUserVCs(putUserVcsDto);
+    }
+
+    private EvcsPutUserVCsDto createCompletedPutUserVcsDto(
+            String userId,
+            List<VerifiableCredential> credentials,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot)
+            throws FailedToCreateStoredIdentityForEvcsException {
+        var storedIdentityJwt =
+                storedIdentityService.getStoredIdentityForEvcs(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+
+        return new EvcsPutUserVCsDto(
+                userId,
+                credentials.stream()
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(), CURRENT, null, ONLINE))
+                        .toList(),
+                storedIdentityJwt);
+    }
+
+    private EvcsPutUserVCsDto createPendingPutUserVcsDto(
+            String userId, List<VerifiableCredential> credentials) {
+        return new EvcsPutUserVCsDto(
+                userId,
+                credentials.stream()
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(), PENDING_RETURN, null, ONLINE))
+                        .toList(),
+                null);
+    }
+
+    public void storeCompletedOrPendingIdentityWithPost(
+            String userId,
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> existingEvcsUserVCs,
+            boolean isPendingIdentity)
             throws EvcsServiceException {
-        try {
-            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
-                List<EvcsCreateUserVCsDto> userVCsToStore =
-                        credentials.stream()
-                                .map(
-                                        vc ->
-                                                new EvcsCreateUserVCsDto(
-                                                        vc.getVcString(),
-                                                        isPendingIdentity
-                                                                ? PENDING_RETURN
-                                                                : CURRENT,
-                                                        null,
-                                                        ONLINE))
-                                .toList();
-
-                EvcsStoredIdentityDto storedIdentityJwt = null;
-                if (!isPendingIdentity) {
-                    storedIdentityJwt =
-                            storedIdentityService.getStoredIdentityForEvcs(
-                                    userId, credentials, strongestAchievedVot, achievedVot);
-                }
-                var putUserVcsDto =
-                        new EvcsPutUserVCsDto(userId, userVCsToStore, storedIdentityJwt);
-
-                evcsClient.storeUserVCs(putUserVcsDto);
-            } else {
-                List<EvcsCreateUserVCsDto> userVCsToStore =
-                        credentials.stream()
-                                .filter(
-                                        credential ->
-                                                existingEvcsUserVCs.stream()
-                                                        .noneMatch(
-                                                                evcsVC ->
-                                                                        evcsVC.vc()
-                                                                                .equals(
-                                                                                        credential
-                                                                                                .getVcString())))
-                                .map(
-                                        vc ->
-                                                new EvcsCreateUserVCsDto(
-                                                        vc.getVcString(),
-                                                        isPendingIdentity
-                                                                ? PENDING_RETURN
-                                                                : CURRENT,
-                                                        null,
-                                                        ONLINE))
-                                .toList();
-                if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
-                    updateExistingUserVCs(
-                            userId, credentials, existingEvcsUserVCs, isPendingIdentity);
-                if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
-            }
-        } catch (FailedToCreateStoredIdentityForEvcsException e) {
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS);
-        }
+        List<EvcsCreateUserVCsDto> userVCsToStore =
+                credentials.stream()
+                        .filter(
+                                credential ->
+                                        existingEvcsUserVCs.stream()
+                                                .noneMatch(
+                                                        evcsVC ->
+                                                                evcsVC.vc()
+                                                                        .equals(
+                                                                                credential
+                                                                                        .getVcString())))
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(),
+                                                isPendingIdentity ? PENDING_RETURN : CURRENT,
+                                                null,
+                                                ONLINE))
+                        .toList();
+        if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
+            updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
+        if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
     }
 
     private void updateExistingUserVCs(
