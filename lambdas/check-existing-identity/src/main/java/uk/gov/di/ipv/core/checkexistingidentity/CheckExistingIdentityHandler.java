@@ -198,6 +198,7 @@ public class CheckExistingIdentityHandler
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
 
         try {

@@ -120,12 +120,15 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
+  IsDevOrBuild: !Or
+    - !Condition IsDevelopment
+    - !Condition IsBuild
   IsStaging: !Equals [ !Ref Environment, "staging" ]
   IsBuildOrStaging: !Or
     - !Condition IsBuild
     - !Condition IsStaging
   IsProduction: !Equals [ !Ref Environment, "production" ]
-  IsSubscriptionEnviroment: !Or
+  IsStagingIntProd: !Or
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
@@ -160,8 +163,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      sharedStubAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      f2fAsyncCriResponseQueueArn: "not-used"
+      f2fAsyncCriResponseQueueKmsKeyArn: "not-used"
+      dcmawAsyncCriResponseQueueArn: "not-used"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
@@ -171,8 +178,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      sharedStubAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      f2fAsyncCriResponseQueueArn: "not-used"
+      f2fAsyncCriResponseQueueKmsKeyArn: "not-used"
+      dcmawAsyncCriResponseQueueArn: "not-used"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "457601271792": # Build
@@ -180,8 +191,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_build"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      sharedStubAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_build"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+      f2fAsyncCriResponseQueueArn: "not-used"
+      f2fAsyncCriResponseQueueKmsKeyArn: "not-used"
+      dcmawAsyncCriResponseQueueArn: "not-used"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "335257547869": # Staging
@@ -189,8 +204,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
+      sharedStubAsyncCriResponseQueueArn: "not-used"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "not-used"
+      f2fAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
+      f2fAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
+      dcmawAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:730335288219:mob-async-backend-ipv-core-outbound"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:730335288219:key/d2326cb1-e2fc-4a81-98dc-3b6101bdb01f"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "991138514218": # Integration
@@ -198,8 +217,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
+      sharedStubAsyncCriResponseQueueArn: "not-used"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "not-used"
+      f2fAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
+      f2fAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
+      dcmawAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:992382392501:mob-async-backend-ipv-core-outbound"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:992382392501:key/c3d600cd-bde4-4595-a5e2-991c46802cbb"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "075701497069": # Production
@@ -207,8 +230,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
+      sharedStubAsyncCriResponseQueueArn: "not-used"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "not-used"
+      f2fAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
+      f2fAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
+      dcmawAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:339712924890:mob-async-backend-ipv-core-outbound"
+      dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:339712924890:key/24e580d2-ea02-4e41-986b-1a53242480a5"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
   SecurityGroups:
@@ -383,7 +410,7 @@ Resources:
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -612,7 +639,7 @@ Resources:
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -745,7 +772,7 @@ Resources:
 
   IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -841,7 +868,7 @@ Resources:
 
   BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -969,7 +996,7 @@ Resources:
 
   InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1079,7 +1106,7 @@ Resources:
 
   BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1229,7 +1256,7 @@ Resources:
 
   ProcessCriCallbackLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1344,7 +1371,7 @@ Resources:
 
   ProcessMobileAppCallbackLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1459,7 +1486,7 @@ Resources:
 
   CheckMobileAppVcReceiptLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1579,7 +1606,7 @@ Resources:
 
   BuildUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1685,7 +1712,7 @@ Resources:
 
   UserReverificationFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1821,7 +1848,7 @@ Resources:
 
   JourneyEngineStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -1923,7 +1950,7 @@ Resources:
 
   IPVProcessJourneyEventFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2037,7 +2064,7 @@ Resources:
 
   BuildProvenUserIdentityDetailsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2154,7 +2181,7 @@ Resources:
 
   CheckExistingIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2254,39 +2281,65 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-            - Sid: asyncCriResponseQueuePermission
+            - Sid: sharedStubAsyncCriResponseQueuePermission
               Effect: Allow
               Action:
                 - sqs:DeleteMessage
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: !If
-                - IsDevelopment
-                - !Join
-                  - ''
-                  - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-                    - !Sub "_${Environment}"
-                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-            - Sid: asyncCriResponseQueueKmsKeyPermission
+                - IsDevOrBuild
+                - !If
+                  - IsDevelopment
+                  - !Sub
+                    - "${BaseArn}_${Environment}"
+                    - BaseArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
+                  - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
+            - Sid: f2fAsyncCriResponseQueuePermission
+              Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: !If
+                - IsStagingIntProd
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, f2fAsyncCriResponseQueueArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
+            - Sid: dcmawAsyncCriResponseQueuePermission
+              Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource: !If
+                - IsStagingIntProd
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
+            - Sid: sharedStubAsyncCriResponseQueueKmsKeyPermission
               Effect: Allow
               Action:
                 - kms:Decrypt
-              Resource: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueKmsKeyArn ]
-      Events:
-        AsyncCriResponse:
-          Type: SQS
-          Properties:
-            Enabled: true
-            Queue: !If
-              - IsDevelopment
-              - !Join
-                - ''
-                - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-                  - !Sub "_${Environment}"
-              - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-            BatchSize: 1
-            FunctionResponseTypes:
-              - ReportBatchItemFailures
+              Resource: !If
+                - IsDevOrBuild
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueKmsKeyArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
+            - Sid: f2fAsyncCriResponseQueueKmsKeyPermission
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !If
+                - IsStagingIntProd
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, f2fAsyncCriResponseQueueKmsKeyArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
+            - Sid: dcmawAsyncCriResponseQueueKmsKeyPermission
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !If
+                - IsStagingIntProd
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueKmsKeyArn ]
+                - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
       AutoPublishAlias: live
 
   ProcessAsyncCriCredentialFunctionLogGroup:
@@ -2298,11 +2351,49 @@ Resources:
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
+
+  SharedStubQueueEventSourceMapping:
+    Condition: IsDevOrBuild
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref ProcessAsyncCriCredentialFunction
+      EventSourceArn: !If
+        - IsDevelopment
+        - !Sub
+          - "${BaseArn}_${Environment}"
+          - BaseArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
+        - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueArn ]
+      BatchSize: 1
+      Enabled: true
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+
+  F2fQueueEventSourceMapping:
+    Condition: IsStagingIntProd
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref ProcessAsyncCriCredentialFunction
+      EventSourceArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, f2fAsyncCriResponseQueueArn ]
+      BatchSize: 1
+      Enabled: true
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+
+  DcmawQueueEventSourceMapping:
+    Condition: IsStagingIntProd
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref ProcessAsyncCriCredentialFunction
+      EventSourceArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueArn ]
+      BatchSize: 1
+      Enabled: true
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
 
   CheckGpg45ScoreFunction:
     Type: AWS::Serverless::Function
@@ -2384,7 +2475,7 @@ Resources:
 
   CheckGpg45ScoreFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2479,7 +2570,7 @@ Resources:
 
   CallDcmawAsyncCriFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2579,7 +2670,7 @@ Resources:
 
   ResetSessionIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2664,7 +2755,7 @@ Resources:
 
   CheckReverificationIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
@@ -2774,7 +2865,7 @@ Resources:
 
   ProcessCandidateIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
+    Condition: IsStagingIntProd
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""

@@ -86,6 +86,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
 
         try {

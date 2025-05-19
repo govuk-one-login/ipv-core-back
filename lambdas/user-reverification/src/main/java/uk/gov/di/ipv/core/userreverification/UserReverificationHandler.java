@@ -91,6 +91,8 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
