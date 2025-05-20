@@ -55,6 +55,9 @@ const config = {
     managementTicfUrl: getMandatoryConfig("TICF_STUB_BASE_URL"),
     managementTicfApiKey: getMandatoryConfig("MANAGEMENT_TICF_API_KEY"),
   },
+  ais: {
+    managementAisUrl: getMandatoryConfig("AIS_STUB_BASE_URL"),
+  },
 };
 
 export default config;

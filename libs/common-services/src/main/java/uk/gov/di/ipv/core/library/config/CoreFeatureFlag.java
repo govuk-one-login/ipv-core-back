@@ -10,7 +10,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     SQS_ASYNC("sqsAsync"),
     KID_JAR_HEADER("kidJarHeaderEnabled"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
-    STORED_IDENTITY_SERVICE("storedIdentityServiceEnabled");
+    STORED_IDENTITY_SERVICE("storedIdentityServiceEnabled"),
+    AIS_ENABLED("accountInterventionsEnabled");
 
     private final String name;
 

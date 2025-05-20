@@ -301,7 +301,6 @@ public class CheckExistingIdentityHandler
             }
 
             // No breaching CIs.
-
             var areGpg45VcsCorrelated =
                     userIdentityService.areVcsCorrelated(credentialBundle.credentials);
 
@@ -318,26 +317,22 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
-            // No profile matched.
-
+            // No profile matched, are we waiting for an async VC?
             if (asyncCriStatus.isAwaitingVc()) {
                 return asyncCriStatus.getJourneyForAwaitingVc(false);
             }
 
-            // No awaited async vc.
-
+            // No awaited async vc, do we already have an async VC.
             if (asyncCriStatus.isPendingReturn()) {
                 if (asyncCriStatus.cri() == F2F) {
 
                     // Returned with F2F async VC. Should have matched a profile.
-
                     return buildF2FNoMatchResponse(
                             areGpg45VcsCorrelated, auditEventUser, deviceInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
                     // Can attempt to complete a profile from here.
-
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
@@ -353,7 +348,6 @@ public class CheckExistingIdentityHandler
             }
 
             // No relevant async CRI
-
             return getNewIdentityJourney(targetVot);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException

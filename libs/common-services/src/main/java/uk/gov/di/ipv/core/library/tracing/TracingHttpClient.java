@@ -61,8 +61,9 @@ public class TracingHttpClient extends HttpClient {
             // We occasionally see HTTP/2 GOAWAY messages and in build we occasionally see
             // connection resets for idle connections in the pool. Retrying uses a different
             // connection.
-            if (e.getMessage().contains("GOAWAY received")
-                    || e.getMessage().contains("Connection reset")
+            if ((e.getMessage() != null
+                            && (e.getMessage().contains("GOAWAY received")
+                                    || e.getMessage().contains("Connection reset")))
                     || e instanceof HttpRetryException) {
                 LOGGER.warn(
                         LogHelper.buildErrorMessage("Retrying after non-fatal HTTP IOException", e)
