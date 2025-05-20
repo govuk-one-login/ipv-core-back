@@ -1,0 +1,95 @@
+@Build
+Feature: P1 CIMIT - Nino alternate doc
+  Rule: New P1 identity
+    Background:
+      Given I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'nino' CRI response
+
+    Scenario: Failed nino and use DCMAW instead
+      When I submit 'kenneth-with-needs-alternate-doc-ci' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'pyi-nino-no-match-another-way' page response
+      When I submit an 'mobileApp' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+
+    Scenario Outline: Failed nino and use web photo ID instead
+      When I submit 'kenneth-with-needs-alternate-doc-ci' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'pyi-nino-no-match-another-way' page response
+      When I submit an '<event>' event
+      Then I get a '<cri>' CRI response
+      When I submit '<details>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details to the CRI stub
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'kbv' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+
+      Examples:
+        | event          | cri            | details                      |
+        | drivingLicence | drivingLicence | kenneth-driving-permit-valid |
+        | passport       | ukPassport     | kenneth-passport-valid       |
+
+    Scenario: Failed nino and use post office instead
+      When I submit 'kenneth-with-needs-alternate-doc-ci' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'pyi-nino-no-match-another-way' page response
+      When I submit an 'postOffice' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details to the CRI stub
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-verification-1' details with attributes to the async CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'page-face-to-face-handoff' page response
+      # Return journey
+      When I start a new 'low-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+
+    Scenario: Failed nino and return to RP
+      When I submit 'kenneth-with-needs-alternate-doc-ci' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'pyi-nino-no-match-another-way' page response
+      When I submit a 'relyingParty' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
