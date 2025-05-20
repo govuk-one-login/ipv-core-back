@@ -45,7 +45,7 @@ public class TestData {
                                     .reproveIdentity(false)
                                     .resetPassword(false)
                                     .build())
-                    .auditLevel(AisAuditLevel.standard)
+                    .auditLevel(AisAuditLevel.STANDARD)
                     .history(new AccountInterventionStatusDto.InterventionHistory[0])
                     .build();
     public static final String AIS_RESPONSE_REPROVE_IDENTITY =
@@ -89,7 +89,7 @@ public class TestData {
                                     .reproveIdentity(true)
                                     .resetPassword(false)
                                     .build())
-                    .auditLevel(AisAuditLevel.standard)
+                    .auditLevel(AisAuditLevel.STANDARD)
                     .history(new AccountInterventionStatusDto.InterventionHistory[0])
                     .build();
 }
