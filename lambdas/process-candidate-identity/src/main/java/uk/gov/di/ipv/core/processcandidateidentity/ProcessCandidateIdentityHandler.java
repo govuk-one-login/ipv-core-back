@@ -201,6 +201,7 @@ public class ProcessCandidateIdentityHandler
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
 
@@ -438,7 +439,7 @@ public class ProcessCandidateIdentityHandler
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)
                         ? null
-                        : votMatchingResult.strongestRequestedMatch().orElse(null);
+                        : votMatchingResult.strongestMatch().orElse(null);
         storeIdentityService.storeIdentity(
                 userId,
                 sessionVcs,

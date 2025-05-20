@@ -203,10 +203,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: BANK_ACCOUNT_START_PAGE
         checkIfDisabled:
@@ -220,10 +216,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: BANK_ACCOUNT_START_PAGE
         checkIfDisabled:
@@ -239,10 +231,6 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
         auditEvents:
           - IPV_NO_PHOTO_ID_JOURNEY_START
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
 
@@ -255,10 +243,6 @@ states:
         targetState: WEB_DL_OR_PASSPORT
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -604,10 +588,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -619,10 +599,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -729,10 +705,6 @@ states:
       next:
         targetJourney: F2F_HAND_OFF
         targetState: START
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE

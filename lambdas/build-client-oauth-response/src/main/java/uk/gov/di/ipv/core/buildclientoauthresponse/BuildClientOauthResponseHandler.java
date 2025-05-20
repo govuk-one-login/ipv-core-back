@@ -98,7 +98,7 @@ public class BuildClientOauthResponseHandler
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
 
         try {

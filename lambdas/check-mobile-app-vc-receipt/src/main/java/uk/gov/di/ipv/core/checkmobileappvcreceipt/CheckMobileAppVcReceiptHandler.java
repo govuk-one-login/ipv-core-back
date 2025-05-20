@@ -101,6 +101,9 @@ public class CheckMobileAppVcReceiptHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
+
         try {
             var request = parseRequest(input);
 
@@ -192,7 +195,6 @@ public class CheckMobileAppVcReceiptHandler
                 clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(request.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
-        LogHelper.attachComponentId(configService);
 
         // Retrieve and validate cri response and vc
         var criResponseItem = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);

@@ -87,6 +87,9 @@ public class ProcessMobileAppCallbackHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
+
         try {
             var callbackRequest = parseCallbackRequest(input);
 
@@ -150,7 +153,6 @@ public class ProcessMobileAppCallbackHandler
         // Attach variables to logs
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
-        LogHelper.attachComponentId(configService);
 
         // Validate CRI state
         var criState = callbackRequest.getState();

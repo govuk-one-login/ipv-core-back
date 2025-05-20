@@ -151,6 +151,7 @@ public class InitialiseIpvSessionHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
 
         try {

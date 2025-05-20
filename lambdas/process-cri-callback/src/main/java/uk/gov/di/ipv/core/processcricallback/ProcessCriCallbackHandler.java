@@ -149,6 +149,8 @@ public class ProcessCriCallbackHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
         CriCallbackRequest callbackRequest = null;
 
         try {
@@ -323,7 +325,6 @@ public class ProcessCriCallbackHandler
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
-        LogHelper.attachComponentId(configService);
         LogHelper.attachCriSessionIdToLogs(callbackRequest.getState());
 
         EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());

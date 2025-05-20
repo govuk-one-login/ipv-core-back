@@ -96,6 +96,7 @@ public class ProcessAsyncCriCredentialHandler
     @Metrics(captureColdStart = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
         try {
+            LogHelper.attachTraceId();
             LogHelper.attachComponentId(configService);
             var failedRecords = new ArrayList<SQSBatchResponse.BatchItemFailure>();
 
