@@ -3323,7 +3323,7 @@ Resources:
           ReturnData: true
           MetricStat:
             Metric:
-              Namespace: AWS/Lambda
+              Namespace: Custom/Lambda
               MetricName: IOExceptionCount
             Period: 60
             Stat: Sum
