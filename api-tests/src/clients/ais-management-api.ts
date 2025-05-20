@@ -2,11 +2,11 @@ import config from "../config/config.js";
 
 export const primeResponseForUser = async (
   userId: string,
-  desiredResponse: string,
+  desiredResponse: AisValidResponseTypes,
 ) => {
   const url = `${config.ais.managementAisUrl}/management/user/${userId}`;
   const requestBody = {
-    intervention: desiredResponse,
+    intervention: AisValidResponseTypes[desiredResponse],
   };
 
   const response = await fetch(url, {
@@ -23,3 +23,14 @@ export const primeResponseForUser = async (
     );
   }
 };
+
+export enum AisValidResponseTypes {
+  AIS_NO_INTERVENTION,
+  AIS_ACCOUNT_SUSPENDED,
+  AIS_ACCOUNT_UNSUSPENDED,
+  AIS_ACCOUNT_BLOCKED,
+  AIS_ACCOUNT_UNBLOCKED,
+  AIS_FORCED_USER_PASSWORD_RESET,
+  AIS_FORCED_USER_IDENTITY_VERIFY,
+  AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+}
