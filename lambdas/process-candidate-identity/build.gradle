@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
 	implementation libs.bundles.awsLambda,
+			project(":libs:ais-service"),
 			project(":libs:common-services"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),

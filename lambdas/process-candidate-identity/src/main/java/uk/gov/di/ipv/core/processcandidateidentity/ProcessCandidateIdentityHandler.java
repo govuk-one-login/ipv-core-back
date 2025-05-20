@@ -2,12 +2,17 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
+import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
+import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -76,7 +81,9 @@ import java.util.Set;
 
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_AIS_API;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -91,6 +98,7 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCOUNT_INTERVENTION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -100,6 +108,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UN
 public class ProcessCandidateIdentityHandler
         implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_PROFILE_UNMET =
             new JourneyResponse(JOURNEY_PROFILE_UNMET_PATH);
@@ -109,6 +118,8 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+    private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
+            new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -124,6 +135,7 @@ public class ProcessCandidateIdentityHandler
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
     private final EvcsService evcsService;
+    private final AisService aisService;
 
     // Candidate identities that should be subject to a COI check
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
@@ -162,6 +174,7 @@ public class ProcessCandidateIdentityHandler
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
         this.evcsService = new EvcsService(configService);
+        this.aisService = new AisService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -180,7 +193,8 @@ public class ProcessCandidateIdentityHandler
             VotMatcher votMatcher,
             CimitUtilityService cimitUtilityService,
             TicfCriService ticfCriService,
-            EvcsService evcsService) {
+            EvcsService evcsService,
+            AisService aisService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
@@ -195,6 +209,7 @@ public class ProcessCandidateIdentityHandler
         this.ticfCriService = ticfCriService;
         this.cimitUtilityService = cimitUtilityService;
         this.evcsService = evcsService;
+        this.aisService = aisService;
     }
 
     @Override
@@ -221,6 +236,16 @@ public class ProcessCandidateIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String userId = clientOAuthSessionItem.getUserId();
+
+            if (configService.enabled(AIS_ENABLED)
+                    && midJourneyInterventionDetected(
+                            userId, ipvSessionItem.getInitialAccountInterventionState())) {
+                ipvSessionItem.setErrorCode("session_invalidated");
+                ipvSessionItem.setErrorDescription("Account intervention detected");
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+                return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
+            }
+
             var sessionVcs =
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
@@ -253,6 +278,13 @@ public class ProcessCandidateIdentityHandler
                             JOURNEY_ERROR_PATH,
                             HttpStatusCode.BAD_REQUEST,
                             UNEXPECTED_PROCESS_IDENTITY_TYPE)
+                    .toObjectMap();
+        } catch (AisClientException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to call AIS API", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                            ERROR_CALLING_AIS_API)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
@@ -300,6 +332,72 @@ public class ProcessCandidateIdentityHandler
         } finally {
             auditService.awaitAuditEvents();
         }
+    }
+
+    private boolean midJourneyInterventionDetected(
+            String userId, IpvSessionItem.AccountInterventionState initialAccountInterventionState)
+            throws AisClientException {
+        var currentAccountInterventionState = aisService.fetchAccountState(userId);
+
+        // If no intervention flags are set then there can't have been an intervention
+        if (!initialAccountInterventionState.isBlocked()
+                && !initialAccountInterventionState.isSuspended()
+                && !initialAccountInterventionState.isResetPassword()
+                && !initialAccountInterventionState.isReproveIdentity()
+                && !currentAccountInterventionState.isBlocked()
+                && !currentAccountInterventionState.isSuspended()
+                && !currentAccountInterventionState.isResetPassword()
+                && !currentAccountInterventionState.isReproveIdentity()) {
+            return false;
+        }
+
+        // If the user is currently reproving their identity then the suspended and reprove identity
+        // flags may not have been reset yet.
+        if (notBlockedAndNotPasswordReset(
+                        initialAccountInterventionState, currentAccountInterventionState)
+                && initialAccountInterventionState.isSuspended()
+                && currentAccountInterventionState.isSuspended()
+                && initialAccountInterventionState.isReproveIdentity()
+                && currentAccountInterventionState.isReproveIdentity()) {
+            return false;
+        }
+
+        // If the user is currently reproving their identity and it has been detected
+        if (notBlockedAndNotPasswordReset(
+                        initialAccountInterventionState, currentAccountInterventionState)
+                && initialAccountInterventionState.isSuspended()
+                && !currentAccountInterventionState.isSuspended()
+                && initialAccountInterventionState.isReproveIdentity()
+                && !currentAccountInterventionState.isReproveIdentity()) {
+            return false;
+        }
+
+        // Otherwise an intervention flag has been set for some other reason
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Mid journey intervention detected. Initial state: %s Final state: %s"
+                                    .formatted(
+                                            OBJECT_MAPPER.writeValueAsString(
+                                                    initialAccountInterventionState),
+                                            OBJECT_MAPPER.writeValueAsString(
+                                                    currentAccountInterventionState))));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error converting account intervention state to string", e));
+            LOGGER.info(LogHelper.buildLogMessage("Mid journey intervention detected."));
+        }
+        return true;
+    }
+
+    private boolean notBlockedAndNotPasswordReset(
+            IpvSessionItem.AccountInterventionState initialAccountInterventionState,
+            AccountInterventionStatusDto.AccountState currentAccountInterventionState) {
+        return !initialAccountInterventionState.isBlocked()
+                && !initialAccountInterventionState.isResetPassword()
+                && !currentAccountInterventionState.isBlocked()
+                && !currentAccountInterventionState.isResetPassword();
     }
 
     private CoiCheckType getCoiCheckType(

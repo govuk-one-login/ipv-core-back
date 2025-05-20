@@ -128,11 +128,13 @@ public class IpvSessionService {
             String clientOAuthSessionId,
             ErrorObject errorObject,
             String emailAddress,
-            boolean isReverification) {
+            boolean isReverification,
+            IpvSessionItem.AccountInterventionState initialAccountInterventionState) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
+        ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
