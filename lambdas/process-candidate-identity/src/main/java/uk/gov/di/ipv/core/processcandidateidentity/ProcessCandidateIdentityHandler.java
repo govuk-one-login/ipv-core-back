@@ -439,7 +439,7 @@ public class ProcessCandidateIdentityHandler
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)
                         ? null
-                        : votMatchingResult.strongestRequestedMatch().orElse(null);
+                        : votMatchingResult.strongestMatch().orElse(null);
         storeIdentityService.storeIdentity(
                 userId,
                 sessionVcs,
