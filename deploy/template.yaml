@@ -2391,7 +2391,7 @@ Resources:
       FunctionName: !Ref ProcessAsyncCriCredentialFunction
       EventSourceArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dcmawAsyncCriResponseQueueArn ]
       BatchSize: 1
-      Enabled: false
+      Enabled: true
       FunctionResponseTypes:
         - ReportBatchItemFailures
 
