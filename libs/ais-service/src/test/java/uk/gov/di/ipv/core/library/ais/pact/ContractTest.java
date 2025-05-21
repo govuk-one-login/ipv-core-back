@@ -257,6 +257,7 @@ class ContractTest {
                 .toPact();
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     @PactTestFor(pactMethod = "invalidGetAccountInterventionRequestReturns400")
     void getUserAccountInterventionsReturns400Error(MockServer mockServer) {
@@ -286,6 +287,7 @@ class ContractTest {
                 .toPact();
     }
 
+    @SuppressWarnings("java:S4144")
     @Test
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns500")
     void getUserAccountInterventionsReturns500Error(MockServer mockServer) {
@@ -315,6 +317,7 @@ class ContractTest {
                 .toPact();
     }
 
+    @SuppressWarnings("java:S4144")
     @Test
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns502")
     void getUserAccountInterventionsReturns502Error(MockServer mockServer) {
@@ -343,6 +346,7 @@ class ContractTest {
                 .toPact();
     }
 
+    @SuppressWarnings("java:S4144")
     @Test
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns504")
     void getUserAccountInterventionsReturns504Error(MockServer mockServer) {
