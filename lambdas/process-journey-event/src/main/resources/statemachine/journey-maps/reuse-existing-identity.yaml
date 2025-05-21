@@ -27,6 +27,9 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -52,6 +55,9 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED

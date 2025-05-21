@@ -28,6 +28,9 @@ states:
     events:
       next:
         targetState: ERROR_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetState: ERROR_PAGE
       vcs-not-correlated:
