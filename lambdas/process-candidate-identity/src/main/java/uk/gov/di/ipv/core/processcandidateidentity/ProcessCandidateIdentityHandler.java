@@ -105,8 +105,8 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_PROFILE_UNMET_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
-    private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
-            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_COI_CHECK_FAILED =
+            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
@@ -357,7 +357,7 @@ public class ProcessCandidateIdentityHandler
                             auditEventParameters);
 
             if (!isCoiCheckSuccessful) {
-                return JOURNEY_COI_CHECK_FAILED;
+                return JOURNEY_COI_CHECK_FAILED.toObjectMap();
             }
         }
 
