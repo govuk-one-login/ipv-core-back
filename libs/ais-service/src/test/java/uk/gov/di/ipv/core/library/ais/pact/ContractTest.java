@@ -40,7 +40,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsNoInterventionWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(builder, AisInterventionType.AIS_NO_INTERVENTION);
     }
 
@@ -65,7 +65,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsSuspendedWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(builder, AisInterventionType.AIS_ACCOUNT_SUSPENDED);
     }
 
@@ -90,7 +90,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsUnsuspendedWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(builder, AisInterventionType.AIS_ACCOUNT_UNSUSPENDED);
     }
 
@@ -115,7 +115,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsBlockedWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(builder, AisInterventionType.AIS_ACCOUNT_BLOCKED);
     }
 
@@ -139,7 +139,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsUnblockedWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(builder, AisInterventionType.AIS_ACCOUNT_UNBLOCKED);
     }
 
@@ -164,7 +164,7 @@ class ContractTest {
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetAccountInterventionRequestReturnsForcedPasswordResetWith200(
-            PactDslWithProvider builder) {
+            PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(
                 builder, AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET);
     }
@@ -191,7 +191,7 @@ class ContractTest {
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact
             validGetAccountInterventionRequestReturnsForcedUserIdentityVerifyWith200(
-                    PactDslWithProvider builder) {
+                    PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(
                 builder, AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY);
     }
@@ -219,7 +219,7 @@ class ContractTest {
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact
             validGetAccountInterventionRequestReturnsForcedPasswordResetAndUserIdentityVerifyWith200(
-                    PactDslWithProvider builder) {
+                    PactDslWithProvider builder) throws Exception {
         return buildRequestResponsePact(
                 builder, AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY);
     }
@@ -248,7 +248,7 @@ class ContractTest {
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetAccountInterventionRequestReturns400(
             PactDslWithProvider builder) {
-        return builder.given("AIS returns a 400 Bad request response")
+        return builder.given("AIS returns a 400 Bad Request response")
                 .uponReceiving("an invalid request")
                 .path("/ais/" + TEST_USER_ID)
                 .method("GET")
@@ -274,9 +274,10 @@ class ContractTest {
     }
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidGetAccountInterventionRequestReturns500(
+    public RequestResponsePact getAccountInterventionRequestReturns500(
             PactDslWithProvider builder) {
-        return builder.given("AIS encounters an error and response with a 500")
+        return builder.given(
+                        "AIS encounters an error and responds with a 500 Internal Server Error")
                 .uponReceiving("a valid request")
                 .path("/ais/" + TEST_USER_ID)
                 .method("GET")
@@ -286,7 +287,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidGetAccountInterventionRequestReturns500")
+    @PactTestFor(pactMethod = "getAccountInterventionRequestReturns500")
     void getUserAccountInterventionsReturns500Error(MockServer mockServer) {
         // Arrange
         when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
@@ -302,7 +303,7 @@ class ContractTest {
     }
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidGetAccountInterventionRequestReturns502(
+    public RequestResponsePact getAccountInterventionRequestReturns502(
             PactDslWithProvider builder) {
         return builder.given("AIS returns a 502 Bad Gateway response")
                 .uponReceiving("a valid request")
@@ -310,11 +311,12 @@ class ContractTest {
                 .method("GET")
                 .willRespondWith()
                 .status(502)
+                .body(newJsonBody(body -> body.stringValue("message", "Bad Gateway")).build())
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidGetAccountInterventionRequestReturns502")
+    @PactTestFor(pactMethod = "getAccountInterventionRequestReturns502")
     void getUserAccountInterventionsReturns502Error(MockServer mockServer) {
         // Arrange
         when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
@@ -330,7 +332,7 @@ class ContractTest {
     }
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidGetAccountInterventionRequestReturns504(
+    public RequestResponsePact getAccountInterventionRequestReturns504(
             PactDslWithProvider builder) {
         return builder.given("AIS returns a 504 Gateway Timeout response")
                 .uponReceiving("a valid request")
@@ -342,7 +344,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidGetAccountInterventionRequestReturns504")
+    @PactTestFor(pactMethod = "getAccountInterventionRequestReturns504")
     void getUserAccountInterventionsReturns504Error(MockServer mockServer) {
         // Arrange
         when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
@@ -361,7 +363,8 @@ class ContractTest {
         return "http://localhost:" + mockServer.getPort();
     }
 
-    private static DslPart getResponseBodyByIntervention(AisInterventionType interventionType) {
+    private static DslPart getResponseBodyByIntervention(AisInterventionType interventionType)
+            throws Exception {
         switch (interventionType) {
             case AIS_NO_INTERVENTION -> {
                 return generateAisResponseBody(
@@ -408,10 +411,12 @@ class ContractTest {
                         true);
             }
         }
+
+        throw new Exception("AisInterventionType has no corresponding response body");
     }
 
     private static RequestResponsePact buildRequestResponsePact(
-            PactDslWithProvider builder, AisInterventionType interventionType) {
+            PactDslWithProvider builder, AisInterventionType interventionType) throws Exception {
         return builder.given(
                         String.format(
                                 "test-user-id has %s interventionType", interventionType.name()))
@@ -419,7 +424,8 @@ class ContractTest {
                 .given(String.format("intervention updatedAt is %s", CURRENT_TIME))
                 .given(String.format("intervention appliedAt is %s", CURRENT_TIME))
                 .given(String.format("intervention sentAt is %s", CURRENT_TIME))
-                .uponReceiving("a request to get a user's account interventions")
+                .uponReceiving(
+                        "a valid request to get a user's account interventions with userId 'test-user-id'")
                 .path("/ais/" + TEST_USER_ID)
                 .method("GET")
                 .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
