@@ -64,7 +64,7 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
-      unmet:
+      profile-unmet:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:
