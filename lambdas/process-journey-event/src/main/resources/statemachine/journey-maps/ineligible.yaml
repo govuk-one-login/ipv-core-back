@@ -46,15 +46,6 @@ states:
             targetState: ANOTHER_WAY_PAGE
           alternate-doc-invalid-passport:
             targetState: ANOTHER_WAY_PAGE
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -81,15 +72,6 @@ states:
             targetState: RETURN_TO_RP
           alternate-doc-invalid-passport:
             targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
