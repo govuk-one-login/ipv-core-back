@@ -92,6 +92,9 @@ states:
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   UPDATE_DETAILS_PAGE:
     response:

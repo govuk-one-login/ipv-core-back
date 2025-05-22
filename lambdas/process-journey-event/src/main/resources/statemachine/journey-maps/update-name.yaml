@@ -229,6 +229,9 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
             targetEntryEvent: appTriage
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS:
     nestedJourney: STRATEGIC_APP_TRIAGE

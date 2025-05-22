@@ -72,6 +72,9 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   IDENTITY_START_PAGE:
     response:
