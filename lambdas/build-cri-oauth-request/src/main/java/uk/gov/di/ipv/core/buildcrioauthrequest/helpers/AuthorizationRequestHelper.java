@@ -88,7 +88,7 @@ public class AuthorizationRequestHelper {
         }
 
         try {
-            return createSignedJwt(claimsSetBuilder.build(), signer, true);
+            return createSignedJwt(claimsSetBuilder.build(), signer);
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to sign shared attributes", e));
             throw new HttpResponseExceptionWithErrorBody(

@@ -195,7 +195,7 @@ public class CriApiService {
                             .build();
 
             var signedClientJwt =
-                    JwtHelper.createSignedJwt(clientAuthClaimsSet, signerFactory.getSigner(), true);
+                    JwtHelper.createSignedJwt(clientAuthClaimsSet, signerFactory.getSigner());
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
             var authorizationGrant = new AuthorizationCodeGrant(authorizationCode, redirectionUri);
