@@ -97,6 +97,13 @@ public class EvcsClient {
             if (CollectionUtils.isEmpty(evcsGetUserVCs.vcs())) {
                 LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
             }
+
+            // Temporary logging to discover if we are receiving too many VCs
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "%s VCs found in EVCS response", evcsGetUserVCs.vcs().size())));
+
             return evcsGetUserVCs;
         } catch (JsonProcessingException e) {
             throw new EvcsServiceException(
