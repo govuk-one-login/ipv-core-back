@@ -58,9 +58,6 @@ states:
       account-intervention:
         targetJourney: FAILED
         targetState: FAILED_ACCOUNT_INTERVENTION
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
