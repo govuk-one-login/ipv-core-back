@@ -394,7 +394,7 @@ class ContractTest {
                 return generateAisResponseBody(
                         AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET,
                         false,
-                        false,
+                        true,
                         false,
                         true);
             }
@@ -402,7 +402,7 @@ class ContractTest {
                 return generateAisResponseBody(
                         AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY,
                         false,
-                        false,
+                        true,
                         true,
                         false);
             }
@@ -410,7 +410,7 @@ class ContractTest {
                 return generateAisResponseBody(
                         AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
                         false,
-                        false,
+                        true,
                         true,
                         true);
             }
