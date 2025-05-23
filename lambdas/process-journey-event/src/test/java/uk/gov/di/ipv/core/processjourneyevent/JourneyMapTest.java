@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyI
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,6 +54,41 @@ class JourneyMapTest {
                     String.format(
                             "%s doesn't handle these CRI state events: %s",
                             stateAndEvents.state(), missingCriEvents));
+        }
+    }
+
+    @Test
+    void shouldHandleSameEventsForSameProcessStates() throws IOException {
+        var processStateMap = new HashMap<String, List<StateAndEvents>>();
+
+        for (var journeyType : IpvJourneyTypes.values()) {
+            var stateMachineInitializer = new StateMachineInitializer(journeyType);
+            var stateMachine = stateMachineInitializer.initialize();
+
+            findProcessStatesAndEvents(stateMachine, processStateMap);
+        }
+
+        for (var lambdaAndParameters : processStateMap.keySet()) {
+            var statesAndEvents = processStateMap.get(lambdaAndParameters);
+            var processStateEvents = new HashSet<String>();
+
+            for (var stateAndEvents : statesAndEvents) {
+                processStateEvents.addAll(stateAndEvents.events());
+            }
+
+            for (var stateAndEvents : statesAndEvents) {
+                var missingProcessStateEvents = new HashSet<>(processStateEvents);
+                missingProcessStateEvents.removeAll(stateAndEvents.events());
+
+                assertEquals(
+                        processStateEvents,
+                        stateAndEvents.events(),
+                        String.format(
+                                "%s using %s doesn't handle these events for this process state: %s",
+                                stateAndEvents.state(),
+                                lambdaAndParameters,
+                                missingProcessStateEvents));
+            }
         }
     }
 
@@ -372,6 +408,48 @@ class JourneyMapTest {
                 var nestedStateMachine =
                         nestedState.getNestedJourneyDefinition().getNestedJourneyStates();
                 findCriStatesAndEvents(nestedStateMachine, criStatesAndEvents, allCriEvents);
+            }
+        }
+    }
+
+    private void findProcessStatesAndEvents(
+            Map<String, State> stateMachine, Map<String, List<StateAndEvents>> processStateMap) {
+        for (var key : stateMachine.keySet()) {
+            var state = stateMachine.get(key);
+
+            if (state instanceof BasicState basicState) {
+                var response = basicState.getResponse();
+
+                if (response instanceof ProcessStepResponse processStepResponse) {
+                    var lambda = processStepResponse.getLambda();
+
+                    var lambdaInputs = processStepResponse.getLambdaInput();
+                    if (lambdaInputs != null) {
+                        var inputsInOrder =
+                                lambdaInputs.keySet().stream()
+                                        .sorted()
+                                        .map(k -> String.format("%s=%s", k, lambdaInputs.get(k)))
+                                        .toList();
+                        var inputs = String.join(", ", inputsInOrder);
+                        lambda = lambda + "(" + inputs + ")";
+                    }
+
+                    var processStateEvents = new HashSet<>(basicState.getEvents().keySet());
+
+                    if (basicState.getParent() != null) {
+                        processStateEvents.addAll(
+                                ((BasicState) stateMachine.get(basicState.getParent()))
+                                        .getEvents()
+                                        .keySet());
+                    }
+                    processStateMap
+                            .computeIfAbsent(lambda, k -> new ArrayList<>())
+                            .add(new StateAndEvents(key, processStateEvents));
+                }
+            } else if (state instanceof NestedJourneyInvokeState nestedState) {
+                var nestedStateMachine =
+                        nestedState.getNestedJourneyDefinition().getNestedJourneyStates();
+                findProcessStatesAndEvents(nestedStateMachine, processStateMap);
             }
         }
     }

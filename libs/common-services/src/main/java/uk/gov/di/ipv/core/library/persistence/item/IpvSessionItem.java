@@ -41,6 +41,7 @@ public class IpvSessionItem implements PersistenceItem {
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
+    private AccountInterventionState initialAccountInterventionState;
     @Builder.Default private List<String> stateStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
@@ -117,4 +118,10 @@ public class IpvSessionItem implements PersistenceItem {
     public void setJourneyContext(String journeyContext) {
         this.journeyContext = journeyContext;
     }
+
+    public record AccountInterventionState(
+            boolean isBlocked,
+            boolean isSuspended,
+            boolean isReproveIdentity,
+            boolean isResetPassword) {}
 }

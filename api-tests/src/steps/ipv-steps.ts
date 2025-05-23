@@ -39,6 +39,10 @@ import {
   compareAuditEvents,
   getAuditEventsForJourneyType,
 } from "../utils/audit-events.js";
+import {
+  AisValidResponseTypes,
+  primeResponseForUser,
+} from "../clients/ais-management-api.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -90,6 +94,7 @@ const startNewJourney = async (
   inheritedIdentity:
     | { inheritedIdentityId?: string; errorJwt?: boolean }
     | undefined,
+  aisStubResponse: AisValidResponseTypes | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
@@ -103,6 +108,11 @@ const startNewJourney = async (
     }),
     world.featureSet,
   );
+
+  if (aisStubResponse !== undefined) {
+    primeResponseForUser(world.userId, aisStubResponse);
+  }
+
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
     world.ipvSessionId,
@@ -134,9 +144,15 @@ When(
     reproveIdentity: " with reprove identity" | undefined,
     inheritedIdentityId: string | undefined,
   ): Promise<void> {
-    await startNewJourney(this, journeyType, !!reproveIdentity, {
-      inheritedIdentityId,
-    });
+    await startNewJourney(
+      this,
+      journeyType,
+      !!reproveIdentity,
+      {
+        inheritedIdentityId,
+      },
+      undefined,
+    );
   },
 );
 
@@ -144,7 +160,28 @@ When(
   "I start a new {string} journey with invalid redirect uri",
   async function (this: World, journeyType: string): Promise<void> {
     try {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, false, undefined, undefined);
+    } catch (e) {
+      if (e instanceof Error) {
+        this.error = e;
+      }
+    }
+  },
+);
+
+When(
+  "I start a new {string} journey with AIS stub response of {string}",
+  async function (
+    this: World,
+    journeyType: string,
+    aisResponseType: string,
+  ): Promise<void> {
+    try {
+      const responseType =
+        AisValidResponseTypes[
+          aisResponseType as keyof typeof AisValidResponseTypes
+        ];
+      await startNewJourney(this, journeyType, false, undefined, responseType);
     } catch (e) {
       if (e instanceof Error) {
         this.error = e;
@@ -193,7 +230,13 @@ Then(
 When(
   "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
   async function (this: World, journeyType: string): Promise<void> {
-    await startNewJourney(this, journeyType, false, { errorJwt: true });
+    await startNewJourney(
+      this,
+      journeyType,
+      false,
+      { errorJwt: true },
+      undefined,
+    );
   },
 );
 
@@ -218,7 +261,13 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
+      await startNewJourney(
+        this,
+        journeyType,
+        !!reproveIdentity,
+        undefined,
+        undefined,
+      );
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");

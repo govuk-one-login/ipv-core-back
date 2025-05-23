@@ -27,6 +27,9 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -52,13 +55,13 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
-      coi-check-failed:
+      account-intervention:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
-      unmet:
+      profile-unmet:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:
@@ -89,6 +92,9 @@ states:
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   UPDATE_DETAILS_PAGE:
     response:

@@ -76,6 +76,9 @@ states:
     events:
       next:
         targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:

@@ -229,6 +229,9 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
             targetEntryEvent: appTriage
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -316,6 +319,9 @@ states:
     events:
       next:
         targetState: IPV_SUCCESS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:

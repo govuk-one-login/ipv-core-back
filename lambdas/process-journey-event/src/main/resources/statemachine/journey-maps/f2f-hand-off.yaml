@@ -50,6 +50,9 @@ states:
     events:
       next:
         targetState: CRI_F2F
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED

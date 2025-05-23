@@ -196,10 +196,6 @@ public class InitialiseIpvSessionHandler
 
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
-            IpvSessionItem ipvSessionItem =
-                    ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId, null, emailAddress, isReverification);
-
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
                             clientOAuthSessionId,
@@ -209,18 +205,42 @@ public class InitialiseIpvSessionHandler
                                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                     claimsSet));
 
-            if (configService.enabled(AIS_ENABLED)) {
-                // If this is a reverification journey then we can skip the call to AIS
-                var aisReproveIdentity = false;
-                if (!isReverification) {
-                    aisReproveIdentity =
-                            aisService.needsToReproveIdentity(clientOAuthSessionItem.getUserId());
-                }
-                clientOAuthSessionItem.setReproveIdentity(aisReproveIdentity);
+            // Default the reprove identity value to the value from orchestration so it's consistent
+            // if we turn the feature on during a journey.
+            var initialAccountInterventionState =
+                    new IpvSessionItem.AccountInterventionState(
+                            false,
+                            false,
+                            clientOAuthSessionItem.getReproveIdentity() != null
+                                    && clientOAuthSessionItem.getReproveIdentity(),
+                            false);
+
+            // If this is a reverification journey then we can skip the call to AIS
+            if (configService.enabled(AIS_ENABLED) && !isReverification) {
+                var initialAccountState =
+                        aisService.fetchAccountState(clientOAuthSessionItem.getUserId());
+
+                initialAccountInterventionState =
+                        new IpvSessionItem.AccountInterventionState(
+                                initialAccountState.isBlocked(),
+                                initialAccountState.isSuspended(),
+                                initialAccountState.isReproveIdentity(),
+                                initialAccountState.isResetPassword());
+
+                clientOAuthSessionItem.setReproveIdentity(
+                        initialAccountInterventionState.isReproveIdentity());
                 clientOAuthSessionService.updateClientSessionDetails(clientOAuthSessionItem);
             }
 
-            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
+
+            IpvSessionItem ipvSessionItem =
+                    ipvSessionService.generateIpvSession(
+                            clientOAuthSessionId,
+                            null,
+                            emailAddress,
+                            isReverification,
+                            initialAccountInterventionState);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -300,7 +320,12 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId, e.getErrorObject(), null, false);
+                            clientOAuthSessionId,
+                            e.getErrorObject(),
+                            null,
+                            false,
+                            new IpvSessionItem.AccountInterventionState(
+                                    false, false, false, false));
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),
@@ -341,8 +366,7 @@ public class InitialiseIpvSessionHandler
         } catch (AisClientException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to call AIS API", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.ERROR_CALLING_AIS_API);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

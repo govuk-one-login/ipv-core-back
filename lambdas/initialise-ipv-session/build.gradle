@@ -22,6 +22,7 @@ dependencies {
 	annotationProcessor libs.lombok
 
 	testImplementation libs.hamcrest,
+			libs.assertJ,
 			libs.jacksonDatabind,
 			libs.junitJupiter,
 			project(path: ':libs:common-services', configuration: 'tests'),
