@@ -13,8 +13,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 
@@ -23,7 +21,6 @@ import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -33,13 +30,12 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 class JwtHelperTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void shouldCreateValidSignedJWT(boolean includeKid) throws Exception {
+    @Test
+    void shouldCreateValidSignedJWT() throws Exception {
         var signer = new LocalECDSASigner(getPrivateKey());
         var exampleClaimsSet = new JWTClaimsSet.Builder().claim("exampleField", "test").build();
 
-        var signedJWT = JwtHelper.createSignedJwt(exampleClaimsSet, signer, includeKid);
+        var signedJWT = JwtHelper.createSignedJwt(exampleClaimsSet, signer);
         var generatedClaims = signedJWT.getJWTClaimsSet();
 
         assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK))));
@@ -47,11 +43,7 @@ class JwtHelperTest {
         var claimsSet = OBJECT_MAPPER.readTree(generatedClaims.toString());
         assertEquals("test", claimsSet.get("exampleField").asText());
 
-        if (includeKid) {
-            assertEquals("test-fixtures-ec-key", signedJWT.getHeader().getKeyID());
-        } else {
-            assertNull(signedJWT.getHeader().getKeyID());
-        }
+        assertEquals("test-fixtures-ec-key", signedJWT.getHeader().getKeyID());
     }
 
     @Test

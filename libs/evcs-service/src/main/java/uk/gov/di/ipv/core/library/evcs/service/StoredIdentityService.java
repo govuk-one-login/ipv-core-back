@@ -94,7 +94,7 @@ public class StoredIdentityService {
         try {
             var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
 
-            return createSignedJwt(storedIdentity, signerFactory.getSigner(), false).serialize();
+            return createSignedJwt(storedIdentity, signerFactory.getSigner()).serialize();
         } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Unable to parse user credentials"));
             throw new FailedToCreateStoredIdentityForEvcsException(

@@ -50,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
@@ -319,7 +318,7 @@ class CriApiServiceTest {
 
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
-                    .when(() -> JwtHelper.createSignedJwt(any(), any(), anyBoolean()))
+                    .when(() -> JwtHelper.createSignedJwt(any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
             when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
             when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));

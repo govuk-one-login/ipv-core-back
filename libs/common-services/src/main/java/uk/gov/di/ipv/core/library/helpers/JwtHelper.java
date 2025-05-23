@@ -13,9 +13,9 @@ import uk.gov.di.ipv.core.library.signing.CoreSigner;
 public class JwtHelper {
     private JwtHelper() {}
 
-    public static SignedJWT createSignedJwt(
-            JWTClaimsSet claimsSet, CoreSigner signer, boolean includeKid) throws JOSEException {
-        JWSHeader jwsHeader = generateHeader(includeKid ? signer.getKid() : null);
+    public static SignedJWT createSignedJwt(JWTClaimsSet claimsSet, CoreSigner signer)
+            throws JOSEException {
+        JWSHeader jwsHeader = generateHeader(signer.getKid());
         SignedJWT signedJWT = new SignedJWT(jwsHeader, claimsSet);
         signedJWT.sign(signer);
         return signedJWT;

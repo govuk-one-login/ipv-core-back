@@ -64,7 +64,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -378,12 +377,8 @@ public class BuildCriOauthRequestHandler
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
 
-        if (configService.enabled(KID_JAR_HEADER)) {
-            return AuthorizationRequestHelper.createJweObject(
-                    rsaEncrypter, signedJWT, encKey.getKeyID());
-        }
-
-        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT, null);
+        return AuthorizationRequestHelper.createJweObject(
+                rsaEncrypter, signedJWT, encKey.getKeyID());
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
