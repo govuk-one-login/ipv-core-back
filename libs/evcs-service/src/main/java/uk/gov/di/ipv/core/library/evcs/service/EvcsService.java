@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -178,20 +179,22 @@ public class EvcsService {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
-    public void storeCompletedOrPendingIdentityWithPut(
+    public void storePendingIdentityWithPut(String userId, List<VerifiableCredential> credentials)
+            throws EvcsServiceException {
+        var putUserVcsDto = createPendingPutUserVcsDto(userId, credentials);
+        evcsClient.storeUserVCs(putUserVcsDto);
+    }
+
+    public HttpResponse<String> storeCompletedIdentityWithPut(
             String userId,
             List<VerifiableCredential> credentials,
             VotMatchingResult.VotAndProfile strongestAchievedVot,
-            Vot achievedVot,
-            boolean isPendingIdentity)
+            Vot achievedVot)
             throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
         var putUserVcsDto =
-                isPendingIdentity
-                        ? createPendingPutUserVcsDto(userId, credentials)
-                        : createCompletedPutUserVcsDto(
-                                userId, credentials, strongestAchievedVot, achievedVot);
-
-        evcsClient.storeUserVCs(putUserVcsDto);
+                createCompletedPutUserVcsDto(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+        return evcsClient.storeUserVCs(putUserVcsDto);
     }
 
     private EvcsPutUserVCsDto createCompletedPutUserVcsDto(

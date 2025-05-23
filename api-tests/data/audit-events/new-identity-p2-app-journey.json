@@ -253,7 +253,8 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "identity_type": "new",
-      "vot": "P2"
+      "vot": "P2",
+      "sis_record_created": true
     },
     "restricted": {
       "device_information": {}
