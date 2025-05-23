@@ -107,7 +107,8 @@ public class EvcsClient {
         }
     }
 
-    public void storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs) throws EvcsServiceException {
+    public HttpResponse<String> storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs)
+            throws EvcsServiceException {
         LOGGER.info(LogHelper.buildLogMessage("Preparing to store user VCs using PUT method"));
 
         try {
@@ -122,7 +123,7 @@ public class EvcsClient {
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -132,8 +133,8 @@ public class EvcsClient {
         }
     }
 
-    public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
-            throws EvcsServiceException {
+    public HttpResponse<String> storeUserVCs(
+            String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs) throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         "Preparing to store %d user VCs".formatted(userVCsForEvcs.size())));
@@ -149,7 +150,7 @@ public class EvcsClient {
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);

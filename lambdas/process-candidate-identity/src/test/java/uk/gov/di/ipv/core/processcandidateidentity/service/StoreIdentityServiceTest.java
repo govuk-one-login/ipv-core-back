@@ -11,10 +11,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -26,6 +28,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +45,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
@@ -65,6 +69,7 @@ class StoreIdentityServiceTest {
     private AuditEventUser testAuditEventUser;
     private SharedAuditEventParameters sharedAuditEventParameters;
 
+    @Mock HttpResponse<String> httpResponse;
     @Mock ConfigService configService;
     @Mock AuditService auditService;
     @Mock EvcsService evcsService;
@@ -197,7 +202,7 @@ class StoreIdentityServiceTest {
                     VCS,
                     List.of(),
                     P0,
-                    STRONGEST_MATCHED_VOT,
+                    null,
                     CandidateIdentityType.PENDING,
                     sharedAuditEventParameters);
 
@@ -227,7 +232,7 @@ class StoreIdentityServiceTest {
                     VCS,
                     List.of(),
                     P0,
-                    STRONGEST_MATCHED_VOT,
+                    null,
                     CandidateIdentityType.PENDING,
                     sharedAuditEventParameters);
 
@@ -280,6 +285,11 @@ class StoreIdentityServiceTest {
 
         @Test
         void shouldStoreCompletedIdentityWithPutEndpoint() throws Exception {
+            // Arrange
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+            when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
@@ -292,8 +302,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             verify(evcsService, times(0))
                     .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -315,9 +324,7 @@ class StoreIdentityServiceTest {
                     sharedAuditEventParameters);
 
             // Assert
-            verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, true);
+            verify(evcsService, times(1)).storePendingIdentityWithPut(USER_ID, VCS);
             verify(evcsService, times(0))
                     .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -331,8 +338,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(EvcsServiceException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
 
             // Act
             storeIdentityService.storeIdentity(
@@ -357,8 +363,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(FailedToCreateStoredIdentityForEvcsException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
 
             // Act
             storeIdentityService.storeIdentity(
@@ -383,8 +388,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(FailedToCreateStoredIdentityForEvcsException.class)
                     .when(evcsService)
-                    .storeCompletedOrPendingIdentityWithPut(
-                            USER_ID, VCS, STRONGEST_MATCHED_VOT, P2, false);
+                    .storeCompletedIdentityWithPut(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             doThrow(EvcsServiceException.class)
                     .when(evcsService)
                     .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
@@ -402,5 +406,85 @@ class StoreIdentityServiceTest {
                                     CandidateIdentityType.NEW,
                                     sharedAuditEventParameters));
         }
+
+        @Test
+        void shouldSetSisRecordCreatedFlagToTrueWhenFeatureFlagIsEnabled()
+                throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
+            // arrange
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+            when(evcsService.storeCompletedIdentityWithPut(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+
+            // act
+            storeIdentityService.storeIdentity(
+                    USER_ID,
+                    VCS,
+                    List.of(),
+                    P1,
+                    STRONGEST_MATCHED_VOT,
+                    CandidateIdentityType.NEW,
+                    sharedAuditEventParameters);
+
+            // assert
+            verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+            var auditEvent = auditEventCaptor.getValue();
+
+            assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
+            assertTrue(
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .sisRecordCreated());
+            assertEquals(
+                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+        }
+
+        @Test
+        void
+                shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsEnabled_forPendingCandidateIdentity()
+                        throws EvcsServiceException {
+
+            // Act
+            storeIdentityService.storeIdentity(
+                    USER_ID,
+                    VCS,
+                    List.of(),
+                    P0,
+                    null,
+                    CandidateIdentityType.PENDING,
+                    sharedAuditEventParameters);
+
+            // Assert
+            verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+            var auditEvent = auditEventCaptor.getValue();
+
+            assertFalse(
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .sisRecordCreated());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+        }
+    }
+
+    @Test
+    void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
+            throws EvcsServiceException {
+        // arrange
+        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
+
+        // act
+        storeIdentityService.storeIdentity(
+                USER_ID,
+                VCS,
+                List.of(),
+                P1,
+                STRONGEST_MATCHED_VOT,
+                CandidateIdentityType.NEW,
+                sharedAuditEventParameters);
+
+        // assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertFalse(
+                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                        .sisRecordCreated());
     }
 }
