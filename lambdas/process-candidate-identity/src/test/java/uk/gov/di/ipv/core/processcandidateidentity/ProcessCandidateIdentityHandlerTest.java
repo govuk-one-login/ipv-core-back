@@ -750,12 +750,14 @@ class ProcessCandidateIdentityHandlerTest {
                             new IpvSessionItem.AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, true, false, false)),
-                    // Reprove identity that cleared during the journey but was also blocked to start with
+                    // Reprove identity that cleared during the journey but was also blocked to
+                    // start with
                     Arguments.of(
                             new IpvSessionItem.AccountInterventionState(true, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
-                    // Reprove identity that cleared during the journey but got blocked during the journey
+                    // Reprove identity that cleared during the journey but got blocked during the
+                    // journey
                     Arguments.of(
                             new IpvSessionItem.AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
