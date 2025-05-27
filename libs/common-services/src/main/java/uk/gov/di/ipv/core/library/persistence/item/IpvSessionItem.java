@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
@@ -118,10 +119,4 @@ public class IpvSessionItem implements PersistenceItem {
     public void setJourneyContext(String journeyContext) {
         this.journeyContext = journeyContext;
     }
-
-    public record AccountInterventionState(
-            boolean isBlocked,
-            boolean isSuspended,
-            boolean isReproveIdentity,
-            boolean isResetPassword) {}
 }

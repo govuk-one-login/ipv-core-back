@@ -52,6 +52,7 @@ import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -360,8 +361,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockAisService.fetchAccountState(TEST_USER_ID))
                 .thenReturn(
                         new AccountInterventionStatusDto.AccountState(false, false, true, false));
-        var accountInterventionState =
-                new IpvSessionItem.AccountInterventionState(false, false, true, false);
+        var accountInterventionState = new AccountInterventionState(false, false, true, false);
         when(mockIpvSessionService.generateIpvSession(
                         any(), any(), any(), anyBoolean(), eq(accountInterventionState)))
                 .thenReturn(ipvSessionItem);
@@ -405,7 +405,7 @@ class InitialiseIpvSessionHandlerTest {
         assertTrue(clientOAuthSessionDetailsCaptor.getValue().getReproveIdentity());
 
         var accountInterventionStateCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.AccountInterventionState.class);
+                ArgumentCaptor.forClass(AccountInterventionState.class);
         verify(mockIpvSessionService)
                 .generateIpvSession(
                         anyString(),

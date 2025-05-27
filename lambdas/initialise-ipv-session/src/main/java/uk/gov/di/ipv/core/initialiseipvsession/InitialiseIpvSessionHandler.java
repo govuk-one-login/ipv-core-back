@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -208,7 +209,7 @@ public class InitialiseIpvSessionHandler
             // Default the reprove identity value to the value from orchestration so it's consistent
             // if we turn the feature on during a journey.
             var initialAccountInterventionState =
-                    new IpvSessionItem.AccountInterventionState(
+                    new AccountInterventionState(
                             false,
                             false,
                             clientOAuthSessionItem.getReproveIdentity() != null
@@ -221,7 +222,7 @@ public class InitialiseIpvSessionHandler
                         aisService.fetchAccountState(clientOAuthSessionItem.getUserId());
 
                 initialAccountInterventionState =
-                        new IpvSessionItem.AccountInterventionState(
+                        new AccountInterventionState(
                                 initialAccountState.isBlocked(),
                                 initialAccountState.isSuspended(),
                                 initialAccountState.isReproveIdentity(),
@@ -324,8 +325,7 @@ public class InitialiseIpvSessionHandler
                             e.getErrorObject(),
                             null,
                             false,
-                            new IpvSessionItem.AccountInterventionState(
-                                    false, false, false, false));
+                            new AccountInterventionState(false, false, false, false));
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),

@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -40,8 +41,8 @@ class IpvSessionServiceTest {
     private static final String ERROR_STATE = "ERROR";
     private static final JourneyState INITIAL_START_JOURNEY_STATE =
             new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE);
-    private static final IpvSessionItem.AccountInterventionState ACCOUNT_INTERVENTION_STATE =
-            new IpvSessionItem.AccountInterventionState(false, false, false, false);
+    private static final AccountInterventionState ACCOUNT_INTERVENTION_STATE =
+            new AccountInterventionState(false, false, false, false);
 
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;

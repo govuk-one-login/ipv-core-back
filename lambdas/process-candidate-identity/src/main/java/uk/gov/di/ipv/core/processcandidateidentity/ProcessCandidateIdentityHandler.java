@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -220,14 +221,13 @@ public class ProcessCandidateIdentityHandler
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
 
-        IpvSessionItem ipvSessionItem = null;
         try {
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
             var processIdentityType = RequestHelper.getProcessIdentityType(request);
 
-            ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -335,7 +335,7 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean midJourneyInterventionDetected(
-            String userId, IpvSessionItem.AccountInterventionState initialAccountInterventionState)
+            String userId, AccountInterventionState initialAccountInterventionState)
             throws AisClientException {
         var currentAccountInterventionState = aisService.fetchAccountState(userId);
 
@@ -392,7 +392,7 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean notBlockedAndNotPasswordReset(
-            IpvSessionItem.AccountInterventionState initialAccountInterventionState,
+            AccountInterventionState initialAccountInterventionState,
             AccountInterventionStatusDto.AccountState currentAccountInterventionState) {
         return !initialAccountInterventionState.isBlocked()
                 && !initialAccountInterventionState.isResetPassword()

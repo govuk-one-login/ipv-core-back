@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -163,7 +164,7 @@ class ProcessCandidateIdentityHandlerTest {
         ipvSessionItem.setVot(P2);
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
         ipvSessionItem.setInitialAccountInterventionState(
-                new IpvSessionItem.AccountInterventionState(false, false, false, false));
+                new AccountInterventionState(false, false, false, false));
         lenient()
                 .when(aisService.fetchAccountState(USER_ID))
                 .thenReturn(
@@ -592,7 +593,7 @@ class ProcessCandidateIdentityHandlerTest {
         @ParameterizedTest
         @MethodSource("createNonInterventionStates")
         void shouldNotInterruptProcessingIfNoMidJourneyAccountInterventionHasHappened(
-                IpvSessionItem.AccountInterventionState initialAccountInterventionState,
+                AccountInterventionState initialAccountInterventionState,
                 AccountInterventionStatusDto.AccountState finalAccountInterventionState)
                 throws Exception {
             // Arrange
@@ -654,17 +655,17 @@ class ProcessCandidateIdentityHandlerTest {
             return Stream.of(
                     // No interventions
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Reprove identity that has been detected during the journey
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, true, true, false),
+                            new AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Reprove identity that has not been detected during the journey
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, true, true, false),
+                            new AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, true, true, false)));
         }
@@ -672,7 +673,7 @@ class ProcessCandidateIdentityHandlerTest {
         @ParameterizedTest
         @MethodSource("createInterventionStates")
         void shouldInterruptProcessingIfMidJourneyAccountInterventionHasHappened(
-                IpvSessionItem.AccountInterventionState initialAccountInterventionState,
+                AccountInterventionState initialAccountInterventionState,
                 AccountInterventionStatusDto.AccountState finalAccountInterventionState)
                 throws Exception {
             // Arrange
@@ -702,64 +703,64 @@ class ProcessCandidateIdentityHandlerTest {
             return Stream.of(
                     // Initially blocked
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(true, false, false, false),
+                            new AccountInterventionState(true, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Initially just suspended
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, true, false, false),
+                            new AccountInterventionState(false, true, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Initially just reprove
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, true, false),
+                            new AccountInterventionState(false, false, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Initially reset password
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, true),
+                            new AccountInterventionState(false, false, false, true),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Finally blocked
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     true, false, false, false)),
                     // Finally just suspended
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, true, false, false)),
                     // Finally just reprove
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, true, false)),
                     // Finally reset password
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, true)),
                     // Reprove identity that has been triggered during the journey
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, false, false, false),
+                            new AccountInterventionState(false, false, false, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, true, true, false)),
                     // Reprove identity that cleared during the journey but got re-suspended
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, true, true, false),
+                            new AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, true, false, false)),
                     // Reprove identity that cleared during the journey but was also blocked to
                     // start with
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(true, true, true, false),
+                            new AccountInterventionState(true, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     false, false, false, false)),
                     // Reprove identity that cleared during the journey but got blocked during the
                     // journey
                     Arguments.of(
-                            new IpvSessionItem.AccountInterventionState(false, true, true, false),
+                            new AccountInterventionState(false, true, true, false),
                             new AccountInterventionStatusDto.AccountState(
                                     true, false, false, false)));
         }
