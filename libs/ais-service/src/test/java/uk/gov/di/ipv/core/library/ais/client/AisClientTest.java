@@ -129,7 +129,7 @@ class AisClientTest {
 
     @Test
     void getAccountInterventionStatus_whenCalledForAValidUser_doesntRetryIoExceptions()
-            throws IOException, InterruptedException, AisClientException {
+            throws IOException, InterruptedException {
         // Arrange
         HttpResponse<String> goodAisResponse = mock(HttpResponse.class);
         when(httpClient.send(any(), any(HttpResponse.BodyHandlers.ofString().getClass())))
