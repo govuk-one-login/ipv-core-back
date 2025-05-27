@@ -50,7 +50,6 @@ public class LogHelper {
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
         LOG_GPG45_PROFILE("gpg45Profile"),
         LOG_HASH_USER_ID("hashUserId"),
-        LOG_IS_USER_INITIATED("isUserInitiated"),
         LOG_IPV_SESSION_ID("ipvSessionId"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
         LOG_JWKS_URL("jwksUrl"),
