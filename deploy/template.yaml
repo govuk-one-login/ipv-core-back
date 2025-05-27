@@ -173,6 +173,7 @@ Mappings:
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
     "175872367215": # Core dev02
       environment: dev
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -186,6 +187,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
     "457601271792": # Build
       environment: build
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -199,6 +201,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
     "335257547869": # Staging
       environment: staging
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -212,6 +215,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:730335288219:key/d2326cb1-e2fc-4a81-98dc-3b6101bdb01f"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
     "991138514218": # Integration
       environment: integration
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -225,6 +229,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:992382392501:key/c3d600cd-bde4-4595-a5e2-991c46802cbb"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
     "075701497069": # Production
       environment: production
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -238,6 +243,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:339712924890:key/24e580d2-ea02-4e41-986b-1a53242480a5"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -710,9 +716,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -805,9 +813,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -906,9 +916,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1031,9 +1043,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1156,9 +1170,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1291,9 +1307,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1405,9 +1423,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1530,9 +1550,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1640,9 +1662,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1882,9 +1906,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1988,9 +2014,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2109,9 +2137,11 @@ Resources:
           - !If
             - IsBuildOrStaging
             - !Ref AWS::NoValue
-            - !Sub
-              - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              dynatraceLayerArn,
+            ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2219,9 +2249,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2422,9 +2454,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2511,9 +2545,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2604,9 +2640,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2702,9 +2740,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2789,9 +2829,11 @@ Resources:
       Layers:
         - !If
           - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
