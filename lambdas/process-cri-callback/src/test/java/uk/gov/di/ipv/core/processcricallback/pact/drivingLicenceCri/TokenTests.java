@@ -246,7 +246,9 @@ class TokenTests {
                     900);
 
     private static final String CLIENT_ASSERTION_SIGNING_KID = "testKid";
-    private static final String CLIENT_ASSERTION_HEADER = "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
+    private static final String CLIENT_ASSERTION_HEADER =
+            // pragma: allowlist nextline secret
+            "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ";
     private static final String CLIENT_ASSERTION_BODY =
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEcml2aW5nTGljZW5jZUNvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io

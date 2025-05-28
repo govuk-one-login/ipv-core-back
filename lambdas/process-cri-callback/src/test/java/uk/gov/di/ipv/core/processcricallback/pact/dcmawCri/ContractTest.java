@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
@@ -1783,9 +1782,7 @@ class ContractTest {
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
-        lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
+        lenient().when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
     }
 
     @NotNull
@@ -1816,7 +1813,9 @@ class ContractTest {
                     "dummySessionId", "dummyOAuthSessionId", DCMAW.getId(), "dummyConnection", 900);
 
     private static final String CLIENT_ASSERTION_SIGNING_KID = "testKid";
-    private static final String CLIENT_ASSERTION_HEADER = "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
+    private static final String CLIENT_ASSERTION_HEADER =
+            // pragma: allowlist nextline secret
+            "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ";
     private static final String CLIENT_ASSERTION_BODY =
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEY21hd0NvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
