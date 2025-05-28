@@ -47,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
@@ -109,7 +108,6 @@ class TokenTests {
                 .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
-        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
@@ -173,7 +171,6 @@ class TokenTests {
                 .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
-        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
