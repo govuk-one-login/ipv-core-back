@@ -46,6 +46,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
@@ -102,18 +103,18 @@ class TokenTests {
             throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
         when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn(900L);
-
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
@@ -165,17 +166,18 @@ class TokenTests {
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
         when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.enabled(KID_JAR_HEADER)).thenReturn(true);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
@@ -242,10 +244,11 @@ class TokenTests {
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", NINO.getId(), "dummyConnection", 900);
 
-    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    private static final String CLIENT_ASSERTION_SIGNING_KID = "testKid";
+    private static final String CLIENT_ASSERTION_HEADER = "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
     private static final String CLIENT_ASSERTION_BODY =
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlOaW5vQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "ZHj3_BoW2CJEsWA7i_Eq0tfi3HsmoHonHVmBaY7OAzOn-ZA_MYcIaRuMOCipK4_Ar1hCT1LMYveJrD0aYs1y0Q"; // pragma: allowlist secret
+            "ummfj9htevoj66nNM4ryPGo9KBrog5scQf-71fcyP8wuCRkHD5IZwkdmoqKopLl4J28t1L48R1kG7urwV_GRZw"; // pragma: allowlist secret
 }
