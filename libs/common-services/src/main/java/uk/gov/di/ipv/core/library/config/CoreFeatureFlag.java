@@ -8,7 +8,6 @@ public enum CoreFeatureFlag implements FeatureFlag {
     MFA_RESET("mfaResetEnabled"),
     P1_JOURNEYS_ENABLED("p1JourneysEnabled"),
     SQS_ASYNC("sqsAsync"),
-    KID_JAR_HEADER("kidJarHeaderEnabled"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     STORED_IDENTITY_SERVICE("storedIdentityServiceEnabled"),
     AIS_ENABLED("accountInterventionsEnabled");
