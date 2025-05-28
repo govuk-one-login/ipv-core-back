@@ -34,6 +34,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
@@ -53,6 +54,7 @@ Feature: Repeat fraud check journeys
       Then I get a 'P2' identity
       And my identity 'GivenName' is 'Ken'
       And my identity 'FamilyName' is 'Decerqueira'
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Family Name Update
       # Repeat fraud check with update family name
@@ -66,6 +68,7 @@ Feature: Repeat fraud check journeys
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address Update
       # Repeat fraud check with update address
@@ -83,6 +86,7 @@ Feature: Repeat fraud check journeys
       Then I get a 'P2' identity
       And my address 'buildingNumber' is '28'
       And my address 'addressLocality' is 'Bristol'
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address and Family Name Update
       # Repeat fraud check with update address and family name
@@ -110,6 +114,7 @@ Feature: Repeat fraud check journeys
       Then I get a 'P2' identity
       And my identity 'FamilyName' is 'Smith'
       And my address 'addressLocality' is 'Bristol'
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and given name
@@ -123,6 +128,7 @@ Feature: Repeat fraud check journeys
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      And I don't have a stored identity in EVCS
 
     Scenario: Unsupported Changes
       # Repeat fraud check with various unsupported events and back navigation
@@ -188,6 +194,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
@@ -205,6 +212,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address Update
       # Repeat fraud check with update address
@@ -220,6 +228,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and family name
@@ -241,6 +250,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
   Rule: Match M1C Fraud Check Unavailable
 
@@ -265,6 +275,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
@@ -282,6 +293,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address Update
       # Repeat fraud check with update address
@@ -295,6 +307,7 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and family name
@@ -314,3 +327,4 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS

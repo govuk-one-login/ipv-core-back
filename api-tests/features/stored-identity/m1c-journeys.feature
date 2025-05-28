@@ -50,7 +50,6 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'useApp' event
       Then I get a 'dcmaw' CRI response
 
-
     Scenario: Successful M1C P2 identity via DCMAW using chipped passport
       When I submit 'kenneth-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
@@ -67,8 +66,6 @@ Feature: Stored Identity - M1C Outcomes
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
-
-
 
   Rule: Returning existing M1C user goes through details confirmation
     Background:

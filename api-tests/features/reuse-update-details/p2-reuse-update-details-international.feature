@@ -27,6 +27,7 @@ Feature: International identity reuse update details
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my address 'buildingNumber' is '28'
+        And I don't have a stored identity in EVCS
 
     Scenario: International Address and Family Name Change
         When I submit a 'family-name-and-address' event
@@ -49,6 +50,7 @@ Feature: International identity reuse update details
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
+        And I don't have a stored identity in EVCS
 
     Scenario: International Address and Given Name Change
         When I submit a 'given-names-and-address' event
@@ -71,3 +73,4 @@ Feature: International identity reuse update details
         Then I get a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'streetName' is 'King Road'
+        And I don't have a stored identity in EVCS

@@ -26,6 +26,7 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I don't have a stored identity in EVCS
 
     # Reuse journey
     When I start a new 'medium-confidence' journey
@@ -35,6 +36,7 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I don't have a stored identity in EVCS
 
   Scenario: User with M1C is sent on reuse journey when no applicable fraud check
     Given the subject already has the following credentials
