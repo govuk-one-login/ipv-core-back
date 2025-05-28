@@ -49,8 +49,8 @@ Feature: Stored Identity - Update Existing Identity
 
     Examples:
       | selected-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
-      | given-names-only     | kenneth-changed-family-name-driving-permit-valid | kenneth-changed-family-name-score-2 | Kenneth             | Smith                |
-      | family-name-only     | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
+      | family-name-only     | kenneth-changed-family-name-driving-permit-valid | kenneth-changed-family-name-score-2 | Kenneth             | Smith                |
+      | given-names-only     | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
 
   Scenario Outline: Successful Address and Name Change - <selected-name-change>
     When I submit a '<selected-name-change>' event
