@@ -128,22 +128,20 @@ class AisClientTest {
     }
 
     @Test
-    void getAccountInterventionStatus_whenCalledForAValidUser_retriesIoExceptions()
-            throws IOException, InterruptedException, AisClientException {
+    void getAccountInterventionStatus_whenCalledForAValidUser_doesntRetryIoExceptions()
+            throws IOException, InterruptedException {
         // Arrange
         HttpResponse<String> goodAisResponse = mock(HttpResponse.class);
-        when(goodAisResponse.body()).thenReturn(AIS_RESPONSE_NO_INTERVENTION);
-        when(goodAisResponse.statusCode()).thenReturn(SC_OK);
         when(httpClient.send(any(), any(HttpResponse.BodyHandlers.ofString().getClass())))
                 .thenThrow(new IOException("test"))
                 .thenReturn(goodAisResponse);
 
-        // Act
-        var result = underTest.getAccountInterventionStatus(TEST_USER_ID);
+        // Act & Assert
+        assertThrows(
+                AisClientException.class,
+                () -> underTest.getAccountInterventionStatus(TEST_USER_ID));
 
-        // Assert
-        assertThat(result).isEqualToComparingFieldByFieldRecursively(AIS_NO_INTERVENTION_DTO);
-        verify(httpClient, times(2)).send(any(), any());
+        verify(httpClient, times(1)).send(any(), any());
     }
 
     @Test

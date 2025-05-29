@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
+import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -51,6 +52,7 @@ import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -95,6 +97,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -228,7 +231,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
@@ -272,7 +275,7 @@ class InitialiseIpvSessionHandlerTest {
         validEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(Boolean.TRUE);
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
@@ -309,7 +312,7 @@ class InitialiseIpvSessionHandlerTest {
         // Arrange
         clientOAuthSessionItem.setReproveIdentity(true);
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
@@ -354,14 +357,18 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setReproveIdentity(false);
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockConfigService.enabled(AIS_ENABLED)).thenReturn(true);
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockAisService.fetchAccountState(TEST_USER_ID))
+                .thenReturn(
+                        new AccountInterventionStatusDto.AccountState(false, false, true, false));
+        var accountInterventionState = new AccountInterventionState(false, false, true, false);
+        when(mockIpvSessionService.generateIpvSession(
+                        any(), any(), any(), anyBoolean(), eq(accountInterventionState)))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
-        when(mockAisService.needsToReproveIdentity(TEST_USER_ID)).thenReturn(true);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -395,12 +402,27 @@ class InitialiseIpvSessionHandlerTest {
         verify(mockClientOAuthSessionDetailsService)
                 .updateClientSessionDetails(clientOAuthSessionDetailsCaptor.capture());
         assertTrue(clientOAuthSessionDetailsCaptor.getValue().getReproveIdentity());
+
+        var accountInterventionStateCaptor =
+                ArgumentCaptor.forClass(AccountInterventionState.class);
+        verify(mockIpvSessionService)
+                .generateIpvSession(
+                        anyString(),
+                        any(),
+                        isNull(),
+                        anyBoolean(),
+                        accountInterventionStateCaptor.capture());
+        var capturedState = accountInterventionStateCaptor.getValue();
+        assertFalse(capturedState.isBlocked());
+        assertFalse(capturedState.isSuspended());
+        assertTrue(capturedState.isReproveIdentity());
+        assertFalse(capturedState.isResetPassword());
     }
 
     @Test
     void shouldRecoverIfMissingEvcsAccessToken() throws Exception {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         var evcsAccessTokenClaims =
@@ -430,10 +452,14 @@ class InitialiseIpvSessionHandlerTest {
                         eq("test-state"),
                         eq(null));
 
-        verify(mockIpvSessionService, times(2))
+        verify(mockIpvSessionService)
                 .generateIpvSession(
-                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
-        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+                        anyString(),
+                        errorObjectArgumentCaptor.capture(),
+                        isNull(),
+                        anyBoolean(),
+                        any());
+        var capturedErrorObject = errorObjectArgumentCaptor.getValue();
         assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
         assertEquals(
                 "Evcs access token jwt claim not received", capturedErrorObject.getDescription());
@@ -443,7 +469,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
@@ -479,7 +505,7 @@ class InitialiseIpvSessionHandlerTest {
             String expectedMessage)
             throws Exception {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -503,10 +529,14 @@ class InitialiseIpvSessionHandlerTest {
                         eq("test-state"),
                         eq(null));
 
-        verify(mockIpvSessionService, times(2))
+        verify(mockIpvSessionService)
                 .generateIpvSession(
-                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
-        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+                        anyString(),
+                        errorObjectArgumentCaptor.capture(),
+                        isNull(),
+                        anyBoolean(),
+                        any());
+        var capturedErrorObject = errorObjectArgumentCaptor.getValue();
         assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
         assertEquals(expectedMessage, capturedErrorObject.getDescription());
     }
@@ -567,7 +597,7 @@ class InitialiseIpvSessionHandlerTest {
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JOSEException, ParseException, JarValidationException {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
@@ -714,7 +744,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateErrorClientSessionDetails(
                         any(), any(), any(), any(), any()))
@@ -770,7 +800,7 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
             when(mockConfigService.enabled(CoreFeatureFlag.AIS_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-            when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+            when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean(), any()))
                     .thenReturn(ipvSessionItem);
             when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                             any(), any(), any(), any()))
@@ -1101,7 +1131,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1137,13 +1168,14 @@ class InitialiseIpvSessionHandlerTest {
                             eq("test-state"),
                             eq(null));
 
-            verify(mockIpvSessionService, times(2))
+            verify(mockIpvSessionService)
                     .generateIpvSession(
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
-            var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+                            anyBoolean(),
+                            any());
+            var capturedErrorObject = errorObjectArgumentCaptor.getValue();
             assertEquals(INVALID_REQUEST_OBJECT_CODE, capturedErrorObject.getCode());
             assertEquals(
                     "Claims cannot be parsed to JarClaims", capturedErrorObject.getDescription());
@@ -1198,7 +1230,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1249,7 +1282,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1312,7 +1346,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1378,7 +1413,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1446,7 +1482,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(
@@ -1512,7 +1549,8 @@ class InitialiseIpvSessionHandlerTest {
                             anyString(),
                             errorObjectArgumentCaptor.capture(),
                             isNull(),
-                            anyBoolean());
+                            anyBoolean(),
+                            any());
             var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
             assertEquals(INVALID_INHERITED_IDENTITY, capturedErrorObject.getCode());
             assertEquals(

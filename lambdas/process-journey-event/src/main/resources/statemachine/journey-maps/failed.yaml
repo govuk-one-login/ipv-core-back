@@ -13,6 +13,11 @@ states:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH
 
+  FAILED_ACCOUNT_INTERVENTION:
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
   FAILED_SKIP_MESSAGE:
     events:
       next:
@@ -84,6 +89,9 @@ states:
     events:
       next:
         targetState: NO_MATCH_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: NO_MATCH_PAGE
       error:
@@ -99,6 +107,9 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: RETURN_TO_RP
       error:
@@ -114,6 +125,9 @@ states:
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
       error:
@@ -129,6 +143,9 @@ states:
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
       error:
@@ -144,6 +161,9 @@ states:
     events:
       next:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
@@ -159,6 +179,9 @@ states:
     events:
       next:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
@@ -174,6 +197,9 @@ states:
     events:
       next:
         targetState: NO_MATCH_PAGE_BAV
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: NO_MATCH_PAGE_BAV
       error:
@@ -189,6 +215,9 @@ states:
     events:
       next:
         targetState: NO_MATCH_PAGE_NINO
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: NO_MATCH_PAGE_NINO
       error:
@@ -259,12 +288,21 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
       profile-unmet:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
       vcs-not-correlated:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   DELETE_HANDOVER_PAGE:
     response:

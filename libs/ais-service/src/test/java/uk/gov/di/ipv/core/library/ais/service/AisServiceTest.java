@@ -26,30 +26,15 @@ class AisServiceTest {
     }
 
     @Test
-    void needsToReproveIdentity_whenCalledForUserWithNoIntervention_returnsFalse()
-            throws AisClientException {
+    void fetchAccountState_whenCalled_returnsState() throws AisClientException {
         // Arrange
         when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
                 .thenReturn(TestData.AIS_NO_INTERVENTION_DTO);
 
         // Act
-        var result = underTest.needsToReproveIdentity(TEST_USER_ID);
+        var result = underTest.fetchAccountState(TEST_USER_ID);
 
         // Assert
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    void needsToReproveIdentity_whenCalledForUserWithReproveIdentity_returnsTrue()
-            throws AisClientException {
-        // Arrange
-        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
-                .thenReturn(TestData.AIS_REPROVE_IDENTITY_DTO);
-
-        // Act
-        var result = underTest.needsToReproveIdentity(TEST_USER_ID);
-
-        // Assert
-        assertThat(result).isTrue();
+        assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
     }
 }

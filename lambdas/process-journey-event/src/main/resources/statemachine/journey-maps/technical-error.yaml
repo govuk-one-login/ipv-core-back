@@ -28,12 +28,9 @@ states:
     events:
       next:
         targetState: ERROR_PAGE
-      coi-check-failed:
-        targetState: ERROR_PAGE
-      vcs-not-correlated:
-        targetState: ERROR_PAGE
-      profile-unmet:
-        targetState: ERROR_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF

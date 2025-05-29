@@ -6,10 +6,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
+import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
@@ -17,6 +23,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -45,6 +52,7 @@ import uk.gov.di.model.ContraIndicator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,10 +65,12 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -80,6 +90,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_N
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCOUNT_INTERVENTION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -108,6 +119,8 @@ class ProcessCandidateIdentityHandlerTest {
     private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
 
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
+            new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
 
     @Spy private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -128,10 +141,11 @@ class ProcessCandidateIdentityHandlerTest {
     @Mock private CimitUtilityService cimitUtilityService;
     @Mock private CimitService cimitService;
     @Mock private EvcsService evcsService;
+    @Mock private AisService aisService;
     @InjectMocks ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws AisClientException {
         requestBuilder =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(SESSION_ID)
@@ -149,6 +163,12 @@ class ProcessCandidateIdentityHandlerTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setVot(P2);
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
+        ipvSessionItem.setInitialAccountInterventionState(
+                new AccountInterventionState(false, false, false, false));
+        lenient()
+                .when(aisService.fetchAccountState(USER_ID))
+                .thenReturn(
+                        new AccountInterventionStatusDto.AccountState(false, false, false, false));
     }
 
     @Nested
@@ -568,6 +588,181 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(List.of()),
                             any(AuditEventUser.class));
+        }
+
+        @ParameterizedTest
+        @MethodSource("createNonInterventionStates")
+        void shouldNotInterruptProcessingIfNoMidJourneyAccountInterventionHasHappened(
+                AccountInterventionState initialAccountInterventionState,
+                AccountInterventionStatusDto.AccountState finalAccountInterventionState)
+                throws Exception {
+            // Arrange
+            ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
+            when(aisService.fetchAccountState(USER_ID)).thenReturn(finalAccountInterventionState);
+            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(List.of()),
+                            any(),
+                            any()))
+                    .thenReturn(true);
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.UPDATE.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(USER_ID),
+                            eq(List.of()),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.UPDATE),
+                            any());
+        }
+
+        private static Stream<Arguments> createNonInterventionStates() {
+            return Stream.of(
+                    // No interventions
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Reprove identity that has been detected during the journey
+                    Arguments.of(
+                            new AccountInterventionState(false, true, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Reprove identity that has not been detected during the journey
+                    Arguments.of(
+                            new AccountInterventionState(false, true, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, true, true, false)));
+        }
+
+        @ParameterizedTest
+        @MethodSource("createInterventionStates")
+        void shouldInterruptProcessingIfMidJourneyAccountInterventionHasHappened(
+                AccountInterventionState initialAccountInterventionState,
+                AccountInterventionStatusDto.AccountState finalAccountInterventionState)
+                throws Exception {
+            // Arrange
+            ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
+            when(aisService.fetchAccountState(USER_ID)).thenReturn(finalAccountInterventionState);
+            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.UPDATE.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ACCOUNT_INTERVENTION.getJourney(), response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
+        }
+
+        private static Stream<Arguments> createInterventionStates() {
+            return Stream.of(
+                    // Initially blocked
+                    Arguments.of(
+                            new AccountInterventionState(true, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Initially just suspended
+                    Arguments.of(
+                            new AccountInterventionState(false, true, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Initially just reprove
+                    Arguments.of(
+                            new AccountInterventionState(false, false, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Initially reset password
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, true),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Finally blocked
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    true, false, false, false)),
+                    // Finally just suspended
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, true, false, false)),
+                    // Finally just reprove
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, true, false)),
+                    // Finally reset password
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, true)),
+                    // Reprove identity that has been triggered during the journey
+                    Arguments.of(
+                            new AccountInterventionState(false, false, false, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, true, true, false)),
+                    // Reprove identity that cleared during the journey but got re-suspended
+                    Arguments.of(
+                            new AccountInterventionState(false, true, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, true, false, false)),
+                    // Reprove identity that cleared during the journey but was also blocked to
+                    // start with
+                    Arguments.of(
+                            new AccountInterventionState(true, true, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    false, false, false, false)),
+                    // Reprove identity that cleared during the journey but got blocked during the
+                    // journey
+                    Arguments.of(
+                            new AccountInterventionState(false, true, true, false),
+                            new AccountInterventionStatusDto.AccountState(
+                                    true, false, false, false)));
         }
 
         @Test

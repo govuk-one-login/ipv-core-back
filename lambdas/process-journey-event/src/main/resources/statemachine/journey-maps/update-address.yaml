@@ -80,6 +80,9 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: true
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
