@@ -21,9 +21,18 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+      profile-unmet:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      vcs-not-correlated:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

@@ -10,6 +10,7 @@ public class JourneyUris {
     }
 
     public static final String JOURNEY_ACCESS_DENIED_PATH = "/journey/access-denied";
+    public static final String JOURNEY_ACCOUNT_INTERVENTION_PATH = "/journey/account-intervention";
     // This journey is a special value that is caught explicitly by the journey event handler
     public static final String JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH =
             "/journey/" + Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;

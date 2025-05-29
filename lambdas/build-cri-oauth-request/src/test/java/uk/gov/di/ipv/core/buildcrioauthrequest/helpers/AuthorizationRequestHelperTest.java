@@ -55,7 +55,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -110,7 +109,6 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(configService.enabled(KID_JAR_HEADER)).thenReturn(true);
         when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
         when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 

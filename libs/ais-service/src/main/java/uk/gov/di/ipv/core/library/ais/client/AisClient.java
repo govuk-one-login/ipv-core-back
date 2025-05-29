@@ -110,7 +110,8 @@ public class AisClient {
                             LOGGER.warn(
                                     LogHelper.buildErrorMessage(
                                             "IOException caught when sending request to AIS", e));
-                            throw new RetryableException(e);
+                            // The httpClient will retry IOExceptions that can be retried
+                            throw new NonRetryableException(e);
                         } catch (InterruptedException e) {
                             // This should never happen running in Lambda as it's single
                             // threaded.

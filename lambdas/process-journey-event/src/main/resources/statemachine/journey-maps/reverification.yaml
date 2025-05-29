@@ -159,6 +159,9 @@ states:
     events:
       next:
         targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       enhanced-verification:
         targetState: RETURN_TO_RP
       alternate-doc-invalid-dl:
@@ -183,17 +186,11 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

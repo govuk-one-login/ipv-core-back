@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -128,11 +129,13 @@ public class IpvSessionService {
             String clientOAuthSessionId,
             ErrorObject errorObject,
             String emailAddress,
-            boolean isReverification) {
+            boolean isReverification,
+            AccountInterventionState initialAccountInterventionState) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
+        ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());

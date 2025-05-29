@@ -72,6 +72,9 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   IDENTITY_START_PAGE:
     response:
@@ -671,6 +674,9 @@ states:
     events:
       next:
         targetState: IPV_SUCCESS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -704,17 +710,11 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
