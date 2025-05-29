@@ -1,5 +1,5 @@
-Feature: D02 journeys
-  Rule: P1 CIMIT - Alternate doc
+Feature: Stored Identity Service - CIMIT journeys
+  Rule: P1 - D02 Mitigation
     Background:
       Given I activate the 'storedIdentityService' feature set
       Given I start a new 'low-confidence' journey
@@ -78,7 +78,7 @@ Feature: D02 journeys
         | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
         | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
 
-  Rule: P2 CIMIT - Alternate doc
+  Rule: P2 - D02 Mitigation
     Background:
       Given I activate the 'storedIdentityService' feature set
       Given I start a new 'medium-confidence' journey
@@ -157,3 +157,91 @@ Feature: D02 journeys
         | initialCri     | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigatingCri  | mitigatingDoc                |
         | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
         | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+
+  Rule: P2 - V03 Enhanced Verification
+    Scenario Outline: Same session F2F enhanced verification mitigation
+      Given I activate the 'storedIdentityService' feature set
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'page-multiple-doc-check' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'kbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-security-questions-find-another-way' page response
+      When I submit an 'f2f' event
+      Then I get an 'f2f' CRI response
+      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+      And I have a 'GPG45' stored identity record type with a 'P2' vot
+
+      Examples:
+        | document-details             |
+        | kenneth-passport-valid       |
+        | kenneth-driving-permit-valid |
+
+  Rule: P1 - V03 Enhanced Verification
+    Scenario Outline: Same session F2F enhanced verification mitigation
+      Given I activate the 'storedIdentityService' feature set
+      Given I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      When I submit a 'ukPassport' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'kbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+      Then I get a 'photo-id-security-questions-find-another-way' page response
+      When I submit an 'f2f' event
+      Then I get an 'f2f' CRI response
+      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'low-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+      And I have a 'GPG45' stored identity record type with a 'P2' vot
+
+      Examples:
+        | document-details             |
+        | kenneth-passport-valid       |
+        | kenneth-driving-permit-valid |
