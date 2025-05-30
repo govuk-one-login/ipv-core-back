@@ -35,7 +35,7 @@ Feature: P2 F2F journey
       When I submit a 'next' event
       Then I get a 'pyi-f2f-delete-details' page response
       When I submit a 'next' event
-      Then I get a 'pyi-confirm-delete-details' page response with context 'f2f'
+      Then I get a 'pyi-confirm-delete-details' page response
       When I submit a 'next' event
       Then I get a 'pyi-details-deleted' page response with context 'f2f'
 
@@ -51,7 +51,7 @@ Feature: P2 F2F journey
       When I submit a 'next' event
       Then I get a 'pyi-f2f-delete-details' page response
       When I submit a 'next' event
-      Then I get a 'pyi-confirm-delete-details' page response with context 'f2f'
+      Then I get a 'pyi-confirm-delete-details' page response
       When I submit a 'end' event
       Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
 

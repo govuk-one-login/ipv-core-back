@@ -35,10 +35,6 @@ public enum ConfigurationVariable {
     FEATURE_FLAGS("featureFlags/%s"),
     FRAUD_CHECK_EXPIRY_PERIOD_HOURS("self/fraudCheckExpiryPeriodHours"),
     GOV_UK_NOTIFY_API_KEY("govUkNotify/apiKey"),
-    GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmationF2f"),
-    GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY("self/clientJarKmsEncryptionKeyAliasPrimary"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY("self/clientJarKmsEncryptionKeyAliasSecondary"),
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),

@@ -94,7 +94,7 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get a 'pyi-f2f-delete-details' page response
     When I submit a 'next' event
-    Then I get a 'pyi-confirm-delete-details' page response with context 'f2f'
+    Then I get a 'pyi-confirm-delete-details' page response
     When I submit a 'next' event
     Then I get a 'pyi-details-deleted' page response with context 'f2f'
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
