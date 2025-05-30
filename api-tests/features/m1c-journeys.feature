@@ -24,6 +24,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped BRP
       When I submit 'kenneth-brp-valid' details to the CRI stub
@@ -38,6 +39,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Unsuccessful M1C P2 identity via web DL using DL
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -76,6 +78,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | fraudResponse            | endScore  |
@@ -97,6 +100,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | fraudResponse                                | endScore  |
@@ -114,6 +118,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | fraudResponse            | endScore  |
@@ -138,6 +143,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | fraudResponse                                | endScore  |
@@ -163,6 +169,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
   Rule: Existing non-M1C identity returns
 
@@ -192,6 +199,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Existing M1A user cannot change name with DL and unavailable fraud check
       When I submit a 'family-name-only' event
@@ -212,3 +220,4 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I don't have a stored identity in EVCS
