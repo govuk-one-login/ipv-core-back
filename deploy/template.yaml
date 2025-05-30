@@ -243,7 +243,7 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:339712924890:key/24e580d2-ea02-4e41-986b-1a53242480a5"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_277_157_20231019-162516_with_collector_java:2
+      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
