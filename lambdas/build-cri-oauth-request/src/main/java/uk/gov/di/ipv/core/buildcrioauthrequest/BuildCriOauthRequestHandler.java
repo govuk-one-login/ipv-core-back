@@ -339,7 +339,9 @@ public class BuildCriOauthRequestHandler
             Cri cri,
             String context,
             EvidenceRequest evidenceRequest)
-            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
+            throws HttpResponseExceptionWithErrorBody,
+                    ParseException,
+                    JOSEException,
                     VerifiableCredentialException {
 
         var vcs =
@@ -422,8 +424,10 @@ public class BuildCriOauthRequestHandler
                 switch (targetVot) {
                     case P1 -> 1;
                     case P2 -> 2;
-                    default -> throw new InvalidParameterException(
-                            "Cannot calculate verification score required for vot: " + targetVot);
+                    default ->
+                            throw new InvalidParameterException(
+                                    "Cannot calculate verification score required for vot: "
+                                            + targetVot);
                 };
 
         return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);

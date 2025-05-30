@@ -100,21 +100,26 @@ public class JourneyEngineHandler {
         var journeyStep = (String) processJourneyEventOutput.get(JOURNEY);
 
         return switch (journeyStep) {
-            case JOURNEY_CHECK_EXISTING_IDENTITY_PATH -> checkExistingIdentityHandler.handleRequest(
-                    buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-            case JOURNEY_RESET_SESSION_IDENTITY_PATH -> resetSessionIdentityHandler.handleRequest(
-                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH -> buildClientOauthResponseHandler
-                    .handleRequest(buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-            case JOURNEY_CHECK_GPG45_SCORE_PATH -> checkGpg45ScoreHandler.handleRequest(
-                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH -> callDcmawAsyncHandler.handleRequest(
-                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH -> checkReverificationIdentityHandler
-                    .handleRequest(
+            case JOURNEY_CHECK_EXISTING_IDENTITY_PATH ->
+                    checkExistingIdentityHandler.handleRequest(
+                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+            case JOURNEY_RESET_SESSION_IDENTITY_PATH ->
+                    resetSessionIdentityHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case JOURNEY_PROCESS_CANDIDATE_IDENTITY -> processCandidateIdentityHandler
-                    .handleRequest(
+            case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH ->
+                    buildClientOauthResponseHandler.handleRequest(
+                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+            case JOURNEY_CHECK_GPG45_SCORE_PATH ->
+                    checkGpg45ScoreHandler.handleRequest(
+                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH ->
+                    callDcmawAsyncHandler.handleRequest(
+                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH ->
+                    checkReverificationIdentityHandler.handleRequest(
+                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case JOURNEY_PROCESS_CANDIDATE_IDENTITY ->
+                    processCandidateIdentityHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {

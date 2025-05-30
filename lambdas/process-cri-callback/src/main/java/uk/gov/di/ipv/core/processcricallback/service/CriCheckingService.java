@@ -258,8 +258,12 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
-                    CredentialParseException, ConfigException, MissingSecurityCheckCredential {
+            throws CiRetrievalException,
+                    HttpResponseExceptionWithErrorBody,
+                    CiExtractionException,
+                    CredentialParseException,
+                    ConfigException,
+                    MissingSecurityCheckCredential {
         var isReverification = clientOAuthSessionItem.isReverification();
         if (!isReverification) {
             var previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();

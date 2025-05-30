@@ -85,7 +85,8 @@ public class UserIdentityService {
             Vot achievedVot,
             Vot targetVot,
             List<ContraIndicator> contraIndicators)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+            throws HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
                     UnrecognisedCiException {
         var profileType = achievedVot.getProfileType();
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
