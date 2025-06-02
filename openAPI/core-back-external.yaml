@@ -158,6 +158,15 @@ paths:
         responses:
           default:
             statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($body = $util.parseJson($input.body))
+                #foreach($key in $body.keys)
+                  #if($key.use == "enc")
+                    #set($key.alg = "RSA-OAEP-256")
+                  #end
+                #end
+                $input.json('$')
             responseParameters:
               method.response.header.Cache-Control: "'max-age=300'"
           \[45\]\d{2}:
