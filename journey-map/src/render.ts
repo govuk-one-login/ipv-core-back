@@ -123,9 +123,13 @@ const getVisibleEdgesAndNodes = async (
           sourceState,
           targetState,
           transitionCount:
-            journeyTransitions[definition.parent]?.[sourceState]?.[
-              definition.parent
-            ]?.[targetState] ?? 0,
+            journeyTransitions.find(
+              (transition) =>
+                transition.fromJourney === definition.parent &&
+                transition.from === sourceState &&
+                transition.toJourney === definition.parent &&
+                transition.to === targetState,
+            )?.count ?? 0,
           transitionEvents,
         });
       },

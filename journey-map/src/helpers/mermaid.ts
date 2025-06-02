@@ -75,7 +75,7 @@ export interface TransitionEvent {
 export interface TransitionEdge {
   sourceState: string;
   targetState: string;
-  transitionCount: number;
+  transitionCount?: number;
   transitionEvents: TransitionEvent[];
 }
 
