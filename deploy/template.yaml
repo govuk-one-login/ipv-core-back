@@ -2323,7 +2323,7 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: !If
-                - IsDevOrBuild
+                - IsDevOrBuildOrStaging
                 - !If
                   - IsDevelopment
                   - !Sub
