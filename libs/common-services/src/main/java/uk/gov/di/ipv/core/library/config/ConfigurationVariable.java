@@ -34,7 +34,6 @@ public enum ConfigurationVariable {
     EVCS_APPLICATION_URL("evcs/applicationUrl"),
     FEATURE_FLAGS("featureFlags/%s"),
     FRAUD_CHECK_EXPIRY_PERIOD_HOURS("self/fraudCheckExpiryPeriodHours"),
-    GOV_UK_NOTIFY_API_KEY("govUkNotify/apiKey"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY("self/clientJarKmsEncryptionKeyAliasPrimary"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY("self/clientJarKmsEncryptionKeyAliasSecondary"),
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
