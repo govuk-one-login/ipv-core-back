@@ -1,0 +1,34 @@
+plugins {
+	id "java"
+	id "idea"
+	id "jacoco"
+	alias libs.plugins.postCompileWeaving
+}
+
+dependencies {
+	implementation libs.awsLambdaJavaCore,
+			libs.lombok,
+			libs.awsSdkLogs
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
+			libs.mockitoJunit
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

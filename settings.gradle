@@ -57,3 +57,5 @@ dependencyResolutionManagement {
 		}
 	}
 }
+include 'lambdas:fetch-journey-transitions'
+findProject(':lambdas:fetch-journey-transitions')?.name = 'fetch-journey-transitions'
