@@ -49,7 +49,7 @@ paths:
     get:
       description: "List of Verifiable Credentials and claims representing the user's identity"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         200:
           description: >-
@@ -88,7 +88,7 @@ paths:
     get:
       description: "Result of a reverification journey"
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         200:
           description: "Reverification success or failure response"
@@ -138,7 +138,7 @@ paths:
                 $ref: "#/components/schemas/jwksResponse"
         500:
           description: "Error fetching public keys"
-          content: {}
+          content: { }
       x-amazon-apigateway-integration:
         type: aws
         credentials:
@@ -160,13 +160,24 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: |
-                #set($body = $util.parseJson($input.body))
-                #foreach($key in $body.keys)
-                  #if($key.use == "enc")
-                    #set($key.alg = "RSA-OAEP-256")
-                  #end
-                #end
-                $input.json('$')
+                {
+                  "keys": [
+                    #foreach($key in $util.parseJson($input.body).keys)
+                    {
+                      "kty": "$key.kty",
+                      "n": "$key.n",
+                      "e": "$key.e",
+                      #if($key.use == "enc")
+                      "alg": "RSA-OAEP-256",
+                      #else
+                      "alg": "$key.alg",
+                      #end
+                      "use": "$key.use",
+                      "kid": "$key.kid"
+                    }#if($foreach.hasNext),#end
+                    #end
+                  ]
+                }
             responseParameters:
               method.response.header.Cache-Control: "'max-age=300'"
           \[45\]\d{2}:
@@ -204,7 +215,7 @@ components:
       properties:
         grant_type:
           type: string
-          enum: ["authorization_code"]
+          enum: [ "authorization_code" ]
         code:
           type: string
         redirect_uri:
@@ -213,7 +224,7 @@ components:
           type: string
         client_assertion_type:
           type: string
-          enum: ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"]
+          enum: [ "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" ]
         client_assertion:
           type: string
       required:
@@ -342,7 +353,7 @@ components:
           type: string
         failure_code:
           type: string
-          enum: ["no_identity_available", "identity_check_incomplete", "identity_check_failed", "identity_did_not_match"]
+          enum: [ "no_identity_available", "identity_check_incomplete", "identity_check_failed", "identity_did_not_match" ]
         failure_description:
           type: string
       required:
