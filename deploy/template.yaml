@@ -124,6 +124,9 @@ Conditions:
     - !Condition IsDevelopment
     - !Condition IsBuild
   IsStaging: !Equals [ !Ref Environment, "staging" ]
+  IsDevOrBuildOrStaging: !Or
+    - !Condition IsDevOrBuild
+    - !Condition IsStaging
   IsBuildOrStaging: !Or
     - !Condition IsBuild
     - !Condition IsStaging
@@ -207,8 +210,8 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      sharedStubAsyncCriResponseQueueArn: "not-used"
-      sharedStubAsyncCriResponseQueueKmsKeyArn: "not-used"
+      sharedStubAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
+      sharedStubAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       f2fAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
       f2fAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
       dcmawAsyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:730335288219:mob-async-backend-ipv-core-outbound"
@@ -2320,7 +2323,7 @@ Resources:
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
               Resource: !If
-                - IsDevOrBuild
+                - IsDevOrBuildOrStaging
                 - !If
                   - IsDevelopment
                   - !Sub
@@ -2353,7 +2356,7 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !If
-                - IsDevOrBuild
+                - IsDevOrBuildOrStaging
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueKmsKeyArn ]
                 - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: f2fAsyncCriResponseQueueKmsKeyPermission
@@ -2390,7 +2393,7 @@ Resources:
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
 
   SharedStubQueueEventSourceMapping:
-    Condition: IsDevOrBuild
+    Condition: IsDevOrBuildOrStaging
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       FunctionName: !Ref ProcessAsyncCriCredentialFunction
