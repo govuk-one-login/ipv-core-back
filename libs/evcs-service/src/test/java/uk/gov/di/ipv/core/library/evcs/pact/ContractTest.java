@@ -15,8 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -52,6 +55,7 @@ class ContractTest {
     private static final String VC_STRING =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1wLnN0YWdpbmcuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDU5ODY1MjEsInZjIjp7InR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Ik1PUkdBTiJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IlNBUkFIIE1FUkVEWVRIIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTY1LTA3LTA4In1dLCJwYXNzcG9ydCI6W3siZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODciLCJleHBpcnlEYXRlIjoiMjAzMC0wMS0wMSIsImljYW9Jc3N1ZXJDb2RlIjoiR0JSIn1dLCJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6IkdCIiwiYWRkcmVzc0xvY2FsaXR5IjoiR1JFQVQgTUlTU0VOREVOIiwiYnVpbGRpbmdOYW1lIjoiQ09ZIFBPTkQgQlVTSU5FU1MgUEFSSyIsImJ1aWxkaW5nTnVtYmVyIjoiMTYiLCJkZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJMT05HIEVBVE9OIiwiZGVwZW5kZW50U3RyZWV0TmFtZSI6IktJTkdTIFBBUksiLCJkb3VibGVEZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJTT01FIERJU1RSSUNUIiwib3JnYW5pc2F0aW9uTmFtZSI6IkZJTkNIIEdST1VQIiwicG9zdGFsQ29kZSI6IkhQMTYgMEFMIiwic3RyZWV0TmFtZSI6IkJJRyBTVFJFRVQiLCJzdWJCdWlsZGluZ05hbWUiOiJVTklUIDJCIiwidXBybiI6MTAwMTIwMDEyMDc3fV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiY2QyMzQ2Iiwic3RyZW5ndGhTY29yZSI6NCwidmFsaWRpdHlTY29yZSI6MiwidmVyaWZpY2F0aW9uU2NvcmUiOjMsImNpIjpbXSwiY2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6ImRhdGEiLCJkYXRhQ2hlY2siOiJjYW5jZWxsZWRfY2hlY2sifSx7ImNoZWNrTWV0aG9kIjoiZGF0YSIsImRhdGFDaGVjayI6InJlY29yZF9jaGVjayJ9XX1dfX0." // pragma: allowlist secret
                     + VC_SIGNATURE;
+    private static final String SI_STRING = "";
 
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(PENDING_RETURN);
 
@@ -69,7 +73,31 @@ class ContractTest {
     private static final List<EvcsCreateUserVCsDto> INVALID_CREATE_USER_VCS_DTO =
             List.of(new EvcsCreateUserVCsDto(VC_STRING, EvcsVCState.CURRENT, null, null));
 
-    private static final List<EvcsUpdateUserVCsDto> EVCS_UPDATE_USER_VCS_DTO =
+    private static final EvcsPutUserVCsDto EVCS_PUT_P2_SI_AND_VCS_DTO =
+            new EvcsPutUserVCsDto(
+                    TEST_USER_ID,
+                    List.of(
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
+                    new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
+
+    private static final EvcsPutUserVCsDto EVCS_PUT_P2_SI_AND_VCS_DTO =
+            new EvcsPutUserVCsDto(
+                    TEST_USER_ID,
+                    List.of(
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                            new EvcsCreateUserVCsDto(
+                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
+                    new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
+
+    private static final List<EvcsUpdateUserVCsDto> EVCS_POST_USER_VCS_DTO =
             List.of(
                     new EvcsUpdateUserVCsDto(
                             VC_SIGNATURE,
@@ -291,7 +319,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validCreateUserVcReturnsMessageIdWith202")
-    void testCreateVcRequestReturnsUsersVcWith202(MockServer mockServer) throws Exception {
+    void testCreateVcRequestReturnsUsersVcWith202(MockServer mockServer) {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
         try {
@@ -422,7 +450,7 @@ class ContractTest {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
         try {
-            evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+            evcsClient.updateUserVCs(TEST_USER_ID, EVCS_POST_USER_VCS_DTO);
         } catch (EvcsServiceException e) {
             fail("EvcsServiceException was thrown");
         }
@@ -455,7 +483,67 @@ class ContractTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> {
-                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_POST_USER_VCS_DTO);
                 });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsReturns200(PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
+                .uponReceiving("A request to put EVCS VCs and stored identity")
+                .path("/vcs")
+                .method("PUT")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(
+                        newJsonBody(
+                                        dto -> {
+                                            dto.stringType("userId", TEST_USER_ID);
+                                            dto.array(
+                                                    "vcs",
+                                                    vcDtos -> {
+                                                        vcDtos.object(
+                                                                vcDto -> {
+                                                                    vcDto.stringType(
+                                                                            "vc", VC_STRING);
+                                                                    vcDto.stringType(
+                                                                            "state",
+                                                                            EvcsVCState.CURRENT
+                                                                                    .toString());
+                                                                    vcDto.object(
+                                                                            "metadata", vc -> {});
+                                                                    vcDto.stringType(
+                                                                            "provenance",
+                                                                            ONLINE.toString());
+                                                                });
+                                                    });
+                                            dto.object(
+                                                    "si",
+                                                    si -> {
+                                                        si.stringType("jwt", SI_STRING);
+                                                        si.stringType("vot", Vot.P2.toString());
+                                                    });
+                                        })
+                                .build())
+                .willRespondWith()
+                .status(200)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putVcsReturns200")
+    void testPutVcsRequestReturns200(MockServer mockServer) throws EvcsServiceException {
+        // Arrange
+        var evcsClient = new EvcsClient(mockConfigService);
+
+        // Act
+        var response = evcsClient.storeUserVCs(EVCS_PUT_P2_SI_AND_VCS_DTO);
+
+        // Assert
+        assertEquals(200, response.statusCode());
     }
 }
