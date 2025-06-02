@@ -127,9 +127,6 @@ Conditions:
   IsDevOrBuildOrStaging: !Or
     - !Condition IsDevOrBuild
     - !Condition IsStaging
-  IsBuildOrStaging: !Or
-    - !Condition IsBuild
-    - !Condition IsStaging
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsStagingIntProd: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -1161,15 +1158,6 @@ Resources:
             - UseDynatrace
             - /opt/dynatrace
             - !Ref AWS::NoValue
-          # PYIC-8242 Turn on DT debug logging for single build lambda
-          DT_LOGGING_DESTINATION: !If
-            - IsBuild
-            - "stdout"
-            - !Ref AWS::NoValue
-          DT_LOGGING_JAVA_FLAGS: !If
-            - IsBuild
-            - "log-Transformer=true,log-OpenTelemetryUtils=true,log-AsyncClassRetransformer=true,log-ClassValue=true"
-            - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
@@ -2129,22 +2117,16 @@ Resources:
           # https://govukverify.atlassian.net/browse/PYIC-8220
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsBuildOrStaging
-              - !Ref AWS::NoValue
-              - /opt/dynatrace
+            - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsBuildOrStaging
-            - !Ref AWS::NoValue
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
