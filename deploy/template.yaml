@@ -2356,7 +2356,7 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !If
-                - IsDevOrBuild
+                - IsDevOrBuildOrStaging
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, sharedStubAsyncCriResponseQueueKmsKeyArn ]
                 - "arn:aws:sqs:region:000000000000:not-used" # to satisfy linter - never actually used
             - Sid: f2fAsyncCriResponseQueueKmsKeyPermission
