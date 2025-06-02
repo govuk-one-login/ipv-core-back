@@ -1,3 +1,3 @@
 package uk.gov.di.ipv.core.fetchjourneytransitions.domain;
 
-public record Request(Integer minutes) {}
+public record Request(int minutes, int limit, String ipvSessionId) {}

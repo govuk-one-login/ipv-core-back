@@ -22,69 +22,36 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
-import {
-  CloudWatchLogsClient,
-  GetQueryResultsCommand,
-  StartQueryCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
   states: StateNode[];
 }
 
-type TransitionCounts = Record<
-  string, // from
-  Record<string, number> // to -> count
->;
+interface JourneyTransition {
+  fromJourney: string;
+  from: string;
+  toJourney: string;
+  to: string;
+  count: number;
+}
 
-export const getTransitionCounts = async (
-  mins = 10,
-): Promise<TransitionCounts> => {
-  const client = new CloudWatchLogsClient({ region: process.env.AWS_REGION });
-  const logGroupName = "/aws/lambda/process-journey-event-build";
-
-  const endTime = Math.floor(Date.now() / 1000);
-  const startTime = endTime - mins * 60;
-
-  const startQueryCommand = new StartQueryCommand({
-    logGroupName,
-    startTime,
-    endTime,
-    queryString: `
-      fields @timestamp, @message
-      | filter journeyEngine = "State transition"
-      | stats count() as transitions by fromJourney, from, toJourney, to
-      | limit 1000
-    `,
+const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
+  const query = new URLSearchParams({
+    minutes: "30",
+    limit: "500",
+    // ipvSessionId: "test-session-1",
   });
-  const { queryId } = await client.send(startQueryCommand);
 
-  // Wait for query to complete
-  let status = "Running";
-  let results = [];
-  while (status === "Running" || status === "Scheduled") {
-    await new Promise((r) => setTimeout(r, 2000));
-    const response = await client.send(new GetQueryResultsCommand({ queryId }));
-    status = response.status;
-    if (status === "Complete") {
-      results = response.results ?? [];
-    }
+  const response = await fetch(
+    `https://dev.01.dev.identity.account.gov.uk/journey-transitions?${query.toString()}`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch journey transitions: ${response.status}`);
   }
 
-  const counts: TransitionCounts = {};
-  for (const row of results) {
-    const from = row.find((c) => c.field === "from")?.value ?? "unknown";
-    const to = row.find((c) => c.field === "to")?.value ?? "unknown";
-    const count = parseInt(
-      row.find((c) => c.field === "transitions")?.value ?? "0",
-    );
-
-    counts[from] ??= {};
-    counts[from][to] = count;
-  }
-
-  return counts;
+  return response.json();
 };
 
 // Trace transitions (edges) and states (nodes) traced from the initial states
@@ -101,7 +68,7 @@ const getVisibleEdgesAndNodes = async (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
-  const transitionCounts = await getTransitionCounts();
+  const journeyTransitions: JourneyTransition[] = await getJourneyTransitions();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -155,7 +122,10 @@ const getVisibleEdgesAndNodes = async (
         transitions.push({
           sourceState,
           targetState,
-          transitionCount: transitionCounts[sourceState]?.[targetState] ?? 0,
+          transitionCount:
+            journeyTransitions[definition.parent]?.[sourceState]?.[
+              definition.parent
+            ]?.[targetState] ?? 0,
           transitionEvents,
         });
       },

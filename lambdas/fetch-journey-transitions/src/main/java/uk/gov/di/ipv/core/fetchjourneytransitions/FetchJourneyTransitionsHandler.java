@@ -10,41 +10,60 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.Request;
+import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class FetchJourneyTransitionsHandler
-        implements RequestHandler<
-                Request, Map<String, Map<String, Map<String, Map<String, Integer>>>>> {
+        implements RequestHandler<Request, List<TransitionCount>> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String LOG_GROUP =
             "/aws/ecs/your-log-group"; // Replace with your actual log group
-    private static final String FIXED_QUERY =
-            """
-        fields @timestamp, @message
-        | filter journeyEngine = "State transition"
-        | stats count() as transitions by fromJourney, from, toJourney, to
-        | limit 1000
-    """;
+    private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
 
     private final AWSLogs logsClient = AWSLogsClientBuilder.defaultClient();
 
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
-    public Map<String, Map<String, Map<String, Map<String, Integer>>>> handleRequest(
-            Request input, Context context) {
+    public List<TransitionCount> handleRequest(Request input, Context context) {
         try {
             int minutes = input.minutes();
             long endTime = Instant.now().getEpochSecond();
             long startTime = endTime - (minutes * 60L);
 
+            var ipvSessionId = input.ipvSessionId();
+            if (ipvSessionId != null & isValidIpvSessionId(ipvSessionId)) {
+                throw new Exception("Invalid journey Id");
+            }
+
+            String query =
+                    String.format(
+                            """
+                    fields @timestamp, @message
+                    | parse @message '"from":"*"' as from
+                    | parse @message '"fromJourney":"*"' as fromJourney
+                    | parse @message '"to":"*"' as to
+                    | parse @message '"toJourney":"*"' as toJourney
+                    | parse @message '"journeyEngine":"*"' as journeyEngine
+                    | parse @message '"ipvSessionId":"*"' as ipvSessionId
+                    | filter journeyEngine = "State transition"
+                    %s
+                    | stats count() as transitions by fromJourney, from, toJourney, to
+                    | limit %d
+                """,
+                            input.ipvSessionId() != null
+                                    ? "| filter ipvSessionId = '" + input.ipvSessionId() + "'"
+                                    : "",
+                            input.limit());
+
             StartQueryRequest startQueryRequest =
                     new StartQueryRequest()
                             .withLogGroupName(LOG_GROUP)
-                            .withQueryString(FIXED_QUERY)
+                            .withQueryString(query)
                             .withStartTime(startTime)
                             .withEndTime(endTime);
 
@@ -53,13 +72,13 @@ public class FetchJourneyTransitionsHandler
 
             GetQueryResultsResult queryResults;
             do {
-                Thread.sleep(1000);
                 queryResults =
                         logsClient.getQueryResults(
                                 new GetQueryResultsRequest().withQueryId(queryId));
+                Thread.sleep(1000);
             } while (!"Complete".equals(queryResults.getStatus()));
 
-            Map<String, Map<String, Map<String, Map<String, Integer>>>> output = new HashMap<>();
+            List<TransitionCount> output = new ArrayList<>();
 
             for (List<ResultField> row : queryResults.getResults()) {
                 String fromJourney = null;
@@ -83,10 +102,7 @@ public class FetchJourneyTransitionsHandler
                         && toJourney != null
                         && to != null
                         && transitions != null) {
-                    output.computeIfAbsent(fromJourney, k -> new HashMap<>())
-                            .computeIfAbsent(from, k -> new HashMap<>())
-                            .computeIfAbsent(toJourney, k -> new HashMap<>())
-                            .put(to, transitions);
+                    output.add(new TransitionCount(fromJourney, from, toJourney, to, transitions));
                 }
             }
 
@@ -96,5 +112,9 @@ public class FetchJourneyTransitionsHandler
             LOGGER.error("Unhandled lambda exception", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isValidIpvSessionId(String id) {
+        return JOURNEY_ID_PATTERN.matcher(id).matches();
     }
 }
