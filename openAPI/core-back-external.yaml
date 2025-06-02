@@ -186,6 +186,25 @@ paths:
   /journey-transitions:
     get:
       description: "Endpoint for fetching journey transitions for journey map analysis"
+      parameters:
+        - name: minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: "Number of minutes to look back"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: "Maximum number of results to return"
+        - name: ipvSessionId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Session ID to filter journey transitions"
       responses:
         200:
           description: "State journey transitions"
