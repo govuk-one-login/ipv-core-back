@@ -1,48 +1,48 @@
-// import * as assert from "assert";
-// import path from "path";
-// import { BeforeAll } from "@cucumber/cucumber";
+import * as assert from "assert";
+import path from "path";
+import { BeforeAll } from "@cucumber/cucumber";
 import { JSONWebKeySet } from "jose";
-// import type { Validator } from "jsonschema";
+import type { Validator } from "jsonschema";
 import config from "../config/config.js";
 import {
   MfaResetResult,
   TokenResponse,
   UserIdentity,
 } from "../types/external-api.js";
-// import { createValidator } from "../utils/schema-validator.js";
+import { createValidator } from "../utils/schema-validator.js";
 
-// let schemaValidator: Validator;
-//
-// BeforeAll(async () => {
-//   try {
-//     schemaValidator = await createValidator(
-//       path.resolve(
-//         import.meta.dirname,
-//         "../../../openAPI/core-back-external.yaml",
-//       ),
-//     );
-//   } catch (e) {
-//     console.log(`Exception caught creating schema validator: ${e}`);
-//     throw e;
-//   }
-// });
-//
-// const validateResponseSchema = async (
-//   body: unknown,
-//   schemaName: string,
-// ): Promise<void> => {
-//   const result = schemaValidator.validate(
-//     body,
-//     schemaValidator.schemas[`/${schemaName}`],
-//   );
-//
-//   if (result.errors.length) {
-//     const { property, message } = result.errors[0];
-//     assert.fail(
-//       `External API response did not match schema: ${property} ${message}`,
-//     );
-//   }
-// };
+let schemaValidator: Validator;
+
+BeforeAll(async () => {
+  try {
+    schemaValidator = await createValidator(
+      path.resolve(
+        import.meta.dirname,
+        "../../../openAPI/core-back-external.yaml",
+      ),
+    );
+  } catch (e) {
+    console.log(`Exception caught creating schema validator: ${e}`);
+    throw e;
+  }
+});
+
+const validateResponseSchema = async (
+  body: unknown,
+  schemaName: string,
+): Promise<void> => {
+  const result = schemaValidator.validate(
+    body,
+    schemaValidator.schemas[`/${schemaName}`],
+  );
+
+  if (result.errors.length) {
+    const { property, message } = result.errors[0];
+    assert.fail(
+      `External API response did not match schema: ${property} ${message}`,
+    );
+  }
+};
 
 export const exchangeCodeForToken = async (
   tokenExchangeBody: string,
@@ -62,7 +62,7 @@ export const exchangeCodeForToken = async (
   }
 
   const body = await response.json();
-  // await validateResponseSchema(body, "tokenResponse");
+  await validateResponseSchema(body, "tokenResponse");
 
   return body;
 };
@@ -83,7 +83,7 @@ export const getIdentity = async (
   }
 
   const body = await response.json();
-  // await validateResponseSchema(body, "userIdentityResponse");
+  await validateResponseSchema(body, "userIdentityResponse");
 
   return body;
 };
@@ -104,7 +104,7 @@ export const getMfaResetResult = async (
   }
 
   const body = await response.json();
-  // await validateResponseSchema(body, "reverificationResponse");
+  await validateResponseSchema(body, "reverificationResponse");
   return body;
 };
 
@@ -118,7 +118,7 @@ export const healthcheck = async (): Promise<string> => {
   }
 
   const body = await response.json();
-  // await validateResponseSchema(body, "healthcheckResponse");
+  await validateResponseSchema(body, "healthcheckResponse");
 
   return body.healthcheck;
 };
@@ -136,7 +136,7 @@ export const jwks = async (): Promise<JSONWebKeySet> => {
   }
 
   const body = await response.json();
-  // await validateResponseSchema(body, "jwksResponse");
+  await validateResponseSchema(body, "jwksResponse");
 
   return body;
 };
