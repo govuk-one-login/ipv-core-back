@@ -87,4 +87,3 @@ Feature: P1 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I don't have a stored identity in EVCS

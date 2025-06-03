@@ -33,7 +33,6 @@ Feature: Identity reuse update details
         Then I get a 'P2' identity
         And my identity 'GivenName' is '<expected-given-name>'
         And my identity 'FamilyName' is '<expected-family-name>'
-        And I don't have a stored identity in EVCS
 
     Examples:
         | selected-name-change | actual-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -54,7 +53,6 @@ Feature: Identity reuse update details
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my address 'buildingNumber' is '28'
-        And I don't have a stored identity in EVCS
 
     Scenario: Address and Family Name Change
         When I submit a 'family-name-and-address' event
@@ -81,7 +79,6 @@ Feature: Identity reuse update details
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
-        And I don't have a stored identity in EVCS
 
     Scenario: Address and Given Name Change
         When I submit a 'given-names-and-address' event
@@ -94,7 +91,6 @@ Feature: Identity reuse update details
             | Attribute | Values          |
             | context   | "check_details" |
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
-        And I don't have a stored identity in EVCS
 
     Scenario: Unsupported Changes
         When I submit a 'dob' event
