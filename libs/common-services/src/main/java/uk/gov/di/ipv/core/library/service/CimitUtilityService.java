@@ -104,7 +104,7 @@ public class CimitUtilityService {
 
     public Optional<String> getMitigationEventIfBreachingOrActive(
             String securityCheckCredential, String userID, Vot confidenceRequested)
-            throws CiExtractionException, ConfigException {
+            throws CiExtractionException, ConfigException, CredentialParseException {
         var cis = getContraIndicatorsFromVc(securityCheckCredential, userID);
         return getMitigationEventIfBreachingOrActive(cis, confidenceRequested);
     }
@@ -174,19 +174,17 @@ public class CimitUtilityService {
     }
 
     public VerifiableCredential getParsedSecurityCheckCredential(
-            String securityCheckCredential, String userId) throws CiExtractionException {
+            String securityCheckCredential, String userId) throws CredentialParseException {
         try {
             var jwt = SignedJWT.parse(securityCheckCredential);
             return VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         } catch (ParseException e) {
-            throw new CiExtractionException("Unable to parse vc string");
-        } catch (CredentialParseException e) {
-            throw new CiExtractionException("Unable to parse claims set of credential");
+            throw new CredentialParseException("Unable to parse vc string");
         }
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
-            throws CiExtractionException {
+            throws CiExtractionException, CredentialParseException {
         var credential = getParsedSecurityCheckCredential(vcString, userId);
         return getContraIndicatorsFromVc(credential);
     }

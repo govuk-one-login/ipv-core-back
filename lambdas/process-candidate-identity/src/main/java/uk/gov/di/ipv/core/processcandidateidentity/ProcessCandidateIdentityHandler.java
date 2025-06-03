@@ -533,7 +533,7 @@ public class ProcessCandidateIdentityHandler
             List<EvcsGetUserVCDto> evcsUserVcs,
             CandidateIdentityType processIdentityType,
             SharedAuditEventParameters auditEventParameters)
-            throws EvcsServiceException, CiExtractionException {
+            throws EvcsServiceException {
         var achievedVot = ipvSessionItem.getVot();
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)
@@ -543,10 +543,15 @@ public class ProcessCandidateIdentityHandler
         var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
 
         if (StringUtils.isNotBlank(securityCheckCredential)) {
-            var parsedSecurityCheckVc =
-                    cimitUtilityService.getParsedSecurityCheckCredential(
-                            securityCheckCredential, userId);
-            sessionVcs.add(parsedSecurityCheckVc);
+            try {
+                var parsedSecurityCheckVc =
+                        cimitUtilityService.getParsedSecurityCheckCredential(
+                                securityCheckCredential, userId);
+                sessionVcs.add(parsedSecurityCheckVc);
+            } catch (CredentialParseException e) {
+                LOGGER.warn(
+                        "Failed to parse security check credential, skipping storage of CIMIT VC");
+            }
         }
 
         storeIdentityService.storeIdentity(
@@ -703,6 +708,7 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
+                | CredentialParseException
                 | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
@@ -736,7 +742,8 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated)
-            throws CiExtractionException, ParseException, HttpResponseExceptionWithErrorBody {
+            throws CiExtractionException, ParseException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException {
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatusCode.INTERNAL_SERVER_ERROR, MISSING_SECURITY_CHECK_CREDENTIAL);
