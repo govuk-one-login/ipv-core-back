@@ -498,7 +498,7 @@ public class ProcessCandidateIdentityHandler
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeCandidateIdentity(
                             userId,
-                            ipvSessionItem.getVot(),
+                            ipvSessionItem,
                             null,
                             sessionVcs,
                             evcsUserVcs,
@@ -514,7 +514,7 @@ public class ProcessCandidateIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeCandidateIdentity(
                     userId,
-                    ipvSessionItem.getVot(),
+                    ipvSessionItem,
                     votMatchingResult,
                     sessionVcs,
                     evcsUserVcs,
@@ -527,17 +527,28 @@ public class ProcessCandidateIdentityHandler
 
     private void storeCandidateIdentity(
             String userId,
-            Vot achievedVot,
+            IpvSessionItem ipvSessionItem,
             VotMatchingResult votMatchingResult,
             List<VerifiableCredential> sessionVcs,
             List<EvcsGetUserVCDto> evcsUserVcs,
             CandidateIdentityType processIdentityType,
             SharedAuditEventParameters auditEventParameters)
-            throws EvcsServiceException {
+            throws EvcsServiceException, CiExtractionException {
+        var achievedVot = ipvSessionItem.getVot();
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)
                         ? null
                         : votMatchingResult.strongestMatch().orElse(null);
+
+        var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+
+        if (StringUtils.isNotBlank(securityCheckCredential)) {
+            var parsedSecurityCheckVc =
+                    cimitUtilityService.getParsedSecurityCheckCredential(
+                            securityCheckCredential, userId);
+            sessionVcs.add(parsedSecurityCheckVc);
+        }
+
         storeIdentityService.storeIdentity(
                 userId,
                 sessionVcs,
@@ -692,8 +703,7 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
-                | UnrecognisedVotException
-                | CredentialParseException e) {
+                | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
@@ -726,8 +736,7 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated)
-            throws CiExtractionException, CredentialParseException, ParseException,
-                    HttpResponseExceptionWithErrorBody {
+            throws CiExtractionException, ParseException, HttpResponseExceptionWithErrorBody {
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatusCode.INTERNAL_SERVER_ERROR, MISSING_SECURITY_CHECK_CREDENTIAL);
