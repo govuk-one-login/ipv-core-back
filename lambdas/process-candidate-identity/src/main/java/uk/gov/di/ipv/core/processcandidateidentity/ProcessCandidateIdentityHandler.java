@@ -83,6 +83,7 @@ import java.util.Set;
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_AIS_API;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
@@ -542,7 +543,8 @@ public class ProcessCandidateIdentityHandler
 
         var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
 
-        if (StringUtils.isNotBlank(securityCheckCredential)) {
+        if (StringUtils.isNotBlank(securityCheckCredential)
+                && configService.enabled(STORED_IDENTITY_SERVICE)) {
             try {
                 var parsedSecurityCheckVc =
                         cimitUtilityService.getParsedSecurityCheckCredential(
