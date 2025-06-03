@@ -36,7 +36,6 @@ lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.25"
-notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.15.0-alpha"
 openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
