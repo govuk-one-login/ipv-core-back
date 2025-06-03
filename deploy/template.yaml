@@ -2944,7 +2944,7 @@ Resources:
               Action:
                 - logs:StartQuery
                 - logs:GetQueryResults
-              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}
+              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
       Events:
         IPVCoreExternalAPIJourneyTransitions:
           Type: Api
