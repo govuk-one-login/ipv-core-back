@@ -2917,6 +2917,7 @@ Resources:
     Type: AWS::Serverless::Function
     DependsOn:
       - FetchJourneyTransitionsFunctionLogGroup
+      - IPVProcessJourneyEventFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -2939,14 +2940,14 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
-            - Sid: CloudWatchLogsInsights
-              Effect: Allow
-              Action:
-                - logs:StartQuery
-                - logs:GetQueryResults
-              Resource:
-                - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}
-                - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
+          - Sid: CloudWatchLogsInsights
+            Effect: Allow
+            Action:
+              - logs:StartQuery
+              - logs:GetQueryResults
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
       Events:
         IPVCoreExternalAPIJourneyTransitions:
           Type: Api
