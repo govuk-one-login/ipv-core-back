@@ -43,7 +43,7 @@ public class FetchJourneyTransitionsHandler
             var ipvSessionId = input.ipvSessionId();
             LOGGER.info("Input ipvSessionId: {}", ipvSessionId);
 
-            if (ipvSessionId != null & isValidIpvSessionId(ipvSessionId)) {
+            if (ipvSessionId != null && isValidIpvSessionId(ipvSessionId)) {
                 LOGGER.info("Invalid journey ID detected, throwing exception");
                 throw new Exception("Invalid journey Id");
             }
