@@ -165,14 +165,11 @@ paths:
                   "keys": [
                     #foreach($key in $keys)
                     {
-                      "kty": "$key.kty",
-                      "n": "$key.n",
-                      "e": "$key.e",
-                      "alg": "#if($key.use == 'enc')RSA-OAEP-256#{else}$key.alg#end",
-                      "use": "$key.use",
-                      "kid": "$key.kid"
+                      #foreach($propName in $key.keySet())
+                      "$propName": #if($propName == "alg" && $key.use == "enc")"RSA-OAEP-256"#{else}"$key.get($propName)"#end#if($foreach.hasNext),#end
+                        #end
                     }#if($foreach.hasNext),#end
-                  #end
+                    #end
                   ]
                 }
             responseParameters:
