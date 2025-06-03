@@ -1,3 +1,4 @@
+@Build
 Feature: Stored Identity Service - CIMIT journeys
   Background:
     Given I activate the 'storedIdentityService' feature set

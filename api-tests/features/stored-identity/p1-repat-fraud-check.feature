@@ -1,3 +1,4 @@
+@Build
 Feature: Stored Identity - repeat fraud check
   Background:
     Given I activate the 'storedIdentityService' feature set

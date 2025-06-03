@@ -1,3 +1,4 @@
+@Build
 Feature: Stored Identity - Update Existing Identity
   Background:
     Given I activate the 'storedIdentityService' feature set

@@ -1,8 +1,10 @@
+@Build
 Feature: Stored Identity - M1C Outcomes
+  Background:
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: New Identities - UK Address
     Background:
-      Given I activate the 'storedIdentityService' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -59,7 +61,6 @@ Feature: Stored Identity - M1C Outcomes
 
   Rule: New Identities - International Address
     Background:
-      Given I activate the 'storedIdentityService' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'international' event
@@ -86,7 +87,6 @@ Feature: Stored Identity - M1C Outcomes
 
   Rule: Returning existing M1C user goes through details confirmation
     Background:
-      Given I activate the 'storedIdentityService' feature set
       Given the subject already has the following credentials
         | CRI        | scenario               |
         | dcmawAsync | kenneth-passport-valid |
