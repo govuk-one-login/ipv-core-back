@@ -160,22 +160,19 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: |
+                #set($keys = $util.parseJson($input.body).keys)
                 {
                   "keys": [
-                    #foreach($key in $util.parseJson($input.body).keys)
+                    #foreach($key in $keys)
                     {
                       "kty": "$key.kty",
                       "n": "$key.n",
                       "e": "$key.e",
-                      #if($key.use == "enc")
-                      "alg": "RSA-OAEP-256",
-                      #else
-                      "alg": "$key.alg",
-                      #end
+                      "alg": "#if($key.use == 'enc')RSA-OAEP-256#{else}$key.alg#end",
                       "use": "$key.use",
                       "kid": "$key.kid"
                     }#if($foreach.hasNext),#end
-                    #end
+                  #end
                   ]
                 }
             responseParameters:
