@@ -166,10 +166,16 @@ paths:
                     #foreach($key in $keys)
                     {
                       #foreach($propName in $key.keySet())
-                      "$propName": #if($propName == "alg" && $key.use == "enc")"RSA-OAEP-256"#{else}"$key.get($propName)"#end#if($foreach.hasNext),#end
+                        "$propName":
+                        #if($propName == "alg" && $key.use == "enc")
+                          "RSA-OAEP-256"
+                        #{else}
+                          "$key.get($propName)"
                         #end
+                        #if($foreach.hasNext),#end
+                      #end
                     }#if($foreach.hasNext),#end
-                    #end
+                  #end
                   ]
                 }
             responseParameters:
