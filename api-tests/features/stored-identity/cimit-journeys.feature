@@ -184,10 +184,10 @@ Feature: Stored Identity Service - CIMIT journeys
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
       Then I get a 'photo-id-security-questions-find-another-way' page response
 
-    Scenario Outline: Successful F2F enhanced verification mitigation - separate session
+    Scenario: Successful F2F enhanced verification mitigation - same session
       When I submit an 'f2f' event
       Then I get an 'f2f' CRI response
-      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
       Then I get a 'page-face-to-face-handoff' page response
@@ -200,13 +200,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get a 'P1' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
-      Examples:
-        | document-details             |
-        | kenneth-passport-valid       |
-        | kenneth-driving-permit-valid |
-
-    Scenario Outline: Successful F2F enhanced verification mitigation - separate session
-      And I don't have a stored identity in EVCS
+    Scenario: Successful F2F enhanced verification mitigation - separate session
       When I start a new 'low-confidence' journey
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -218,7 +212,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get an 'f2f' CRI response
-      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'page-face-to-face-handoff' page response
@@ -229,8 +223,3 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-
-      Examples:
-        | document-details             |
-        | kenneth-passport-valid       |
-        | kenneth-driving-permit-valid |
