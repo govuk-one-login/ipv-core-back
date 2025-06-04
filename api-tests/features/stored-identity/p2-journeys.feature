@@ -1,6 +1,6 @@
 Feature: Stored Identity - P2 journeys
   Background: Enabled stored identity service flag and start p1 journey
-    Given I activate the 'storedIdentityService' feature sets
+    Given I activate the 'storedIdentityService,disableStrategicApp' feature sets
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
 

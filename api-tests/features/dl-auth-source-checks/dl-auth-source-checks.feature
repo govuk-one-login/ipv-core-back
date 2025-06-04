@@ -1,5 +1,7 @@
 @Build
 Feature: Authoritative source checks with driving licence CRI
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
 
   Scenario: Journey through DCMAW with driving licence requires authoritative source check low-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
