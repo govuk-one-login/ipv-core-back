@@ -22,6 +22,7 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
+import config from "./config.ts";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -44,9 +45,14 @@ const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
   });
 
   const response = await fetch(
-    `https://api-dev.01.dev.identity.account.gov.uk/journey-transitions?${query.toString()}`,
+    `${config.journeyTransitionsEndpoint}?${query}`,
+    {
+      headers: {
+        "x-api-key": config.analyticsApiKey,
+        "Content-Type": "application/json",
+      },
+    },
   );
-
   if (!response.ok) {
     throw new Error(`Failed to fetch journey transitions: ${response.status}`);
   }
