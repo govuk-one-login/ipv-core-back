@@ -50,7 +50,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSIO
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ALL;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ASYNC_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
@@ -209,7 +209,7 @@ class ResetSessionIdentityHandlerTest {
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ALL.name()))
+                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ASYNC_ALL.name()))
                         .build();
 
         // Act
@@ -223,7 +223,7 @@ class ResetSessionIdentityHandlerTest {
 
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForResetType(
-                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ALL);
+                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC_ALL);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
         verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 

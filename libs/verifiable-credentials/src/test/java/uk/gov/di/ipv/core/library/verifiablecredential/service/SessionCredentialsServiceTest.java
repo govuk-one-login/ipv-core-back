@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
@@ -290,7 +291,7 @@ class SessionCredentialsServiceTest {
         }
 
         @ParameterizedTest
-        @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "REINSTATE"})
+        @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "PENDING_DCMAW_ASYNC_ALL", "REINSTATE"})
         void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(
                 SessionCredentialsResetType resetType) throws Exception {
             var addressVc =
@@ -352,7 +353,7 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForResetTypePendingDcmawAllShouldDeleteDcmawVcs()
+        void deleteSessionCredentialsForResetTypePendingDcmawAsyncAllShouldDeleteDcmawAsyncVcs()
                 throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
@@ -360,7 +361,8 @@ class SessionCredentialsServiceTest {
                     generateVerifiableCredential(
                             "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
+            var dcmawVc =
+                    generateVerifiableCredential("userId", DCMAW_ASYNC, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -374,7 +376,7 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, SessionCredentialsResetType.PENDING_DCMAW_ALL);
+                    SESSION_ID, SessionCredentialsResetType.DCMAW_ASYNC);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));

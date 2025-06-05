@@ -22,6 +22,7 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 
 public class SessionCredentialsService {
@@ -99,7 +100,8 @@ public class SessionCredentialsService {
             var sessionCredentialItems = dataStore.getItems(ipvSessionId);
             var vcsToDelete =
                     switch (resetType) {
-                        case ALL, PENDING_F2F_ALL, REINSTATE -> sessionCredentialItems;
+                        case ALL, PENDING_F2F_ALL, PENDING_DCMAW_ASYNC_ALL, REINSTATE ->
+                                sessionCredentialItems;
                         case ADDRESS_ONLY_CHANGE ->
                                 sessionCredentialItems.stream()
                                         .filter(
@@ -109,9 +111,13 @@ public class SessionCredentialsService {
                                                                         EXPERIAN_FRAUD.getId())
                                                                 .contains(item.getCriId()))
                                         .toList();
-                        case DCMAW, PENDING_DCMAW_ALL ->
+                        case DCMAW ->
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW.getId().equals(item.getCriId()))
+                                        .toList();
+                        case DCMAW_ASYNC ->
+                                sessionCredentialItems.stream()
+                                        .filter(item -> DCMAW_ASYNC.getId().equals(item.getCriId()))
                                         .toList();
                         case NAME_ONLY_CHANGE ->
                                 sessionCredentialItems.stream()
