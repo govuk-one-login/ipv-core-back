@@ -2,10 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >-
   This creates the necessary serverless components for IPV Core-Back.
-Metadata:
-  cfn-lint:
-    rules_to_suppress:
-      - id: W3005
 
 Globals:
   Function:
@@ -741,6 +737,7 @@ Resources:
 
   IPVCoreAnalyticsAPIKey:
     Type: AWS::ApiGateway::ApiKey
+    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
       Enabled: true
@@ -750,6 +747,7 @@ Resources:
 
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
@@ -761,6 +759,7 @@ Resources:
 
   IPVCoreAnalyticsUsagePlanKey:
     Type: AWS::ApiGateway::UsagePlanKey
+    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       KeyId: !Ref IPVCoreAnalyticsAPIKey
       KeyType: API_KEY
