@@ -735,35 +735,35 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreAnalyticsAPILogGroup
 
-#  IPVCoreAnalyticsAPIKey:
-#    Type: AWS::ApiGateway::ApiKey
-#    DependsOn: IPVCoreAnalyticsAPI
-#    Properties:
-#      Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
-#      Enabled: true
-#      StageKeys:
-#        - RestApiId: !Ref IPVCoreAnalyticsAPI
-#          StageName: !Sub ${Environment}
-#
-#  IPVCoreAnalyticsUsagePlan:
-#    Type: AWS::ApiGateway::UsagePlan
-#    DependsOn: IPVCoreAnalyticsAPI
-#    Properties:
-#      UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
-#      ApiStages:
-#        - ApiId: !Ref IPVCoreAnalyticsAPI
-#          Stage: !Sub ${Environment}
-#      Throttle:
-#        RateLimit: 10
-#        BurstLimit: 2
-#
-#  IPVCoreAnalyticsUsagePlanKey:
-#    Type: AWS::ApiGateway::UsagePlanKey
-#    DependsOn: IPVCoreAnalyticsAPI
-#    Properties:
-#      KeyId: !Ref IPVCoreAnalyticsAPIKey
-#      KeyType: API_KEY
-#      UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
+  IPVCoreAnalyticsAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn: IPVCoreAnalyticsAPI
+    Properties:
+      Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref IPVCoreAnalyticsAPI
+          StageName: !Sub ${Environment}
+
+  IPVCoreAnalyticsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: IPVCoreAnalyticsAPI
+    Properties:
+      UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
+      ApiStages:
+        - ApiId: !Ref IPVCoreAnalyticsAPI
+          Stage: !Sub ${Environment}
+      Throttle:
+        RateLimit: 10
+        BurstLimit: 2
+
+  IPVCoreAnalyticsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    DependsOn: IPVCoreAnalyticsAPI
+    Properties:
+      KeyId: !Ref IPVCoreAnalyticsAPIKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function

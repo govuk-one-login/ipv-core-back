@@ -34,7 +34,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyTransitionsResponse"
       security:
-        - ApiKeyAuth: [ ]
+        - apiKey: [ ]
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "GET"
