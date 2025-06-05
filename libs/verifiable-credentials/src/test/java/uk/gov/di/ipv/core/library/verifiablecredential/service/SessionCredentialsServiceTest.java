@@ -324,7 +324,7 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForResetTypeShouldDeleteDcmawVcs() throws Exception {
+        void deleteSessionCredentialsForResetTypeDcmawShouldDeleteDcmawVcs() throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
             var fraudVc =
@@ -346,6 +346,35 @@ class SessionCredentialsServiceTest {
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
                     SESSION_ID, SessionCredentialsResetType.DCMAW);
+
+            verify(mockDataStore).getItems(SESSION_ID);
+            verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
+        }
+
+        @Test
+        void deleteSessionCredentialsForResetTypePendingDcmawAllShouldDeleteDcmawVcs()
+                throws Exception {
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
+
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
+
+            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
+
+            when(mockDataStore.getItems(SESSION_ID))
+                    .thenReturn(
+                            List.of(
+                                    sessionFraudCredentialItem,
+                                    sessionAddressCredentialItem,
+                                    sessionDcmawCredentialItem));
+
+            sessionCredentialService.deleteSessionCredentialsForResetType(
+                    SESSION_ID, SessionCredentialsResetType.PENDING_DCMAW_ALL);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));

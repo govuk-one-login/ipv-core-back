@@ -8,6 +8,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -30,10 +31,12 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.io.UncheckedIOException;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
@@ -127,7 +130,11 @@ public class ResetSessionIdentityHandler
             }
 
             if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
-                doResetForPendingF2f(clientOAuthSessionItem);
+                doResetForPendingVc(clientOAuthSessionItem, F2F);
+            }
+
+            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ALL)) {
+                doResetForPendingVc(clientOAuthSessionItem, DCMAW_ASYNC);
             }
 
             return JOURNEY_NEXT;
@@ -169,10 +176,10 @@ public class ResetSessionIdentityHandler
         }
     }
 
-    private void doResetForPendingF2f(ClientOAuthSessionItem clientOAuthSessionItem)
+    private void doResetForPendingVc(ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri)
             throws EvcsServiceException {
         var userId = clientOAuthSessionItem.getUserId();
-        criResponseService.deleteCriResponseItem(userId, F2F);
+        criResponseService.deleteCriResponseItem(userId, asyncCri);
         evcsService.abandonPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
         LOGGER.info(LogHelper.buildLogMessage("Reset done for F2F pending identity."));
     }

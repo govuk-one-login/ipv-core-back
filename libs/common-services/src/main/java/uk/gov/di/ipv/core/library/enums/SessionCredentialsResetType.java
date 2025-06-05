@@ -6,5 +6,6 @@ public enum SessionCredentialsResetType {
     NAME_ONLY_CHANGE,
     ADDRESS_ONLY_CHANGE,
     PENDING_F2F_ALL,
+    PENDING_DCMAW_ALL,
     REINSTATE
 }

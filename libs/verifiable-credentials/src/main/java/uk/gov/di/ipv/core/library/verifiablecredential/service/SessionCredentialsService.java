@@ -109,7 +109,7 @@ public class SessionCredentialsService {
                                                                         EXPERIAN_FRAUD.getId())
                                                                 .contains(item.getCriId()))
                                         .toList();
-                        case DCMAW ->
+                        case DCMAW, PENDING_DCMAW_ALL ->
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW.getId().equals(item.getCriId()))
                                         .toList();
