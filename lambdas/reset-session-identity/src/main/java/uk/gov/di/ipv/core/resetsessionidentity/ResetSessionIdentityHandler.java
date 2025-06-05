@@ -181,6 +181,8 @@ public class ResetSessionIdentityHandler
         var userId = clientOAuthSessionItem.getUserId();
         criResponseService.deleteCriResponseItem(userId, asyncCri);
         evcsService.abandonPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
-        LOGGER.info(LogHelper.buildLogMessage("Reset done for F2F pending identity."));
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format("Reset done for %s pending identity.", asyncCri.getId())));
     }
 }
