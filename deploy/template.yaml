@@ -2,6 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >-
   This creates the necessary serverless components for IPV Core-Back.
+Metadata:
+  cfn-lint:
+    rules_to_suppress:
+      - id: W3005
 
 Globals:
   Function:
