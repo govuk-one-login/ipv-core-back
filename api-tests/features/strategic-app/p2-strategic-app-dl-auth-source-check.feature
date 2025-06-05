@@ -93,7 +93,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-    @MikeC
     Scenario: Auth check abandoned, retry with CI
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
