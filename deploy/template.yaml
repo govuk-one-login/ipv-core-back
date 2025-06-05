@@ -684,6 +684,84 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
+  IPVCoreAnalyticsAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
+      Name: !Sub IPV Core Analytics API Gateway ${Environment}
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: true
+      StageName: !Sub ${Environment}
+      TracingEnabled: true
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-analytics.yaml"
+      AccessLogSetting:
+        DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
+        Format: >-
+          {
+          "requestId":"$context.requestId",
+          "ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "path":"$context.path",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLatency":"$context.responseLatency",
+          "responseLength":"$context.responseLength"
+          }
+
+  IPVCoreAnalyticsAPILogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      LogGroupName: !If
+        - IsDevelopment
+        - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackAnalytics-API-GW-AccessLogs
+        - !Sub /aws/apigateway/${AWS::StackName}-CoreBackAnalytics-API-GW-AccessLogs
+      RetentionInDays: 30
+
+  IPVCoreAnalyticsAPILogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref IPVCoreAnalyticsAPILogGroup
+
+  IPVCoreAnalyticsAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref IPVCoreAnalyticsAPI
+          StageName: !Sub ${Environment}
+
+  IPVCoreAnalyticsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
+      ApiStages:
+        - ApiId: !Ref IPVCoreAnalyticsAPI
+          Stage: !Sub ${Environment}
+      Throttle:
+        RateLimit: 10
+        BurstLimit: 2
+
+  IPVCoreAnalyticsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref IPVCoreAnalyticsAPIKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:

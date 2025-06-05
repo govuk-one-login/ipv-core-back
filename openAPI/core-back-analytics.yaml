@@ -1,0 +1,73 @@
+openapi: 3.0.3
+info:
+  title: "IPV Core Analytics"
+  description: "The analytics api presented by IPV Core Back for use by IPV observability tooling"
+  version: "1.0.0"
+paths:
+  /journey-transitions:
+    get:
+      description: "Endpoint for fetching journey transitions for journey map analysis"
+      parameters:
+        - name: minutes
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: "Number of minutes to look back"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: "Maximum number of results to return"
+        - name: ipvSessionId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Session ID to filter journey transitions"
+      responses:
+        200:
+          description: "State journey transitions"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyTransitionsResponse"
+      security:
+        - ApiKeyAuth: [ ]
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchJourneyTransitionsFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: x-api-key
+
+  schemas:
+    journeyTransitionsResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          fromJourney:
+            type: string
+          from:
+            type: string
+          toJourney:
+            type: string
+          to:
+            type: string
+          count:
+            type: integer
+        required:
+          - fromJourney
+          - from
+          - toJourney
+          - to
+          - count
+        additionalProperties: false

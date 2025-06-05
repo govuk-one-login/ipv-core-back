@@ -6,7 +6,8 @@ plugins {
 }
 
 dependencies {
-	implementation libs.awsLambdaJavaCore,
+	implementation libs.bundles.awsLambda,
+			libs.awsLambdaJavaCore,
 			libs.lombok,
 			libs.awsSdkLogs
 	testImplementation libs.hamcrest,

@@ -44,7 +44,7 @@ const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
   });
 
   const response = await fetch(
-    `https://dev.01.dev.identity.account.gov.uk/journey-transitions?${query.toString()}`,
+    `https://api-dev.01.dev.identity.account.gov.uk/journey-transitions?${query.toString()}`,
   );
 
   if (!response.ok) {

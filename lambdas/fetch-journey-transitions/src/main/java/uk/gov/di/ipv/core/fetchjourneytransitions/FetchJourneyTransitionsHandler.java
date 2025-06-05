@@ -2,9 +2,12 @@ package uk.gov.di.ipv.core.fetchjourneytransitions;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -15,10 +18,12 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class FetchJourneyTransitionsHandler
-        implements RequestHandler<Request, List<TransitionCount>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String LOG_GROUP = "/aws/lambda/process-journey-event-dev";
     private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
 
@@ -27,129 +32,115 @@ public class FetchJourneyTransitionsHandler
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
-    public List<TransitionCount> handleRequest(Request input, Context context) {
-        LOGGER.info("Handling request: {}", input);
-
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent event, Context context) {
         try {
-            int minutes = input.minutes();
-            LOGGER.info("Input minutes: {}", minutes);
+            Request input = parseRequest(event);
+            long now = Instant.now().getEpochSecond();
+            long startTime = now - input.minutes() * 60L;
 
-            long endTime = Instant.now().getEpochSecond();
-            LOGGER.info("Computed endTime (epoch seconds): {}", endTime);
-
-            long startTime = endTime - (minutes * 60L);
-            LOGGER.info("Computed startTime (epoch seconds): {}", startTime);
-
-            var ipvSessionId = input.ipvSessionId();
-            LOGGER.info("Input ipvSessionId: {}", ipvSessionId);
-
-            if (ipvSessionId != null && isValidIpvSessionId(ipvSessionId)) {
-                LOGGER.info("Invalid journey ID detected, throwing exception");
-                throw new Exception("Invalid journey Id");
+            if (input.ipvSessionId() != null && !isValidIpvSessionId(input.ipvSessionId())) {
+                throw new IllegalArgumentException("Invalid ipvSessionId format");
             }
 
-            String query =
-                    String.format(
-                            """
-                    fields @timestamp, @message
-                    | parse @message '"from":"*"' as from
-                    | parse @message '"fromJourney":"*"' as fromJourney
-                    | parse @message '"to":"*"' as to
-                    | parse @message '"toJourney":"*"' as toJourney
-                    | parse @message '"journeyEngine":"*"' as journeyEngine
-                    | filter journeyEngine = "State transition"
-                    %s
-                    | stats count() as transitions by fromJourney, from, toJourney, to
-                    | limit %d
-                """,
-                            ipvSessionId != null
-                                    ? "| filter ipvSessionId = '" + ipvSessionId + "'"
-                                    : "",
-                            input.limit());
-            LOGGER.info("Constructed CloudWatch Logs Insights query:\n{}", query);
+            String query = buildQuery(input);
+            LOGGER.info("Executing CloudWatch Logs query: {}", query);
 
-            StartQueryRequest startQueryRequest =
-                    new StartQueryRequest()
-                            .withLogGroupName(LOG_GROUP)
-                            .withQueryString(query)
-                            .withStartTime(startTime)
-                            .withEndTime(endTime);
-            LOGGER.info("StartQueryRequest prepared: {}", startQueryRequest);
+            List<TransitionCount> results = executeCloudWatchQuery(query, startTime, now);
 
-            StartQueryResult startQueryResult = logsClient.startQuery(startQueryRequest);
-            LOGGER.info("StartQueryResult received: {}", startQueryResult);
-
-            String queryId = startQueryResult.getQueryId();
-            LOGGER.info("Query ID: {}", queryId);
-
-            GetQueryResultsResult queryResults;
-            do {
-                LOGGER.info("Polling for query results...");
-                queryResults =
-                        logsClient.getQueryResults(
-                                new GetQueryResultsRequest().withQueryId(queryId));
-                LOGGER.info("Query status: {}", queryResults.getStatus());
-                Thread.sleep(1000);
-            } while (!"Complete".equals(queryResults.getStatus()));
-
-            LOGGER.info("Query complete. Processing results.");
-            List<TransitionCount> output = new ArrayList<>();
-
-            for (List<ResultField> row : queryResults.getResults()) {
-                LOGGER.info("Processing result row: {}", row);
-
-                String fromJourney = null;
-                String from = null;
-                String toJourney = null;
-                String to = null;
-                Integer transitions = null;
-
-                for (ResultField field : row) {
-                    LOGGER.info("ResultField: {}", field);
-                    switch (field.getField()) {
-                        case "fromJourney" -> fromJourney = field.getValue();
-                        case "from" -> from = field.getValue();
-                        case "toJourney" -> toJourney = field.getValue();
-                        case "to" -> to = field.getValue();
-                        case "transitions" -> transitions = Integer.parseInt(field.getValue());
-                    }
-                }
-
-                LOGGER.info(
-                        "Parsed - fromJourney: {}, from: {}, toJourney: {}, to: {}, transitions: {}",
-                        fromJourney,
-                        from,
-                        toJourney,
-                        to,
-                        transitions);
-
-                if (fromJourney != null
-                        && from != null
-                        && toJourney != null
-                        && to != null
-                        && transitions != null) {
-                    TransitionCount transitionCount =
-                            new TransitionCount(fromJourney, from, toJourney, to, transitions);
-                    output.add(transitionCount);
-                    LOGGER.info("Added TransitionCount: {}", transitionCount);
-                } else {
-                    LOGGER.info("Incomplete data row skipped");
-                }
-            }
-
-            LOGGER.info("Final output size: {}", output.size());
-            return output;
-
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(200)
+                    .withHeaders(Map.of("Content-Type", "application/json"))
+                    .withBody(OBJECT_MAPPER.writeValueAsString(results));
         } catch (Exception e) {
-            LOGGER.error("Unhandled lambda exception", e);
-            throw new RuntimeException(e);
+            LOGGER.error("Unhandled exception", e);
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(500)
+                    .withBody("{\"message\": \"Internal Server Error\"}");
+        }
+    }
+
+    private Request parseRequest(APIGatewayProxyRequestEvent event) {
+        Map<String, String> q =
+                Optional.ofNullable(event.getQueryStringParameters()).orElse(Map.of());
+        int minutes = parseIntOrDefault(q.get("minutes"), 60);
+        int limit = parseIntOrDefault(q.get("limit"), 100);
+        String ipvSessionId = q.get("ipvSessionId");
+        return new Request(minutes, limit, ipvSessionId);
+    }
+
+    private int parseIntOrDefault(String value, int defaultVal) {
+        try {
+            return value != null ? Integer.parseInt(value) : defaultVal;
+        } catch (NumberFormatException e) {
+            return defaultVal;
         }
     }
 
     private boolean isValidIpvSessionId(String id) {
-        LOGGER.info("Validating ipvSessionId: {}", id);
-        boolean isValid = JOURNEY_ID_PATTERN.matcher(id).matches();
-        LOGGER.info("Validation result: {}", isValid);
-        return isValid;
+        return JOURNEY_ID_PATTERN.matcher(id).matches();
+    }
+
+    private String buildQuery(Request input) {
+        String filter =
+                input.ipvSessionId() != null
+                        ? String.format("| filter ipvSessionId = '%s'\n", input.ipvSessionId())
+                        : "";
+
+        return String.format(
+                """
+            fields @timestamp, @message
+            | parse @message '"from":"*"' as from
+            | parse @message '"fromJourney":"*"' as fromJourney
+            | parse @message '"to":"*"' as to
+            | parse @message '"toJourney":"*"' as toJourney
+            | parse @message '"journeyEngine":"*"' as journeyEngine
+            | filter journeyEngine = "State transition"
+            %s| stats count() as transitions by fromJourney, from, toJourney, to
+            | limit %d
+        """,
+                filter, input.limit());
+    }
+
+    private List<TransitionCount> executeCloudWatchQuery(String query, long start, long end)
+            throws InterruptedException {
+        StartQueryResult startResult =
+                logsClient.startQuery(
+                        new StartQueryRequest()
+                                .withLogGroupName(LOG_GROUP)
+                                .withQueryString(query)
+                                .withStartTime(start)
+                                .withEndTime(end));
+
+        String queryId = startResult.getQueryId();
+        GetQueryResultsResult results;
+
+        do {
+            Thread.sleep(1000);
+            results = logsClient.getQueryResults(new GetQueryResultsRequest().withQueryId(queryId));
+        } while (!"Complete".equals(results.getStatus()));
+
+        return results.getResults().stream()
+                .map(this::parseResultRow)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private TransitionCount parseResultRow(List<ResultField> row) {
+        Map<String, String> fields =
+                row.stream()
+                        .collect(Collectors.toMap(ResultField::getField, ResultField::getValue));
+
+        try {
+            return new TransitionCount(
+                    fields.get("fromJourney"),
+                    fields.get("from"),
+                    fields.get("toJourney"),
+                    fields.get("to"),
+                    Integer.parseInt(fields.get("transitions")));
+        } catch (Exception e) {
+            LOGGER.warn("Skipping row due to missing/invalid data: {}", fields);
+            return null;
+        }
     }
 }
