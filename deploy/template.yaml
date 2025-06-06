@@ -11,7 +11,7 @@ Globals:
     Architectures:
       - arm64
     MemorySize: !If [IsPerformanceSensitive, 3072, 1024]
-    Runtime: java17
+    Runtime: java21
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
@@ -126,9 +126,6 @@ Conditions:
   IsStaging: !Equals [ !Ref Environment, "staging" ]
   IsDevOrBuildOrStaging: !Or
     - !Condition IsDevOrBuild
-    - !Condition IsStaging
-  IsBuildOrStaging: !Or
-    - !Condition IsBuild
     - !Condition IsStaging
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsStagingIntProd: !Or
@@ -1161,15 +1158,6 @@ Resources:
             - UseDynatrace
             - /opt/dynatrace
             - !Ref AWS::NoValue
-          # PYIC-8242 Turn on DT debug logging for single build lambda
-          DT_LOGGING_DESTINATION: !If
-            - IsBuild
-            - "stdout"
-            - !Ref AWS::NoValue
-          DT_LOGGING_JAVA_FLAGS: !If
-            - IsBuild
-            - "log-Transformer=true,log-OpenTelemetryUtils=true,log-AsyncClassRetransformer=true,log-ClassValue=true"
-            - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
@@ -1526,10 +1514,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
-      Runtime: !If
-        - IsBuild
-        - java21
-        - java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Tracing: Active
@@ -2129,22 +2113,16 @@ Resources:
           # https://govukverify.atlassian.net/browse/PYIC-8220
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsBuildOrStaging
-              - !Ref AWS::NoValue
-              - /opt/dynatrace
+            - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsBuildOrStaging
-            - !Ref AWS::NoValue
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:

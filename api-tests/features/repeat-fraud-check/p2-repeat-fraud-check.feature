@@ -1,5 +1,7 @@
 @Build
 Feature: Repeat fraud check journeys
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
 
   Scenario: User is sent on RFC journey to remedy unavailable fraud check
     Given the subject already has the following credentials

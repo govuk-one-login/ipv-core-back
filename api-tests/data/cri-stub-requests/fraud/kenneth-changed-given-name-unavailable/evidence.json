@@ -1,0 +1,10 @@
+{
+  "failedCheckDetails": [
+    {
+      "checkMethod": "data",
+      "fraudCheck": "available_authoritative_source"
+    }
+  ],
+  "txn": "RB000117420948",
+  "type": "IdentityCheck"
+}

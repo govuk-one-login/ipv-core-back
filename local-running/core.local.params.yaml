@@ -27,10 +27,6 @@ core:
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
-    govUkNotify:
-      emailTemplates:
-        UserTriggeredIdentityResetConfirmation: "dummy-value"
-        UserTriggeredIdentityResetConfirmationF2f: "dummy-value"
     coi:
       # Test COI config
       familyNameChars: 5
@@ -360,9 +356,8 @@ core:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     resetIdentity: false
-    deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
-    strategicAppEnabled: false
+    strategicAppEnabled: true
     internationalAddressEnabled: true
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
@@ -391,15 +386,15 @@ core:
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
-    deleteDetailsTestJourney:
-      featureFlags:
-        deleteDetailsEnabled: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
     strategicApp:
       featureFlags:
         strategicAppEnabled: true
+    disableStrategicApp:
+      featureFlags:
+        strategicAppEnabled: false
     inheritedIdentity:
       featureFlags:
         inheritedIdentity: true

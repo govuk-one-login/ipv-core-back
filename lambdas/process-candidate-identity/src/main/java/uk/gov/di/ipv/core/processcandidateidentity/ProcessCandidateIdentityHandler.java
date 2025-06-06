@@ -422,8 +422,11 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws EvcsServiceException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, ParseException, CiExtractionException {
+            throws EvcsServiceException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    ParseException,
+                    CiExtractionException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
         var auditEventParameters =
@@ -744,8 +747,10 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated)
-            throws CiExtractionException, ParseException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException {
+            throws CiExtractionException,
+                    CredentialParseException,
+                    ParseException,
+                    HttpResponseExceptionWithErrorBody {
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatusCode.INTERNAL_SERVER_ERROR, MISSING_SECURITY_CHECK_CREDENTIAL);

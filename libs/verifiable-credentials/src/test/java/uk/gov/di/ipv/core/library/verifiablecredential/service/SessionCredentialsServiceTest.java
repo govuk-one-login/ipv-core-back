@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
@@ -324,7 +325,7 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForResetTypeShouldDeleteDcmawVcs() throws Exception {
+        void deleteSessionCredentialsForResetTypeDcmawShouldDeleteDcmawVcs() throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
             var fraudVc =
@@ -346,6 +347,36 @@ class SessionCredentialsServiceTest {
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
                     SESSION_ID, SessionCredentialsResetType.DCMAW);
+
+            verify(mockDataStore).getItems(SESSION_ID);
+            verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
+        }
+
+        @ParameterizedTest
+        @EnumSource(names = {"DCMAW_ASYNC", "PENDING_DCMAW_ASYNC_ALL"})
+        void deleteSessionCredentialsForResetTypePendingDcmawAsyncAllShouldDeleteDcmawAsyncVcs(
+                SessionCredentialsResetType resetType) throws Exception {
+            var addressVc =
+                    generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
+            var fraudVc =
+                    generateVerifiableCredential(
+                            "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
+
+            var dcmawVc =
+                    generateVerifiableCredential("userId", DCMAW_ASYNC, vcClaimFailedWithCis(null));
+
+            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
+
+            when(mockDataStore.getItems(SESSION_ID))
+                    .thenReturn(
+                            List.of(
+                                    sessionFraudCredentialItem,
+                                    sessionAddressCredentialItem,
+                                    sessionDcmawCredentialItem));
+
+            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, resetType);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
