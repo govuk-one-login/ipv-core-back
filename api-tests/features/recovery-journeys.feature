@@ -1,7 +1,5 @@
 @Build
 Feature: Recovery journeys
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
 
   Scenario: Recovery event from page state - the same page is returned
     When I start a new 'medium-confidence' journey

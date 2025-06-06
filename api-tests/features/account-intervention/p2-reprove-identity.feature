@@ -1,8 +1,5 @@
 @Build
 Feature: Reprove Identity Journey
-    Background: Disable strategic app
-        Given I activate the 'disableStrategicApp' feature set
-
     Scenario: User reproves identity
         Given the subject already has the following credentials
             | CRI     | scenario                     |

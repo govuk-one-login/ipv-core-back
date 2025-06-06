@@ -1,7 +1,5 @@
 @Build
 Feature: M1C Unavailable Journeys
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
 
   Rule: New identities
 

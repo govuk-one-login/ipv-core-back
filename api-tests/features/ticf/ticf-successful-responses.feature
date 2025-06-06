@@ -1,8 +1,5 @@
 @Build
 Feature: TICF successful responses
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Rule: TICF returns CI
     Scenario: New P2 identity journey via app - TICF returns a CI
       Given TICF CRI will respond with default parameters and

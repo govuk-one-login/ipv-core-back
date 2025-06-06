@@ -1,8 +1,5 @@
 @Build
 Feature: Inherited identity extended scenarios
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: Successful enhanced verification mitigation with a PCL250 HMRC profile and receives a P2
     Given I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

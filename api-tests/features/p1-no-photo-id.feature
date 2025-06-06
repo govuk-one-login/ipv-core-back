@@ -33,7 +33,7 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
-    Given I activate the 'p1Journeys,disableStrategicApp' feature set
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -83,7 +83,7 @@ Feature: P1 No Photo Id Journey
     Then I get a 'no-photo-id-abandon-find-another-way' page response
 
   Scenario: P1 No Photo Id Journey - DCMAW after Experian KBV thin file
-    Given I activate the 'p1Journeys,disableStrategicApp' feature set
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -227,7 +227,7 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
-    Given I activate the 'p1Journeys,dwpKbvTest,disableStrategicApp' feature sets
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event

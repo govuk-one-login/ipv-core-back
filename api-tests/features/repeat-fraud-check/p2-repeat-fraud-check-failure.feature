@@ -1,7 +1,5 @@
 @Build
 Feature: Repeat fraud check failures
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
 
   Rule: Given name change only
 

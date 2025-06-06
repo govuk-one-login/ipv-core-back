@@ -2,7 +2,7 @@
 Feature: Reprove Identity Journey
 
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: P2 Journeys
     Background:
