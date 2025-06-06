@@ -100,7 +100,7 @@ public class SessionCredentialsService {
             var sessionCredentialItems = dataStore.getItems(ipvSessionId);
             var vcsToDelete =
                     switch (resetType) {
-                        case ALL, PENDING_F2F_ALL, PENDING_DCMAW_ASYNC_ALL, REINSTATE ->
+                        case ALL, PENDING_F2F_ALL, REINSTATE ->
                                 sessionCredentialItems;
                         case ADDRESS_ONLY_CHANGE ->
                                 sessionCredentialItems.stream()
@@ -115,7 +115,7 @@ public class SessionCredentialsService {
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW.getId().equals(item.getCriId()))
                                         .toList();
-                        case DCMAW_ASYNC ->
+                        case DCMAW_ASYNC, PENDING_DCMAW_ASYNC_ALL ->
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW_ASYNC.getId().equals(item.getCriId()))
                                         .toList();
