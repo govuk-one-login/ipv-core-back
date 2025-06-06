@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.evcs.service;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
@@ -136,6 +137,15 @@ public class EvcsService {
         for (var vc : evcsUserVcs) {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
+
+                // With SIS, we now store the CIMIT VC. We don't want to add this to the
+                // credential bundle so we skip the VC if it's from CIMIT.
+                if (configService
+                        .getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID)
+                        .equals(jwt.getJWTClaimsSet().getIssuer())) {
+                    continue;
+                }
+
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
                 var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
                 if (!credentials.containsKey(vc.state())) {
