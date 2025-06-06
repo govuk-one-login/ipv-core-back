@@ -8,6 +8,22 @@ on:
       - '.github/workflows/secure-post-merge.yml'
       - '.github/workflows/secure-post-merge-notags.yml'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Which user environment to deploy to.
+        required: true
+        type: choice
+        options:
+          - dev
+          - dev-perf
+          - dev-mikec
+          - dev-danc
+          - dev-joee
+          - dev-dominikt
+          - dev-theab
+          - dev-amrits
+          - dev-alir
+          - dev-patrickb
 
 jobs:
   check-if-api-tests-changed:
@@ -41,7 +57,7 @@ jobs:
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
-      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
+      environment: ${{ inputs.environment || 'build' }}
     secrets: inherit # pragma: allowlist secret
     permissions:
       id-token: write
@@ -55,7 +71,46 @@ jobs:
     timeout-minutes: 15
     env:
       AWS_REGION: eu-west-2
-      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
+      ENVIRONMENT: ${{ inputs.environment || 'build' }}
+      GH_ACTIONS_ROLE_ARN: ${{
+        inputs.environment == 'dev'          && secrets.GH_ACTIONS_ROLE_ARN_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.GH_ACTIONS_ROLE_ARN_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.GH_ACTIONS_ROLE_ARN_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.GH_ACTIONS_ROLE_ARN_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.GH_ACTIONS_ROLE_ARN_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.GH_ACTIONS_ROLE_ARN_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.GH_ACTIONS_ROLE_ARN_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.GH_ACTIONS_ROLE_ARN_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.GH_ACTIONS_ROLE_ARN_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.GH_ACTIONS_ROLE_ARN_DEV_PATRICKB ||
+        secrets.GH_ACTIONS_ROLE_ARN
+      }}
+      ARTIFACT_BUCKET_NAME: ${{
+        inputs.environment == 'dev'          && secrets.ARTIFACT_BUCKET_NAME_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.ARTIFACT_BUCKET_NAME_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.ARTIFACT_BUCKET_NAME_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.ARTIFACT_BUCKET_NAME_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.ARTIFACT_BUCKET_NAME_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.ARTIFACT_BUCKET_NAME_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.ARTIFACT_BUCKET_NAME_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.ARTIFACT_BUCKET_NAME_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.ARTIFACT_BUCKET_NAME_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.ARTIFACT_BUCKET_NAME_DEV_PATRICKB ||
+        secrets.ARTIFACT_BUCKET_NAME
+      }}
+      SIGNING_PROFILE_NAME: ${{
+        inputs.environment == 'dev'          && secrets.SIGNING_PROFILE_NAME_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.SIGNING_PROFILE_NAME_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.SIGNING_PROFILE_NAME_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.SIGNING_PROFILE_NAME_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.SIGNING_PROFILE_NAME_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.SIGNING_PROFILE_NAME_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.SIGNING_PROFILE_NAME_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.SIGNING_PROFILE_NAME_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.SIGNING_PROFILE_NAME_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.SIGNING_PROFILE_NAME_DEV_PATRICKB ||
+        secrets.SIGNING_PROFILE_NAME
+      }}
     permissions:
       id-token: write
       contents: read
@@ -92,7 +147,7 @@ jobs:
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.GH_ACTIONS_ROLE_ARN || secrets.GH_ACTIONS_ROLE_ARN_DEV }}
+          role-to-assume: ${{ env.GH_ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: SAM validate
@@ -108,7 +163,7 @@ jobs:
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
-          artifact-bucket-name: ${{ env.ENVIRONMENT == 'build' && secrets.ARTIFACT_BUCKET_NAME || secrets.ARTIFACT_BUCKET_NAME_DEV }}
-          signing-profile-name: ${{ env.ENVIRONMENT == 'build' && secrets.SIGNING_PROFILE_NAME || secrets.SIGNING_PROFILE_NAME_DEV }}
+          artifact-bucket-name: ${{ env.ARTIFACT_BUCKET_NAME }}
+          signing-profile-name: ${{ env.SIGNING_PROFILE_NAME }}
           working-directory: ./deploy
           template-file: .aws-sam/build/template.yaml

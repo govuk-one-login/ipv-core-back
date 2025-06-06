@@ -12,7 +12,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      ENVIRONMENT: ${{ inputs.environment }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN: ${{
+        inputs.environment == 'dev'          && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV_PATRICKB ||
+        secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN
+      }}
+      BUILD_API_TESTS_ECR_REPO: ${{
+        inputs.environment == 'dev'          && secrets.BUILD_API_TESTS_ECR_REPO_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.BUILD_API_TESTS_ECR_REPO_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.BUILD_API_TESTS_ECR_REPO_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.BUILD_API_TESTS_ECR_REPO_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.BUILD_API_TESTS_ECR_REPO_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.BUILD_API_TESTS_ECR_REPO_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.BUILD_API_TESTS_ECR_REPO_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.BUILD_API_TESTS_ECR_REPO_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.BUILD_API_TESTS_ECR_REPO_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.BUILD_API_TESTS_ECR_REPO_DEV_PATRICKB ||
+        secrets.BUILD_API_TESTS_ECR_REPO
+      }}
+      BUILD_CONTAINER_SIGN_KMS_KEY: ${{
+        inputs.environment == 'dev'          && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_SHARED ||
+        inputs.environment == 'dev-perf'     && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_PERF ||
+        inputs.environment == 'dev-mikec'    && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_MIKEC ||
+        inputs.environment == 'dev-danc'     && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_DANC ||
+        inputs.environment == 'dev-joee'     && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_JOEE ||
+        inputs.environment == 'dev-dominikt' && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_DOMINIKT ||
+        inputs.environment == 'dev-theab'    && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_THEAB ||
+        inputs.environment == 'dev-amrits'   && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_AMRITS ||
+        inputs.environment == 'dev-alir'     && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_ALIR ||
+        inputs.environment == 'dev-patrickb' && secrets.BUILD_CONTAINER_SIGN_KMS_KEY_DEV_PATRICKB ||
+        secrets.BUILD_CONTAINER_SIGN_KMS_KEY
+      }}
     permissions:
       id-token: write
       packages: read
@@ -29,7 +67,7 @@ jobs:
       - name: Set up build AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN || secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV }}
+          role-to-assume: ${{ env.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Login to build ECR
@@ -39,9 +77,7 @@ jobs:
       - name: Build, tag, push, and sign api testing image to build
         env:
           BUILD_ECR_REG: ${{ steps.login-build-ecr.outputs.registry }}
-          BUILD_API_TESTS_ECR_REPO: ${{ env.ENVIRONMENT == 'build' && secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME || secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV }}
           SHA: ${{ github.sha }}
-          BUILD_CONTAINER_SIGN_KMS_KEY: ${{ env.ENVIRONMENT == 'build' && secrets.CONTAINER_SIGN_KMS_KEY || secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
         run: |
           docker build --build-arg GITHUB_PAT="${{ secrets.GITHUB_TOKEN }}" \
             -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest" \
