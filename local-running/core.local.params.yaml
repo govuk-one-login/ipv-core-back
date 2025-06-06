@@ -357,7 +357,7 @@ core:
   featureFlags:
     resetIdentity: false
     pendingF2FResetEnabled: false
-    strategicAppEnabled: false
+    strategicAppEnabled: true
     internationalAddressEnabled: true
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
@@ -392,6 +392,9 @@ core:
     strategicApp:
       featureFlags:
         strategicAppEnabled: true
+    disableStrategicApp:
+      featureFlags:
+        strategicAppEnabled: false
     inheritedIdentity:
       featureFlags:
         inheritedIdentity: true

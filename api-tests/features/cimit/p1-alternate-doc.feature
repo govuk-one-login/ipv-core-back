@@ -1,5 +1,8 @@
 @Build
 Feature: P1 CIMIT - Alternate doc
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
+
   Rule: No existing identity
     Background:
       Given I start a new 'low-confidence' journey

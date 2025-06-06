@@ -2,7 +2,7 @@
 Feature: Journey ending interventions
 
   Scenario Outline: <intervention> intervention at <when> of identity proving journey
-    Given I activate the 'accountInterventions' feature set
+    Given I activate the 'accountInterventions,disableStrategicApp' feature set
     And The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -32,7 +32,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
   Scenario Outline: <intervention> intervention at <when> of reprove identity journey
-    Given I activate the 'accountInterventions' feature set
+    Given I activate the 'accountInterventions,disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
@@ -121,6 +121,3 @@ Feature: Journey ending interventions
     When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
     And I submit 'kenneth-score-2' details to the CRI stub
     Then I get an OAuth response with error code 'session_invalidated'
-
-
-

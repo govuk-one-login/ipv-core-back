@@ -7,6 +7,7 @@ Feature: International identity reuse update details
             | dcmaw   | kenneth-passport-valid |
             | address | kenneth-current        |
             | fraud   | kenneth-no-applicable   |
+        And I activate the 'disableStrategicApp' feature set
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
         When I activate the 'internationalAddress' feature sets

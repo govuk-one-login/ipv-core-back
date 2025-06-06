@@ -1,5 +1,8 @@
 @Build
 Feature: Return exit codes
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
+
   Scenario: Successful journey with identity and no CIs - no return codes
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

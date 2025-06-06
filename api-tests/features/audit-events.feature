@@ -1,4 +1,7 @@
 Feature: Audit Events
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
+
   Scenario: New identity - p2 app journey
     Given I activate the 'storedIdentityService' feature set
     And I start a new 'medium-confidence' journey
@@ -245,7 +248,7 @@ Feature: Audit Events
     And audit events for 'international-address-journey' are recorded [local only]
 
   Scenario: Strategic app journey
-    Given I activate the 'strategicApp' feature set
+    Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -262,7 +265,7 @@ Feature: Audit Events
 
   @InitialisesDCMAWSessionState
   Scenario: MAM journey cross-browser scenario
-    Given I activate the 'strategicApp' feature set
+    Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

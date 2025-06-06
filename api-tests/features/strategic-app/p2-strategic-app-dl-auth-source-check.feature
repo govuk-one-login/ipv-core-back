@@ -93,6 +93,28 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
+    Scenario: Auth check abandoned, retry with CI
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      When I submit a 'next' event
+
+      # Reattempt
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'pyi-no-match' page response
+
     Scenario: CI on auth check asks for alternative document
       When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
         | Attribute | Values          |

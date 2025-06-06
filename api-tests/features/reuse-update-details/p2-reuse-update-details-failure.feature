@@ -9,6 +9,7 @@ Feature: Identity reuse update details failures
                 | dcmaw   | kenneth-driving-permit-valid |
                 | address | kenneth-current              |
                 | fraud   | kenneth-score-2              |
+            And I activate the 'disableStrategicApp' feature set
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
             When I submit an 'update-details' event

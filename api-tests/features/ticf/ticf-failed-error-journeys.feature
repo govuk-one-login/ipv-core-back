@@ -1,5 +1,7 @@
 @Build
 Feature: TICF failed/error journeys
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
 
   Rule: Via enhanced-verification journey
     Background: Start TICF enhanced verification journey

@@ -1,8 +1,8 @@
 @Build
-Feature: P2 App journey
+Feature: P2 International Address
 
   Background:
-    Given I start a new 'medium-confidence' journey
+    Given I activate the 'disableStrategicApp' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
 
