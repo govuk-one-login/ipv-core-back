@@ -144,6 +144,7 @@ public class ProcessCandidateIdentityHandler
             EnumSet.of(NEW, PENDING, REVERIFICATION, UPDATE);
 
     // Candidate identities that should store the given identity (if successful)
+    @SuppressWarnings("java:S116") // Field names should comply with a naming convention
     private final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
             EnumSet.of(NEW, PENDING, UPDATE);
 
