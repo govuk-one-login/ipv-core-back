@@ -9,7 +9,6 @@ Feature: MFA reset journey
         | fraud   | kenneth-score-2              |
 
       # Start MFA reset journey
-      And I activate the 'disableStrategicApp' feature set
       When I start a new 'reverification' journey
       Then I get a 'you-can-change-security-code-method' page response
 

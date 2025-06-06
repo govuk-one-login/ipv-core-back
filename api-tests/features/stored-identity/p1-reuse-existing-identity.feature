@@ -1,7 +1,7 @@
 @Build
 Feature: Stored Identity - Update Existing Identity
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |

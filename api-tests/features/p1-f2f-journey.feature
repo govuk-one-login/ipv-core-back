@@ -1,7 +1,5 @@
 @Build
 Feature: P1 F2F journey
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
 
   Scenario: P1 Face to Face after DCMAW dropout
     Given I activate the 'p1Journeys' feature set

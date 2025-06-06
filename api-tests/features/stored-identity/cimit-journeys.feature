@@ -1,7 +1,7 @@
 @Build
 Feature: Stored Identity Service - CIMIT journeys
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: P1 - D02 Mitigation
     Background:

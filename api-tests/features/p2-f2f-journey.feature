@@ -91,8 +91,7 @@ Feature: P2 F2F journey
 
     Scenario Outline: Successful P2 identity via F2F using <doc> - DCMAW access_denied
       # Initial journey
-      Given I activate the 'disableStrategicApp' feature set
-      And I start a new 'medium-confidence' journey
+      Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -179,8 +178,7 @@ Feature: P2 F2F journey
 
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification
-      Given I activate the 'disableStrategicApp' feature set
-      And I start a new 'medium-confidence' journey
+      Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       When I submit an 'appTriage' event

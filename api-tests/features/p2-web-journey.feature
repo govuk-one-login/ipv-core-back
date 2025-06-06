@@ -2,8 +2,7 @@
 @TrafficGeneration
 Feature: P2 Web document journey
   Background: Start P2 journey and ineligible for the app
-    Given I activate the 'disableStrategicApp' feature set
-    When I start a new 'medium-confidence' journey
+    Given I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response

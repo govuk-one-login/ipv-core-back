@@ -3,8 +3,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
 
   Background:
     # Navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
-    Given I activate the 'disableStrategicApp' feature set
-    When I start a new 'low-confidence' journey
+    Given I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

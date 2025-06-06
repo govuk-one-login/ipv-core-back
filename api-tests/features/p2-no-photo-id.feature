@@ -186,14 +186,9 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'no-photo-id-abandon-find-another-way' page response
 
-    Scenario: P2 no photo id journey - Abandon - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'mobileApp' event
-      Then I get a 'dcmaw' CRI response
-
     Scenario: P2 no photo id journey - Abandon - Strategic app
       When I submit an 'mobileApp' event
-      Then I get a 'identify-device' page response
+      Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - Abandon - Passport
       When I submit an 'passport' event
@@ -277,14 +272,9 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response
 
-    Scenario: P2 no photo id journey - KBV mitigation - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-
     Scenario: P2 no photo id journey - KBV mitigation - Strategic app
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - KBV mitigation - F2F
       When I submit an 'f2f' event
@@ -324,14 +314,9 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
 
-    Scenario: P2 no photo id journey - KBV dropout - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-
     Scenario: P2 no photo id journey - KBV dropout - Strategic app
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - KBV dropout - F2F
       When I submit an 'f2f' event

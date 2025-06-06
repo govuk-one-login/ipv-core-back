@@ -1,8 +1,5 @@
 @Build
 Feature: Failed TICF responses
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario Outline: TICF CRI returns a <statusCode> during identity proving
     Given TICF CRI will respond with default parameters and
       | statusCode    | <statusCode>                 |

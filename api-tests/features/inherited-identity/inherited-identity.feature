@@ -44,8 +44,7 @@ Feature: Inherited Identity
     Then I get a 'PCL250' identity
 
   Scenario Outline: P2 identity takes priority over successfully migrated PCL200
-    Given I activate the 'disableStrategicApp' feature set
-    When I start a new 'medium-confidence' journey
+    Given I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -100,8 +99,7 @@ Feature: Inherited Identity
     | PCL250       | alice-vot-pcl250-no-evidence   | Alice             | PCL250           | PCL200       | kenneth-vot-pcl200-no-evidence       | Alice             | PCL250           | not replaced |
 
   Scenario: Previous PCL250 inherited identity is replaced with new P2 identity for the same user
-    Given I activate the 'disableStrategicApp' feature set
-    When I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
+    Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'PCL250' identity

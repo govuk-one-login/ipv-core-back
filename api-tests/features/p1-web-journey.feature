@@ -1,7 +1,7 @@
 @Build
 Feature: P1 Web Journeys
   Background: Start P1 journey ineligible for app
-    Given I activate the 'p1Journeys,disableStrategicApp' feature set
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event

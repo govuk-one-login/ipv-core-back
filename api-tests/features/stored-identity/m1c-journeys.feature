@@ -1,7 +1,7 @@
 @Build
 Feature: Stored Identity - M1C Outcomes
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: New Identities - UK Address
     Background:
