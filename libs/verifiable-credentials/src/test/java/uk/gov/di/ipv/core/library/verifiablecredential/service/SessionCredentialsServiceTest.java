@@ -291,7 +291,7 @@ class SessionCredentialsServiceTest {
         }
 
         @ParameterizedTest
-        @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "PENDING_DCMAW_ASYNC_ALL", "REINSTATE"})
+        @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "REINSTATE"})
         void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(
                 SessionCredentialsResetType resetType) throws Exception {
             var addressVc =
@@ -352,9 +352,10 @@ class SessionCredentialsServiceTest {
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
         }
 
-        @Test
-        void deleteSessionCredentialsForResetTypePendingDcmawAsyncAllShouldDeleteDcmawAsyncVcs()
-                throws Exception {
+        @ParameterizedTest
+        @EnumSource(names = {"DCMAW_ASYNC", "PENDING_DCMAW_ASYNC_ALL"})
+        void deleteSessionCredentialsForResetTypePendingDcmawAsyncAllShouldDeleteDcmawAsyncVcs(
+                SessionCredentialsResetType resetType) throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
             var fraudVc =
@@ -375,8 +376,7 @@ class SessionCredentialsServiceTest {
                                     sessionAddressCredentialItem,
                                     sessionDcmawCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, SessionCredentialsResetType.DCMAW_ASYNC);
+            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, resetType);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
