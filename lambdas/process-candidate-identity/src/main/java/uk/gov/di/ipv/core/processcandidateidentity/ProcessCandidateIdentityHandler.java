@@ -83,6 +83,7 @@ import java.util.Set;
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_AIS_API;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
@@ -143,7 +144,8 @@ public class ProcessCandidateIdentityHandler
             EnumSet.of(NEW, PENDING, REVERIFICATION, UPDATE);
 
     // Candidate identities that should store the given identity (if successful)
-    private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
+    @SuppressWarnings("java:S116") // Field names should comply with a naming convention
+    private final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
             EnumSet.of(NEW, PENDING, UPDATE);
 
     // Candidate identities that should match a profile
@@ -237,6 +239,10 @@ public class ProcessCandidateIdentityHandler
 
             String userId = clientOAuthSessionItem.getUserId();
 
+            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+                STORE_IDENTITY_TYPES.add(EXISTING);
+            }
+
             if (configService.enabled(AIS_ENABLED)
                     && midJourneyInterventionDetected(
                             userId, ipvSessionItem.getInitialAccountInterventionState())) {
@@ -298,15 +304,8 @@ public class ProcessCandidateIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
+        } catch (ParseException | CredentialParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
