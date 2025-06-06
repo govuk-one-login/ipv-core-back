@@ -54,7 +54,7 @@ nestedJourneyStates:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: PENDING_DCMAW_ASYNC_ALL
+        resetType: DCMAW
     events:
       next:
         targetState: DL_DETAILS_INCORRECT_PAGE
@@ -64,7 +64,7 @@ nestedJourneyStates:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: DCMAW_ASYNC
+        resetType: DCMAW
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
