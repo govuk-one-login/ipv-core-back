@@ -192,6 +192,7 @@ Feature: P2 no photo id journey
       Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - Abandon - Strategic app
+      Given I activate the 'strategicApp' feature set
       When I submit an 'mobileApp' event
       Then I get a 'identify-device' page response
 
@@ -283,6 +284,7 @@ Feature: P2 no photo id journey
       Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - KBV mitigation - Strategic app
+      Given I activate the 'strategicApp' feature set
       When I submit an 'appTriage' event
       Then I get a 'identify-device' page response
 
@@ -330,6 +332,7 @@ Feature: P2 no photo id journey
       Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - KBV dropout - Strategic app
+      Given I activate the 'strategicApp' feature set
       When I submit an 'appTriage' event
       Then I get a 'identify-device' page response
 
