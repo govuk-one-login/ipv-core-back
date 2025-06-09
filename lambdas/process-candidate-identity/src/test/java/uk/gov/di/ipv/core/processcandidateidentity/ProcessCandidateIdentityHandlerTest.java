@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
@@ -88,6 +89,7 @@ import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcSecurityCheckNoCis;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -110,6 +112,7 @@ class ProcessCandidateIdentityHandlerTest {
                     Optional.of(STRONGEST_MATCHED_VOT),
                     Optional.of(STRONGEST_MATCHED_VOT),
                     M1A.getScores());
+    private static final VerifiableCredential CIMIT_VC = vcSecurityCheckNoCis();
 
     private static final String SESSION_ID = "session-id";
     private static final String IP_ADDRESS = "ip-address";
@@ -250,6 +253,7 @@ class ProcessCandidateIdentityHandlerTest {
                         throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
+            ipvSessionItem.setVot(P0);
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
@@ -319,6 +323,7 @@ class ProcessCandidateIdentityHandlerTest {
         void shouldHandleCandidateIdentityTypePendingAndReturnJourneyNext() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
+            ipvSessionItem.setVot(P0);
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
@@ -356,7 +361,14 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(votMatcher, times(0)).findStrongestMatches(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
+                    .storeIdentity(
+                            eq(USER_ID),
+                            eq(List.of()),
+                            eq(List.of()),
+                            eq(P0),
+                            eq(null),
+                            eq(CandidateIdentityType.PENDING),
+                            any());
             verify(criStoringService, times(1))
                     .storeVcs(
                             eq(Cri.TICF),
@@ -1353,6 +1365,117 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
             assertEquals(500, response.get("statusCode"));
             assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), response.get("message"));
+        }
+
+        @Test
+        void
+                shouldStoreCimitVcIfStoredIdentityServiceFeatureFlagIsEnabledAndSecurityCheckCredentialIsValid()
+                        throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(List.of()),
+                            any(),
+                            any()))
+                    .thenReturn(true);
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(USER_ID),
+                            eq(List.of(CIMIT_VC)),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.NEW),
+                            any());
+        }
+
+        @Test
+        void shouldContinueToStoreIdentityIfFailedToParseSecurityCheckCredential()
+                throws Exception {
+            // Arrange
+            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(List.of()),
+                            any(),
+                            any()))
+                    .thenReturn(true);
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenThrow(new CredentialParseException("Failed to parse VC"));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(USER_ID),
+                            eq(List.of()),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.NEW),
+                            any());
         }
     }
 
