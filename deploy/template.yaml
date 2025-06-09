@@ -684,6 +684,90 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
+  ManualF2fPendingResetFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "ManualF2fPendingResetFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "manual-f2f-pending-reset-${Environment}"
+      Handler: uk.gov.di.ipv.core.manualf2fpendingreset.ManualF2fPendingResetHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/manual-f2f-pending-reset
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub manual-f2f-pending-reset-${Environment}
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          AWS_LAMBDA_EXEC_WRAPPER: !If
+            - UseDynatrace
+            - /opt/dynatrace
+            - !Ref AWS::NoValue
+      Layers:
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              dynatraceLayerArn,
+          ]
+          - !Ref AWS::NoValue
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: {}
+        - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref CRIResponseTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+      AutoPublishAlias: live
+
+  ManualF2fPendingResetFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/manual-f2f-pending-reset-${Environment}"
+
+  ManualF2fPendingResetFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -3361,6 +3445,16 @@ Resources:
           MetricNamespace: Custom/Lambda
           MetricName: IOExceptionCount
 
+  ManualF2fPendingResetFunctionIOExceptionMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
+      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: Custom/Lambda
+          MetricName: IOExceptionCount
+
   BuildClientOauthResponseFunctionIOExceptionMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
@@ -3547,6 +3641,31 @@ Resources:
   #                                                                  #
   ####################################################################
 
+  ManualF2fPendingResetFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: "Error returned from the ManualF2fPendingResetFunction."
+      AlarmName: !Sub ${AWS::StackName}-ManualF2fPendingReset-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "manual-f2f-pending-reset-${Environment}:live"
+        - Name: FunctionName
+          Value: !Ref ManualF2fPendingResetFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt ManualF2fPendingResetFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
   IssueClientAccessTokenFunctionErrorCanaryAlarm:
     Type: AWS::CloudWatch::Alarm
