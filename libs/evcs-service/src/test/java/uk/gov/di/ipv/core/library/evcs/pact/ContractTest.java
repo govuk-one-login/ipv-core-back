@@ -116,8 +116,18 @@ class ContractTest {
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
-                            new EvcsCreateUserVCsDto(VC_STRING, PENDING_RETURN, Map.of(), ONLINE)),
+                                    DCMAW_PASSPORT_VC_STRING,
+                                    EvcsVCState.CURRENT,
+                                    Map.of(),
+                                    ONLINE),
+                            new EvcsCreateUserVCsDto(
+                                    DCMAW_PASSPORT_VC_STRING, PENDING_RETURN, Map.of(), ONLINE)),
+                    null);
+
+    private static final EvcsPutUserVCsDto INVALID_VCS_DTO =
+            new EvcsPutUserVCsDto(
+                    TEST_USER_ID,
+                    List.of(new EvcsCreateUserVCsDto(DCMAW_PASSPORT_VC_STRING, null, null, null)),
                     null);
 
     private static final List<EvcsUpdateUserVCsDto> EVCS_POST_USER_VCS_DTO =
@@ -765,14 +775,6 @@ class ContractTest {
                                 .build())
                 .willRespondWith()
                 .status(400)
-                .body(
-                        newJsonBody(
-                                        body -> {
-                                            body.stringType(
-                                                    "error",
-                                                    "Duplicate VCs with conflicting state detected");
-                                        })
-                                .build())
                 .toPact();
     }
 
@@ -791,11 +793,63 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact putVcsWithoutApiKey(PactDslWithProvider builder) {
-        return builder.uponReceiving("A PUT request with missing or invalid API key")
+    public RequestResponsePact putInvalidVcs(PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
+                .uponReceiving("A bad request with invalid VCs DTO")
                 .path("/vcs")
                 .method("PUT")
-                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(
+                        newJsonBody(
+                                        dto -> {
+                                            dto.stringType("userId", TEST_USER_ID);
+                                            dto.array(
+                                                    "vcs",
+                                                    vcs -> {
+                                                        vcs.object(
+                                                                vc -> {
+                                                                    vc.stringType(
+                                                                            "vc",
+                                                                            DCMAW_PASSPORT_VC_STRING);
+                                                                });
+                                                    });
+                                        })
+                                .build())
+                .willRespondWith()
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putInvalidVcs")
+    void testPutInvalidVcs(MockServer mockServer) {
+        // Arrange
+        var evcsClient = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () -> {
+                    evcsClient.storeUserVCs(INVALID_VCS_DTO);
+                });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsWithoutApiKey(PactDslWithProvider builder) {
+        return builder.uponReceiving("A PUT request with invalid API key")
+                .path("/vcs")
+                .method("PUT")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                "invalid-api-key",
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
                                         dto -> {
@@ -830,6 +884,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "putVcsWithoutApiKey")
     void testPutVcsWithoutApiKey(MockServer mockServer) {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                .thenReturn("invalid-api-key");
         var evcsClient = new EvcsClient(mockConfigService);
 
         // Act & Assert
