@@ -671,6 +671,15 @@ Resources:
                   - "s3:GetObject"
                 Resource:
                   - !Sub
+                    - "arn:aws:s3:::ipv-core-well-known-jwks-${env}/well-known.json"
+                    - env: !If
+                        - IsDevelopment
+                        - !If
+                          - IsDev01
+                          - dev01
+                          - dev02
+                        - !Ref Environment
+                  - !Sub
                     - "arn:aws:s3:::ipv-core-well-known-jwks-${env}/well-known-v2.json"
                     - env: !If
                         - IsDevelopment
