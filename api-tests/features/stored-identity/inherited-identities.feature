@@ -1,3 +1,4 @@
+@Build
 Feature: Inherited Identity journeys
   Background: Enable stored identity service feature flag
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

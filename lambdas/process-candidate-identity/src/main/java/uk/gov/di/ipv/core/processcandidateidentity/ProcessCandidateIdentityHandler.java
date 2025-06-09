@@ -144,10 +144,7 @@ public class ProcessCandidateIdentityHandler
             EnumSet.of(NEW, PENDING, REVERIFICATION, UPDATE);
 
     // Candidate identities that should store the given identity (if successful)
-    @SuppressWarnings("java:S116") // Field names should comply with a naming convention
-    // When SIS goes live, we can remove the above suppression as we can
-    // permanently add the EXISTING enum and set this to static
-    private final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
+    private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
             EnumSet.of(NEW, PENDING, UPDATE);
 
     // Candidate identities that should match a profile
@@ -240,10 +237,6 @@ public class ProcessCandidateIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String userId = clientOAuthSessionItem.getUserId();
-
-            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
-                STORE_IDENTITY_TYPES.add(EXISTING);
-            }
 
             if (configService.enabled(AIS_ENABLED)
                     && midJourneyInterventionDetected(
@@ -514,7 +507,7 @@ public class ProcessCandidateIdentityHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
-        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+        if (shouldStoreIdentity(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeCandidateIdentity(
                     userId,
@@ -553,15 +546,23 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
-        return (STORE_IDENTITY_TYPES.contains(processIdentityType)
-                        && !PENDING.equals(processIdentityType))
+        return (shouldStoreIdentity(processIdentityType) && !PENDING.equals(processIdentityType))
                 || PROFILE_MATCHING_TYPES.contains(processIdentityType);
     }
 
     private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
         return COI_CHECK_TYPES.contains(processIdentityType)
-                || STORE_IDENTITY_TYPES.contains(processIdentityType)
+                || shouldStoreIdentity(processIdentityType)
                 || PENDING.equals(processIdentityType);
+    }
+
+    private boolean shouldStoreIdentity(CandidateIdentityType identityType) {
+        return STORE_IDENTITY_TYPES.contains(identityType)
+                || shouldStoreExistingIdentity(identityType);
+    }
+
+    private boolean shouldStoreExistingIdentity(CandidateIdentityType identityType) {
+        return configService.enabled(STORED_IDENTITY_SERVICE) && EXISTING.equals(identityType);
     }
 
     private JourneyResponse getJourneyResponseForProfileMatching(

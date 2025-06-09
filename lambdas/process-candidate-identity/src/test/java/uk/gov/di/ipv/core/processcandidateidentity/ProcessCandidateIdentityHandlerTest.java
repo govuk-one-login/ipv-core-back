@@ -181,7 +181,6 @@ class ProcessCandidateIdentityHandlerTest {
             when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         }
 
         @Test
@@ -474,6 +473,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(votMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
 
             var request =
