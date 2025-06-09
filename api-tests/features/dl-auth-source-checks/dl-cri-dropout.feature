@@ -1,9 +1,9 @@
 @Build
 Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to incorrect details)
   Background: Activate the featureSet
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck,p1Journeys,disableStrategicApp' feature sets
 
-  Scenario Outline: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL low-confidence
+  Scenario: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL low-confidence
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -23,7 +23,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL medium-confidence
+  Scenario: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL medium-confidence
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -45,7 +45,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: User backs out of driving licence CRI and returns to DCMAW with a passport P1 - identity has only one DCMAW VC
+  Scenario: User backs out of driving licence CRI and returns to DCMAW with a passport P1 - identity has only one DCMAW VC
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -72,7 +72,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'P1' identity
     And I have a dcmaw VC without 'drivingPermit' details
 
-    Scenario Outline: User backs out of driving licence CRI and returns to DCMAW with a passport P2 - identity has only one DCMAW VC
+    Scenario: User backs out of driving licence CRI and returns to DCMAW with a passport P2 - identity has only one DCMAW VC
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -101,7 +101,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'P2' identity
     And I have a dcmaw VC without 'drivingPermit' details
 
-  Scenario Outline: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
+  Scenario: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -136,7 +136,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity without a 'dcmaw' VC
 
-  Scenario Outline: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
+  Scenario: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -173,7 +173,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity without a 'dcmaw' VC
 
-  Scenario Outline: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC low-confidence
+  Scenario: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC low-confidence
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -191,7 +191,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-  Scenario Outline: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC medium-confidence
+  Scenario: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC medium-confidence
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
