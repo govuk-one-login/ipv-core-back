@@ -64,7 +64,7 @@ class YamlConfigServiceTest {
     void getSecretReturnsSecret() throws Exception {
         var configService = getConfigService();
 
-        var secret = configService.getSecret(ConfigurationVariable.GOV_UK_NOTIFY_API_KEY);
+        var secret = configService.getSecret(ConfigurationVariable.EVCS_API_KEY);
 
         assertEquals("test-api-key", secret);
     }

@@ -1,3 +1,4 @@
+@Build
 Feature: Stored Identity - P1 journeys
   Background: Enabled stored identity service flag and start p1 journey
     Given I activate the 'p1Journeys,storedIdentityService' feature sets

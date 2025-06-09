@@ -175,10 +175,16 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    InvalidCriResponseException, CredentialParseException,
-                    VerifiableCredentialException, ConfigException, CiRetrievalException,
-                    EvcsServiceException, CiExtractionException, MissingSecurityCheckCredential {
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    InvalidCriResponseException,
+                    CredentialParseException,
+                    VerifiableCredentialException,
+                    ConfigException,
+                    CiRetrievalException,
+                    EvcsServiceException,
+                    CiExtractionException,
+                    MissingSecurityCheckCredential {
         // Validate callback sessions
         validateSessionId(request);
 
