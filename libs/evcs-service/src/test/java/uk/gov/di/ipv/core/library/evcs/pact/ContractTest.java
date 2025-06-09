@@ -39,9 +39,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -58,7 +55,6 @@ class ContractTest {
     private static final String VC_STRING =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1wLnN0YWdpbmcuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDU5ODY1MjEsInZjIjp7InR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Ik1PUkdBTiJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IlNBUkFIIE1FUkVEWVRIIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTY1LTA3LTA4In1dLCJwYXNzcG9ydCI6W3siZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODciLCJleHBpcnlEYXRlIjoiMjAzMC0wMS0wMSIsImljYW9Jc3N1ZXJDb2RlIjoiR0JSIn1dLCJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6IkdCIiwiYWRkcmVzc0xvY2FsaXR5IjoiR1JFQVQgTUlTU0VOREVOIiwiYnVpbGRpbmdOYW1lIjoiQ09ZIFBPTkQgQlVTSU5FU1MgUEFSSyIsImJ1aWxkaW5nTnVtYmVyIjoiMTYiLCJkZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJMT05HIEVBVE9OIiwiZGVwZW5kZW50U3RyZWV0TmFtZSI6IktJTkdTIFBBUksiLCJkb3VibGVEZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJTT01FIERJU1RSSUNUIiwib3JnYW5pc2F0aW9uTmFtZSI6IkZJTkNIIEdST1VQIiwicG9zdGFsQ29kZSI6IkhQMTYgMEFMIiwic3RyZWV0TmFtZSI6IkJJRyBTVFJFRVQiLCJzdWJCdWlsZGluZ05hbWUiOiJVTklUIDJCIiwidXBybiI6MTAwMTIwMDEyMDc3fV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiY2QyMzQ2Iiwic3RyZW5ndGhTY29yZSI6NCwidmFsaWRpdHlTY29yZSI6MiwidmVyaWZpY2F0aW9uU2NvcmUiOjMsImNpIjpbXSwiY2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6ImRhdGEiLCJkYXRhQ2hlY2siOiJjYW5jZWxsZWRfY2hlY2sifSx7ImNoZWNrTWV0aG9kIjoiZGF0YSIsImRhdGFDaGVjayI6InJlY29yZF9jaGVjayJ9XX1dfX0." // pragma: allowlist secret
                     + VC_SIGNATURE;
-    private static final String SI_STRING = "";
 
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(PENDING_RETURN);
 
@@ -76,15 +72,20 @@ class ContractTest {
     private static final List<EvcsCreateUserVCsDto> INVALID_CREATE_USER_VCS_DTO =
             List.of(new EvcsCreateUserVCsDto(VC_STRING, EvcsVCState.CURRENT, null, null));
 
+    private static final String DCMAW_PASSPORT_VC_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1iLnN0YWdpbmcuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDU5ODY1MjEsImlhdCI6MTcwNTk4NjUyMSwidmMiOnsiY3JlZGVudGlhbFN1YmplY3QiOnsiYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkdSRUFUIE1JU1NFTkRFTiIsImJ1aWxkaW5nTmFtZSI6IkNPWSBQT05EIEJVU0lORVNTIFBBUksiLCJidWlsZGluZ051bWJlciI6IjE2IiwiZGVwZW5kZW50QWRkcmVzc0xvY2FsaXR5IjoiTE9ORyBFQVRPTiIsImRlcGVuZGVudFN0cmVldE5hbWUiOiJLSU5HUyBQQVJLIiwiZG91YmxlRGVwZW5kZW50QWRkcmVzc0xvY2FsaXR5IjoiU09NRSBESVNUUklDVCIsIm9yZ2FuaXNhdGlvbk5hbWUiOiJGSU5DSCBHUk9VUCIsInBvc3RhbENvZGUiOiJIUDE2IDBBTCIsInN0cmVldE5hbWUiOiJCSUcgU1RSRUVUIiwic3ViQnVpbGRpbmdOYW1lIjoiVU5JVCAyQiIsInVwcm4iOjEwMDEyMDAxMjA3N31dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XSwibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJNT1JHQU4ifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJTQVJBSCBNRVJFRFlUSCJ9XX1dLCJwYXNzcG9ydCI6W3siZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODciLCJleHBpcnlEYXRlIjoiMjAzMC0wMS0wMSIsImljYW9Jc3N1ZXJDb2RlIjoiR0JSIn1dfSwiZXZpZGVuY2UiOlt7ImFjdGl2aXR5SGlzdG9yeVNjb3JlIjoxLCJjaGVja0RldGFpbHMiOlt7ImFjdGl2aXR5RnJvbSI6IjIwMTktMDEtMDEiLCJjaGVja01ldGhvZCI6InZyaSIsImlkZW50aXR5Q2hlY2tQb2xpY3kiOiJwdWJsaXNoZWQifSx7ImJpb21ldHJpY1ZlcmlmaWNhdGlvblByb2Nlc3NMZXZlbCI6MywiY2hlY2tNZXRob2QiOiJidnIifV0sInN0cmVuZ3RoU2NvcmUiOjQsInR4biI6ImJjZDIzNDYiLCJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInZhbGlkaXR5U2NvcmUiOjJ9XSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl19fQ.hjJcmLEEIbG6J1Ik2vW5oRhpazL1SvvuvyBe5T62VtlNik5zsKwPtqly0eDeJeiCp4oxtcmBfG1APMNRasbk8A";
+    private static final String ADDRESS_VC_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1hLmludGVncmF0aW9uLmFjY291bnQuZ292LnVrIiwic3ViIjoidXJuOnV1aWQ6ZTZlMmUzMjQtNWI2Ni00YWQ2LTgzMzgtODNmOWY4MzdlMzQ1IiwibmJmIjoxNjU4ODI5NzIwLCJpYXQiOjE2NTg4Mjk3MjAsInZjIjp7ImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImFkZHJlc3MiOlt7ImFkZHJlc3NDb3VudHJ5IjoiR0IiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwiYnVpbGRpbmdOYW1lIjoiIiwiYnVpbGRpbmdOdW1iZXIiOiI4IiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJzdHJlZXROYW1lIjoiSEFETEVZIFJPQUQiLCJ1cHJuIjoxMDAxMjAwMTIwNzcsInZhbGlkVW50aWwiOiIyMDAwLTAxLTAxIn1dfSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIkFkZHJlc3NDcmVkZW50aWFsIl19fQ.tJr8joysbRzbyT0e8qRWTay88cNFFa9DA5Qyc6rHvwUxlMYdIUzDnVQYfb4x8O_beUHaxxn5NiMCua2qd3xFHw";
+    private static final String FRAUD_VC_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1mLmludGVncmF0aW9uLmFjY291bnQuZ292LnVrIiwic3ViIjoidXJuOnV1aWQ6ZTZlMmUzMjQtNWI2Ni00YWQ2LTgzMzgtODNmOWY4MzdlMzQ1IiwibmJmIjoxNzQ5NDY2MjY2LCJpYXQiOjE3NDk0NjYyNjYsInZjIjp7ImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImFkZHJlc3MiOlt7ImFkZHJlc3NDb3VudHJ5IjoiR0IiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwiYnVpbGRpbmdOYW1lIjoiIiwiYnVpbGRpbmdOdW1iZXIiOiI4IiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJzdHJlZXROYW1lIjoiSEFETEVZIFJPQUQiLCJ1cHJuIjoxMDAxMjAwMTIwNzcsInZhbGlkVW50aWwiOiIyMDAwLTAxLTAxIn1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk1OS0wOC0yMyJ9XSwibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJLRU5ORVRIIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiREVDRVJRVUVJUkEifV19XX0sImV2aWRlbmNlIjpbeyJpZGVudGl0eUZyYXVkU2NvcmUiOjEsInR4biI6IlJCMDAwMTAzNDkwMDg3IiwidHlwZSI6IklkZW50aXR5Q2hlY2sifV0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdfX0.LDY6jIPXpHxJuDPkSQlcUsHOL_y4j3ZdGLwhK8vCAceXVhtR1XPXljpeW6aUcj3Q8m7Ox55KB9Le9TPrF9xr1Q";
+    private static final String SI_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lkZW50aXR5LmFjY291bnQuZ292LnVrIiwic3ViIjoidGVzdC11c2VyLWlkIiwiYXVkIjoiaHR0cHM6Ly9yZXVzZS1pZGVudGl0eS5hY2NvdW50Lmdvdi51ayIsIm5iZiI6MjY1ODgyOTcyMCwiaWF0IjoyNjU4ODI5NzIwLCJ2b3QiOiJQMiIsImNyZWRlbnRpYWxzIjpbImhqSmNtTEVFSWJHNkoxSWsydlc1b1JocGF6TDFTdnZ1dnlCZTVUNjJWdGxOaWs1enNLd1B0cWx5MGVEZUplaUNwNG94dGNtQmZHMUFQTU5SYXNiazhBIiwidEpyOGpveXNiUnpieVQwZThxUldUYXk4OGNORkZhOURBNVF5YzZySHZ3VXhsTVlkSVV6RG5WUVlmYjR4OE9fYmVVSGF4eG41TmlNQ3VhMnFkM3hGSHciLCJMRFk2aklQWHBIeEp1RFBrU1FsY1VzSE9MX3k0ajNaZEdMd2hLOHZDQWNlWFZodFIxWFBYbGpwZVc2YVVjajNROG03T3g1NUtCOUxlOVRQckY5eHIxUSJdLCJjbGFpbXMiOnt9fQ.omMIO4KF1uPKlWh252GIX21MgCfrH6qoQGezYcD_yZWDobZ5H0L3dCvQxEt7SVXLWmxtBsoQpv4Lf8kwfGVI2Q";
     private static final EvcsPutUserVCsDto EVCS_PUT_NEW_VCS_DTO =
             new EvcsPutUserVCsDto(
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
-                                    vcAddressM1a().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(),
-                                    ONLINE)),
+                                    ADDRESS_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
                     null);
 
     private static final EvcsPutUserVCsDto EVCS_PUT_UPDATED_VCS_DTO =
@@ -92,10 +93,7 @@ class ContractTest {
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
-                                    vcAddressM1a().getVcString(),
-                                    EvcsVCState.HISTORIC,
-                                    Map.of(),
-                                    ONLINE)),
+                                    ADDRESS_VC_STRING, EvcsVCState.HISTORIC, Map.of(), ONLINE)),
                     null);
 
     private static final EvcsPutUserVCsDto EVCS_PUT_P2_SI_AND_VCS_DTO =
@@ -103,20 +101,14 @@ class ContractTest {
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
-                                    vcDcmawPassport().getVcString(),
+                                    DCMAW_PASSPORT_VC_STRING,
                                     EvcsVCState.CURRENT,
                                     Map.of(),
                                     ONLINE),
                             new EvcsCreateUserVCsDto(
-                                    vcAddressM1a().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(),
-                                    ONLINE),
+                                    ADDRESS_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
                             new EvcsCreateUserVCsDto(
-                                    vcExperianFraudM1a().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(),
-                                    ONLINE)),
+                                    FRAUD_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
                     new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
 
     private static final EvcsPutUserVCsDto DUPLICATE_CONFLICTING_VCS_DTO =
@@ -126,7 +118,7 @@ class ContractTest {
                             new EvcsCreateUserVCsDto(
                                     VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
                             new EvcsCreateUserVCsDto(VC_STRING, PENDING_RETURN, Map.of(), ONLINE)),
-                    new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
+                    null);
 
     private static final List<EvcsUpdateUserVCsDto> EVCS_POST_USER_VCS_DTO =
             List.of(
@@ -519,7 +511,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact putNewVcsIdentity(PactDslWithProvider builder) {
+    public RequestResponsePact putNewVcs(PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
                 .uponReceiving("A request to put EVCS VCs and stored identity")
                 .path("/vcs")
@@ -541,8 +533,7 @@ class ContractTest {
                                                                 vcDto -> {
                                                                     vcDto.stringType(
                                                                             "vc",
-                                                                            vcAddressM1a()
-                                                                                    .getVcString());
+                                                                            ADDRESS_VC_STRING);
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -562,8 +553,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "putNewVcsIdentity")
-    void testPutNewVcsIdentity(MockServer mockServer) throws EvcsServiceException {
+    @PactTestFor(pactMethod = "putNewVcs")
+    void testPutNewVcs(MockServer mockServer) throws EvcsServiceException {
         // Arrange
         var evcsClient = new EvcsClient(mockConfigService);
 
@@ -575,7 +566,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact putUpdatedVcsIdentity(PactDslWithProvider builder) {
+    public RequestResponsePact putUpdatedVcs(PactDslWithProvider builder) {
         return builder.given("VC already exists in EVCS")
                 .given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
                 .uponReceiving("A request to put EVCS VCs and stored identity")
@@ -598,8 +589,7 @@ class ContractTest {
                                                                 vcDto -> {
                                                                     vcDto.stringType(
                                                                             "vc",
-                                                                            vcAddressM1a()
-                                                                                    .getVcString());
+                                                                            ADDRESS_VC_STRING);
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.HISTORIC
@@ -619,8 +609,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "putUpdatedVcsIdentity")
-    void testPutUpdatedVcsIdentity(MockServer mockServer) throws EvcsServiceException {
+    @PactTestFor(pactMethod = "putUpdatedVcs")
+    void testPutUpdatedVcs(MockServer mockServer) throws EvcsServiceException {
         // Arrange
         var evcsClient = new EvcsClient(mockConfigService);
 
@@ -654,8 +644,7 @@ class ContractTest {
                                                                 vcDto -> {
                                                                     vcDto.stringType(
                                                                             "vc",
-                                                                            vcDcmawPassport()
-                                                                                    .getVcString());
+                                                                            DCMAW_PASSPORT_VC_STRING);
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -670,8 +659,7 @@ class ContractTest {
                                                                 vcDto -> {
                                                                     vcDto.stringType(
                                                                             "vc",
-                                                                            vcAddressM1a()
-                                                                                    .getVcString());
+                                                                            ADDRESS_VC_STRING);
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -685,9 +673,7 @@ class ContractTest {
                                                         vcDtos.object(
                                                                 vcDto -> {
                                                                     vcDto.stringType(
-                                                                            "vc",
-                                                                            vcExperianFraudM1a()
-                                                                                    .getVcString());
+                                                                            "vc", FRAUD_VC_STRING);
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -748,8 +734,7 @@ class ContractTest {
                                                                 vc -> {
                                                                     vc.stringType(
                                                                             "vc",
-                                                                            vcDcmawPassport()
-                                                                                    .getVcString());
+                                                                            DCMAW_PASSPORT_VC_STRING);
                                                                     vc.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -764,8 +749,7 @@ class ContractTest {
                                                                 vc -> {
                                                                     vc.stringType(
                                                                             "vc",
-                                                                            vcDcmawPassport()
-                                                                                    .getVcString()); // same VC
+                                                                            DCMAW_PASSPORT_VC_STRING); // same VC
                                                                     vc.stringType(
                                                                             "state",
                                                                             PENDING_RETURN
@@ -776,12 +760,6 @@ class ContractTest {
                                                                             "provenance",
                                                                             ONLINE.toString());
                                                                 });
-                                                    });
-                                            dto.object(
-                                                    "si",
-                                                    si -> {
-                                                        si.stringType("jwt", SI_STRING);
-                                                        si.stringType("vot", Vot.P2.toString());
                                                     });
                                         })
                                 .build())
@@ -829,8 +807,7 @@ class ContractTest {
                                                                 vc -> {
                                                                     vc.stringType(
                                                                             "vc",
-                                                                            vcDcmawPassport()
-                                                                                    .getVcString());
+                                                                            DCMAW_PASSPORT_VC_STRING);
                                                                     vc.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
