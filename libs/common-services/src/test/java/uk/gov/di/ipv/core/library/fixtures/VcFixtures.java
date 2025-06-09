@@ -18,6 +18,8 @@ import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
+import uk.gov.di.model.SecurityCheck;
+import uk.gov.di.model.SecurityCheckCredential;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 import uk.gov.di.model.VerifiableCredentialType;
 
@@ -59,6 +61,7 @@ public interface VcFixtures {
     String DWP_KBV_ISSUER_STAGING = "https://gdskbvauth-test.financial-support.service.dwp.gov.uk";
     String PASSPORT_ISSUER_STAGING = "https://review-p.staging.account.gov.uk";
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
+    String CIMIT_ISSUER = "https://cimit.stubs.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
@@ -626,6 +629,21 @@ public interface VcFixtures {
                                                                         CheckDetails.CheckMethodType
                                                                                 .DATA)
                                                                 .build()))
+                                        .build()))
+                .build();
+    }
+
+    private static SecurityCheckCredential vcClaimSecurityCheckNoCis() {
+        return SecurityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.SECURITY_CHECK_CREDENTIAL,
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL))
+                .withEvidence(
+                        List.of(
+                                SecurityCheck.builder()
+                                        .withContraIndicator(List.of())
+                                        .withType("SecurityCheck")
                                         .build()))
                 .build();
     }
@@ -1381,6 +1399,17 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
                 PASSPORT_ISSUER_STAGING,
+                null,
+                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
+                "https://hmrc.gov.uk/trustmark");
+    }
+
+    static VerifiableCredential vcSecurityCheckNoCis() {
+        return generateVerifiableCredential(
+                "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
+                Cri.CIMIT,
+                vcClaimSecurityCheckNoCis(),
+                CIMIT_ISSUER,
                 null,
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");

@@ -83,6 +83,7 @@ import java.util.Set;
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_AIS_API;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
@@ -501,7 +502,7 @@ public class ProcessCandidateIdentityHandler
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeCandidateIdentity(
                             userId,
-                            ipvSessionItem.getVot(),
+                            ipvSessionItem,
                             null,
                             sessionVcs,
                             evcsUserVcs,
@@ -517,7 +518,7 @@ public class ProcessCandidateIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeCandidateIdentity(
                     userId,
-                    ipvSessionItem.getVot(),
+                    ipvSessionItem,
                     votMatchingResult,
                     sessionVcs,
                     evcsUserVcs,
@@ -530,17 +531,34 @@ public class ProcessCandidateIdentityHandler
 
     private void storeCandidateIdentity(
             String userId,
-            Vot achievedVot,
+            IpvSessionItem ipvSessionItem,
             VotMatchingResult votMatchingResult,
             List<VerifiableCredential> sessionVcs,
             List<EvcsGetUserVCDto> evcsUserVcs,
             CandidateIdentityType processIdentityType,
             SharedAuditEventParameters auditEventParameters)
             throws EvcsServiceException {
+        var achievedVot = ipvSessionItem.getVot();
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)
                         ? null
                         : votMatchingResult.strongestMatch().orElse(null);
+
+        var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+
+        if (StringUtils.isNotBlank(securityCheckCredential)
+                && configService.enabled(STORED_IDENTITY_SERVICE)) {
+            try {
+                var parsedSecurityCheckVc =
+                        cimitUtilityService.getParsedSecurityCheckCredential(
+                                securityCheckCredential, userId);
+                sessionVcs.add(parsedSecurityCheckVc);
+            } catch (CredentialParseException e) {
+                LOGGER.warn(
+                        "Failed to parse security check credential, skipping storage of CIMIT VC");
+            }
+        }
+
         storeIdentityService.storeIdentity(
                 userId,
                 sessionVcs,
@@ -695,8 +713,8 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
-                | UnrecognisedVotException
-                | CredentialParseException e) {
+                | CredentialParseException
+                | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
