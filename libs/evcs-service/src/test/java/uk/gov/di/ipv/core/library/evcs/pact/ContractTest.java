@@ -39,6 +39,9 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -78,23 +81,24 @@ class ContractTest {
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                                    vcDcmawPassport()
+                                            .getVcString(), EvcsVCState.CURRENT, Map.of(), ONLINE),
                             new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
+                                    vcAddressM1a()
+                                            .getVcString(), EvcsVCState.CURRENT, Map.of(), ONLINE),
                             new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
+                                    vcExperianFraudM1a()
+                                            .getVcString(), EvcsVCState.CURRENT, Map.of(), ONLINE)),
                     new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
 
-    private static final EvcsPutUserVCsDto EVCS_PUT_P2_SI_AND_VCS_DTO =
+    private static final EvcsPutUserVCsDto DUPLICATE_CONFLICTING_VCS_DTO =
             new EvcsPutUserVCsDto(
                     TEST_USER_ID,
                     List.of(
                             new EvcsCreateUserVCsDto(
                                     VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
                             new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
-                            new EvcsCreateUserVCsDto(
-                                    VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
+                                    VC_STRING, PENDING_RETURN, Map.of(), ONLINE)),
                     new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
 
     private static final List<EvcsUpdateUserVCsDto> EVCS_POST_USER_VCS_DTO =
@@ -488,7 +492,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact putVcsReturns200(PactDslWithProvider builder) {
+    public RequestResponsePact putVcsReturns202(PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
                 .uponReceiving("A request to put EVCS VCs and stored identity")
                 .path("/vcs")
@@ -504,12 +508,46 @@ class ContractTest {
                                         dto -> {
                                             dto.stringType("userId", TEST_USER_ID);
                                             dto.array(
-                                                    "vcs",
+                                                    "vcs", // M1A
                                                     vcDtos -> {
                                                         vcDtos.object(
                                                                 vcDto -> {
                                                                     vcDto.stringType(
-                                                                            "vc", VC_STRING);
+                                                                            "vc",
+                                                                            vcDcmawPassport()
+                                                                                    .getVcString());
+                                                                    vcDto.stringType(
+                                                                            "state",
+                                                                            EvcsVCState.CURRENT
+                                                                                    .toString());
+                                                                    vcDto.object(
+                                                                            "metadata", vc -> {});
+                                                                    vcDto.stringType(
+                                                                            "provenance",
+                                                                            ONLINE.toString());
+                                                                });
+                                                        vcDtos.object(
+                                                                vcDto -> {
+                                                                    vcDto.stringType(
+                                                                            "vc",
+                                                                            vcAddressM1a()
+                                                                                    .getVcString());
+                                                                    vcDto.stringType(
+                                                                            "state",
+                                                                            EvcsVCState.CURRENT
+                                                                                    .toString());
+                                                                    vcDto.object(
+                                                                            "metadata", vc -> {});
+                                                                    vcDto.stringType(
+                                                                            "provenance",
+                                                                            ONLINE.toString());
+                                                                });
+                                                        vcDtos.object(
+                                                                vcDto -> {
+                                                                    vcDto.stringType(
+                                                                            "vc",
+                                                                            vcExperianFraudM1a()
+                                                                                    .getVcString());
                                                                     vcDto.stringType(
                                                                             "state",
                                                                             EvcsVCState.CURRENT
@@ -530,12 +568,12 @@ class ContractTest {
                                         })
                                 .build())
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "putVcsReturns200")
+    @PactTestFor(pactMethod = "putVcsReturns202")
     void testPutVcsRequestReturns200(MockServer mockServer) throws EvcsServiceException {
         // Arrange
         var evcsClient = new EvcsClient(mockConfigService);
@@ -544,6 +582,151 @@ class ContractTest {
         var response = evcsClient.storeUserVCs(EVCS_PUT_P2_SI_AND_VCS_DTO);
 
         // Assert
-        assertEquals(200, response.statusCode());
+        assertEquals(202, response.statusCode());
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsReturns400(PactDslWithProvider builder) {
+        return builder
+                .given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
+                .uponReceiving("A bad request with duplicate VCs with different states")
+                .path("/vcs")
+                .method("PUT")
+                .headers(
+                        Map.of(
+                                "x-api-key", EVCS_API_KEY,
+                                CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
+                .body(newJsonBody(dto -> {
+                    dto.stringType("userId", TEST_USER_ID);
+                    dto.array("vcs", vcs -> {
+                        vcs.object(vc -> {
+                            vc.stringType("vc", vcDcmawPassport().getVcString());
+                            vc.stringType("state", EvcsVCState.CURRENT.toString());
+                            vc.object("metadata", meta -> {});
+                            vc.stringType("provenance", ONLINE.toString());
+                        });
+                        vcs.object(vc -> {
+                            vc.stringType("vc", vcDcmawPassport().getVcString()); // same VC
+                            vc.stringType("state", PENDING_RETURN.toString()); // conflicting state
+                            vc.object("metadata", meta -> {});
+                            vc.stringType("provenance", ONLINE.toString());
+                        });
+                    });
+                }).build())
+                .willRespondWith()
+                .status(400)
+                .body(newJsonBody(body -> {
+                    body.stringType("error", "Duplicate VCs with conflicting state detected");
+                }).build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putVcsReturns400")
+    void testPutVcsReturns400(MockServer mockServer) {
+        // Arrange
+        var evcsClient = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        assertThrows(EvcsServiceException.class, () -> {
+            evcsClient.storeUserVCs(DUPLICATE_CONFLICTING_VCS_DTO);
+        });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsReturns403(PactDslWithProvider builder) {
+        return builder
+                .given("Missing or invalid API key")
+                .uponReceiving("A PUT request with missing or invalid API key")
+                .path("/vcs")
+                .method("PUT")
+                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
+                .body(newJsonBody(dto -> {
+                    dto.stringType("userId", TEST_USER_ID);
+                    dto.array("vcs", vcs -> {
+                        vcs.object(vc -> {
+                            vc.stringType("vc", vcDcmawPassport().getVcString());
+                            vc.stringType("state", EvcsVCState.CURRENT.toString());
+                            vc.object("metadata", meta -> {});
+                            vc.stringType("provenance", ONLINE.toString());
+                        });
+                    });
+                }).build())
+                .willRespondWith()
+                .status(403)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putVcsReturns403")
+    void testPutVcsReturns403(MockServer mockServer) {
+        // Arrange
+        var evcsClient = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        assertThrows(EvcsServiceException.class, () -> {
+            evcsClient.storeUserVCs(EVCS_PUT_P2_SI_AND_VCS_DTO);
+        });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsReturns415(PactDslWithProvider builder) {
+        return builder
+                .given("Request with unsupported Content-Type")
+                .uponReceiving("A PUT request with invalid Content-Type")
+                .path("/vcs")
+                .method("PUT")
+                .headers(Map.of(
+                        "x-api-key", EVCS_API_KEY,
+                        CONTENT_TYPE, "text/plain"))
+                .body("some invalid body")
+                .willRespondWith()
+                .status(415)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putVcsReturns415")
+    void testPutVcsReturns415(MockServer mockServer) {
+        // Arrange
+        var evcsClient = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        assertThrows(EvcsServiceException.class, () -> {
+            evcsClient.storeUserVCs(EVCS_PUT_P2_SI_AND_VCS_DTO);
+        });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact putVcsReturns409(PactDslWithProvider builder) {
+        return builder.given("Existing user")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create EVCS user VCs")
+                .path("/vcs/" + TEST_USER_ID)
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(getRequestBodyForUserVC())
+                .willRespondWith()
+                .status(409)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "putVcsReturns409")
+    void testPutVcsReturns409(MockServer mockServer) {
+        // Arrange
+        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () -> {
+                    evcsClient.storeUserVCs(EVCS_PUT_P2_SI_AND_VCS_DTO);
+                });
     }
 }
