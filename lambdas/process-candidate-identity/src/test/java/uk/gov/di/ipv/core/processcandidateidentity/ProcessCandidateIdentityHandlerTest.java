@@ -487,6 +487,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
 
             var request =
                     requestBuilder
@@ -503,7 +506,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
