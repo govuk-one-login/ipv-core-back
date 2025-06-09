@@ -1,8 +1,8 @@
 Feature: Inherited Identity journeys
   Background: Enable stored identity service feature flag
-    Given I activate the 'storedIdentityService' feature set
+    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
 
-  Scenario Outline: Inherited Identity Scenarios
+  Scenario Outline: Inherited Identity Reuse
     Given I start a new '<journey-type>' journey with inherited identity '<inherited-identity>'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -21,14 +21,14 @@ Feature: Inherited Identity journeys
       | medium-confidence-pcl200-pcl250 | alice-vot-pcl200-no-evidence      | PCL200            |
       | medium-confidence-pcl200-pcl250 | alice-vot-pcl250-no-evidence      | PCL250            |
 
-  Scenario: Stronger inherited identity overrides initial weaker identity
+  Scenario: Stronger inherited identity overrides initial weaker inherited identity
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'PCL200' identity
     And I have a 'HMRC' stored identity record type with a 'PCL200' vot
 
-    # New journey with stronger stored identity
+    # New journey with stronger inherited identity
     When I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -42,7 +42,7 @@ Feature: Inherited Identity journeys
     Then I get a 'PCL250' identity
     And I have a 'HMRC' stored identity record type with a 'PCL250' vot
 
-    # New journey with weaker stored identity
+    # New journey with weaker inherited identity
     When I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity

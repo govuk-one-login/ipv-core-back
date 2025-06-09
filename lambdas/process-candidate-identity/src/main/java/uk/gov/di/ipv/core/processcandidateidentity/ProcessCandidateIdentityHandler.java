@@ -145,6 +145,8 @@ public class ProcessCandidateIdentityHandler
 
     // Candidate identities that should store the given identity (if successful)
     @SuppressWarnings("java:S116") // Field names should comply with a naming convention
+    // When SIS goes live, we can remove the above suppression as we can
+    // permanently add the EXISTING enum and set this to static
     private final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
             EnumSet.of(NEW, PENDING, UPDATE);
 
