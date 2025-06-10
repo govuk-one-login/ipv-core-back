@@ -37,17 +37,23 @@ class ManualF2fPendingResetHandlerTest {
     @NullAndEmptySource
     @ValueSource(strings = {"   "})
     void shouldReturnErrorForInvalidInput(String invalidInput) {
+        // Act
         Map<String, Object> response = handler.handleRequest(invalidInput, mockContext);
+
+        // Assert
         assertEquals("error", response.get("result"));
         assertEquals("Missing or empty userId in input", response.get("message"));
     }
 
     @Test
     void shouldReturnErrorWhenCriResponseItemNotFound() {
+        // Arrange
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(null);
 
+        // Act
         Map<String, Object> response = handler.handleRequest(TEST_USER_ID, mockContext);
 
+        // Assert
         assertEquals("error", response.get("result"));
         assertEquals("No F2F pending record found.", response.get("message"));
         verify(mockCriResponseService, never()).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
@@ -55,16 +61,18 @@ class ManualF2fPendingResetHandlerTest {
 
     @Test
     void shouldReturnSuccessWhenItemFoundAndDeleted() {
+        // Arrange
         CriResponseItem mockItem =
                 CriResponseItem.builder()
                         .userId(TEST_USER_ID)
                         .credentialIssuer(Cri.F2F.getId())
                         .build();
-
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
 
+        // Act
         Map<String, Object> response = handler.handleRequest(TEST_USER_ID, mockContext);
 
+        // Assert
         assertEquals("success", response.get("result"));
         assertEquals("Deleted F2F pending record.", response.get("message"));
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
@@ -72,21 +80,27 @@ class ManualF2fPendingResetHandlerTest {
 
     @Test
     void shouldReturnErrorWhenExceptionThrownDuringLookup() {
+        // Arrange
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
                 .thenThrow(new RuntimeException("simulated failure"));
 
+        // Act
         Map<String, Object> response = handler.handleRequest(TEST_USER_ID, mockContext);
 
+        // Assert
         assertEquals("error", response.get("result"));
         assertEquals("Failed to delete record due to internal error.", response.get("message"));
     }
 
     @Test
     void responseShouldAlwaysContainResultAndMessageFields() {
+        // Arrange
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(null);
 
+        // Act
         Map<String, Object> response = handler.handleRequest(TEST_USER_ID, mockContext);
 
+        // Assert
         assertTrue(response.containsKey("result"));
         assertTrue(response.containsKey("message"));
     }
