@@ -716,17 +716,6 @@ Resources:
           "responseLatency":"$context.responseLatency",
           "responseLength":"$context.responseLength"
           }
-      Auth:
-        ApiKeyRequired: true
-        ResourcePolicy:
-          CustomStatements:
-            - Effect: Allow
-              Principal: "*"
-              Action: "execute-api:Invoke"
-              Resource: "execute-api:/*/*/*"
-              Condition:
-                StringEquals:
-                  aws:SourceVpc: !Ref VpcId
 
   IPVCoreAnalyticsAPILogGroup:
     Type: AWS::Logs::LogGroup
