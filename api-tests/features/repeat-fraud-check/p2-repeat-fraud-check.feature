@@ -172,7 +172,9 @@ Feature: Repeat fraud check journeys
         | CRI     | scenario               |
         | dcmaw   | kenneth-passport-valid |
         | address | kenneth-current        |
-        | fraud   | kenneth-no-applicable  |
+      And the subject already has the following expired credentials
+        | CRI   | scenario              |
+        | fraud | kenneth-no-applicable |
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
