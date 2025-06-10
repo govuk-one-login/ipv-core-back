@@ -1,7 +1,6 @@
 @Build
 @TrafficGeneration
 Feature: P2 App journey
-
   Background:
     Given I activate the 'disableStrategicApp' feature set
     And I start a new 'medium-confidence' journey
@@ -53,12 +52,6 @@ Feature: P2 App journey
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario Outline: <error> from DCMAW
-    When I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
     When I call the CRI stub and get an '<error>' OAuth error
     Then I get a '<expected_page>' page response
 
@@ -72,11 +65,5 @@ Feature: P2 App journey
       | invalid_scope             | pyi-technical           |
 
   Scenario: Fail DCMAW with no CI
-    When I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-fail-no-ci' details to the CRI stub
     Then I get a 'page-multiple-doc-check' page response

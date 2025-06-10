@@ -7,9 +7,9 @@ Feature: MFA reset journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
+      And I activate the 'disableStrategicApp' feature set
 
       # Start MFA reset journey
-      And I activate the 'disableStrategicApp' feature set
       When I start a new 'reverification' journey
       Then I get a 'you-can-change-security-code-method' page response
 

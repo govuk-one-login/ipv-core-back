@@ -1,6 +1,5 @@
 @Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys with DL authoritative source check
-
   Rule: Uk user
     Background: Get to the DL check
       Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set

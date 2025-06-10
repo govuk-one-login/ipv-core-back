@@ -14,8 +14,7 @@ Feature: Repeat fraud check journeys
     Then I get a 'confirm-your-details' page response
 
   Rule: Match M1B
-
-    Background:
+    Background: Start journey with expired fraud check
       Given the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
@@ -168,7 +167,6 @@ Feature: Repeat fraud check journeys
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
 
   Rule: Match M1C Fraud Check Not Applicable
-
     Background:
       Given the subject already has the following credentials
         | CRI     | scenario               |
@@ -245,7 +243,6 @@ Feature: Repeat fraud check journeys
       Then I get a 'P2' identity
 
   Rule: Match M1C Fraud Check Unavailable
-
     Background:
       Given the subject already has the following credentials
         | CRI     | scenario               |

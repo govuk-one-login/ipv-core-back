@@ -4,7 +4,6 @@ Feature: Repeat fraud check failures
     Given I activate the 'disableStrategicApp' feature set
 
   Rule: Given name change only
-
     Background:
       Given the subject already has the following credentials
         | CRI     | scenario                     |

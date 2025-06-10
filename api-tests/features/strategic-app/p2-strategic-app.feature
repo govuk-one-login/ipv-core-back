@@ -1,6 +1,5 @@
 @Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys
-
   Rule: UK user
     Background: Start journey
       Given I activate the 'strategicApp' feature set

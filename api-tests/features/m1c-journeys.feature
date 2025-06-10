@@ -4,7 +4,6 @@ Feature: M1C Unavailable Journeys
     Given I activate the 'disableStrategicApp' feature set
 
   Rule: New identities
-
     Background:
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -58,7 +57,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'P0' identity
 
   Rule: Returning existing M1C unavailable user goes through details confirmation
-
     Background:
       Given the subject already has the following credentials
         | CRI           | scenario                     |
@@ -167,7 +165,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'P2' identity
 
   Rule: Existing non-M1C identity returns
-
     Background:
       Given the subject already has the following credentials
         | CRI           | scenario                     |
