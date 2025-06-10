@@ -3,6 +3,11 @@ info:
   title: "IPV Core Analytics"
   description: "The analytics api presented by IPV Core Back for use by IPV observability tooling"
   version: "1.0.0"
+
+# Add security requirement at root level
+security:
+  - apiKey: []
+
 paths:
   /journey-transitions:
     get:
@@ -33,8 +38,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/journeyTransitionsResponse"
+        401:
+          description: "Unauthorized - Invalid or missing API key"
       security:
-        - apiKey: [ ]
+        - apiKey: []
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "GET"
@@ -47,6 +54,8 @@ components:
     apiKey:
       type: apiKey
       name: x-api-key
+      in: header
+      description: "API key for authentication"
 
   schemas:
     journeyTransitionsResponse:
