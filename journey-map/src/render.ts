@@ -22,18 +22,50 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
+import config from "./config.ts";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
   states: StateNode[];
 }
 
+interface JourneyTransition {
+  fromJourney: string;
+  from: string;
+  toJourney: string;
+  to: string;
+  count: number;
+}
+
+const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
+  const query = new URLSearchParams({
+    minutes: "30",
+    limit: "500",
+    // ipvSessionId: "test-session-1",
+  });
+
+  const response = await fetch(
+    `${config.journeyTransitionsEndpoint}?${query}`,
+    {
+      headers: {
+        "x-api-key": config.analyticsApiKey,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch journey transitions: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
-const getVisibleEdgesAndNodes = (
+const getVisibleEdgesAndNodes = async (
   journeyStates: Record<string, JourneyState>,
   options: RenderOptions,
-): RenderableMap => {
+): Promise<RenderableMap> => {
   // Initial states have no response or nested journey
   const initialStates = Object.keys(journeyStates).filter(
     (s) => !journeyStates[s].response && !journeyStates[s].nestedJourney,
@@ -42,6 +74,7 @@ const getVisibleEdgesAndNodes = (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
+  const journeyTransitions: JourneyTransition[] = await getJourneyTransitions();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -95,6 +128,14 @@ const getVisibleEdgesAndNodes = (
         transitions.push({
           sourceState,
           targetState,
+          transitionCount:
+            journeyTransitions.find(
+              (transition) =>
+                transition.fromJourney === definition.parent &&
+                transition.from === sourceState &&
+                transition.toJourney === definition.parent &&
+                transition.to === targetState,
+            )?.count ?? 0,
           transitionEvents,
         });
       },
@@ -107,12 +148,12 @@ const getVisibleEdgesAndNodes = (
   };
 };
 
-export const render = (
+export const render = async (
   selectedJourney: string,
   journeyMap: JourneyMap,
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
-): string => {
+): Promise<string> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
   const direction = TOP_DOWN_JOURNEYS.includes(selectedJourney) ? "TD" : "LR";
 
@@ -134,7 +175,7 @@ export const render = (
 
   const { transitions, states } = options.onlyOrphanStates
     ? { transitions: [], states: findOrphanStates(journeyStates) }
-    : getVisibleEdgesAndNodes(journeyStates, options);
+    : await getVisibleEdgesAndNodes(journeyStates, options);
 
   return `${getMermaidHeader(direction)}
     ${states.map(renderState).join("\n")}
