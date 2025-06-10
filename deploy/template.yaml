@@ -765,26 +765,6 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
 
-  IPVCoreAnalyticsAPIRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: apigateway.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: LambdaInvokePolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !GetAtt FetchJourneyTransitionsFunction.Arn
-
   FetchJourneyTransitionsFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
