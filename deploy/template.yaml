@@ -716,6 +716,17 @@ Resources:
           "responseLatency":"$context.responseLatency",
           "responseLength":"$context.responseLength"
           }
+      Auth:
+        ApiKeyRequired: true
+        ResourcePolicy:
+          CustomStatements:
+            - Effect: Allow
+              Principal: "*"
+              Action: "execute-api:Invoke"
+              Resource: "execute-api:/*/*/*"
+              Condition:
+                StringEquals:
+                  aws:SourceVpc: !Ref VpcId
 
   IPVCoreAnalyticsAPILogGroup:
     Type: AWS::Logs::LogGroup
@@ -764,6 +775,34 @@ Resources:
       KeyId: !Ref IPVCoreAnalyticsAPIKey
       KeyType: API_KEY
       UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
+
+  IPVCoreAnalyticsAPIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt FetchJourneyTransitionsFunction.Arn
+
+  FetchJourneyTransitionsFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FetchJourneyTransitionsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
