@@ -1,8 +1,6 @@
 @Build
 Feature: Identity reuse update details failures
-
     Rule: Update given name only
-
         Background:
             Given the subject already has the following credentials
                 | CRI     | scenario                     |
@@ -147,7 +145,6 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
     Rule: Update address only
-
         Background:
             Given the subject already has the following credentials
                 | CRI     | scenario                     |

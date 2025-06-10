@@ -1,6 +1,5 @@
 @Build
 Feature: P2 International Address
-
   Background:
     Given I activate the 'disableStrategicApp' feature set
     And I start a new 'medium-confidence' journey

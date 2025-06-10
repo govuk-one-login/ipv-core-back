@@ -1,6 +1,5 @@
 @Build
 Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
-
   Background:
     # Navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
     Given I activate the 'disableStrategicApp' feature set
