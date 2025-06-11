@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -123,6 +124,50 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(TEST_USER_ID, auditEventArgumentCaptor.getValue().getUser().getUserId());
         assertEquals(
                 TEST_IPV_SESSION_ID, auditEventArgumentCaptor.getValue().getUser().getSessionId());
+    }
+
+    @Test
+    void
+            shouldReturnCrossBrowserCallbackWhenCallbackRequestMissingIpvSessionIdAndPreviousIpvSessionExpired()
+                    throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
+        requestEvent.setHeaders(Map.of());
+        var criOAuthSessionItem =
+                new CriOAuthSessionItem(
+                        TEST_OAUTH_STATE,
+                        TEST_CLIENT_OAUTH_SESSION_ID,
+                        Cri.DCMAW_ASYNC.toString(),
+                        "test_connection",
+                        3600);
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(criOAuthSessionItem);
+        var clientOAuthSessionItem = new ClientOAuthSessionItem();
+        clientOAuthSessionItem.setUserId(TEST_USER_ID);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(ipvSessionService.getIpvSessionByClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenThrow(
+                        new IpvSessionNotFoundException(
+                                "The session not found in the database for the supplied clientOAuthSessionId"));
+
+        // Act
+        var lambdaResponse =
+                processMobileAppCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+        assertEquals(
+                new JourneyResponse(
+                        JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
+                journeyResponse);
+        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_APP_MISSING_CONTEXT,
+                auditEventArgumentCaptor.getValue().getEventName());
+        assertEquals(TEST_USER_ID, auditEventArgumentCaptor.getValue().getUser().getUserId());
+        assertEquals(null, auditEventArgumentCaptor.getValue().getUser().getSessionId());
     }
 
     @Test
