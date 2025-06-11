@@ -16,6 +16,7 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.exception.InvalidCriResponseException;
@@ -172,11 +173,31 @@ public class ProcessMobileAppCallbackHandler
         if (StringUtils.isBlank(ipvSessionId)) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Missing IPV session id - Cross-browser scenario."));
+
+            var clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
+            var clientOAuthSession =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
+            if (clientOAuthSession == null) {
+                throw new InvalidMobileAppCallbackRequestException(
+                        ErrorResponse.INVALID_OAUTH_STATE);
+            }
+
+            var previousIpvSession =
+                    ipvSessionService.getIpvSessionByClientOAuthSessionId(clientOAuthSessionId);
+            if (previousIpvSession == null) {
+                throw new InvalidMobileAppCallbackRequestException(
+                        ErrorResponse.INVALID_OAUTH_STATE);
+            }
+
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_APP_MISSING_CONTEXT,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            null,
+                            new AuditEventUser(
+                                    clientOAuthSession.getUserId(),
+                                    previousIpvSession.getIpvSessionId(),
+                                    clientOAuthSession.getGovukSigninJourneyId(),
+                                    callbackRequest.getIpAddress()),
                             new AuditRestrictedDeviceInformation(
                                     callbackRequest.getDeviceInformation())));
 

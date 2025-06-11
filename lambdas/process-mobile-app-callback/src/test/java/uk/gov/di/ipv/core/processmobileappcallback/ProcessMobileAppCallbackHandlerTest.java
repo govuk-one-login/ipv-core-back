@@ -99,6 +99,14 @@ class ProcessMobileAppCallbackHandlerTest {
                         3600);
         when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
                 .thenReturn(criOAuthSessionItem);
+        var clientOAuthSessionItem = new ClientOAuthSessionItem();
+        clientOAuthSessionItem.setUserId(TEST_USER_ID);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        var previousIpvSessionItem = new IpvSessionItem();
+        previousIpvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
+        when(ipvSessionService.getIpvSessionByClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(previousIpvSessionItem);
 
         // Act
         var lambdaResponse =
@@ -115,6 +123,9 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_APP_MISSING_CONTEXT,
                 auditEventArgumentCaptor.getValue().getEventName());
+        assertEquals(TEST_USER_ID, auditEventArgumentCaptor.getValue().getUser().getUserId());
+        assertEquals(
+                TEST_IPV_SESSION_ID, auditEventArgumentCaptor.getValue().getUser().getSessionId());
     }
 
     @Test
