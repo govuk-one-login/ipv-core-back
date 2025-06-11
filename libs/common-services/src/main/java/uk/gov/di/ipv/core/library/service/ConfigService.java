@@ -3,7 +3,9 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,11 +28,15 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -44,7 +50,7 @@ public abstract class ConfigService {
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    private Map<String, String> parameters = new HashMap<>();
+    public final Map<String, String> parameters = new HashMap<>();
 
     @Getter @Setter private static boolean local;
 
@@ -79,6 +85,7 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
+    // Get config
     public String getParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
@@ -135,6 +142,10 @@ public abstract class ConfigService {
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
     }
+
+    public abstract List<String> getFeatureSet();
+
+    protected abstract String getSecret(String path);
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
