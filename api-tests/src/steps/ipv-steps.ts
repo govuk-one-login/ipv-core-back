@@ -514,11 +514,6 @@ Then(
       const expectedEvents = await getAuditEventsForJourneyType(journeyName);
       const actualEvents = await auditClient.getAuditEvents(this.userId);
 
-      if (journeyName === "strategic-app-cross-browser-journey") {
-        // Find events with no userId (only IPV_APP_MISSING_CONTEXT)
-        actualEvents.push(...(await auditClient.getAuditEvents(undefined)));
-      }
-
       const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
       assert.ok(
         comparisonResult.isPartiallyEqual,
