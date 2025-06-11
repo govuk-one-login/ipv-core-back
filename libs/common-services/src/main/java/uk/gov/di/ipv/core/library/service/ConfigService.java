@@ -2,7 +2,9 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +24,8 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,11 +33,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Collectors;
+
+import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String APP_CONFIG_SOURCE = "app-config";
+    private static final String PATH_SEPARATOR = "/";
+    private static final String FEATURE_SETS = "features";
+    private static final String CORE = "core";
+    public static final ObjectMapper YAML_OBJECT_MAPPER =
+            new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
+
+    public final Map<String, String> parameters = new HashMap<>();
 
     @Getter @Setter private static boolean local = false;
 
@@ -42,23 +55,10 @@ public abstract class ConfigService {
         if (isLocal()) {
             return new YamlConfigService();
         }
-        if (Objects.equals(
-                System.getenv(EnvironmentVariable.CONFIG_SOURCE.name()), APP_CONFIG_SOURCE)) {
-            return new AppConfigService();
-        }
-        return new SsmConfigService();
+        return new AppConfigService();
     }
 
-    public abstract List<String> getFeatureSet();
-
-    public abstract void setFeatureSet(List<String> featureSet);
-
-    protected abstract String getParameter(String path);
-
-    protected abstract Map<String, String> getParametersByPrefix(String path);
-
-    protected abstract String getSecret(String path);
-
+    // Get environment variables
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
     }
@@ -72,9 +72,34 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
+    // Get config
     public String getParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
+    }
+
+    public String getParameter(String path) {
+        if (getFeatureSet() != null) {
+            for (String individualFeatureSet : getFeatureSet()) {
+                var featurePath =
+                        String.format("%s/%s/%s", FEATURE_SETS, individualFeatureSet, path);
+                if (parameters.containsKey(featurePath)) {
+                    return parameters.get(featurePath);
+                }
+            }
+        }
+        if (!parameters.containsKey(path)) {
+            throw new ConfigParameterNotFoundException(path);
+        }
+        return parameters.get(path);
+    }
+
+    public Map<String, String> getParametersByPrefix(String path) {
+        return parameters.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(path))
+                .collect(
+                        Collectors.toMap(
+                                e -> e.getKey().substring(path.length()), Map.Entry::getValue));
     }
 
     public boolean getBooleanParameter(
@@ -98,12 +123,12 @@ public abstract class ConfigService {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
     }
 
+    public abstract List<String> getFeatureSet();
+
+    protected abstract String getSecret(String path);
+
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
-    }
-
-    private String formatPath(String path, String... pathProperties) {
-        return String.format(path, (Object[]) pathProperties);
     }
 
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
@@ -227,5 +252,40 @@ public abstract class ConfigService {
             }
         }
         return issuerToCri;
+    }
+
+    // Set config
+    public abstract void setFeatureSet(List<String> featureSet);
+
+    protected void updateParameters(Map<String, String> map, String yaml) {
+        try {
+            var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            addJsonConfig(map, yamlParsed, "");
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        }
+    }
+
+    // Helper methods
+    private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
+        switch (tree.getNodeType()) {
+            case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            case OBJECT ->
+                    tree.properties()
+                            .forEach(
+                                    entry ->
+                                            addJsonConfig(
+                                                    map,
+                                                    entry.getValue(),
+                                                    prefix + PATH_SEPARATOR + entry.getKey()));
+            case ARRAY, BINARY, MISSING, NULL, POJO ->
+                    throw new IllegalArgumentException(
+                            String.format(
+                                    "Invalid config of type %s at %s", tree.getNodeType(), prefix));
+        }
+    }
+
+    private String formatPath(String path, String... pathProperties) {
+        return String.format(path, (Object[]) pathProperties);
     }
 }
