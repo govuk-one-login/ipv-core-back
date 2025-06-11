@@ -5,6 +5,7 @@ import {
 } from "../types/cimit-stub.js";
 
 export const postDetectCi = async (
+  journeyId: string,
   body: CimitStubDetectRequest,
 ): Promise<void> => {
   const response = await fetch(
@@ -13,6 +14,8 @@ export const postDetectCi = async (
       headers: {
         "x-api-key": config.cimit.internalApiKey,
         "content-type": "application/json",
+        "govuk-signin-journey-id": journeyId,
+        "ip-address": "192.168.1.1",
       },
       method: "POST",
       body: JSON.stringify(body),

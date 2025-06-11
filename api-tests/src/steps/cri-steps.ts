@@ -461,7 +461,9 @@ When(
       generatePostVcsBody(credentials),
     );
     for (const credential of credentials) {
-      await cimitStubClient.postDetectCi({ signed_jwt: credential });
+      await cimitStubClient.postDetectCi(getRandomString(16), {
+        signed_jwt: credential,
+      });
     }
   },
 );
