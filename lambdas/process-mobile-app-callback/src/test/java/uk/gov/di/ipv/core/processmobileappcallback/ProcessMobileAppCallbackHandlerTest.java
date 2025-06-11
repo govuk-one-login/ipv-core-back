@@ -322,13 +322,6 @@ class ProcessMobileAppCallbackHandlerTest {
         return event;
     }
 
-    private IpvSessionItem buildValidIpvSessionItem() {
-        var ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
-        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
-        return ipvSessionItem;
-    }
-
     private CriOAuthSessionItem buildValidCriOAuthSessionItem() {
         return CriOAuthSessionItem.builder()
                 .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
