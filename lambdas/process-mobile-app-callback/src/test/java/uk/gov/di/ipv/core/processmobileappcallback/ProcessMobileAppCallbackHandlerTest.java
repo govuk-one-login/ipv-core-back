@@ -129,7 +129,8 @@ class ProcessMobileAppCallbackHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorWhenCallbackRequestMissingIpvSessionIdAndClientOAuthSession() throws Exception {
+    void shouldReturnErrorWhenCallbackRequestMissingIpvSessionIdAndClientOAuthSession()
+            throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         requestEvent.setHeaders(Map.of());
