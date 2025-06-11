@@ -120,6 +120,7 @@ Feature: Stored Identity - P2 journeys
       | dcmaw   | kenneth-passport-valid |
       | address | kenneth-current        |
       | fraud   | kenneth-score-2        |
+    And I don't have a stored identity in EVCS
 
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response

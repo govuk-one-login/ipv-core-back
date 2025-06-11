@@ -79,6 +79,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -563,14 +564,22 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
-        return (shouldStoreIdentity(processIdentityType) && !PENDING.equals(processIdentityType))
-                || PROFILE_MATCHING_TYPES.contains(processIdentityType);
+        if (shouldStoreExistingIdentity(processIdentityType)) {
+            return true;
+        }
+
+        var typesRequiringVotMatchingResult =
+                Stream.concat(PROFILE_MATCHING_TYPES.stream(), STORE_IDENTITY_TYPES.stream())
+                        .filter(identityType -> !identityType.equals(PENDING))
+                        .distinct()
+                        .toList();
+
+        return typesRequiringVotMatchingResult.contains(processIdentityType);
     }
 
     private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
         return COI_CHECK_TYPES.contains(processIdentityType)
-                || shouldStoreIdentity(processIdentityType)
-                || PENDING.equals(processIdentityType);
+                || shouldStoreIdentity(processIdentityType);
     }
 
     private boolean shouldStoreIdentity(CandidateIdentityType identityType) {
