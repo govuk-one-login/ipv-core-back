@@ -168,25 +168,34 @@ public class ProcessMobileAppCallbackHandler
             throw new InvalidMobileAppCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
 
+        // Fetch client session
+        var clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
+        var clientOAuthSessionItem =
+                clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
+        var userId = clientOAuthSessionItem.getUserId();
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+
+        // Attach variables to logs
+        LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
         // Check IPV session
         var ipvSessionId = callbackRequest.getIpvSessionId();
         if (StringUtils.isBlank(ipvSessionId)) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Missing IPV session id - Cross-browser scenario."));
 
-            var clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
-            var clientOAuthSession =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
-            if (clientOAuthSession == null) {
-                throw new InvalidMobileAppCallbackRequestException(
-                        ErrorResponse.INVALID_OAUTH_STATE);
-            }
-
-            var previousIpvSession =
-                    ipvSessionService.getIpvSessionByClientOAuthSessionId(clientOAuthSessionId);
-            if (previousIpvSession == null) {
-                throw new InvalidMobileAppCallbackRequestException(
-                        ErrorResponse.INVALID_OAUTH_STATE);
+            String previousIpvSessionId = null;
+            try {
+                previousIpvSessionId =
+                        ipvSessionService
+                                .getIpvSessionByClientOAuthSessionId(clientOAuthSessionId)
+                                .getIpvSessionId();
+            } catch (IpvSessionNotFoundException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Previous IPV session not found for client OAuth session ID: %s",
+                                        clientOAuthSessionId)));
             }
 
             auditService.sendAuditEvent(
@@ -194,28 +203,16 @@ public class ProcessMobileAppCallbackHandler
                             AuditEventTypes.IPV_APP_MISSING_CONTEXT,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(
-                                    clientOAuthSession.getUserId(),
-                                    previousIpvSession.getIpvSessionId(),
-                                    clientOAuthSession.getGovukSigninJourneyId(),
+                                    userId,
+                                    previousIpvSessionId,
+                                    govukSigninJourneyId,
                                     callbackRequest.getIpAddress()),
                             new AuditRestrictedDeviceInformation(
                                     callbackRequest.getDeviceInformation())));
 
             return new JourneyResponse(
-                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH,
-                    criOAuthSessionItem.getClientOAuthSessionId());
+                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, clientOAuthSessionId);
         }
-
-        // Get set session items
-        var ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.getClientOAuthSession(
-                        ipvSessionItem.getClientOAuthSessionId());
-        var userId = clientOAuthSessionItem.getUserId();
-
-        // Attach variables to logs
-        LogHelper.attachGovukSigninJourneyIdToLogs(
-                clientOAuthSessionItem.getGovukSigninJourneyId());
 
         // Validate cri response item
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
