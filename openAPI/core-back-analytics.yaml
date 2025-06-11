@@ -10,7 +10,7 @@ security:
 
 paths:
   /journey-transitions:
-    get:
+    post:
       description: "Endpoint for fetching journey transitions for journey map analysis"
       parameters:
         - name: minutes
