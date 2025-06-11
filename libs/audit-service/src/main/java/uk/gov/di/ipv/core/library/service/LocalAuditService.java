@@ -22,14 +22,9 @@ public class LocalAuditService implements AuditService {
     public static List<AuditEvent> getAuditEvents(String userId) {
         return AUDIT_EVENTS.stream()
                 .filter(
-                        event -> {
-                            if (userId == null) {
-                                // Only expected once, to fetch IPV_APP_MISSING_CONTEXT
-                                return event.getUser() == null;
-                            }
-                            return event.getUser() != null
-                                    && userId.equals(event.getUser().getUserId());
-                        })
+                        event ->
+                                event.getUser() != null
+                                        && userId.equals(event.getUser().getUserId()))
                 .toList();
     }
 
