@@ -38,6 +38,21 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey' are recorded [local only]
 
+  Scenario: Reuse journey - identity is stored when SIS is enabled
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    And I activate the 'storedIdentityService' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And audit events for 'reuse-journey-identity-stored' are recorded [local only]
+
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -237,6 +252,14 @@ Feature: Audit Events
     When I use the OAuth response to get my identity
     Then I get a 'PCL200' identity
     And audit events for 'inherited-identity-journey' are recorded [local only]
+
+  Scenario: Inherited identity journey - identity stored
+    Given I activate the 'storedIdentityService' feature set
+    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'PCL200' identity
+    And audit events for 'inherited-identity-journey-identity-stored' are recorded [local only]
 
   Scenario: International address journey
     And I start a new 'medium-confidence' journey
