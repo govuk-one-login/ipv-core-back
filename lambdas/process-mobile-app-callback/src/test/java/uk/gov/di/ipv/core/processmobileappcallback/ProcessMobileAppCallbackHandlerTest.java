@@ -129,6 +129,38 @@ class ProcessMobileAppCallbackHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorWhenCallbackRequestMissingIpvSessionIdAndClientOAuthSession() throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
+        requestEvent.setHeaders(Map.of());
+        var criOAuthSessionItem =
+                new CriOAuthSessionItem(
+                        TEST_OAUTH_STATE,
+                        TEST_CLIENT_OAUTH_SESSION_ID,
+                        Cri.DCMAW_ASYNC.toString(),
+                        "test_connection",
+                        3600);
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(criOAuthSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(null);
+
+        // Act
+        var lambdaResponse =
+                processMobileAppCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
+
+        // Assert
+        assertEquals(
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatusCode.BAD_REQUEST,
+                        ErrorResponse.INVALID_OAUTH_STATE),
+                journeyResponse);
+    }
+
+    @Test
     void shouldReturnErrorWhenIpvSessionNotFound() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
