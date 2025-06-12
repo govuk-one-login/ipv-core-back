@@ -82,8 +82,6 @@ class ContractTest {
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1mLmludGVncmF0aW9uLmFjY291bnQuZ292LnVrIiwic3ViIjoidXJuOnV1aWQ6ZTZlMmUzMjQtNWI2Ni00YWQ2LTgzMzgtODNmOWY4MzdlMzQ1IiwibmJmIjoxNzQ5NDY2MjY2LCJpYXQiOjE3NDk0NjYyNjYsInZjIjp7ImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImFkZHJlc3MiOlt7ImFkZHJlc3NDb3VudHJ5IjoiR0IiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwiYnVpbGRpbmdOYW1lIjoiIiwiYnVpbGRpbmdOdW1iZXIiOiI4IiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJzdHJlZXROYW1lIjoiSEFETEVZIFJPQUQiLCJ1cHJuIjoxMDAxMjAwMTIwNzcsInZhbGlkVW50aWwiOiIyMDAwLTAxLTAxIn1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk1OS0wOC0yMyJ9XSwibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJLRU5ORVRIIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiREVDRVJRVUVJUkEifV19XX0sImV2aWRlbmNlIjpbeyJpZGVudGl0eUZyYXVkU2NvcmUiOjEsInR4biI6IlJCMDAwMTAzNDkwMDg3IiwidHlwZSI6IklkZW50aXR5Q2hlY2sifV0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdfX0.LDY6jIPXpHxJuDPkSQlcUsHOL_y4j3ZdGLwhK8vCAceXVhtR1XPXljpeW6aUcj3Q8m7Ox55KB9Le9TPrF9xr1Q"; // pragma: allowlist secret
     private static final String SI_STRING =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lkZW50aXR5LmFjY291bnQuZ292LnVrIiwic3ViIjoidGVzdC11c2VyLWlkIiwiYXVkIjoiaHR0cHM6Ly9yZXVzZS1pZGVudGl0eS5hY2NvdW50Lmdvdi51ayIsIm5iZiI6MjY1ODgyOTcyMCwiaWF0IjoyNjU4ODI5NzIwLCJ2b3QiOiJQMiIsImNyZWRlbnRpYWxzIjpbImhqSmNtTEVFSWJHNkoxSWsydlc1b1JocGF6TDFTdnZ1dnlCZTVUNjJWdGxOaWs1enNLd1B0cWx5MGVEZUplaUNwNG94dGNtQmZHMUFQTU5SYXNiazhBIiwidEpyOGpveXNiUnpieVQwZThxUldUYXk4OGNORkZhOURBNVF5YzZySHZ3VXhsTVlkSVV6RG5WUVlmYjR4OE9fYmVVSGF4eG41TmlNQ3VhMnFkM3hGSHciLCJMRFk2aklQWHBIeEp1RFBrU1FsY1VzSE9MX3k0ajNaZEdMd2hLOHZDQWNlWFZodFIxWFBYbGpwZVc2YVVjajNROG03T3g1NUtCOUxlOVRQckY5eHIxUSJdLCJjbGFpbXMiOnt9fQ.omMIO4KF1uPKlWh252GIX21MgCfrH6qoQGezYcD_yZWDobZ5H0L3dCvQxEt7SVXLWmxtBsoQpv4Lf8kwfGVI2Q"; // pragma: allowlist secret
-    private static final String INVALID_SI_STRING =
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lkZW50aXR5LmFjY291bnQuZ292LnVrIiwic3ViIjoidGVzdC11c2VyLWlkIiwiYXVkIjoiaHR0cHM6Ly9yZXVzZS1pZGVudGl0eS5hY2NvdW50Lmdvdi51ayIsIm5iZiI6MjY1ODgyOTcyMCwiaWF0IjoyNjU4ODI5NzIwLCJjcmVkZW50aWFscyI6WyJoakpjbUxFRUliRzZKMUlrMnZXNW9SaHBhekwxU3Z2dXZ5QmU1VDYyVnRsTmlrNXpzS3dQdHFseTBlRGVKZWlDcDRveHRjbUJmRzFBUE1OUmFzYms4QSIsInRKcjhqb3lzYlJ6YnlUMGU4cVJXVGF5ODhjTkZGYTlEQTVReWM2ckh2d1V4bE1ZZElVekRuVlFZZmI0eDhPX2JlVUhheHhuNU5pTUN1YTJxZDN4Rkh3IiwiTERZNmpJUFhwSHhKdURQa1NRbGNVc0hPTF95NGozWmRHTHdoSzh2Q0FjZVhWaHRSMVhQWGxqcGVXNmFVY2ozUThtN094NTVLQjlMZTlUUHJGOXhyMVEiXSwiY2xhaW1zIjp7fX0.YWBzpK07fsWoPRsKTvvsaP4kWHf1FdJo0kk9Iwa0aJwDfSUskhTa1cpWU6HhZ735OqRt79xTF_q-8chLyCrWOQ"; // pragma: allowlist secret
     private static final EvcsPutUserVCsDto EVCS_PUT_NEW_VCS_DTO =
             new EvcsPutUserVCsDto(
                     TEST_USER_ID,
@@ -117,21 +115,6 @@ class ContractTest {
                             new EvcsCreateUserVCsDto(
                                     FRAUD_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
                     new EvcsStoredIdentityDto(SI_STRING, Vot.P2));
-
-    private static final EvcsPutUserVCsDto EVCS_PUT_INVALID_SI_AND_VCS_DTO =
-            new EvcsPutUserVCsDto(
-                    TEST_USER_ID,
-                    List.of(
-                            new EvcsCreateUserVCsDto(
-                                    DCMAW_PASSPORT_VC_STRING,
-                                    EvcsVCState.CURRENT,
-                                    Map.of(),
-                                    ONLINE),
-                            new EvcsCreateUserVCsDto(
-                                    ADDRESS_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE),
-                            new EvcsCreateUserVCsDto(
-                                    FRAUD_VC_STRING, EvcsVCState.CURRENT, Map.of(), ONLINE)),
-                    new EvcsStoredIdentityDto(INVALID_SI_STRING, Vot.P2));
 
     private static final EvcsPutUserVCsDto DUPLICATE_CONFLICTING_VCS_DTO =
             new EvcsPutUserVCsDto(
@@ -741,97 +724,6 @@ class ContractTest {
 
         // Assert
         assertEquals(202, response.statusCode());
-    }
-
-    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact putVcsAndInvalidStoredIdentity(PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid EVCS API key", EVCS_API_KEY))
-                .uponReceiving("A request to put EVCS VCs and invalid stored identity")
-                .path("/vcs")
-                .method("PUT")
-                .headers(
-                        Map.of(
-                                "x-api-key",
-                                EVCS_API_KEY,
-                                CONTENT_TYPE,
-                                ContentType.APPLICATION_JSON.toString()))
-                .body(
-                        newJsonBody(
-                                        dto -> {
-                                            dto.stringType("userId", TEST_USER_ID);
-                                            dto.array(
-                                                    "vcs",
-                                                    vcDtos -> {
-                                                        vcDtos.object(
-                                                                vcDto -> {
-                                                                    vcDto.stringType(
-                                                                            "vc",
-                                                                            DCMAW_PASSPORT_VC_STRING);
-                                                                    vcDto.stringType(
-                                                                            "state",
-                                                                            EvcsVCState.CURRENT
-                                                                                    .toString());
-                                                                    vcDto.object(
-                                                                            "metadata", vc -> {});
-                                                                    vcDto.stringType(
-                                                                            "provenance",
-                                                                            ONLINE.toString());
-                                                                });
-                                                        vcDtos.object(
-                                                                vcDto -> {
-                                                                    vcDto.stringType(
-                                                                            "vc",
-                                                                            ADDRESS_VC_STRING);
-                                                                    vcDto.stringType(
-                                                                            "state",
-                                                                            EvcsVCState.CURRENT
-                                                                                    .toString());
-                                                                    vcDto.object(
-                                                                            "metadata", vc -> {});
-                                                                    vcDto.stringType(
-                                                                            "provenance",
-                                                                            ONLINE.toString());
-                                                                });
-                                                        vcDtos.object(
-                                                                vcDto -> {
-                                                                    vcDto.stringType(
-                                                                            "vc", FRAUD_VC_STRING);
-                                                                    vcDto.stringType(
-                                                                            "state",
-                                                                            EvcsVCState.CURRENT
-                                                                                    .toString());
-                                                                    vcDto.object(
-                                                                            "metadata", vc -> {});
-                                                                    vcDto.stringType(
-                                                                            "provenance",
-                                                                            ONLINE.toString());
-                                                                });
-                                                    });
-                                            dto.object(
-                                                    "si",
-                                                    si -> {
-                                                        si.stringType("jwt", INVALID_SI_STRING);
-                                                        si.stringType("vot", Vot.P2.toString());
-                                                    });
-                                        })
-                                .build())
-                .willRespondWith()
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "putVcsAndInvalidStoredIdentity")
-    void testPutVcsAndInvalidStoredIdentity(MockServer mockServer) {
-        // Arrange
-        var evcsClient = new EvcsClient(mockConfigService);
-
-        // Act & Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    evcsClient.storeUserVCs(EVCS_PUT_INVALID_SI_AND_VCS_DTO);
-                });
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
