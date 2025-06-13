@@ -765,14 +765,6 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
 
-  FetchJourneyTransitionsFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref FetchJourneyTransitionsFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
-
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -3043,7 +3035,7 @@ Resources:
           Properties:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /journey-transitions
-            Method: GET
+            Method: POST
       AutoPublishAlias: live
 
   FetchJourneyTransitionsFunctionLogGroup:
@@ -3060,6 +3052,14 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref FetchJourneyTransitionsFunctionLogGroup
+
+  FetchJourneyTransitionsFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FetchJourneyTransitionsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
   SessionCredentialsTable:
     Type: AWS::DynamoDB::Table
