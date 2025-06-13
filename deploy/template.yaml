@@ -3057,7 +3057,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref FetchJourneyTransitionsFunction
+      FunctionName: !Sub "fetch-journey-transitions-${Environment}:live"
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
