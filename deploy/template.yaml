@@ -3030,10 +3030,10 @@ Resources:
               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}
               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
       Events:
-        IPVCoreExternalAPIJourneyTransitions:
+        IPVCoreAnalyticsAPIJourneyTransitions:
           Type: Api
           Properties:
-            RestApiId: !Ref IPVCoreExternalAPI
+            RestApiId: !Ref IPVCoreAnalyticsAPI
             Path: /journey-transitions
             Method: POST
       AutoPublishAlias: live
