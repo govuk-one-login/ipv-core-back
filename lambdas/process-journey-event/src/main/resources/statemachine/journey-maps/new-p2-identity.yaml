@@ -27,7 +27,7 @@ states:
   DCMAW_ASYNC_COMPLETE:
     events:
       next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
 
   # Parent states
 

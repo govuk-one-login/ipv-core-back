@@ -70,7 +70,9 @@ Feature: M2B Strategic App Journeys
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values               |
+        | context   | "international_user" |
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'page-ipv-success' page response
