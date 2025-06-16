@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
-import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -360,8 +359,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockConfigService.enabled(AIS_ENABLED)).thenReturn(true);
         when(mockAisService.fetchAccountState(TEST_USER_ID))
-                .thenReturn(
-                        new AccountInterventionStatusDto.AccountState(false, false, true, false));
+                .thenReturn(new AccountInterventionState(false, false, true, false));
         var accountInterventionState = new AccountInterventionState(false, false, true, false);
         when(mockIpvSessionService.generateIpvSession(
                         any(), any(), any(), anyBoolean(), eq(accountInterventionState)))

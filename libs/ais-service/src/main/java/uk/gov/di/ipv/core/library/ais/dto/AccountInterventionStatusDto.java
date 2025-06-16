@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.ais.enums.AisAuditLevel;
 import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 @ExcludeFromGeneratedCoverageReport
 @Data
@@ -15,7 +16,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @AllArgsConstructor
 public class AccountInterventionStatusDto {
     private Intervention intervention;
-    private AccountState state;
+    private AccountInterventionState state;
     private AisAuditLevel auditLevel;
     private InterventionHistory[] history;
 
@@ -31,17 +32,6 @@ public class AccountInterventionStatusDto {
         private Long reprovedIdentityAt;
         private Long resetPasswordAt;
         private Long accountDeletedAt;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class AccountState {
-        private boolean blocked;
-        private boolean suspended;
-        private boolean reproveIdentity;
-        private boolean resetPassword;
     }
 
     @Data
