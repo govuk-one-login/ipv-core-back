@@ -109,7 +109,10 @@ public class EvcsClient {
 
     public HttpResponse<String> storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs)
             throws EvcsServiceException {
-        LOGGER.info(LogHelper.buildLogMessage("Preparing to store user VCs using PUT method"));
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to store %d user VCs using PUT method"
+                                .formatted(userVCsForEvcs.vcs().size())));
 
         try {
             HttpRequest.Builder httpRequestBuilder =
