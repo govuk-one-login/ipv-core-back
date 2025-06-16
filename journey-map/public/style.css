@@ -77,7 +77,6 @@ body {
 #diagram > * {
   height: 100%;
   width: 100%;
-  max-width: unset !important;
 }
 form {
   flex: 0 1 525px;
@@ -227,4 +226,7 @@ form fieldset p {
 }
 .mitigationTransition {
   background-color: #e4c4ff;
+}
+span.edgeLabel > p {
+  text-wrap: wrap;
 }

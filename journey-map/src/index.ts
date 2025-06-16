@@ -36,6 +36,10 @@ mermaid.initialize({
   // Required to enable links and callbacks
   // This is (relatively) safe, as we only run on our own generated mermaid charts
   securityLevel: "loose",
+  flowchart: {
+    useMaxWidth: false,
+    wrappingWidth: 800,
+  },
 });
 
 // Page elements
