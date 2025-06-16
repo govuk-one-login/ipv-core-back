@@ -765,6 +765,61 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
 
+  IPVCoreAnalyticsSSLCert:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !If
+          - IsDevelopment
+          - !If
+            - IsDev01
+            - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+          HostedZoneId: !If
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !ImportValue Dev01IdentityHostedZoneId
+              - !ImportValue Dev02IdentityHostedZoneId
+            - !ImportValue PublicHostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Sub "Certificate for analytics-api-${Environment}"
+      CertificateTransparencyLoggingPreference: ENABLED
+
+  IPVCoreAnalyticsCustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Ref IPVCoreAnalyticsSSLCert
+
+  # Your base path mapping to API Gateway stage
+  IPVCoreAnalyticsBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref IPVCoreAnalyticsCustomDomain
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      Stage: !Sub ${Environment}
+      BasePath: ""
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
