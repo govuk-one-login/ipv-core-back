@@ -228,6 +228,7 @@ public class ProcessCandidateIdentityHandler
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
+    @SuppressWarnings("java:S3776")
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);

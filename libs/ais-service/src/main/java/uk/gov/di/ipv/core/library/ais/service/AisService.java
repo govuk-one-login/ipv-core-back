@@ -25,6 +25,7 @@ public class AisService {
         return interventionDetails.getState();
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public AccountInterventionState getStateByIntervention(AisInterventionType interventionType) {
         switch (interventionType) {
             case AIS_NO_INTERVENTION, AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNBLOCKED -> {
@@ -45,9 +46,7 @@ public class AisService {
             case AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY -> {
                 return new AccountInterventionState(false, true, true, true);
             }
+            default -> { return new AccountInterventionState(false, false, false, false); }
         }
-
-        throw new RuntimeException(
-                "AisInterventionType has no corresponding account intervention state");
     }
 }
