@@ -796,7 +796,7 @@ Resources:
           Value: !Sub "Certificate for analytics-api-${Environment}"
       CertificateTransparencyLoggingPreference: ENABLED
 
-  IPVCoreAnalyticsCustomDomain:
+  IPVCoreAnalyticsDomain:
     Type: AWS::ApiGateway::DomainName
     Properties:
       DomainName: !If
@@ -811,14 +811,29 @@ Resources:
           - REGIONAL
       RegionalCertificateArn: !Ref IPVCoreAnalyticsSSLCert
 
-  # Your base path mapping to API Gateway stage
   IPVCoreAnalyticsBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !Ref IPVCoreAnalyticsCustomDomain
+      DomainName: !Ref IPVCoreAnalyticsDomain
       RestApiId: !Ref IPVCoreAnalyticsAPI
       Stage: !Sub ${Environment}
       BasePath: ""
+
+  IPVCoreAnalyticsDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref IPVCoreAnalyticsDomain
+      HostedZoneId: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !ImportValue Dev01IdentityHostedZoneId
+          - !ImportValue Dev02IdentityHostedZoneId
+        - !ImportValue PublicHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt IPVCoreAnalyticsDomain.RegionalDomainName
+        HostedZoneId: !GetAtt IPVCoreAnalyticsDomain.RegionalHostedZoneId
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
