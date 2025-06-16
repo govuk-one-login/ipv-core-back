@@ -85,30 +85,30 @@ const createTransitionLabel = ({
 }: TransitionEvent): string => {
   const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
 
-  const labelWithClass = (
-    className: string,
-    label: string,
-    value: string,
+  const createEventHtmlLabel = (
+    label?: string,
+    value?: string,
+    className?: string,
   ): string =>
-    `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
+    `<p class="defaultEdgeLabel${className ? ` ${className}` : ""}">${eventLabel}${label ? ` - ${label}: ${value}` : ""}</p>`;
 
   if (journeyContext) {
-    return labelWithClass(
-      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
+    return createEventHtmlLabel(
       "journeyContext",
       journeyContext,
+      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
     );
   }
 
   if (mitigation) {
-    return labelWithClass(
-      MITIGATIONS_TRANSITION_CLASSNAME,
+    return createEventHtmlLabel(
       "mitigation",
       mitigation,
+      MITIGATIONS_TRANSITION_CLASSNAME,
     );
   }
 
-  return eventLabel;
+  return createEventHtmlLabel();
 };
 
 export const renderTransition = ({
