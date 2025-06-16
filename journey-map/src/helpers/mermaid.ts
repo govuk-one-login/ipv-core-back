@@ -117,5 +117,5 @@ export const renderTransition = ({
   transitionEvents,
 }: TransitionEdge): string => {
   const label = transitionEvents.map(createTransitionLabel).join("\n");
-  return `    ${sourceState}-->|${label}|${targetState}`;
+  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}|${targetState}`;
 };
