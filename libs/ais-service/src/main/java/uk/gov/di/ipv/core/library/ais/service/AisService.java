@@ -46,7 +46,9 @@ public class AisService {
             case AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY -> {
                 return new AccountInterventionState(false, true, true, true);
             }
-            default -> { return new AccountInterventionState(false, false, false, false); }
+            default -> {
+                return new AccountInterventionState(false, false, false, false);
+            }
         }
     }
 }
