@@ -3125,6 +3125,7 @@ Resources:
 
   FetchJourneyTransitionsFunctionPermission:
     Type: AWS::Lambda::Permission
+    DependsOn: FetchJourneyTransitionsFunction
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Sub "fetch-journey-transitions-${Environment}:live"
