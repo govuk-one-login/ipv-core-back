@@ -8,11 +8,11 @@ plugins {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodb,
-
 			libs.bundles.awsLambda,
 			libs.apacheHttpCore,
 			project(":libs:common-services"),
-			project(":libs:cri-response-service")
+			project(":libs:cri-response-service"),
+			project(":libs:audit-service")
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,

@@ -7,10 +7,16 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionManualF2FReset;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.HashMap;
@@ -27,17 +33,22 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
 
     private final CriResponseService criResponseService;
     private final ConfigService configService;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public ManualF2fPendingResetHandler() {
         this.configService = ConfigService.create();
         this.criResponseService = new CriResponseService(configService);
+        this.auditService = AuditService.create(configService);
     }
 
     public ManualF2fPendingResetHandler(
-            CriResponseService criResponseService, ConfigService configService) {
+            CriResponseService criResponseService,
+            ConfigService configService,
+            AuditService auditService) {
         this.criResponseService = criResponseService;
         this.configService = configService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -70,6 +81,13 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
             LOGGER.info(LogHelper.buildLogMessage("Successfully deleted F2F pending record"));
             response.put(RESULT_KEY, RESULT_SUCCESS);
             response.put(MESSAGE_KEY, "Deleted F2F pending record.");
+
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_F2F_SUPPORT_CANCEL,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(input, null, null, null),
+                            new AuditExtensionManualF2FReset(input)));
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to delete record", e));
             response.put(RESULT_KEY, RESULT_ERROR);
