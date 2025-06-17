@@ -36,6 +36,10 @@ mermaid.initialize({
   // Required to enable links and callbacks
   // This is (relatively) safe, as we only run on our own generated mermaid charts
   securityLevel: "loose",
+  flowchart: {
+    useMaxWidth: false,
+    wrappingWidth: 800,
+  },
 });
 
 // Page elements
@@ -320,11 +324,11 @@ const highlightState = (state: string): void => {
   );
 
   // Add new highlights
-  Array.from(document.getElementsByClassName(`LS-${state}`)).forEach((edge) =>
-    edge.classList.add("highlight", "outgoingEdge"),
+  Array.from(document.querySelectorAll(`path[id^="${state}-"]`)).forEach(
+    (edge) => edge.classList.add("highlight", "outgoingEdge"),
   );
-  Array.from(document.getElementsByClassName(`LE-${state}`)).forEach((edge) =>
-    edge.classList.add("highlight", "incomingEdge"),
+  Array.from(document.querySelectorAll(`path[id$="-${state}"]`)).forEach(
+    (edge) => edge.classList.add("highlight", "incomingEdge"),
   );
   Array.from(document.getElementsByClassName("node"))
     .filter((node) => node.id.startsWith(`flowchart-${state}-`))
