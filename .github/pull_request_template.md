@@ -15,6 +15,6 @@
 ## Checklists
 
 - [ ] READMEs and documentation up-to-date
-- [ ] API/ unit/ contract tests are up-to-date
+- [ ] API/ unit/ contract tests have been written/ updated
 - [ ] No risk of exposure: PII, credentials, etc through logs/ code
 - [ ] Production changes appropriately staged out
