@@ -44,6 +44,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -299,9 +300,12 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         // Assert
         assertEquals("Test error", thrown.getMessage());
-        var logMessage = logCollector.getLogMessages().get(0);
-        assertThat(logMessage, containsString("Unhandled lambda exception"));
-        assertThat(logMessage, containsString("Test error"));
+        Optional<String> logMessage =
+                logCollector.getLogMessages().stream()
+                        .filter(msg -> msg.contains("Unhandled lambda exception"))
+                        .findFirst();
+        assertTrue(logMessage.isPresent());
+        assertThat(logMessage.get(), containsString("Test error"));
     }
 
     private SQSEvent createErrorTestEvent(String errorType) throws JsonProcessingException {
