@@ -87,7 +87,8 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
                             AuditEventTypes.IPV_F2F_SUPPORT_CANCEL,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(input, null, null, null),
-                            new AuditExtensionManualF2FReset(input)));
+                            new AuditExtensionManualF2FReset(
+                                    new AuditExtensionManualF2FReset.User(input))));
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to delete record", e));
             response.put(RESULT_KEY, RESULT_ERROR);
