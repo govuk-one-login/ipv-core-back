@@ -10,6 +10,7 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.awsSdkKms,
 			libs.powertoolsParameters,
+			libs.awsSdkApacheHttpClient,
 			project(":libs:ais-service"),
 			project(":libs:audit-service"),
 			project(":libs:common-services"),

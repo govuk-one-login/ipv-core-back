@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
@@ -55,7 +55,7 @@ public class AppConfigService extends YamlParametersConfigService {
         appConfigProvider =
                 ParamManager.getAppConfigProvider(
                                 AppConfigDataClient.builder()
-                                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                                        .httpClientBuilder(ApacheHttpClient.builder())
                                         .build(),
                                 environmentId,
                                 applicationId)
@@ -64,7 +64,7 @@ public class AppConfigService extends YamlParametersConfigService {
         secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .httpClient(ApacheHttpClient.create())
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
     }

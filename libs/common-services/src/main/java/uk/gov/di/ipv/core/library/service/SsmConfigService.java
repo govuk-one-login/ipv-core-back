@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
@@ -62,15 +62,13 @@ public class SsmConfigService extends ConfigService {
 
         this.ssmProvider =
                 ParamManager.getSsmProvider(
-                                SsmClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
-                                        .build())
+                                SsmClient.builder().httpClient(ApacheHttpClient.create()).build())
                         .defaultMaxAge(cacheDuration, MINUTES);
 
         this.secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
-                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .httpClient(ApacheHttpClient.create())
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
     }

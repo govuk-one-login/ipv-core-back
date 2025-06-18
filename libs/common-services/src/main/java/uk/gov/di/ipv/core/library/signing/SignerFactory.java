@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.signing;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.ECKey;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -24,7 +24,7 @@ public class SignerFactory {
         this.kmsClient =
                 KmsClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                        .httpClientBuilder(ApacheHttpClient.builder())
                         .build();
     }
 
