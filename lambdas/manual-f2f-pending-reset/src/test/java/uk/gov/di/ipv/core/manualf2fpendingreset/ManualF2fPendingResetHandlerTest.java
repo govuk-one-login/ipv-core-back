@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionManualF2FReset;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -127,16 +126,14 @@ class ManualF2fPendingResetHandlerTest {
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
 
         // Act
-        Map<String, Object> response = handler.handleRequest(TEST_USER_ID, mockContext);
+        handler.handleRequest(TEST_USER_ID, mockContext);
 
         // Assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
         var auditEvent = auditEventCaptor.getValue();
 
         assertEquals(IPV_F2F_SUPPORT_CANCEL, auditEvent.getEventName());
-        assertEquals(
-                TEST_USER_ID,
-                ((AuditExtensionManualF2FReset) auditEvent.getExtensions()).user().userId());
+        assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
     }
 
     @Test
