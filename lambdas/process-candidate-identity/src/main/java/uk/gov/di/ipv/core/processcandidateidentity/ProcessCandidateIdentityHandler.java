@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
+import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -71,6 +71,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
+import uk.gov.di.model.Intervention;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.io.UncheckedIOException;
 import java.text.ParseException;
@@ -81,6 +84,14 @@ import java.util.Objects;
 import java.util.Set;
 
 import static java.lang.Boolean.TRUE;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
@@ -122,6 +133,16 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
+    private static final Map<String, AisInterventionType> interventionCodeTypes =
+            Map.of(
+                    "00", AIS_NO_INTERVENTION,
+                    "01", AIS_ACCOUNT_SUSPENDED,
+                    "02", AIS_ACCOUNT_UNSUSPENDED,
+                    "03", AIS_ACCOUNT_BLOCKED,
+                    "04", AIS_FORCED_USER_PASSWORD_RESET,
+                    "05", AIS_FORCED_USER_IDENTITY_VERIFY,
+                    "06", AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+                    "07", AIS_ACCOUNT_UNBLOCKED);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -217,6 +238,7 @@ public class ProcessCandidateIdentityHandler
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
+    @SuppressWarnings("java:S3776")
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
@@ -238,13 +260,15 @@ public class ProcessCandidateIdentityHandler
 
             String userId = clientOAuthSessionItem.getUserId();
 
-            if (configService.enabled(AIS_ENABLED)
-                    && midJourneyInterventionDetected(
-                            userId, ipvSessionItem.getInitialAccountInterventionState())) {
-                ipvSessionItem.setErrorCode("session_invalidated");
-                ipvSessionItem.setErrorDescription("Account intervention detected");
+            if (configService.enabled(AIS_ENABLED)) {
+                var interventionState = aisService.fetchAccountState(userId);
+                if (midJourneyInterventionDetected(
+                        ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
+                    updateIpvSessionWithIntervention(ipvSessionItem);
+                    return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
+                }
+                ipvSessionItem.setInitialAccountInterventionState(interventionState);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
-                return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
             }
 
             var sessionVcs =
@@ -335,11 +359,15 @@ public class ProcessCandidateIdentityHandler
         }
     }
 
-    private boolean midJourneyInterventionDetected(
-            String userId, AccountInterventionState initialAccountInterventionState)
-            throws AisClientException {
-        var currentAccountInterventionState = aisService.fetchAccountState(userId);
+    private void updateIpvSessionWithIntervention(IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setErrorCode("session_invalidated");
+        ipvSessionItem.setErrorDescription("Account intervention detected");
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+    }
 
+    private boolean midJourneyInterventionDetected(
+            AccountInterventionState initialAccountInterventionState,
+            AccountInterventionState currentAccountInterventionState) {
         // If no intervention flags are set then there can't have been an intervention
         if (!initialAccountInterventionState.isBlocked()
                 && !initialAccountInterventionState.isSuspended()
@@ -394,7 +422,7 @@ public class ProcessCandidateIdentityHandler
 
     private boolean notBlockedAndNotPasswordReset(
             AccountInterventionState initialAccountInterventionState,
-            AccountInterventionStatusDto.AccountState currentAccountInterventionState) {
+            AccountInterventionState currentAccountInterventionState) {
         return !initialAccountInterventionState.isBlocked()
                 && !initialAccountInterventionState.isResetPassword()
                 && !currentAccountInterventionState.isBlocked()
@@ -669,6 +697,12 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     sharedAuditEventParameters.auditEventUser());
 
+            if (configService.enabled(AIS_ENABLED)
+                    && checkHasRelevantIntervention(ipvSessionItem, ticfVcs)) {
+                updateIpvSessionWithIntervention(ipvSessionItem);
+                return JOURNEY_ACCOUNT_INTERVENTION;
+            }
+
             if (!clientOAuthSessionItem.isReverification()) {
                 // Get mitigations from old CIMIT VC to compare against the mitigations on the new
                 // CIs
@@ -721,6 +755,30 @@ public class ProcessCandidateIdentityHandler
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
         }
+    }
+
+    private boolean checkHasRelevantIntervention(
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
+
+        return ticfVcs.stream()
+                .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
+                .flatMap(
+                        vc ->
+                                ((RiskAssessmentCredential) vc.getCredential())
+                                        .getEvidence().stream())
+                .map(RiskAssessment::getIntervention)
+                .filter(Objects::nonNull)
+                .map(Intervention::getInterventionCode)
+                .filter(Objects::nonNull)
+                .map(
+                        interventionCode ->
+                                aisService.getStateByIntervention(
+                                        interventionCodeTypes.get(interventionCode)))
+                .anyMatch(
+                        interventionState ->
+                                midJourneyInterventionDetected(
+                                        ipvSessionItem.getInitialAccountInterventionState(),
+                                        interventionState));
     }
 
     private void sendProfileMatchedAuditEvent(

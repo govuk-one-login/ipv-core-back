@@ -12,6 +12,7 @@ import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.Intervention;
 import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
@@ -1232,6 +1233,14 @@ public interface VcFixtures {
     static VerifiableCredential vcTicfWithCi() {
         var vcClaim = vcClaimTicf();
         vcClaim.getEvidence().get(0).setCi(List.of("test"));
+
+        return generateVerifiableCredential(
+                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
+    }
+
+    static VerifiableCredential generateTicfVcWithIntervention(Intervention intervention) {
+        var vcClaim = vcClaimTicf();
+        vcClaim.getEvidence().get(0).setIntervention(intervention);
 
         return generateVerifiableCredential(
                 TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
