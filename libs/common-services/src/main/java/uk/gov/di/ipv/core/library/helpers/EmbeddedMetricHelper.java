@@ -13,7 +13,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI;
-import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.QUEUE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.ASYNC_CRI_ERROR_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.ASYNC_CRI_RESPONSE_MESSAGE_UNEXPECTED;
@@ -43,7 +43,7 @@ public class EmbeddedMetricHelper {
     public enum Dimension {
         CRI("cri"),
         QUEUE_NAME("queueName"),
-        ERROR_CODE("errorCode"),
+        CRI_ERROR_CODE("cri_errorCode"),
         ERROR_MESSAGE("errorMessage");
 
         private final String name;
@@ -64,7 +64,8 @@ public class EmbeddedMetricHelper {
 
     public static void asyncCriErrorResponse(String criId, String errorCode) {
         recordMetric(
-                Map.of(CRI, criId, ERROR_CODE, errorCode), Map.of(ASYNC_CRI_ERROR_RESPONSE, 1.0));
+                Map.of(CRI_ERROR_CODE, String.format("%s_%s", criId, errorCode)),
+                Map.of(ASYNC_CRI_ERROR_RESPONSE, 1.0));
     }
 
     private static void recordMetric(
