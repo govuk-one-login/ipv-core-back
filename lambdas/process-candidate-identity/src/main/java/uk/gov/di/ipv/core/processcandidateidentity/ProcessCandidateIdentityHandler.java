@@ -133,6 +133,16 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
+    private static final Map<String, AisInterventionType> interventionCodeTypes =
+            Map.of(
+                    "00", AIS_NO_INTERVENTION,
+                    "01", AIS_ACCOUNT_SUSPENDED,
+                    "02", AIS_ACCOUNT_UNSUSPENDED,
+                    "03", AIS_ACCOUNT_BLOCKED,
+                    "04", AIS_FORCED_USER_PASSWORD_RESET,
+                    "05", AIS_FORCED_USER_IDENTITY_VERIFY,
+                    "06", AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+                    "07", AIS_ACCOUNT_UNBLOCKED);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -749,16 +759,6 @@ public class ProcessCandidateIdentityHandler
 
     private boolean checkHasRelevantIntervention(
             IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
-        Map<String, AisInterventionType> interventionCodeTypes =
-                Map.of(
-                        "00", AIS_NO_INTERVENTION,
-                        "01", AIS_ACCOUNT_SUSPENDED,
-                        "02", AIS_ACCOUNT_UNSUSPENDED,
-                        "03", AIS_ACCOUNT_BLOCKED,
-                        "04", AIS_FORCED_USER_PASSWORD_RESET,
-                        "05", AIS_FORCED_USER_IDENTITY_VERIFY,
-                        "06", AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
-                        "07", AIS_ACCOUNT_UNBLOCKED);
 
         return ticfVcs.stream()
                 .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
@@ -773,8 +773,7 @@ public class ProcessCandidateIdentityHandler
                 .map(
                         interventionCode ->
                                 aisService.getStateByIntervention(
-                                        interventionCodeTypes.getOrDefault(
-                                                interventionCode, AIS_NO_INTERVENTION)))
+                                        interventionCodeTypes.get(interventionCode)))
                 .anyMatch(
                         interventionState ->
                                 midJourneyInterventionDetected(
