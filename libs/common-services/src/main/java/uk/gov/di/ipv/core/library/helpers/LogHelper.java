@@ -18,6 +18,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_QUEUE_NAME;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
@@ -70,6 +71,7 @@ public class LogHelper {
         LOG_PARAMETER_PATH("parameterPath"),
         LOG_PAYLOAD("payload"),
         LOG_PROFILE("profile"),
+        LOG_QUEUE_NAME("queueName"),
         LOG_REDIRECT_URI("redirectUri"),
         LOG_RESET_TYPE("resetType"),
         LOG_RESPONSE_CONTENT_TYPE("responseContentType"),
@@ -148,6 +150,14 @@ public class LogHelper {
                     LogField.LOG_GOVUK_SIGNIN_JOURNEY_ID, GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE);
         } else {
             attachFieldToLogs(LogField.LOG_GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId);
+        }
+    }
+
+    public static void attachQueueNameToLogs(String queueName) {
+        if (StringUtils.isBlank(queueName)) {
+            LogHelper.attachFieldToLogs(LOG_QUEUE_NAME, "unknown");
+        } else {
+            LogHelper.attachFieldToLogs(LOG_QUEUE_NAME, queueName);
         }
     }
 
