@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -59,13 +60,16 @@ import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
@@ -362,7 +366,10 @@ public class BuildCriOauthRequestHandler
             evidenceRequest =
                     getEvidenceRequestForKbvCri(
                             VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
+        } else if (cri.equals(EXPERIAN_FRAUD)) {
+            evidenceRequest = getEvidenceRequestForExperianFraudCri(vcs);
         }
+
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaims,
@@ -416,7 +423,8 @@ public class BuildCriOauthRequestHandler
             return null;
         }
 
-        return new EvidenceRequest(SCORING_POLICY_GPG45, minViableStrengthOpt.getAsInt(), null);
+        return new EvidenceRequest(
+                SCORING_POLICY_GPG45, minViableStrengthOpt.getAsInt(), null, null);
     }
 
     private EvidenceRequest getEvidenceRequestForKbvCri(Vot targetVot) {
@@ -430,7 +438,38 @@ public class BuildCriOauthRequestHandler
                                             + targetVot);
                 };
 
-        return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);
+        return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired, null);
+    }
+
+    private EvidenceRequest getEvidenceRequestForExperianFraudCri(
+            List<VerifiableCredential> sessionCredentials) {
+        var appVcs =
+                sessionCredentials.stream()
+                        .filter(vc -> vc.getCri().equals(DCMAW) || vc.getCri().equals(DCMAW_ASYNC))
+                        .toList();
+
+        int identityFraudScore = 2;
+        if (!appVcs.isEmpty()) {
+            var gpg45Score = gpg45ProfileEvaluator.buildScore(appVcs);
+
+            var maxStrength =
+                    gpg45Score.getEvidences().stream()
+                            .max(Comparator.comparing(Gpg45Scores.Evidence::getStrength))
+                            .map(Gpg45Scores.Evidence::getStrength)
+                            .orElse(0);
+
+            var maxValidity =
+                    gpg45Score.getEvidences().stream()
+                            .max(Comparator.comparing(Gpg45Scores.Evidence::getValidity))
+                            .map(Gpg45Scores.Evidence::getValidity)
+                            .orElse(0);
+
+            if (maxStrength >= 4 && maxValidity >= 2 && gpg45Score.getVerification() >= 3) {
+                identityFraudScore = 1;
+            }
+        }
+
+        return new EvidenceRequest(null, null, null, identityFraudScore);
     }
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
