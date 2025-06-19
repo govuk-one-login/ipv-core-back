@@ -8,7 +8,6 @@ plugins {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.apacheHttpCore,
-			libs.awsSdkUrlConnectionClient,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,

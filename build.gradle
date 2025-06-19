@@ -31,9 +31,6 @@ spotless {
 
 subprojects {
 	task allDeps(type: DependencyReportTask) {}
-	configurations.all {
-		exclude group: 'software.amazon.awssdk', module: 'apache-client'
-	}
 
 	tasks.withType(Test) {
 		// Configures environment variables to avoid errors in AWS X-Ray and EMF loggers

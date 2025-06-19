@@ -51,6 +51,8 @@ uuid_results
 
 libs/test-helpers/bin
 local-running/bin/
+libs/common-services/bin
+libs/ticf-cri-service/bin
 
 # User-specific secrets
 secrets.gradle
