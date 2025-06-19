@@ -15,7 +15,9 @@ Feature: Stored Identity - repeat fraud check
   Scenario: Fraud 6 Months Expiry + No Update
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
     When I submit a 'next' event
     Then I get an OAuth response
@@ -40,7 +42,9 @@ Feature: Stored Identity - repeat fraud check
       | Attribute | Values               |
       | context   | "international_user" |
     Then I get a 'fraud' CRI response
-    When I submit '<fraud-details>' details to the CRI stub
+    When I submit '<fraud-details>' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-ipv-success' page response with context 'updateIdentity'
     When I submit a 'next' event
     Then I get an OAuth response

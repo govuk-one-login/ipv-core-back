@@ -16,7 +16,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -51,7 +53,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
       | Attribute          | Values                                      |
@@ -84,7 +88,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute          | Values                                      |
@@ -139,7 +145,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -169,7 +177,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -223,7 +233,9 @@ Feature: Audit Events
             | Attribute | Values               |
             | context   | "international_user" |
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+    When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-ipv-success' page response with context 'updateIdentity'
     When I submit a 'next' event
     Then I get an OAuth response
@@ -291,7 +303,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -334,7 +348,9 @@ Feature: Audit Events
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response

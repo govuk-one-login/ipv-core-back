@@ -38,7 +38,9 @@ Feature: Identity reuse update details with Strategic App
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I submit '<fraud-details>' details to the CRI stub
+            When I submit '<fraud-details>' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get a 'page-ipv-success' page response with context 'updateIdentity'
             When I submit a 'next' event
             Then I get an OAuth response
@@ -79,7 +81,9 @@ Feature: Identity reuse update details with Strategic App
             Then I get a 'address' CRI response
             When I submit 'kenneth-changed' details to the CRI stub
             Then I get a 'fraud' CRI response
-            When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+            When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get a 'page-ipv-success' page response with context 'updateIdentity'
             When I submit a 'next' event
             Then I get an OAuth response
@@ -115,7 +119,9 @@ Feature: Identity reuse update details with Strategic App
             Then I get a 'address' CRI response
             When I submit 'kenneth-changed' details to the CRI stub
             Then I get a 'fraud' CRI response
-            When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+            When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get a 'page-ipv-success' page response with context 'updateIdentity'
             When I submit a 'next' event
             Then I get an OAuth response

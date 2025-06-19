@@ -19,7 +19,9 @@ Feature: P1 F2F journey
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute          | Values                                      |
@@ -42,7 +44,9 @@ Feature: P1 F2F journey
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1-history-0' details to the CRI stub
+    When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
       | Attribute          | Values                                      |
@@ -64,7 +68,9 @@ Feature: P1 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
 
     Scenario: P1 F2F Journey - pending
