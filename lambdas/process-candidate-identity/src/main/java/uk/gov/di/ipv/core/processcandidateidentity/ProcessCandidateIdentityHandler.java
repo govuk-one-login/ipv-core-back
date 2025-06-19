@@ -82,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_BLOCKED;
@@ -323,15 +324,8 @@ public class ProcessCandidateIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
+        } catch (ParseException | CredentialParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
@@ -542,7 +536,7 @@ public class ProcessCandidateIdentityHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
-        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+        if (shouldStoreIdentity(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeCandidateIdentity(
                     userId,
@@ -598,15 +592,31 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
-        return (STORE_IDENTITY_TYPES.contains(processIdentityType)
-                        && !PENDING.equals(processIdentityType))
-                || PROFILE_MATCHING_TYPES.contains(processIdentityType);
+        if (shouldStoreExistingIdentity(processIdentityType)) {
+            return true;
+        }
+
+        var typesRequiringVotMatchingResult =
+                Stream.concat(PROFILE_MATCHING_TYPES.stream(), STORE_IDENTITY_TYPES.stream())
+                        .filter(identityType -> !identityType.equals(PENDING))
+                        .distinct()
+                        .toList();
+
+        return typesRequiringVotMatchingResult.contains(processIdentityType);
     }
 
     private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
         return COI_CHECK_TYPES.contains(processIdentityType)
-                || STORE_IDENTITY_TYPES.contains(processIdentityType)
-                || PENDING.equals(processIdentityType);
+                || shouldStoreIdentity(processIdentityType);
+    }
+
+    private boolean shouldStoreIdentity(CandidateIdentityType identityType) {
+        return STORE_IDENTITY_TYPES.contains(identityType)
+                || shouldStoreExistingIdentity(identityType);
+    }
+
+    private boolean shouldStoreExistingIdentity(CandidateIdentityType identityType) {
+        return configService.enabled(STORED_IDENTITY_SERVICE) && EXISTING.equals(identityType);
     }
 
     private JourneyResponse getJourneyResponseForProfileMatching(
