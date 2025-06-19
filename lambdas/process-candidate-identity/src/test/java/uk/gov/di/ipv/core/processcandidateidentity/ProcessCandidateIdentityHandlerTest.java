@@ -478,6 +478,51 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
+        void shouldStoreExistingIdentityIfStoredIdentityServiceFeatureFlagIsEnabled()
+                throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(votMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.EXISTING.name()))
+                            .build();
+
+            // Act
+            processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(USER_ID),
+                            eq(List.of(CIMIT_VC)),
+                            eq(List.of()),
+                            eq(P2),
+                            eq(STRONGEST_MATCHED_VOT),
+                            eq(CandidateIdentityType.EXISTING),
+                            any());
+            verify(checkCoiService, times(0))
+                    .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
+        }
+
+        @Test
         void shouldHandleCandidateIdentityTypeIncompleteAndReturnJourneyNext() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
