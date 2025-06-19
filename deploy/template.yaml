@@ -696,7 +696,11 @@ Resources:
           MetricsEnabled: true
       StageName: !Sub ${Environment}
       TracingEnabled: true
-      DefinitionUri: ../openAPI/core-back-analytics.yaml
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-analytics.yaml"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
         Format: >-
