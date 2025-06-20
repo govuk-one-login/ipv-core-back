@@ -62,7 +62,7 @@ Feature: M2B Strategic App Journeys
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
-      Then I get an error response with message 'Missing ipv session id header' and status code '400'
+      Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
