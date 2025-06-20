@@ -14,7 +14,9 @@ Feature: P2 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
         | Attribute          | Values                                      |
@@ -69,7 +71,9 @@ Feature: P2 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit '<details>' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
@@ -107,8 +111,9 @@ Feature: P2 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       When I submit '<details>' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
@@ -140,7 +145,9 @@ Feature: P2 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
 
     Scenario: Oauth access_denied error F2F
@@ -196,7 +203,9 @@ Feature: P2 F2F journey
       Then I get a 'fraud' CRI response
 
     Scenario: requested strength score three for fraud score 2
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -204,7 +213,9 @@ Feature: P2 F2F journey
       Then I get a 'page-face-to-face-handoff' page response
 
     Scenario: requested strength score four for fraud score 1
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -212,7 +223,9 @@ Feature: P2 F2F journey
       Then I get a 'page-face-to-face-handoff' page response
 
     Scenario: requested strength score four fraud score 1 and history 0
-      When I submit 'kenneth-score-1-history-0' details to the CRI stub
+      When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -220,7 +233,9 @@ Feature: P2 F2F journey
       Then I get a 'page-face-to-face-handoff' page response
 
     Scenario: requested strength score four for fraud score 2 and history 0
-      When I submit 'kenneth-score-2-history-0' details to the CRI stub
+      When I submit 'kenneth-score-2-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -241,7 +256,9 @@ Feature: P2 F2F journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-verification-1' details with attributes to the async CRI stub
         | Attribute          | Values                                      |

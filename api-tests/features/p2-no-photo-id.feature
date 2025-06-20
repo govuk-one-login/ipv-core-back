@@ -27,7 +27,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
@@ -93,7 +95,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
@@ -115,7 +119,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
@@ -137,7 +143,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
@@ -203,7 +211,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
 
     Scenario: P2 no photo id journey - Abandon - Return to RP
@@ -261,7 +271,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
@@ -309,7 +321,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response

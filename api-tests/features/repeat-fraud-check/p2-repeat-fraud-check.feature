@@ -29,7 +29,9 @@ Feature: Repeat fraud check journeys
       # Repeat fraud check with no update
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit expired 'kenneth-score-2' details to the CRI stub
+      When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -46,7 +48,9 @@ Feature: Repeat fraud check journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -76,7 +80,9 @@ Feature: Repeat fraud check journeys
         | Attribute | Values               |
         | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -103,7 +109,9 @@ Feature: Repeat fraud check journeys
             | Attribute | Values               |
             | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -118,12 +126,18 @@ Feature: Repeat fraud check journeys
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
+      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      When I submit a 'next' event
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-changed' details with attributes to the CRI stub
+        | Attribute | Values               |
+        | context   | "international_user" |
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
 
     Scenario: Unsupported Changes
       # Repeat fraud check with various unsupported events and back navigation
@@ -182,7 +196,9 @@ Feature: Repeat fraud check journeys
       # Repeat fraud check with no update
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-no-applicable' details to the CRI stub
+      When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -199,7 +215,9 @@ Feature: Repeat fraud check journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-no-applicable' details to the CRI stub
+      When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -214,7 +232,9 @@ Feature: Repeat fraud check journeys
         | Attribute | Values               |
         | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-no-applicable' details to the CRI stub
+      When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -235,7 +255,9 @@ Feature: Repeat fraud check journeys
             | Attribute | Values               |
             | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-no-applicable' details to the CRI stub
+      When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -258,7 +280,9 @@ Feature: Repeat fraud check journeys
       # Repeat fraud check with no update
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -275,7 +299,9 @@ Feature: Repeat fraud check journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -288,7 +314,9 @@ Feature: Repeat fraud check journeys
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -307,7 +335,9 @@ Feature: Repeat fraud check journeys
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response

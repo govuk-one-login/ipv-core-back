@@ -2,10 +2,10 @@
 Feature: Identity reuse update details
     Background:
         Given the subject already has the following credentials
-            | CRI     | scenario                     |
-            | dcmaw   | kenneth-driving-permit-valid |
-            | address | kenneth-current              |
-            | fraud   | kenneth-score-2              |
+            | CRI     | scenario               |
+            | dcmaw   | kenneth-passport-valid |
+            | address | kenneth-current        |
+            | fraud   | kenneth-score-2        |
         And I activate the 'disableStrategicApp' feature set
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
@@ -25,7 +25,9 @@ Feature: Identity reuse update details
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
-        When I submit '<fraud-details>' details to the CRI stub
+        When I submit '<fraud-details>' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -46,7 +48,9 @@ Feature: Identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-score-2' details to the CRI stub
+        When I submit 'kenneth-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":1} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -71,7 +75,9 @@ Feature: Identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+        When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response

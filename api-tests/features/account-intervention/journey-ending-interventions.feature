@@ -19,7 +19,9 @@ Feature: Journey ending interventions
     When The AIS stub will return an '<second_ais_response>' result
     And TICF CRI will respond with default parameters and
       | interventionCode | <ticf_intervention_code> |
-    And I submit 'kenneth-score-2' details to the CRI stub
+    And I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
 
     Examples:
@@ -61,7 +63,9 @@ Feature: Journey ending interventions
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
     When The AIS stub will return an '<second_ais_response>' result
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
 
     Examples:
@@ -107,7 +111,9 @@ Feature: Journey ending interventions
       | context   | "international_user" |
     Then I get a 'fraud' CRI response
     When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of initial F2F journey
@@ -126,5 +132,7 @@ Feature: Journey ending interventions
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
     When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
-    And I submit 'kenneth-score-2' details to the CRI stub
+    And I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get an OAuth response with error code 'session_invalidated'
