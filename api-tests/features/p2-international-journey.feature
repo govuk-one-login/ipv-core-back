@@ -49,7 +49,9 @@ Feature: P2 International Address
       | Attribute | Values               |
       | context   | "international_user" |
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-no-applicable' details to the CRI stub
+    When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response

@@ -13,6 +13,7 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -93,6 +94,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -102,6 +104,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaimFailedWithCis;
 
@@ -128,7 +134,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final String EVIDENCE_REQUEST = "evidenceRequest";
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
     private static final EvidenceRequest TEST_EVIDENCE_REQUESTED =
-            new EvidenceRequest("gpg45", 2, null);
+            new EvidenceRequest("gpg45", 2, null, null);
     private static String CRI_WITH_EVIDENCE_REQUEST;
     private static String CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST;
 
@@ -154,9 +160,6 @@ class BuildCriOauthRequestHandlerTest {
     @InjectMocks private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
 
     private OauthCriConfig oauthCriConfig;
-    private OauthCriConfig dcmawOauthCriConfig;
-    private OauthCriConfig f2FOauthCriConfig;
-    private OauthCriConfig claimedIdentityOauthCriConfig;
     private ClientOAuthSessionItem clientOAuthSessionItem;
     private final IpvSessionItem ipvSessionItem = new IpvSessionItem();
 
@@ -181,48 +184,6 @@ class BuildCriOauthRequestHandlerTest {
     @BeforeEach
     void setUp() throws URISyntaxException {
         oauthCriConfig =
-                OauthCriConfig.builder()
-                        .tokenUrl(new URI(CRI_TOKEN_URL))
-                        .credentialUrl(new URI(CRI_CREDENTIAL_URL))
-                        .authorizeUrl(new URI(CRI_AUTHORIZE_URL))
-                        .clientId(IPV_CLIENT_ID)
-                        .signingKey("{}")
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
-                        .componentId("http://www.example.com/audience")
-                        .clientCallbackUrl(URI.create("http://www.example.com/callback/criId"))
-                        .requiresApiKey(true)
-                        .requiresAdditionalEvidence(false)
-                        .build();
-
-        dcmawOauthCriConfig =
-                OauthCriConfig.builder()
-                        .tokenUrl(new URI(CRI_TOKEN_URL))
-                        .credentialUrl(new URI(CRI_CREDENTIAL_URL))
-                        .authorizeUrl(new URI(CRI_AUTHORIZE_URL))
-                        .clientId(IPV_CLIENT_ID)
-                        .signingKey("{}")
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
-                        .componentId("http://www.example.com/audience")
-                        .clientCallbackUrl(URI.create("http://www.example.com/callback/criId"))
-                        .requiresApiKey(true)
-                        .requiresAdditionalEvidence(false)
-                        .build();
-
-        f2FOauthCriConfig =
-                OauthCriConfig.builder()
-                        .tokenUrl(new URI(CRI_TOKEN_URL))
-                        .credentialUrl(new URI(CRI_CREDENTIAL_URL))
-                        .authorizeUrl(new URI(CRI_AUTHORIZE_URL))
-                        .clientId(IPV_CLIENT_ID)
-                        .signingKey("{}")
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
-                        .componentId("http://www.example.com/audience")
-                        .clientCallbackUrl(URI.create("http://www.example.com/callback/criId"))
-                        .requiresApiKey(true)
-                        .requiresAdditionalEvidence(false)
-                        .build();
-
-        claimedIdentityOauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI(CRI_TOKEN_URL))
                         .credentialUrl(new URI(CRI_CREDENTIAL_URL))
@@ -656,11 +617,11 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
         // Arrange
-        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
-                .thenReturn(dcmawOauthCriConfig);
+                .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
                 .thenReturn(null);
         when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
@@ -742,11 +703,11 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
             throws Exception {
         // Arrange
-        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
-                .thenReturn(dcmawOauthCriConfig);
+                .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DWP_KBV.getId()))
                 .thenReturn(null);
         when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
@@ -832,11 +793,11 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
-        when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
-                .thenReturn(f2FOauthCriConfig);
+                .thenReturn(oauthCriConfig);
         when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
@@ -903,16 +864,94 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
+    private static Stream<Arguments> provideAppVcsForExperianFraudRequest() {
+        return Stream.of(
+                Arguments.of(List.of(vcDcmawPassport()), 1),
+                Arguments.of(List.of(vcDcmawAsyncPassport()), 1),
+                Arguments.of(List.of(vcDcmawDrivingPermitDvaM1b()), 2),
+                Arguments.of(List.of(vcDcmawAsyncDrivingPermitDva()), 2),
+                Arguments.of(List.of(), 2));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAppVcsForExperianFraudRequest")
+    void shouldSetEvidenceRequestForFraudWithIdentityFraudScoreSetTo1IfGivenChippedDocumentVc(
+            List<VerifiableCredential> appVcs, int expectedIdentityFraudScore) throws Exception {
+        // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        when(configService.getActiveConnection(EXPERIAN_FRAUD)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, EXPERIAN_FRAUD))
+                .thenReturn(oauthCriConfig);
+        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getParameter(
+                        CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, EXPERIAN_FRAUD.getId()))
+                .thenReturn(null);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        ListUtils.union(
+                                List.of(
+                                        generateVerifiableCredential(
+                                                TEST_USER_ID,
+                                                ADDRESS,
+                                                vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_1),
+                                                IPV_ISSUER)),
+                                appVcs));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setVtr(List.of("P1"));
+        if (!appVcs.isEmpty()) {
+            when(mockGpg45ProfileEvaluator.buildScore(any())).thenCallRealMethod();
+        }
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
+                        .journey(String.format(JOURNEY_BASE_URL, EXPERIAN_FRAUD.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+        assertEquals(
+                expectedIdentityFraudScore, evidenceRequested.get("identityFraudScore").asInt());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    }
+
     @ParameterizedTest
     @MethodSource("journeyUriParameters")
     void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
             String journeyUri, Map<String, Object> expectedClaims) throws Exception {
         // Arrange
-        when(mockOauthKeyService.getEncryptionKey(claimedIdentityOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
-                .thenReturn(claimedIdentityOauthCriConfig);
+                .thenReturn(oauthCriConfig);
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(
                         CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, CLAIMED_IDENTITY.getId()))
