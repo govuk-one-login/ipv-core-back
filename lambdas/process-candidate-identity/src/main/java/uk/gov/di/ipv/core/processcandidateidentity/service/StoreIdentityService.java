@@ -61,7 +61,7 @@ public class StoreIdentityService {
         var hasStoredSiObject = false;
         var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
         LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
-        evcsService.storeCompletedOrPendingIdentityWithPost(
+        evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                 userId, sessionCredentials, evcsVcs, isPendingIdentity);
 
         if (configService.enabled(STORED_IDENTITY_SERVICE) && !isPendingIdentity) {

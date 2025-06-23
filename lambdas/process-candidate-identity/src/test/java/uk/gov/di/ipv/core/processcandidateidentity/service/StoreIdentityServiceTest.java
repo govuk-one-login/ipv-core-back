@@ -125,7 +125,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), false);
         }
 
         @Test
@@ -167,7 +167,7 @@ class StoreIdentityServiceTest {
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
+                    .storeCompletedOrPendingIdentityWithPostVcs(any(), any(), any(), anyBoolean());
         }
 
         @Test
@@ -197,7 +197,7 @@ class StoreIdentityServiceTest {
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
+                    .storeCompletedOrPendingIdentityWithPostVcs(any(), any(), any(), anyBoolean());
         }
 
         @Test
@@ -225,7 +225,7 @@ class StoreIdentityServiceTest {
             assertEquals(testAuditEventUser, auditEvent.getUser());
 
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), true);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), true);
         }
 
         @Test
@@ -255,7 +255,7 @@ class StoreIdentityServiceTest {
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(any(), any(), any(), anyBoolean());
+                    .storeCompletedOrPendingIdentityWithPostVcs(any(), any(), any(), anyBoolean());
         }
     }
 
@@ -266,7 +266,7 @@ class StoreIdentityServiceTest {
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(evcsService)
-                .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), true);
+                .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), true);
 
         // Assert
         assertThrows(
@@ -308,7 +308,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), false);
             verify(evcsService, times(1))
                     .storeStoredIdentityRecord(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -334,7 +334,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), true);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), true);
             verify(evcsService, times(0)).storeStoredIdentityRecord(any(), any(), any(), any());
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
 
@@ -375,7 +375,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), false);
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
 
             var auditEvent = auditEventCaptor.getValue();
@@ -406,7 +406,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), false);
             verify(evcsService, times(1))
                     .storeStoredIdentityRecord(USER_ID, VCS, STRONGEST_MATCHED_VOT, P2);
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -424,7 +424,7 @@ class StoreIdentityServiceTest {
         // Arrange
         doThrow(EvcsServiceException.class)
                 .when(evcsService)
-                .storeCompletedOrPendingIdentityWithPost(USER_ID, VCS, List.of(), false);
+                .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), false);
 
         // Act/Assert
         assertThrows(

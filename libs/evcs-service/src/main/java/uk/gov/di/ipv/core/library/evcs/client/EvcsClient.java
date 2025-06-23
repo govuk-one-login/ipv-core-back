@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -110,40 +109,12 @@ public class EvcsClient {
         }
     }
 
-    public HttpResponse<String> storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs)
-            throws EvcsServiceException {
-        LOGGER.info(
-                LogHelper.buildLogMessage(
-                        "Preparing to store %d user VCs using PUT method"
-                                .formatted(userVCsForEvcs.vcs().size())));
-
-        try {
-            HttpRequest.Builder httpRequestBuilder =
-                    HttpRequest.newBuilder()
-                            .uri(getVcsUriWithNoParams())
-                            .PUT(
-                                    HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
-                            .header(
-                                    X_API_KEY_HEADER,
-                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
-                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-
-            return sendHttpRequest(httpRequestBuilder.build());
-        } catch (URISyntaxException e) {
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
-        } catch (JsonProcessingException e) {
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
-        }
-    }
-
     public HttpResponse<String> storeUserVCs(
             String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs) throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        "Preparing to store %d user VCs".formatted(userVCsForEvcs.size())));
+                        "Preparing to store %d user VCs using POST /vcs endpoint"
+                                .formatted(userVCsForEvcs.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -217,10 +188,6 @@ public class EvcsClient {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
         }
-    }
-
-    private URI getVcsUriWithNoParams() throws URISyntaxException {
-        return getUri(VCS_SUB_PATH, null, null);
     }
 
     private URI getIdentityUri() throws URISyntaxException {
