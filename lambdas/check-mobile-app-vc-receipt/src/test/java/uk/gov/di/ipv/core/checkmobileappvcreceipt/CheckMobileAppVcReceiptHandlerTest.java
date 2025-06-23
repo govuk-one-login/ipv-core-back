@@ -174,7 +174,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
         verify(sessionCredentialsService)
-                .persistCredentials(List.of(vc), TEST_IPV_SESSION_ID, false);
+                .persistCredentials(List.of(vc), TEST_IPV_SESSION_ID, true);
     }
 
     @Test

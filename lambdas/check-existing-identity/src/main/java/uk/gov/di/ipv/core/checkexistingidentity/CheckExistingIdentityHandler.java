@@ -480,7 +480,7 @@ public class CheckExistingIdentityHandler
                 previousIpvSessionItem.getIpvSessionId());
 
         sessionCredentialsService.persistCredentials(
-                credentialBundle.credentials, auditEventUser.getSessionId(), false);
+                credentialBundle.credentials, auditEventUser.getSessionId(), true);
 
         return switch (lowestGpg45ConfidenceRequested) {
             case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
