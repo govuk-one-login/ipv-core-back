@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
@@ -269,6 +270,21 @@ public class EvcsService {
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
             updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
         if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
+    }
+
+    public HttpResponse<String> storeStoredIdentityRecord(
+            String userId,
+            List<VerifiableCredential> credentials,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot)
+            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
+        var storedIdentityJwt =
+                storedIdentityService.getStoredIdentityForEvcs(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+
+        var evcsStoreIdentityDto = new EvcsPostIdentityDto(userId, storedIdentityJwt);
+
+        return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
     }
 
     private void updateExistingUserVCs(

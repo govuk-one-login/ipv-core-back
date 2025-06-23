@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
@@ -119,6 +120,7 @@ class EvcsServiceTest {
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<List<EvcsUpdateUserVCsDto>> evcsUpdateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<EvcsPutUserVCsDto> evcsPutUserVCsDtoCaptor;
+    @Captor ArgumentCaptor<EvcsPostIdentityDto> evcsPostIdentityDtoCaptor;
     @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
     @Mock EvcsClient mockEvcsClient;
@@ -692,5 +694,29 @@ class EvcsServiceTest {
                                         List.of(vcHmrcMigrationPCL250())));
 
         assertEquals(FAILED_TO_PARSE_EVCS_REQUEST_BODY, evcsServiceException.getErrorResponse());
+    }
+
+    @Test
+    void shouldStoreStoredIdentityRecord() throws Exception {
+        // Arrange
+        var testVcs = List.of(VC_ADDRESS_TEST);
+        var testSiJwt = "test.si.jwt";
+
+        when(mockStoredIdentityService.getStoredIdentityForEvcs(
+                        TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT))
+                .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
+
+        // Act
+        evcsService.storeStoredIdentityRecord(
+                TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
+
+        // Assert
+        verify(mockEvcsClient).storeUserIdentity(evcsPostIdentityDtoCaptor.capture());
+
+        assertEquals(testSiJwt, evcsPostIdentityDtoCaptor.getValue().si().jwt());
+        assertEquals(P1, evcsPostIdentityDtoCaptor.getValue().si().vot());
+
+        verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+        verify(mockEvcsClient, never()).storeUserVCs(any(), any());
     }
 }

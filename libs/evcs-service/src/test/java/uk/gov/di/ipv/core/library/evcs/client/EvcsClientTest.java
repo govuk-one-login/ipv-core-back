@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
@@ -108,6 +109,9 @@ class EvcsClientTest {
                             new EvcsCreateUserVCsDto(
                                     "VC_Signature1", EvcsVCState.CURRENT, TEST_METADATA, null)),
                     new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
+    private static final EvcsPostIdentityDto EVCS_POST_IDENTITY_DTO =
+            new EvcsPostIdentityDto(
+                    TEST_USER_ID, new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(CURRENT, PENDING_RETURN);
 
     @Mock private ConfigService mockConfigService;
@@ -447,5 +451,35 @@ class EvcsClientTest {
         inOrder.verify(mockSleeper, times(1)).sleep(2000);
         inOrder.verify(mockSleeper, times(1)).sleep(4000);
         inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void storeUserIdentityShouldSuccessfullySendRequest() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            evcsClient.storeUserIdentity(EVCS_POST_IDENTITY_DTO);
+
+            // Assert
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var evcsPostIdentityDto =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsPostIdentityDto>() {});
+            assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
+            assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
+            assertEquals(TEST_USER_ID, evcsPostIdentityDto.userId());
+        }
     }
 }
