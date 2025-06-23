@@ -9,7 +9,6 @@ Feature: International identity reuse update details
         And I activate the 'disableStrategicApp' feature set
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
-        When I activate the 'internationalAddress' feature sets
         And I submit a 'update-details' event
         Then I get a 'update-details' page response
 
