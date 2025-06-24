@@ -21,17 +21,17 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -198,38 +198,43 @@ public abstract class ConfigService {
         }
     }
 
-    public Map<String, Cri> getIssuerCris() {
-        var allCriParameters = getParametersByPrefix("credentialIssuers");
-        var issuerToCriMap = new HashMap<String, Cri>();
-
-        for (Map.Entry<String, String> entry : allCriParameters.entrySet()) {
-            var fullPath = entry.getKey();
-            var value = entry.getValue();
-
-            var cri = findCriFromPath(fullPath);
-            if (cri == null) continue;
-
-            try {
-                var criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
-                var issuer = criConfig.getComponentId();
-                issuerToCriMap.put(issuer, cri);
-            } catch (JsonProcessingException e) {
-                throw new ConfigParseException(
-                        String.format(
-                                "Failed to parse credential issuer configuration at path '%s': %s",
-                                fullPath, e));
+    public Map<String, Cri> getAllCrisByIssuer() {
+        Map<String, Cri> issuerMap = new HashMap<>();
+        for (var cri : Cri.values()) {
+            for (var componentId : getCriComponentIds(cri)) {
+                issuerMap.put(componentId, cri);
             }
         }
-        return issuerToCriMap;
+        return issuerMap;
     }
 
-    private Cri findCriFromPath(String parameterPath) {
-        Pattern pattern = Pattern.compile("([^/]+)/connections");
-        Matcher matcher = pattern.matcher(parameterPath);
-
-        if (matcher.find()) {
-            return Cri.fromId(matcher.group(1));
+    public Cri getCriByIssuer(String issuer) throws NoCriForIssuerException {
+        for (var cri : Cri.values()) {
+            if (getCriComponentIds(cri).contains(issuer)) {
+                return cri;
+            }
         }
-        return null;
+        throw new NoCriForIssuerException(String.format("No cri found for issuer: '%s'", issuer));
+    }
+
+    private List<String> getCriComponentIds(Cri cri) {
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath();
+        var criId = cri.getId();
+        var result = new ArrayList<String>();
+        try {
+            var parameters = getParametersByPrefix(formatPath(pathTemplate, criId));
+            for (var parameter : parameters.values()) {
+                var criConfig = OBJECT_MAPPER.readValue(parameter, CriConfig.class);
+
+                result.add(criConfig.getComponentId());
+            }
+            return result;
+        } catch (JsonProcessingException e) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at parameter path '%s' because: '%s'",
+                            pathTemplate, e));
+        }
     }
 }
