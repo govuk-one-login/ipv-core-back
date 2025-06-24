@@ -23,6 +23,7 @@ Feature: Journey ending interventions
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
+    And I don't have a stored identity in EVCS
 
     Examples:
       | intervention                        | when  | first_ais_response             | second_ais_response                                | ticf_intervention_code |
@@ -67,6 +68,7 @@ Feature: Journey ending interventions
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
+    And I don't have a stored identity in EVCS
 
     Examples:
       | intervention                        | when  | first_ais_response                                 | second_ais_response                                |
@@ -136,3 +138,4 @@ Feature: Journey ending interventions
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
     Then I get an OAuth response with error code 'session_invalidated'
+    And I don't have a stored identity in EVCS
