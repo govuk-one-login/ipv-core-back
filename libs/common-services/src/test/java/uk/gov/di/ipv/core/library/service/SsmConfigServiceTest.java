@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
@@ -43,6 +44,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -57,6 +59,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
@@ -154,6 +157,7 @@ class SsmConfigServiceTest {
         @Test
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
+
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
@@ -635,32 +639,50 @@ class SsmConfigServiceTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
-                    .thenReturn(
-                            Map.of(
-                                    "ticf/connections/stub",
-                                    "{\"componentId\":\"https://stub-ticf-component-id\"}",
-                                    "ticf/connections/main",
-                                    "{\"componentId\":\"https://main-ticf-component-id\"}",
-                                    "dcmaw/connections/stub",
-                                    "{\"componentId\":\"https://stub-dcmaw-component-id\"}",
-                                    "dcmaw/connections/main",
-                                    "{\"componentId\":\"https://main-dcmaw-component-id\"}"));
+            for (var cri : Cri.values()) {
+                var mainConfig =
+                        String.format(
+                                "{\"componentId\":\"https://main-%s-component-id\"}", cri.getId());
+                var stubConfig =
+                        String.format(
+                                "{\"componentId\":\"https://stub-%s-component-id\"}", cri.getId());
+                when(ssmProvider.getMultiple(
+                                String.format(
+                                        "/test/core/credentialIssuers/%s/connections",
+                                        cri.getId())))
+                        .thenReturn(Map.of("stub", stubConfig, "main", mainConfig));
+            }
         }
 
         @Test
-        void shouldReturnCriForValidIssuers() {
+        void shouldReturnCriForValidIssuers() throws NoCriForIssuerException {
             assertEquals(
-                    Map.of(
-                            "https://main-ticf-component-id",
-                            Cri.TICF,
-                            "https://stub-ticf-component-id",
-                            Cri.TICF,
-                            "https://main-dcmaw-component-id",
-                            Cri.DCMAW,
-                            "https://stub-dcmaw-component-id",
-                            Cri.DCMAW),
-                    configService.getIssuerCris());
+                    PASSPORT, configService.getCriByIssuer("https://main-ukPassport-component-id"));
+            assertEquals(
+                    PASSPORT, configService.getCriByIssuer("https://stub-ukPassport-component-id"));
+            assertEquals(
+                    ADDRESS, configService.getCriByIssuer("https://main-address-component-id"));
+            assertEquals(
+                    DRIVING_LICENCE,
+                    configService.getCriByIssuer("https://stub-drivingLicence-component-id"));
+        }
+
+        @Test
+        void shouldErrorForInvalidIssuer() {
+            assertThrows(
+                    NoCriForIssuerException.class,
+                    () -> configService.getCriByIssuer("https://non-existant-component-id"));
+        }
+
+        @Test
+        void getAllCrisByIssuerShouldReturnMapOfAllIssuersAndCri() {
+            Map<String, Cri> expectedMap = new HashMap<>();
+            for (var cri : Cri.values()) {
+                expectedMap.put(String.format("https://main-%s-component-id", cri.getId()), cri);
+                expectedMap.put(String.format("https://stub-%s-component-id", cri.getId()), cri);
+            }
+            var actual = configService.getAllCrisByIssuer();
+            assertEquals(expectedMap, actual);
         }
     }
 }
