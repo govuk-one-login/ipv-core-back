@@ -153,7 +153,7 @@ public class EvcsService {
                 if (cri == null) {
                     throw new CredentialParseException(
                             String.format(
-                                    "Failed to find credential issuer for vc issuer: %s", issuer));
+                                    "Failed to find credential issuer for vc issuer: %s in %s", issuer, issuerCris));
                 }
 
                 var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
