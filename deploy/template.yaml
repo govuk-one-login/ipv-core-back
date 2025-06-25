@@ -777,6 +777,24 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
 
+  ManualF2fPendingResetFunctionManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DependsOn:
+      - "ManualF2fPendingResetFunction"
+    Properties:
+      ManagedPolicyName: manual-f2f-pending-reset-function-managed-policy
+      Description: Allows invoking the ManualF2f Lambda
+      Path: /control-tower/lambdas/
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunction
+            Resource:
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}:live
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -4329,3 +4347,7 @@ Outputs:
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
       Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
+  ManualF2fInvokePolicyArn:
+    Value: !Ref ManualF2fPendingResetFunctionManagedPolicy
+    Export:
+      Name: !Sub "ManualF2fPendingResetFunctionManagedPolicyArn-${Environment}"
