@@ -760,10 +760,6 @@ Resources:
               Effect: Allow
               Action:
                 - dynamodb:GetItem
-              Resource: !GetAtt CRIResponseTable.Arn
-            - Sid: AllowDeleteItemOnCRIResponseTable
-              Effect: Allow
-              Action:
                 - dynamodb:DeleteItem
               Resource: !GetAtt CRIResponseTable.Arn
         - KMSDecryptPolicy:
