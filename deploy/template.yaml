@@ -756,12 +756,15 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
+            - Sid: AllowDeleteItemOnCRIResponseTable
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt CRIResponseTable.Arn
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CRIResponseTable
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
       AutoPublishAlias: live
