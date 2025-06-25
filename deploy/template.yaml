@@ -132,6 +132,10 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
+  IsBuildStagingProd: !Or
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -779,6 +783,7 @@ Resources:
 
   ManualF2fPendingResetFunctionManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
+    Condition: IsBuildStagingProd
     DependsOn:
       - "ManualF2fPendingResetFunction"
     Properties:
