@@ -4347,7 +4347,3 @@ Outputs:
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
       Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
-  ManualF2fInvokePolicyArn:
-    Value: !Ref ManualF2fPendingResetFunctionManagedPolicy
-    Export:
-      Name: !Sub "ManualF2fPendingResetFunctionManagedPolicyArn-${Environment}"
