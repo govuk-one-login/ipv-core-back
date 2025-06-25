@@ -132,6 +132,10 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
+  IsBuildStagingProd: !Or
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -776,6 +780,25 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
+
+  ManualF2fPendingResetFunctionManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsBuildStagingProd
+    DependsOn:
+      - "ManualF2fPendingResetFunction"
+    Properties:
+      ManagedPolicyName: manual-f2f-pending-reset-function-managed-policy
+      Description: Allows invoking the ManualF2f Lambda
+      Path: /control-tower/lambdas/
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunction
+            Resource:
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}:live
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
