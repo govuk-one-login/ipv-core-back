@@ -756,13 +756,16 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: AllowGetItemOnCRIResponseTable
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource: !GetAtt CRIResponseTable.Arn
             - Sid: AllowDeleteItemOnCRIResponseTable
               Effect: Allow
               Action:
                 - dynamodb:DeleteItem
               Resource: !GetAtt CRIResponseTable.Arn
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
