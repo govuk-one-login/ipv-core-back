@@ -358,7 +358,6 @@ core:
     resetIdentity: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: true
-    internationalAddressEnabled: true
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true
@@ -377,9 +376,6 @@ core:
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    internationalAddress:
-      featureFlags:
-        internationalAddressEnabled: true
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
