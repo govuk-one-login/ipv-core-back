@@ -5,5 +5,5 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record EvcsPutUserVCsDto(
+public record EvcsPostIdentityDto(
         String userId, List<EvcsCreateUserVCsDto> vcs, EvcsStoredIdentityDto si) {}

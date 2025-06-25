@@ -60,28 +60,25 @@ public class StoreIdentityService {
 
         var hasStoredSiObject = false;
         var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
-        if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+        LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
+        evcsService.storeCompletedOrPendingIdentityWithPostVcs(
+                userId, sessionCredentials, evcsVcs, isPendingIdentity);
+
+        if (configService.enabled(STORED_IDENTITY_SERVICE) && !isPendingIdentity) {
             try {
-                LOGGER.info(LogHelper.buildLogMessage("Attempting to store user VCs with PUT"));
-                if (isPendingIdentity) {
-                    evcsService.storePendingIdentityWithPut(userId, sessionCredentials);
-                } else {
-                    var httpResponse =
-                            evcsService.storeCompletedIdentityWithPut(
-                                    userId, sessionCredentials, strongestMatchedVot, achievedVot);
-                    hasStoredSiObject = httpResponse.statusCode() == HttpStatusCode.ACCEPTED;
-                }
-            } catch (FailedToCreateStoredIdentityForEvcsException | EvcsServiceException e) {
+                var httpResponse =
+                        evcsService.storeStoredIdentityRecord(
+                                userId, sessionCredentials, strongestMatchedVot, achievedVot);
+                hasStoredSiObject = httpResponse.statusCode() == HttpStatusCode.ACCEPTED;
+            } catch (FailedToCreateStoredIdentityForEvcsException e) {
                 LOGGER.warn(
                         LogHelper.buildLogMessage(
-                                "Failed to store user VCs with PUT, falling back to POST method"));
-                evcsService.storeCompletedOrPendingIdentityWithPost(
-                        userId, sessionCredentials, evcsVcs, isPendingIdentity);
+                                "Failed to create stored identity record. Stored identity record was not saved to EVCS."));
+            } catch (EvcsServiceException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Failed to store stored identity record to EVCS. Continuing user journey."));
             }
-        } else {
-            LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
-            evcsService.storeCompletedOrPendingIdentityWithPost(
-                    userId, sessionCredentials, evcsVcs, isPendingIdentity);
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
