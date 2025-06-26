@@ -756,7 +756,7 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: AllowGetItemOnCRIResponseTable
+            - Sid: AllowGetDeleteItemOnCriResponseTable
               Effect: Allow
               Action:
                 - dynamodb:GetItem
