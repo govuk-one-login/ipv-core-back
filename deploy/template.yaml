@@ -10,7 +10,7 @@ Globals:
       ApplyOn: PublishedVersions
     Architectures:
       - arm64
-    MemorySize: !If [IsPerformanceSensitive, 3072, 1024]
+    MemorySize: !If [ IsPerformanceSensitive, 3072, 1024 ]
     Runtime: java21
     Environment:
       Variables:
@@ -132,10 +132,10 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-  IsBuildStagingProd: !Or
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, production ]
+#  IsBuildStagingProd: !Or
+#    - !Equals [ !Ref Environment, build ]
+#    - !Equals [ !Ref Environment, staging ]
+#    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -150,8 +150,8 @@ Conditions:
     - !Condition IsDevelopment
     - !Equals [ !Ref Environment, build ]
   UseCanaryDeploymentAlarms: !Or
-    - !Not [ !Equals [ !Ref StepFunctionDeploymentPreference, ALL_AT_ONCE ]]
-    - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ]]
+    - !Not [ !Equals [ !Ref StepFunctionDeploymentPreference, ALL_AT_ONCE ] ]
+    - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ] ]
   IsPerformanceSensitive: !Or
     - !Not [ !Condition IsDevelopment ]
     - !Equals [ !Ref Environment, "dev-perf" ]
@@ -328,18 +328,18 @@ Resources:
       GroupDescription: >-
         Core Back Lambda Security Group outbound permissions ruleset
       SecurityGroupEgress:
-        - DestinationPrefixListId: !FindInMap [SecurityGroups, PrefixListIds, dynamodb]
+        - DestinationPrefixListId: !FindInMap [ SecurityGroups, PrefixListIds, dynamodb ]
           Description: Allow outbound traffic to dynamodb vpc endpoint
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-        - DestinationPrefixListId: !FindInMap [SecurityGroups, PrefixListIds, s3]
+        - DestinationPrefixListId: !FindInMap [ SecurityGroups, PrefixListIds, s3 ]
           Description: Allow outbound traffic to s3 vpc endpoint
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
         - DestinationSecurityGroupId:
-            Fn::ImportValue:  !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
+            Fn::ImportValue: !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
           Description: Allow outbound HTTPS traffic to AWS Services vpc endpoint security group
           IpProtocol: tcp
           FromPort: 443
@@ -521,12 +521,12 @@ Resources:
         - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
-          - IsDevelopment
-          - !If
-            - IsDev01
-            - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+              - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+            - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
           HostedZoneId: !If
             - IsDevelopment
             - !If
@@ -723,9 +723,9 @@ Resources:
         - !If
           - UseDynatrace
           - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
           ]
           - !Ref AWS::NoValue
       VpcConfig:
@@ -735,7 +735,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -785,11 +785,10 @@ Resources:
 
   ManualF2fPendingResetFunctionManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
-    Condition: IsBuildStagingProd
     Properties:
-      ManagedPolicyName: manual-f2f-pending-reset-function-managed-policy
+      ManagedPolicyName: !Sub manual-f2f-pending-reset-function-managed-policy-${Environment}
       Description: Allows invoking the ManualF2f Lambda
-      Path: /control-tower/lambdas/
+      Path: /runbooks/RundbookRoleName/
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -798,11 +797,10 @@ Resources:
               - lambda:InvokeFunction
               - lambda:GetFunction
             Resource:
-              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}:live
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}
 
   ManualF2fPendingResetFunctionInvokeRole:
     Type: AWS::IAM::Role
-    Condition: IsBuildStagingProd
     Properties:
       RoleName: ManualF2fPendingResetRole
       Description: "This role allows approved support team to perform pending F2F reset"
@@ -812,12 +810,11 @@ Resources:
           - Effect: Allow
             Principal:
               AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action:
-              - "sts:AssumeRole"
+            Action: "sts:AssumeRole"
             Condition:
-              - ArnLike:
-                  aws:PrincipalARN:
-                    - !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+              ArnLike:
+                aws:PrincipalARN:
+                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
       ManagedPolicyArns:
         - !Ref ManualF2fPendingResetFunctionManagedPolicy
       MaxSessionDuration: 43200
@@ -839,8 +836,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref IssueClientAccessTokenFunctionErrorCanaryAlarm, !Ref IssueClientAccessTokenFunction5xxErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref IssueClientAccessTokenFunctionErrorCanaryAlarm, !Ref IssueClientAccessTokenFunction5xxErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -856,9 +853,9 @@ Resources:
         - !If
           - UseDynatrace
           - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
           ]
           - !Ref AWS::NoValue
       VpcConfig:
@@ -868,7 +865,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -965,7 +962,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -1039,8 +1036,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref InitialiseIpvSessionFunctionErrorCanaryAlarm, !Ref InitialiseIpvSessionFunction5xxErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref InitialiseIpvSessionFunctionErrorCanaryAlarm, !Ref InitialiseIpvSessionFunction5xxErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1068,7 +1065,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -1195,7 +1192,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -1281,8 +1278,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref ProcessCriCallbackFunctionErrorCanaryAlarm, !Ref ProcessCriCallbackFunction5xxErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref ProcessCriCallbackFunctionErrorCanaryAlarm, !Ref ProcessCriCallbackFunction5xxErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1659,8 +1656,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref BuildUserIdentityFunctionErrorCanaryAlarm, !Ref BuildUserIdentityFunction5xxErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref BuildUserIdentityFunctionErrorCanaryAlarm, !Ref BuildUserIdentityFunction5xxErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1689,7 +1686,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -1801,7 +1798,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -1886,8 +1883,8 @@ Resources:
       AutoPublishAlias: live
       DeploymentPreference:
         Type: !Ref StepFunctionDeploymentPreference
-        Interval: !If [IsProduction, 10, 5]
-        Percentage: !If [IsProduction, 10, 50]
+        Interval: !If [ IsProduction, 10, 5 ]
+        Percentage: !If [ IsProduction, 10, 50 ]
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - - !Ref JourneyEngineStepFunctionExecutionFailedCanaryAlarm
@@ -2045,7 +2042,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -2124,8 +2121,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref BuildProvenUserIdentityDetailsFunctionErrorCanaryAlarm,!Ref BuildProvenUserIdentityDetailsFunction5xxErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref BuildProvenUserIdentityDetailsFunctionErrorCanaryAlarm,!Ref BuildProvenUserIdentityDetailsFunction5xxErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -2354,8 +2351,8 @@ Resources:
       DeploymentPreference:
         Alarms: !If
           - UseCanaryDeploymentAlarms
-          - [!Ref ProcessAsyncCriCredentialFunctionErrorCanaryAlarm]
-          - [!Ref AWS::NoValue]
+          - [ !Ref ProcessAsyncCriCredentialFunctionErrorCanaryAlarm ]
+          - [ !Ref AWS::NoValue ]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -2382,7 +2379,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -2599,25 +2596,25 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
-          - Sid: AppConfigAccess
-            Effect: Allow
-            Action:
-              - appconfig:StartConfigurationSession
-              - appconfig:GetLatestConfiguration
-            Resource:
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   CheckGpg45ScoreFunctionLogGroup:
@@ -2962,7 +2959,7 @@ Resources:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
-        - VPCAccessPolicy: {}
+        - VPCAccessPolicy: { }
         - Statement:
             - Sid: AppConfigAccess
               Effect: Allow
@@ -3309,37 +3306,37 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: IsNotDevelopment
     Properties:
-        AlarmName: PrivateApiGateWay5xxAlarm
-        AlarmDescription: !Sub
-          - 'The internal API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
-          - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
-        ActionsEnabled: true
-        AlarmActions:
-          - !ImportValue sns-topics-AlarmTopic
-        OKActions:
-          - !ImportValue sns-topics-AlarmTopic
-        InsufficientDataActions: []
-        EvaluationPeriods: 3
-        DatapointsToAlarm: 3
-        Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
-        ComparisonOperator: GreaterThanThreshold
-        TreatMissingData: notBreaching
-        Metrics:
-            - Id: e1
-              Label: Sum-of-5xx-Errors
-              ReturnData: true
-              Expression: SUM(METRICS())
-            - Id: m1
-              ReturnData: false
-              MetricStat:
-                  Metric:
-                      Namespace: AWS/ApiGateway
-                      MetricName: 5XXError
-                      Dimensions:
-                          - Name: ApiName
-                            Value: !Sub IPV Core Private API Gateway ${Environment}
-                  Period: 300
-                  Stat: Sum
+      AlarmName: PrivateApiGateWay5xxAlarm
+      AlarmDescription: !Sub
+        - 'The internal API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
+        - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue sns-topics-AlarmTopic
+      OKActions:
+        - !ImportValue sns-topics-AlarmTopic
+      InsufficientDataActions: [ ]
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-5xx-Errors
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub IPV Core Private API Gateway ${Environment}
+            Period: 300
+            Stat: Sum
 
   CoreApiExternalGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
@@ -3354,7 +3351,7 @@ Resources:
         - !ImportValue sns-topics-AlarmTopic
       OKActions:
         - !ImportValue sns-topics-AlarmTopic
-      InsufficientDataActions: []
+      InsufficientDataActions: [ ]
       EvaluationPeriods: 3
       DatapointsToAlarm: 3
       Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, egw500ErrorLimit ]
@@ -3388,7 +3385,7 @@ Resources:
         - !ImportValue alarm-alerts-topic
       OKActions:
         - !ImportValue alarm-alerts-topic
-      InsufficientDataActions: []
+      InsufficientDataActions: [ ]
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 2500
@@ -3433,7 +3430,7 @@ Resources:
         - !ImportValue alarm-alerts-topic
       OKActions:
         - !ImportValue alarm-alerts-topic
-      InsufficientDataActions: []
+      InsufficientDataActions: [ ]
       MetricName: Throttles
       Namespace: AWS/Lambda
       Statistic: Sum
@@ -3473,7 +3470,7 @@ Resources:
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       AlarmName: !Sub ${AWS::StackName}-IOExceptionInLogs
-      InsufficientDataActions: []
+      InsufficientDataActions: [ ]
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
       Threshold: 1
@@ -3815,7 +3812,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !If [IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}"]
+          Value: !If [ IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}" ]
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3869,7 +3866,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !If [IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}"]
+          Value: !If [ IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}" ]
         - Name: Method
           Value: POST
         - Name: Stage
@@ -4003,7 +4000,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !If [IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}"]
+          Value: !If [ IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}" ]
         - Name: Method
           Value: POST
         - Name: Stage
@@ -4086,7 +4083,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !If [IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}"]
+          Value: !If [ IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}" ]
         - Name: Method
           Value: POST
         - Name: Stage
