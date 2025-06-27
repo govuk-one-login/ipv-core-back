@@ -786,8 +786,6 @@ Resources:
   ManualF2fPendingResetFunctionManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
     Condition: IsBuildStagingProd
-    DependsOn:
-      - "ManualF2fPendingResetFunction"
     Properties:
       ManagedPolicyName: manual-f2f-pending-reset-function-managed-policy
       Description: Allows invoking the ManualF2f Lambda
@@ -801,6 +799,29 @@ Resources:
               - lambda:GetFunction
             Resource:
               - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}:live
+
+  ManualF2fPendingResetFunctionInvokeRole:
+    Type: AWS::IAM::Role
+    Condition: IsBuildStagingProd
+    Properties:
+      RoleName: ManualF2fPendingResetRole
+      Description: "This role allows approved support team to perform pending F2F reset"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "sts:AssumeRole"
+            Condition:
+              - ArnLike:
+                  aws:PrincipalARN:
+                    - !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      ManagedPolicyArns:
+        - !Ref ManualF2fPendingResetFunctionManagedPolicy
+      MaxSessionDuration: 43200
+      Path: /runbooks/RundbookRoleName/
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
