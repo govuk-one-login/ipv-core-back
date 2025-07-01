@@ -22,6 +22,7 @@ public class AsyncCriResponseHelper {
                     .userId(criResponseMessageDto.getUserId())
                     .oauthState(criResponseMessageDto.getOauthState())
                     .verifiableCredentialJWTs(criResponseMessageDto.getVerifiableCredentialJWTs())
+                    .journeyId(criResponseMessageDto.getJourneyId())
                     .build();
         } else {
             return ErrorAsyncCriResponse.builder()
@@ -29,6 +30,7 @@ public class AsyncCriResponseHelper {
                     .oauthState(criResponseMessageDto.getOauthState())
                     .error(criResponseMessageDto.getError())
                     .errorDescription(criResponseMessageDto.getErrorDescription())
+                    .journeyId(criResponseMessageDto.getJourneyId())
                     .build();
         }
     }

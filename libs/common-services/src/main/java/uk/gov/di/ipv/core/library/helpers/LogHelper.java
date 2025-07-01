@@ -72,6 +72,7 @@ public class LogHelper {
         LOG_PAYLOAD("payload"),
         LOG_PROFILE("profile"),
         LOG_QUEUE_NAME("queueName"),
+        LOG_SQS_MESSAGE_ID("sqsMessageId"),
         LOG_REDIRECT_URI("redirectUri"),
         LOG_RESET_TYPE("resetType"),
         LOG_RESPONSE_CONTENT_TYPE("responseContentType"),
@@ -159,6 +160,11 @@ public class LogHelper {
         } else {
             LogHelper.attachFieldToLogs(LOG_QUEUE_NAME, queueName);
         }
+    }
+
+    public static void attachSqsMessageIdToLogs(String sqsMessageId) {
+        var idValue = StringUtils.isBlank(sqsMessageId) ? "unknown" : sqsMessageId;
+        attachFieldToLogs(LogField.LOG_SQS_MESSAGE_ID, idValue);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {

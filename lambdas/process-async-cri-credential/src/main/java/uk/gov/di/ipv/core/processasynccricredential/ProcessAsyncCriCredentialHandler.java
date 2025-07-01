@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -37,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.tracing.InstrumentationHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
@@ -122,7 +124,12 @@ public class ProcessAsyncCriCredentialHandler
 
     private List<SQSBatchResponse.BatchItemFailure> processOrReturnItemFailure(SQSMessage message) {
         try {
+            LogHelper.attachSqsMessageIdToLogs(message.getMessageId());
+
             final var asyncCriResponse = getAsyncResponseMessage(message.getBody());
+            var journeyId = extractJourneyIdFromSqsMessage(asyncCriResponse);
+            journeyId.ifPresent(LogHelper::attachGovukSigninJourneyIdToLogs);
+
             if (isSuccessAsyncCriResponse(asyncCriResponse)) {
                 processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
             } else {
@@ -343,6 +350,12 @@ public class ProcessAsyncCriCredentialHandler
             return extractQueueName(firstMessage);
         }
         return "unknown";
+    }
+
+    private Optional<String> extractJourneyIdFromSqsMessage(BaseAsyncCriResponse sqsMessage) {
+        return StringUtils.isBlank(sqsMessage.getJourneyId())
+                ? Optional.empty()
+                : Optional.of(sqsMessage.getJourneyId());
     }
 
     private String extractQueueName(SQSMessage message) {
