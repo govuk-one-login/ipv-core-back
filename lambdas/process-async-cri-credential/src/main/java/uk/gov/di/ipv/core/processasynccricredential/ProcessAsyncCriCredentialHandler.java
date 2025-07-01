@@ -168,6 +168,7 @@ public class ProcessAsyncCriCredentialHandler
                     Cri cri = Cri.fromId(responseItem.getCredentialIssuer());
                     String errorCode = errorAsyncCriResponse.getError();
                     EmbeddedMetricHelper.asyncCriErrorResponse(cri.getId(), errorCode);
+
                     if (CriResponseService.ERROR_ACCESS_DENIED.equals(errorCode)) {
                         responseItem.setStatus(CriResponseService.STATUS_ABANDON);
                     } else {
@@ -176,7 +177,7 @@ public class ProcessAsyncCriCredentialHandler
                     criResponseService.updateCriResponseItem(responseItem);
                 });
 
-        LOGGER.error(
+        StringMapMessage logMessage =
                 new StringMapMessage()
                         .with(
                                 LOG_MESSAGE_DESCRIPTION.getFieldName(),
@@ -184,7 +185,13 @@ public class ProcessAsyncCriCredentialHandler
                         .with(
                                 LOG_ERROR_DESCRIPTION.getFieldName(),
                                 errorAsyncCriResponse.getErrorDescription())
-                        .with(LOG_ERROR_CODE.getFieldName(), errorAsyncCriResponse.getError()));
+                        .with(LOG_ERROR_CODE.getFieldName(), errorAsyncCriResponse.getError());
+
+        if (CriResponseService.ERROR_ACCESS_DENIED.equals(errorAsyncCriResponse.getError())) {
+            LOGGER.info(logMessage);
+        } else {
+            LOGGER.error(logMessage);
+        }
 
         criResponseItem.ifPresent(
                 responseItem ->
