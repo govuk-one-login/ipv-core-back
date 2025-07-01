@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class YamlConfigService extends YamlParametersConfigService {
+public class YamlConfigService extends ConfigService {
     private static final File PARAMETERS_FILE = new File("./core.local.params.yaml");
     private static final File SECRETS_FILE = new File("./core.local.secrets.yaml");
     private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
