@@ -132,10 +132,6 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-  IsBuildStagingProd: !Or
-    - !Equals [ !Ref Environment, build ]
-    - !Equals [ !Ref Environment, staging ]
-    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -780,45 +776,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
-
-  ManualF2fPendingResetFunctionManagedPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Condition: IsBuildStagingProd
-    Properties:
-      ManagedPolicyName: ManualF2fPendingResetManagedPolicy
-      Description: Allows invoking the ManualF2f Lambda
-      Path: /runbooks/runbook-f2f-reset/
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-              - lambda:GetFunction
-            Resource:
-              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}
-
-  ManualF2fPendingResetFunctionInvokeRole:
-    Type: AWS::IAM::Role
-    Condition: IsBuildStagingProd
-    Properties:
-      RoleName: RunbookF2fResetRole
-      Description: "This role allows approved support team to perform pending F2F reset"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-            Action: "sts:AssumeRole"
-            Condition:
-              ArnLike:
-                aws:PrincipalARN:
-                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
-      ManagedPolicyArns:
-        - !Ref ManualF2fPendingResetFunctionManagedPolicy
-      MaxSessionDuration: 43200
-      Path: /runbooks/runbook-f2f-reset/
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
