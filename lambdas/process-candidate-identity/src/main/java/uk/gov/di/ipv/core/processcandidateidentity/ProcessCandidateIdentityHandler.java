@@ -174,8 +174,7 @@ public class ProcessCandidateIdentityHandler
             EnumSet.of(NEW, UPDATE, EXISTING);
 
     // Candidate identities that should not be checked against AIS
-    private static final Set<CandidateIdentityType> SKIP_AIS_TYPES =
-            EnumSet.of(REVERIFICATION);
+    private static final Set<CandidateIdentityType> SKIP_AIS_TYPES = EnumSet.of(REVERIFICATION);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -266,7 +265,8 @@ public class ProcessCandidateIdentityHandler
             String userId = clientOAuthSessionItem.getUserId();
 
             // We skip AIS checks for reverification journeys
-            if (configService.enabled(AIS_ENABLED) && !SKIP_AIS_TYPES.contains(processIdentityType)) {
+            if (configService.enabled(AIS_ENABLED)
+                    && !SKIP_AIS_TYPES.contains(processIdentityType)) {
                 var interventionState = aisService.fetchAccountState(userId);
                 if (midJourneyInterventionDetected(
                         ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
