@@ -271,3 +271,26 @@ Feature: MFA reset journey
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'no_identity_available'
+
+  Scenario: Successful MFA reset journey ignores AIS
+      Given the subject already has the following credentials
+        | CRI     | scenario                     |
+        | dcmaw   | kenneth-driving-permit-valid |
+        | address | kenneth-current              |
+        | fraud   | kenneth-score-2              |
+      And I activate the 'disableStrategicApp,accountInterventions' feature set
+
+      # Start MFA reset journey
+      When I start a new 'reverification' journey
+      Then I get a 'you-can-change-security-code-method' page response
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
+      And I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get a 'we-matched-you-to-your-one-login' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get a successful MFA reset result
