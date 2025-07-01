@@ -283,7 +283,7 @@ class StoreIdentityServiceTest {
     }
 
     @Nested
-    class StoreIdentityWithPut {
+    class PostIdentityEndpoint {
         @BeforeEach
         void setUp() {
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
