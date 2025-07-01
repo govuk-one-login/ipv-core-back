@@ -756,12 +756,15 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: AllowGetDeleteCriResponseDynamoDbTable
+              Effect: Allow
+              Action:
+                - 'dynamodb:GetItem'
+                - 'dynamodb:DeleteItem'
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cri-response
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
       AutoPublishAlias: live
