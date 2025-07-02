@@ -12,8 +12,12 @@ public class ErrorAsyncCriResponse extends BaseAsyncCriResponse {
 
     @Builder
     private ErrorAsyncCriResponse(
-            String userId, String oauthState, String error, String errorDescription) {
-        super(userId, oauthState);
+            String userId,
+            String oauthState,
+            String error,
+            String errorDescription,
+            String journeyId) {
+        super(userId, oauthState, journeyId);
         this.error = error;
         this.errorDescription = errorDescription;
     }
