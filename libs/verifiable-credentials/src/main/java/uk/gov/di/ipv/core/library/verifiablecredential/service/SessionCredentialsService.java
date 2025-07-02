@@ -63,6 +63,11 @@ public class SessionCredentialsService {
                         VerifiableCredential.fromSessionCredentialItem(credential, userId));
             }
 
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                                    "Successfully retrieved and parsed session credential items")
+                            .with("numberOfCredentialsRetrieved", credentials.size()));
+
             return verifiableCredentialList;
         } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error parsing session credential item", e));
