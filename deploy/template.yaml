@@ -2921,22 +2921,12 @@ Resources:
             - !Ref AWS::NoValue
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsBuild
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsBuild
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
+          - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
               dynatraceLayerArn,
