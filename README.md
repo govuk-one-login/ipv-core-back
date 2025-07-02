@@ -55,7 +55,7 @@ pre-commit autoupdate && pre-commit install
 ```
 
 ### Secrets
-To set up secrets, copy the `secrets.gradle.template` to `secrets.gradle` and enter values for each variable.
+To set up secrets, copy the `secrets.template.gradle` to `secrets.gradle` and enter values for each variable.
 
 The DI data-vocab classes are published to a GitHub maven repository (https://github.com/govuk-one-login/data-vocab/packages)
 and you require a personal access token to download these.

@@ -202,6 +202,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: arn:aws:lambda:eu-west-2:901920570463:layer:aws-otel-java-wrapper-arm64-ver-1-32-0:6
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp
     "335257547869": # Staging
       environment: staging
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -2896,18 +2898,36 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
+          OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
+          OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED: false
+          OTEL_INSTRUMENTATION_AWS_LAMBDA_ENABLED: true
+          OTEL_INSTRUMENTATION_AWS_SDK_ENABLED: true
+          DT_CONNECTION_AUTH_TOKEN_OTLP: !If
+            - IsBuild
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
+            - !Ref AWS::NoValue
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !FindInMap [
-            EnvironmentConfiguration,
-            !Ref 'AWS::AccountId',
-            dynatraceLayerArn,
-          ]
+          - !If
+            - IsBuild
+            - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              opentelemetryLayerArn,
+            ]
+            - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              dynatraceLayerArn,
+            ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
