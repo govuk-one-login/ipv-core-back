@@ -7,8 +7,6 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 exporters:
-  debug:
-    verbosity: detailed
   otlphttp:
     endpoint: "${env:DT_CONNECTION_BASE_URL}/api/v2/otlp"
     headers:
