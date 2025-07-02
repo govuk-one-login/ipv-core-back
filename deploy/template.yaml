@@ -2921,7 +2921,10 @@ Resources:
             - !Ref AWS::NoValue
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - /opt/otel-handler
+            - !If
+              - IsBuild
+              - /opt/otel-handler
+              - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
