@@ -229,7 +229,7 @@ public class CheckMobileAppVcReceiptHandler
         }
 
         sessionCredentialsService.persistCredentials(
-                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
+                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), true);
 
         return criCheckingService.checkVcResponse(
                 List.of(dcmawAsyncVc.get()),
