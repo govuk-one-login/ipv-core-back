@@ -686,7 +686,7 @@ class CheckExistingIdentityHandlerTest {
         // Assert
         assertEquals(expectedJourney, journeyResponse);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, false);
+        verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
         verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,
