@@ -54,8 +54,8 @@ public class TracingHttpClient extends HttpClient {
         try {
             return baseClient.send(request, responseBodyHandler);
         } catch (IOException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("HTTP request failed with IOException", e));
             if (e instanceof HttpTimeoutException) {
+                LOGGER.warn(LogHelper.buildErrorMessage("HTTP request timed out", e));
                 throw e;
             }
             // We occasionally see HTTP/2 GOAWAY messages and in build we occasionally see
@@ -74,6 +74,7 @@ public class TracingHttpClient extends HttpClient {
                     throw new UncheckedIOException(ex);
                 }
             }
+            LOGGER.error(LogHelper.buildErrorMessage("HTTP request failed with IOException", e));
             // Rethrow any other IOException as unchecked exception
             throw new UncheckedIOException(e);
         }
