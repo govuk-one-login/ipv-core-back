@@ -417,7 +417,7 @@ core:
       credentialIssuers:
         dwpKbv:
           enabled: false
-    drivingLicenseTest:
+    drivingLicenceTest:
       credentialIssuers:
         drivingLicence:
           enabled: false
