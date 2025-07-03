@@ -90,6 +90,8 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
             LOGGER.error(LogHelper.buildErrorMessage("Failed to delete record", e));
             response.put(RESULT_KEY, RESULT_ERROR);
             response.put(MESSAGE_KEY, "Failed to delete record due to internal error.");
+        } finally {
+            auditService.awaitAuditEvents();
         }
 
         return response;
