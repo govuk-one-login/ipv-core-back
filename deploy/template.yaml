@@ -799,7 +799,7 @@ Resources:
   ManualF2fPendingResetFunctionInvokeRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: RunbookF2fResetRole
+      RoleName: /runbooks/RunbookF2fResetRole
       Description: "This role allows approved support team to perform pending F2F reset"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
