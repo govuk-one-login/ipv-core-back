@@ -785,7 +785,7 @@ Resources:
     Properties:
       ManagedPolicyName: ManualF2fPendingResetManagedPolicy
       Description: Allows invoking the ManualF2f Lambda
-      Path: /runbooks/runbook-f2f-reset/
+      Path: /runbooks/
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -815,7 +815,7 @@ Resources:
       ManagedPolicyArns:
         - !Ref ManualF2fPendingResetFunctionManagedPolicy
       MaxSessionDuration: 43200
-      Path: /runbooks/runbook-f2f-reset/
+      Path: /runbooks/
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
