@@ -101,6 +101,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHEC
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -264,6 +265,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyNewGpg45MediumIdentityForP2Vtr() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -282,6 +284,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyNewGpg45LowIdentityForP1Vtr() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -304,6 +307,7 @@ class CheckExistingIdentityHandlerTest {
     class ReuseJourneys {
         @BeforeEach
         public void reuseSetup() throws Exception {
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -595,6 +599,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnF2FFailForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -642,6 +647,7 @@ class CheckExistingIdentityHandlerTest {
                     VerifiableCredentialException,
                     EvcsServiceException {
         // Arrange
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -713,6 +719,7 @@ class CheckExistingIdentityHandlerTest {
                     CredentialParseException,
                     EvcsServiceException {
         // Arrange
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -746,6 +753,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnNoMatchResponseIfVCsDoNotCorrelate() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -774,6 +782,7 @@ class CheckExistingIdentityHandlerTest {
     @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
     void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
             List<String> vtr, Optional<Vot> vot) throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
 
         var credentials = new ArrayList<VerifiableCredential>();
@@ -802,6 +811,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyIpvGpg45MediumResponseIfScoresDoNotSatisfyP2Gpg45Profile()
             throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -826,6 +836,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldNotSendAuditEventIfNewUser() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
@@ -873,6 +884,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
@@ -893,6 +905,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
             throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
@@ -915,6 +928,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
@@ -934,6 +948,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
@@ -953,6 +968,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -989,6 +1005,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -1024,6 +1041,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -1054,6 +1072,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnFailWithCiJourneyResponseForCiBreachAndNoMitigationsAvailable()
             throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -1074,6 +1093,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnNewIdentityJourneyWhenCiIsBreachingButMitigationIsAvailable()
             throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -1103,6 +1123,7 @@ class CheckExistingIdentityHandlerTest {
     @MethodSource("f2fIncompleteStatus")
     void shouldReturnF2fJourneyResponseWhenCiIsBreachingButMitigationIsAvailable(
             String asyncCriStatus, String expectedJourney) throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -1123,6 +1144,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
                 .thenThrow(CiRetrievalException.class);
@@ -1145,6 +1167,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenThrow(CiExtractionException.class);
@@ -1168,6 +1191,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnableToParseCredentials() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1192,6 +1216,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1212,6 +1237,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
@@ -1235,6 +1261,7 @@ class CheckExistingIdentityHandlerTest {
     class ReproveIdentity {
         @BeforeEach
         public void beforeEach() throws Exception {
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1373,6 +1400,7 @@ class CheckExistingIdentityHandlerTest {
         mitigatedCI.setMitigation(List.of(new Mitigation()));
         var testContraIndicators = List.of(mitigatedCI);
 
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1399,6 +1427,7 @@ class CheckExistingIdentityHandlerTest {
         mitigatedCI.setMitigation(List.of(new Mitigation()));
         var testContraIndicators = List.of(mitigatedCI);
 
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1431,6 +1460,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnNewIdentityJourneyWhenPendingReturnVcNotAssociatedWithPendingRecord()
             throws Exception {
         // Arrange
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
@@ -1456,6 +1486,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         var fraudVc = vcExperianFraudM1aExpired();
         var vcs =
@@ -1495,6 +1526,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
             throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -1526,6 +1558,24 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldInvalidateSiIfSISEnabled() throws Exception {
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                .thenReturn(emptyAsyncCriStatus);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+        verify(mockEvcsService, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 
     @Test
