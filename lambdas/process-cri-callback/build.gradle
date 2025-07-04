@@ -12,6 +12,7 @@ dependencies {
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
 			project(":libs:cri-api-service"),
+			project(":libs:cri-checking-service"),
 			project(":libs:cri-response-service"),
 			project(":libs:cri-storing-service"),
 			project(":libs:gpg45-evaluator"),
