@@ -23,6 +23,10 @@ public class JourneyUris {
     public static final String JOURNEY_COI_CHECK_FAILED_PATH = "/journey/coi-check-failed";
     public static final String JOURNEY_COI_CHECK_PASSED_PATH = "/journey/coi-check-passed";
     public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_PATH = "/journey/dl-auth-source-check";
+    public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH =
+            "/journey/dl-auth-source-check";
+    public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH =
+            "/journey/dl-auth-source-check";
     public static final String JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH =
             "/journey/enhanced-verification-f2f-fail";
     public static final String JOURNEY_ENHANCED_VERIFICATION_PATH =
@@ -31,6 +35,10 @@ public class JourneyUris {
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
+    public static final String JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH =
+            "/journey/fail-with-no-ci-low";
+    public static final String JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH =
+            "/journey/fail-with-no-ci-medium";
     public static final String JOURNEY_FOUND = "/journey/found";
     public static final String JOURNEY_IDENTITY_STORED_PATH = "/journey/identity-stored";
     public static final String JOURNEY_IN_MIGRATION_REUSE_PATH = "/journey/in-migration-reuse";

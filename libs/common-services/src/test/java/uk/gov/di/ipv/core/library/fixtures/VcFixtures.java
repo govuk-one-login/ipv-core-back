@@ -1291,6 +1291,19 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcDcmawAsyncDrivingPermitDvaFailedChecks() {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
+        vcClaim.getEvidence().get(0).setCi(List.of("testCI"));
+        vcClaim.getEvidence().get(0).setValidityScore(0);
+
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DCMAW_ASYNC,
+                vcClaim,
+                DCMAW_ASYNC_ISSUER_BUILD,
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcDcmawAsyncPassport() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",

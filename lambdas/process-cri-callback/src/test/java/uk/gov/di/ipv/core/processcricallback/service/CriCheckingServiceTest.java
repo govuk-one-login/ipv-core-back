@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
+import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
@@ -34,7 +36,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
@@ -42,6 +43,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,7 +70,6 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_INVALID_REQUEST_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
 
@@ -502,7 +503,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void checkVcResponseShouldReturnNextWhenAllChecksPass() throws Exception {
+    void checkVcResponseShouldReturnNullWhenAllChecksPass() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(vcAddressM1a());
@@ -526,11 +527,11 @@ class CriCheckingServiceTest {
                         sessionVcs);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        assertNull(result);
     }
 
     @Test
-    void checkVcResponseShouldReturnNextWhenAllChecksPassForLowerConfidenceVot() throws Exception {
+    void checkVcResponseShouldReturnNullWhenAllChecksPassForLowerConfidenceVot() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(vcAddressM1a());
@@ -555,7 +556,7 @@ class CriCheckingServiceTest {
                         sessionVcs);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        assertNull(result);
     }
 
     @Test
@@ -888,7 +889,7 @@ class CriCheckingServiceTest {
                             ipvSessionItem,
                             List.of(vcWebDrivingPermitDvaValid()));
 
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+            assertNull(result);
         }
 
         @Test
@@ -905,7 +906,7 @@ class CriCheckingServiceTest {
                             ipvSessionItem,
                             List.of());
 
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+            assertNull(result);
         }
 
         @Test
@@ -1022,7 +1023,7 @@ class CriCheckingServiceTest {
                             ipvSessionItem,
                             List.of(vcWebDrivingPermitDvaValid()));
 
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+            assertNull(result);
         }
 
         @Test
@@ -1040,7 +1041,7 @@ class CriCheckingServiceTest {
                             ipvSessionItem,
                             List.of());
 
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+            assertNull(result);
         }
     }
 
