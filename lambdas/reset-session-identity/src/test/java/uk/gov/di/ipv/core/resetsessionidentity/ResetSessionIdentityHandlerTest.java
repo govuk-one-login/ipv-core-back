@@ -42,6 +42,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
@@ -101,6 +102,7 @@ class ResetSessionIdentityHandlerTest {
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
                         .evcsAccessToken(TEST_EVCS_TOKEN)
                         .build();
+        when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
     }
 
     @Test
@@ -127,6 +129,7 @@ class ResetSessionIdentityHandlerTest {
 
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForResetType(ipvSessionItem.getIpvSessionId(), ALL);
+        verify(mockEvcsService).invalidateStoredIdentityRecord(TEST_USER_ID);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }

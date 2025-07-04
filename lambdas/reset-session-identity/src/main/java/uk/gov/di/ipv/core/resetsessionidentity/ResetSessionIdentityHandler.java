@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.io.UncheckedIOException;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -107,6 +108,10 @@ public class ResetSessionIdentityHandler
                             ipvSessionItem.getClientOAuthSessionId());
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+                evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
+            }
 
             ipvSessionItem.setVot(P0);
             ipvSessionService.updateIpvSession(ipvSessionItem);
