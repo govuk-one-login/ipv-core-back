@@ -263,43 +263,625 @@ class CheckExistingIdentityHandlerTest {
         auditInOrder.verifyNoMoreInteractions();
     }
 
-    @Test
-    void shouldReturnJourneyNewGpg45MediumIdentityForP2Vtr() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
+    @Nested
+    class NewIdentityJourneys {
+        @BeforeEach
+        void setUp() throws Exception {
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
+                    .thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+        }
 
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
+        @Test
+        void shouldReturnJourneyNewGpg45MediumIdentityForP2Vtr() throws Exception {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
 
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
 
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-    }
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-    @Test
-    void shouldReturnJourneyNewGpg45LowIdentityForP1Vtr() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
+            verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+            verify(mockEvcsService, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
+        }
 
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
+        @Test
+        void shouldReturnJourneyNewGpg45LowIdentityForP1Vtr() throws Exception {
+            clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
 
-        assertEquals(JOURNEY_IPV_GPG45_LOW, journeyResponse);
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
 
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(JOURNEY_IPV_GPG45_LOW, journeyResponse);
+
+            verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        }
+
+        @Test
+        void shouldReturnF2FFailForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    PENDING_RETURN,
+                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+
+            clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), PCL200.name(), P2.name()));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @ParameterizedTest
+        @MethodSource("lowAndMediumConfidenceVtrs")
+        void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
+                List<String> vtr, JourneyResponse expectedJourney)
+                throws IpvSessionNotFoundException,
+                        HttpResponseExceptionWithErrorBody,
+                        CredentialParseException,
+                        VerifiableCredentialException,
+                        EvcsServiceException {
+            // Arrange
+            when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
+                    .thenReturn(
+                            CriResponseItem.builder()
+                                    .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                    .build());
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
+                    .thenReturn(
+                            CriOAuthSessionItem.builder()
+                                    .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                                    .build());
+            var previousIpvSession = new IpvSessionItem();
+            previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
+            when(ipvSessionService.getIpvSessionByClientOAuthSessionId(
+                            TEST_CLIENT_OAUTH_SESSION_ID))
+                    .thenReturn(previousIpvSession);
+            var vcs = List.of(vcDcmawAsyncDrivingPermitDva());
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    DCMAW_ASYNC,
+                                    AsyncCriStatus.STATUS_PENDING,
+                                    false,
+                                    true,
+                                    false));
+            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            clientOAuthSessionItem.setVtr(vtr);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            assertEquals(expectedJourney, journeyResponse);
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
+            verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            assertEquals(
+                    TEST_PREVIOUS_IPV_SESSION_ID,
+                    ((AuditExtensionPreviousIpvSessionId)
+                                    auditEventArgumentCaptor.getValue().getExtensions())
+                            .getPreviousIpvSessionId());
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        static Stream<Arguments> lowAndMediumConfidenceVtrs() {
+            return Stream.of(
+                    Arguments.of(
+                            List.of(Vot.P1.name(), Vot.P2.name()),
+                            JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW),
+                    Arguments.of(List.of(Vot.P2.name()), JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM));
+        }
+
+        @Test
+        void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
+                throws IpvSessionNotFoundException,
+                        HttpResponseExceptionWithErrorBody,
+                        CredentialParseException,
+                        EvcsServiceException {
+            // Arrange
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDrivingPermitDva())));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnNoMatchResponseIfVCsDoNotCorrelate() throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportPhotoM1a())));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), PCL200.name(), P2.name()));
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @ParameterizedTest
+        @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
+        void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
+                List<String> vtr, Optional<Vot> vot) throws Exception {
+            var credentials = new ArrayList<VerifiableCredential>();
+            if (vot.isPresent()) {
+                credentials.add(createOperationalProfileVc(vot.get()));
+            }
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, credentials));
+            clientOAuthSessionItem.setVtr(vtr);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {
+            return Stream.of(
+                    Arguments.of(List.of("P2"), Optional.empty()),
+                    Arguments.of(List.of("P2"), Optional.of(PCL200)),
+                    Arguments.of(List.of("P2"), Optional.of(Vot.PCL250)),
+                    Arguments.of(List.of("P2", "PCL250"), Optional.empty()),
+                    Arguments.of(List.of("P2", "PCL250"), Optional.of(PCL200)),
+                    Arguments.of(List.of("P2", "PCL250", "PCL200"), Optional.empty()));
+        }
+
+        @Test
+        void shouldReturnJourneyIpvGpg45MediumResponseIfScoresDoNotSatisfyP2Gpg45Profile()
+                throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldNotSendAuditEventIfNewUser() throws Exception {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of());
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+
+            verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_PENDING, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
+                throws Exception {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+                    .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_PENDING, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_ERROR, true, false, false));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_ABANDON, true, false, false));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile()
+                throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    PENDING_RETURN,
+                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    PENDING_RETURN,
+                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    PENDING_RETURN,
+                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailWithCiJourneyResponseForCiBreachAndNoMitigationsAvailable()
+                throws Exception {
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+                    .thenReturn(Optional.empty());
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            var response =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.getJourney());
+        }
+
+        @Test
+        void shouldReturnNewIdentityJourneyWhenCiIsBreachingButMitigationIsAvailable()
+                throws Exception {
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+                    .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            var response =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, response.getJourney());
+        }
+
+        private static Stream<Arguments> f2fIncompleteStatus() {
+            return Stream.of(
+                    Arguments.of(AsyncCriStatus.STATUS_PENDING, JOURNEY_F2F_PENDING_PATH),
+                    Arguments.of(AsyncCriStatus.STATUS_ABANDON, JOURNEY_F2F_FAIL_PATH),
+                    Arguments.of(AsyncCriStatus.STATUS_ERROR, JOURNEY_F2F_FAIL_PATH));
+        }
+
+        @ParameterizedTest
+        @MethodSource("f2fIncompleteStatus")
+        void shouldReturnF2fJourneyResponseWhenCiIsBreachingButMitigationIsAvailable(
+                String asyncCriStatus, String expectedJourney) throws Exception {
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+                    .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                    .thenReturn(new AsyncCriStatus(F2F, asyncCriStatus, true, true, false));
+
+            var response =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(expectedJourney, response.getJourney());
+        }
+
+        @Test
+        void shouldReturnNewIdentityJourneyIfNotBreachingCiThreshold() throws Exception {
+            var mitigatedCI = new ContraIndicator();
+            mitigatedCI.setCode("test_code");
+            mitigatedCI.setMitigation(List.of(new Mitigation()));
+            var testContraIndicators = List.of(mitigatedCI);
+
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                    .thenReturn(testContraIndicators);
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+        }
+
+        @Test
+        void shouldReturnF2fFailJourneyResponseWhenFailedToMatchF2fProfile() throws Exception {
+            var mitigatedCI = new ContraIndicator();
+            mitigatedCI.setCode("test_code");
+            mitigatedCI.setMitigation(List.of(new Mitigation()));
+            var testContraIndicators = List.of(mitigatedCI);
+
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    PENDING_RETURN,
+                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                    .thenReturn(testContraIndicators);
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
+        }
+
+        @Test
+        void shouldReturnNewIdentityJourneyWhenPendingReturnVcNotAssociatedWithPendingRecord()
+                throws Exception {
+            // Arrange
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc))));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID)).thenReturn(List.of());
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, false, false));
+            when(cimitUtilityService.isBreachingCiThreshold(List.of(), P2)).thenReturn(false);
+
+            // Act
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+        }
     }
 
     @Nested
@@ -598,269 +1180,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnF2FFailForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(
-                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(F2F.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
-
-        clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), PCL200.name(), P2.name()));
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @ParameterizedTest
-    @MethodSource("lowAndMediumConfidenceVtrs")
-    void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
-            List<String> vtr, JourneyResponse expectedJourney)
-            throws IpvSessionNotFoundException,
-                    HttpResponseExceptionWithErrorBody,
-                    CredentialParseException,
-                    VerifiableCredentialException,
-                    EvcsServiceException {
-        // Arrange
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
-                .thenReturn(
-                        CriResponseItem.builder().oauthState(TEST_CRI_OAUTH_SESSION_ID).build());
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(DCMAW_ASYNC.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
-                .thenReturn(
-                        CriOAuthSessionItem.builder()
-                                .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
-                                .build());
-        var previousIpvSession = new IpvSessionItem();
-        previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
-        when(ipvSessionService.getIpvSessionByClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID))
-                .thenReturn(previousIpvSession);
-        var vcs = List.of(vcDcmawAsyncDrivingPermitDva());
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(
-                                DCMAW_ASYNC, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, vcs));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-        clientOAuthSessionItem.setVtr(vtr);
-
-        // Act
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        // Assert
-        assertEquals(expectedJourney, journeyResponse);
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_APP_SESSION_RECOVERED,
-                auditEventArgumentCaptor.getValue().getEventName());
-        assertEquals(
-                TEST_PREVIOUS_IPV_SESSION_ID,
-                ((AuditExtensionPreviousIpvSessionId)
-                                auditEventArgumentCaptor.getValue().getExtensions())
-                        .getPreviousIpvSessionId());
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    static Stream<Arguments> lowAndMediumConfidenceVtrs() {
-        return Stream.of(
-                Arguments.of(
-                        List.of(Vot.P1.name(), Vot.P2.name()), JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW),
-                Arguments.of(List.of(Vot.P2.name()), JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM));
-    }
-
-    @Test
-    void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
-            throws IpvSessionNotFoundException,
-                    HttpResponseExceptionWithErrorBody,
-                    CredentialParseException,
-                    EvcsServiceException {
-        // Arrange
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsyncDrivingPermitDva())));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(DCMAW_ASYNC.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-        // Act
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        // Assert
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnNoMatchResponseIfVCsDoNotCorrelate() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportPhotoM1a())));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-
-        clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), PCL200.name(), P2.name()));
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @ParameterizedTest
-    @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
-    void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
-            List<String> vtr, Optional<Vot> vot) throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-
-        var credentials = new ArrayList<VerifiableCredential>();
-        if (vot.isPresent()) {
-            credentials.add(createOperationalProfileVc(vot.get()));
-        }
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, credentials));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        clientOAuthSessionItem.setVtr(vtr);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnJourneyIpvGpg45MediumResponseIfScoresDoNotSatisfyP2Gpg45Profile()
-            throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldNotSendAuditEventIfNewUser() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of());
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
     void shouldReturn400IfSessionIdNotInHeader() throws Exception {
         var eventWithoutHeaders = JourneyRequest.builder().build();
 
@@ -883,268 +1202,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_PENDING, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-            throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_PENDING, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_ERROR, true, false, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_ABANDON, true, false, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(
-                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(F2F.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(
-                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(F2F.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(
-                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(F2F.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturnFailWithCiJourneyResponseForCiBreachAndNoMitigationsAvailable()
-            throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any())).thenReturn(Optional.empty());
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.getJourney());
-    }
-
-    @Test
-    void shouldReturnNewIdentityJourneyWhenCiIsBreachingButMitigationIsAvailable()
-            throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, response.getJourney());
-    }
-
-    private static Stream<Arguments> f2fIncompleteStatus() {
-        return Stream.of(
-                Arguments.of(AsyncCriStatus.STATUS_PENDING, JOURNEY_F2F_PENDING_PATH),
-                Arguments.of(AsyncCriStatus.STATUS_ABANDON, JOURNEY_F2F_FAIL_PATH),
-                Arguments.of(AsyncCriStatus.STATUS_ERROR, JOURNEY_F2F_FAIL_PATH));
-    }
-
-    @ParameterizedTest
-    @MethodSource("f2fIncompleteStatus")
-    void shouldReturnF2fJourneyResponseWhenCiIsBreachingButMitigationIsAvailable(
-            String asyncCriStatus, String expectedJourney) throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                .thenReturn(new AsyncCriStatus(F2F, asyncCriStatus, true, true, false));
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(expectedJourney, response.getJourney());
-    }
-
-    @Test
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
                 .thenThrow(CiRetrievalException.class);
@@ -1167,7 +1226,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenThrow(CiExtractionException.class);
@@ -1191,7 +1250,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnableToParseCredentials() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1216,7 +1275,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1237,7 +1296,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
@@ -1261,7 +1320,7 @@ class CheckExistingIdentityHandlerTest {
     class ReproveIdentity {
         @BeforeEach
         public void beforeEach() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1393,189 +1452,99 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
-    @Test
-    void shouldReturnNewIdentityJourneyIfNotBreachingCiThreshold() throws Exception {
-        var mitigatedCI = new ContraIndicator();
-        mitigatedCI.setCode("test_code");
-        mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = List.of(mitigatedCI);
+    @Nested
+    class RepeatFraudCheck {
+        @BeforeEach
+        void setup() throws Exception {
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
+                    .thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+        }
 
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of());
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+        @Test
+        void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue()
+                throws Exception {
+            var fraudVc = vcExperianFraudM1aExpired();
+            var vcs =
+                    List.of(
+                            vcWebPassportSuccessful(),
+                            vcAddressM1a(),
+                            fraudVc,
+                            vcExperianKbvM1a(),
+                            vcDcmawDrivingPermitDvaM1b());
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, vcs));
 
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1B));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+            when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+            assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+            var expectedStoredVc = vcs.stream().filter(vc -> vc != fraudVc).toList();
+            verify(mockSessionCredentialService)
+                    .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
+
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
+                throws Exception {
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
+
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1B));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+            when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
+                    .thenReturn("100000000"); // not the best way to test this
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+            assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+
+            verify(mockSessionCredentialService)
+                    .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
+
+            var inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P2);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
     }
 
     @Test
-    void shouldReturnF2fFailJourneyResponseWhenFailedToMatchF2fProfile() throws Exception {
-        var mitigatedCI = new ContraIndicator();
-        mitigatedCI.setCode("test_code");
-        mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = List.of(mitigatedCI);
-
+    void shouldNotInvalidateSiIfFeatureFlagDisabled() throws Exception {
         when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(
-                        Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                CriResponseItem.builder()
-                                        .credentialIssuer(F2F.getId())
-                                        .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                        .build()));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
-    }
-
-    @Test
-    void shouldReturnNewIdentityJourneyWhenPendingReturnVcNotAssociatedWithPendingRecord()
-            throws Exception {
-        // Arrange
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc))));
-        when(criResponseService.getCriResponseItems(TEST_USER_ID)).thenReturn(List.of());
-        when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                .thenReturn(
-                        new AsyncCriStatus(
-                                F2F, AsyncCriStatus.STATUS_PENDING, false, false, false));
-        when(cimitUtilityService.isBreachingCiThreshold(List.of(), P2)).thenReturn(false);
-
-        // Act
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        // Assert
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-    }
-
-    @Test
-    void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        var fraudVc = vcExperianFraudM1aExpired();
-        var vcs =
-                List.of(
-                        vcWebPassportSuccessful(),
-                        vcAddressM1a(),
-                        fraudVc,
-                        vcExperianKbvM1a(),
-                        vcDcmawDrivingPermitDvaM1b());
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, vcs));
-
-        when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
-                .thenReturn(buildMatchResultFor(P2, M1B));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-        assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
-
-        var expectedStoredVc = vcs.stream().filter(vc -> vc != fraudVc).toList();
-        verify(mockSessionCredentialService)
-                .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
-
-        assertEquals(Vot.P0, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
-            throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
-
-        when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
-                .thenReturn(buildMatchResultFor(P2, M1B));
-
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
-                .thenReturn("100000000"); // not the best way to test this
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-        assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
-
-        verify(mockSessionCredentialService)
-                .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
-
-        var inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(P2);
-        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-        inOrder.verify(ipvSessionItem, never()).setVot(any());
-        assertEquals(P2, ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldInvalidateSiIfSISEnabled() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
 
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
+        checkExistingIdentityHandler.handleRequest(event, context);
 
-        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-        verify(mockEvcsService, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
+        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(mockEvcsService, times(0)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 
     @Test
@@ -1598,16 +1567,6 @@ class CheckExistingIdentityHandlerTest {
         var logMessage = logCollector.getLogMessages().get(0);
         assertThat(logMessage, containsString("Unhandled lambda exception"));
         assertThat(logMessage, containsString("Test error"));
-    }
-
-    private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {
-        return Stream.of(
-                Arguments.of(List.of("P2"), Optional.empty()),
-                Arguments.of(List.of("P2"), Optional.of(PCL200)),
-                Arguments.of(List.of("P2"), Optional.of(Vot.PCL250)),
-                Arguments.of(List.of("P2", "PCL250"), Optional.empty()),
-                Arguments.of(List.of("P2", "PCL250"), Optional.of(PCL200)),
-                Arguments.of(List.of("P2", "PCL250", "PCL200"), Optional.empty()));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
