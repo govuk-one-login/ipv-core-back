@@ -134,6 +134,7 @@ class ManualF2fPendingResetHandlerTest {
 
         assertEquals(IPV_F2F_SUPPORT_CANCEL, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
+        verify(auditService, times(1)).awaitAuditEvents();
     }
 
     @Test

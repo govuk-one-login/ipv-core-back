@@ -723,6 +723,7 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: !Sub manual-f2f-pending-reset-${Environment}
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/dynatrace
@@ -772,6 +773,16 @@ Resources:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       AutoPublishAlias: live
 
   ManualF2fPendingResetFunctionLogGroup:
