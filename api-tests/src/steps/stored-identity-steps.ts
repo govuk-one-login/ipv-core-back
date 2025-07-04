@@ -5,11 +5,12 @@ import { StoredIdentityRecordtype } from "../types/evcs-stub.js";
 import assert from "assert";
 
 Then(
-  /I have a '(GPG45|HMRC)' stored identity record type with a '(\w+)' vot/,
+  /I have a '(GPG45|HMRC)' stored identity record type with a '(\w+)' vot(?: that is '(invalid|valid)')?/,
   async function (
     this: World,
     expectedRecordType: "GPG45" | "HMRC",
     expectedVot: string,
+    isValidString: "invalid" | "valid",
   ) {
     const { storedIdentities } = await getStoredIdentity(this.userId);
 
@@ -26,6 +27,14 @@ Then(
       expectedVot,
       `Expected "${expectedVot}" but got "${actualSi.levelOfConfidence}"`,
     );
+
+    if (isValidString) {
+      assert.equal(
+        actualSi.isValid,
+        isValidString === "valid",
+        `Expected "${isValidString === "valid"}" but got "${actualSi.isValid}"`,
+      );
+    }
   },
 );
 
