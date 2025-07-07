@@ -60,6 +60,25 @@ Feature: Stored Identity - P2 journeys
       Then I get a 'P2' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
+    Scenario: Successful stored identity storage - P2 app journey that meets P3
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+      And I have a 'GPG45' stored identity record type with a 'P3' vot
+
     Scenario: Successful stored identity storage - P2 F2F journey
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -122,12 +141,29 @@ Feature: Stored Identity - P2 journeys
       Then I get a 'P2' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
-  Scenario: Reuse journey - identity is stored to EVCS
+  Scenario: Reuse journey - identity is stored to EVCS - identity meets P3
     Given the subject already has the following credentials
       | CRI     | scenario               |
       | dcmaw   | kenneth-passport-valid |
       | address | kenneth-current        |
       | fraud   | kenneth-score-2        |
+    And I don't have a stored identity in EVCS
+
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And I have a 'GPG45' stored identity record type with a 'P3' vot
+
+  Scenario: Reuse journey - identity is stored to EVCS - identity only meets P2
+    Given the subject already has the following credentials
+      | CRI        | scenario               |
+      | ukPassport | kenneth-passport-valid |
+      | address    | kenneth-current        |
+      | fraud      | kenneth-score-2        |
+      | kbv        | kenneth-score-2        |
     And I don't have a stored identity in EVCS
 
     When I start a new 'medium-confidence' journey
