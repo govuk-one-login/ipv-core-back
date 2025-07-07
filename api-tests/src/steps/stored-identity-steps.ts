@@ -1,6 +1,9 @@
-import { Then } from "@cucumber/cucumber";
+import { Then, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
-import { getStoredIdentity } from "../clients/evcs-stub-client.js";
+import {
+  createStoredIdentity,
+  getStoredIdentity,
+} from "../clients/evcs-stub-client.js";
 import { StoredIdentityRecordtype } from "../types/evcs-stub.js";
 import assert from "assert";
 
@@ -44,3 +47,10 @@ Then("I don't have a stored identity in EVCS", async function (this: World) {
   assert.equal(statusCode, 404);
   assert.ok(storedIdentities === undefined);
 });
+
+When(
+  "I have an existing stored identity record with a {string} vot",
+  async function (this: World, vot: string) {
+    await createStoredIdentity(this.userId, vot);
+  },
+);

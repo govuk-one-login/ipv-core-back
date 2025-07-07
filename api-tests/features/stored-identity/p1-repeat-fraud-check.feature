@@ -1,15 +1,17 @@
 @Build
 Feature: Stored Identity - repeat fraud check
+  Background: Create user with existing credentials
+    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    And the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+    And the subject already has the following expired credentials
+      | CRI   | scenario        |
+      | fraud | kenneth-score-1 |
+
   Rule: No existing SI record for user
     Background:
-      Given I activate the 'storedIdentityService,disableStrategicApp' feature set
-      And the subject already has the following credentials
-        | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
-        | address | kenneth-current              |
-      And the subject already has the following expired credentials
-        | CRI   | scenario        |
-        | fraud | kenneth-score-2 |
       When I start a new 'low-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -61,31 +63,8 @@ Feature: Stored Identity - repeat fraud check
         | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
 
   Rule: Existing SI record for user
-    Background: Start RFC journey
-      Given I activate the 'p1Journeys,storedIdentityService,disableStrategicApp' feature sets
-      When I start a new 'low-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit expired 'kenneth-score-1' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot
+    Background: Add existing SI record for user
+      And I have an existing stored identity record with a 'P1' vot
 
     Scenario: Successful repeat fraud check journey with update name
       When I start a new 'low-confidence' journey
