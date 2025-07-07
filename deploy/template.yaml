@@ -799,8 +799,29 @@ Resources:
   ManualF2fPendingResetFunctionInvokeRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-RunbookF2fResetRole
+      RoleName: !Sub ${AWS::StackName}-RunbookF2fResetModification
       Description: "This role allows approved support team to perform pending F2F reset"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "sts:AssumeRole"
+            Condition:
+              ArnLike:
+                aws:PrincipalARN:
+                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      ManagedPolicyArns:
+        - !Ref ManualF2fPendingResetFunctionManagedPolicy
+      MaxSessionDuration: 43200
+      Path: /runbooks/
+
+  IAMRoleCreationTest:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-Create
+      Description: "Test role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
