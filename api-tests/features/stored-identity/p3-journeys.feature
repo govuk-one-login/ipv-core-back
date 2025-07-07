@@ -1,3 +1,4 @@
+@Build
 Feature: P3 included in JAR request from client
   Background: Enabled feature sets
     Given I activate the 'storedIdentityService,disableStrategicApp' feature sets

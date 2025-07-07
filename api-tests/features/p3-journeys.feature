@@ -1,3 +1,4 @@
+@Build
 Feature: P3 included in JAR request from client
   Background: Enable feature sets
     When I activate the 'disableStrategicApp' feature set
