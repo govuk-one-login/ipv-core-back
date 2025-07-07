@@ -428,8 +428,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
-                throws IpvSessionNotFoundException,
-                        HttpResponseExceptionWithErrorBody,
+                throws HttpResponseExceptionWithErrorBody,
                         CredentialParseException,
                         EvcsServiceException {
             // Arrange
@@ -604,7 +603,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
+        void shouldReturnFailResponseIfFaceToFaceVerificationIsError() {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -621,7 +620,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
+        void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -888,7 +887,7 @@ class CheckExistingIdentityHandlerTest {
     @DisplayName("reuse journeys")
     class ReuseJourneys {
         @BeforeEach
-        public void reuseSetup() throws Exception {
+        void reuseSetup() throws Exception {
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
@@ -1319,7 +1318,7 @@ class CheckExistingIdentityHandlerTest {
     @Nested
     class ReproveIdentity {
         @BeforeEach
-        public void beforeEach() throws Exception {
+        void beforeEach() throws Exception {
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);

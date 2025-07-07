@@ -471,4 +471,15 @@ class EvcsClientTest {
         // Act/Assert
         assertDoesNotThrow(() -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
     }
+
+    @Test
+    void invalidateStoredIdentityRecordShouldThrowIfBadUri() {
+        // Arrange
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
+        // Act/Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
+    }
 }
