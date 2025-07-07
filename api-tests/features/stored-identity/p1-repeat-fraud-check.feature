@@ -11,7 +11,7 @@ Feature: Stored Identity - repeat fraud check
       | fraud | kenneth-score-1 |
 
   Rule: No existing SI record for user
-    Background:
+    Background: Start RFC journey
       When I start a new 'low-confidence' journey
       Then I get a 'confirm-your-details' page response
 

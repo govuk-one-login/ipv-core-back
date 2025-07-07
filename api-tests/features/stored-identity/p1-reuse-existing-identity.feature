@@ -1,6 +1,6 @@
 @Build
 Feature: Stored Identity - Update Existing Identity
-  Background: Existing credentials
+  Background: Create user with existing credentials
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |

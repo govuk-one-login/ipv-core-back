@@ -123,7 +123,7 @@ Feature: Stored Identity - P2 journeys
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
   Rule: Reuse
-    Background: Existing credentials
+    Background: Create user with existing credentials
       Given the subject already has the following credentials
         | CRI     | scenario               |
         | dcmaw   | kenneth-passport-valid |

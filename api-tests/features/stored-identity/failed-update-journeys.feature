@@ -7,7 +7,7 @@ Feature: Failed update details
       | address | kenneth-current              |
 
   Rule: Reuse journey
-    Background: Start reuse journey with name update
+    Background: Start reuse journey with update details
       # Use non-expired fraud credentials
       And the subject already has the following credentials
         | CRI   | scenario        |
