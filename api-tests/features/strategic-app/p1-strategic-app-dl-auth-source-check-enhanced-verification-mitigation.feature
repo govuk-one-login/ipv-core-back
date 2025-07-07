@@ -201,10 +201,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-  @MikeC
   Rule: Separate session journeys
 
-    @MikeC2
     Scenario: Separate session DCMAW enhanced verification mitigation - successful - DL
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response

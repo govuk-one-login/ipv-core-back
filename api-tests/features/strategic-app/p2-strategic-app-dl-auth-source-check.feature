@@ -1,6 +1,5 @@
 @Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys with DL authoritative source check
-  @MikeC
   Scenario: Cross-browser scenario
     Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey

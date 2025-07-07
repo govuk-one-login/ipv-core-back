@@ -5,7 +5,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
 
-  @MikeC @MikeC3
   Scenario: Cross-browser scenario
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response

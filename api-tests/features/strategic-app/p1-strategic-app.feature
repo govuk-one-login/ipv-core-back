@@ -65,7 +65,6 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
 
-    @MikeC @MikeC4
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -103,7 +102,6 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
 
-    @MikeC
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response

@@ -203,7 +203,6 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-  @MikeC
   Rule: Separate session journeys
 
     Scenario: Separate session DCMAW enhanced verification mitigation - successful - DL
