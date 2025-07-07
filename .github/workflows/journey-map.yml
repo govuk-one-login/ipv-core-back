@@ -53,7 +53,7 @@ jobs:
       contents: read
     steps:
       - name: Deploy SAM app to ECR
-        uses: govuk-one-login/devplatform-upload-action-ecr@v1.3.0
+        uses: govuk-one-login/devplatform-upload-action-ecr@v1.4.0
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_JOURNEY_MAP }}
           container-sign-kms-key-arn: ${{ secrets.CONTAINER_SIGN_KMS_KEY_JOURNEY_MAP }}
