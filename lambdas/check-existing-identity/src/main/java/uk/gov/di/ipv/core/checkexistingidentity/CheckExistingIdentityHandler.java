@@ -533,8 +533,18 @@ public class CheckExistingIdentityHandler
                         clientOAuthSessionItem,
                         ipvSessionItem,
                         credentialBundle.credentials);
+        LOGGER.warn(String.format("wagwan forcedJourney: %s", forcedJourney));
         if (forcedJourney != null) {
+            LOGGER.warn(
+                    String.format(
+                            "wagwan forcedJourney e1 e2: %s %s %s",
+                            forcedJourney,
+                            JOURNEY_FAIL_WITH_NO_CI.equals(forcedJourney),
+                            JOURNEY_DL_AUTH_SOURCE_CHECK.equals(forcedJourney)));
             if (JOURNEY_FAIL_WITH_NO_CI.equals(forcedJourney)) {
+                LOGGER.warn(
+                        String.format(
+                                "wagwan JOURNEY_FAIL_WITH_NO_CI: %s", JOURNEY_FAIL_WITH_NO_CI));
                 return switch (lowestGpg45ConfidenceRequested) {
                     case P1 -> JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE;
                     case P2 -> JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE;
@@ -542,6 +552,10 @@ public class CheckExistingIdentityHandler
                 };
             }
             if (JOURNEY_DL_AUTH_SOURCE_CHECK.equals(forcedJourney)) {
+                LOGGER.warn(
+                        String.format(
+                                "wagwan JOURNEY_DL_AUTH_SOURCE_CHECK: %s",
+                                JOURNEY_DL_AUTH_SOURCE_CHECK));
                 return switch (lowestGpg45ConfidenceRequested) {
                     case P1 -> JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE;
                     case P2 -> JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE;

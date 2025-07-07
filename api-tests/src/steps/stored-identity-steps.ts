@@ -19,7 +19,7 @@ Then(
 
     assert.ok(
       actualSi,
-      `Expected a "${expectedRecordType}" record type but got none.`,
+      `Expected a "${expectedRecordType}" record type but got none. These were the stored identities: ${storedIdentities}`,
     );
     assert.equal(
       actualSi.levelOfConfidence,

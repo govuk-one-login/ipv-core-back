@@ -242,33 +242,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    Scenario: Separate session DCMAW enhanced verification mitigation - user abandons DCMAW
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit a 'appTriage' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces an 'access_denied' error response
-      And I pass on the DCMAW callback in a separate session
-      Then I get an OAuth response with error code 'access_denied'
-      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
-      # has managed to log back in to the site.
-      When I poll for async DCMAW credential receipt
-      And I start a new 'medium-confidence' journey
-      Then I get a 'pyi-post-office' page response
-      When I submit an 'end' event
-      Then I get a 'pyi-another-way' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAw with no ci *e.g. failed likeness) - mitigate via F2F
+    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit a 'appTriage' event

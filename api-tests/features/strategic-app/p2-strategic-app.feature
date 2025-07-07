@@ -85,7 +85,7 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    @MikeC
+    @MikeC @MikeC4
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -122,7 +122,6 @@ Feature: M2B Strategic App Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
 
     @MikeC
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI

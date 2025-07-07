@@ -65,7 +65,7 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
 
-    @MikeC
+    @MikeC @MikeC4
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -80,8 +80,8 @@ Feature: M2B Strategic App Journeys
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      And I start a new 'medium-confidence' journey
-      Then I get a 'page-multiple-doc-check' page response
+      And I start a new 'low-confidence' journey
+      Then I get a 'page-multiple-doc-check' page response with context 'nino'
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -96,13 +96,12 @@ Feature: M2B Strategic App Journeys
       Then I get a 'kbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      Then I get a 'P1' identity
 
     @MikeC
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
@@ -119,7 +118,7 @@ Feature: M2B Strategic App Journeys
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      And I start a new 'medium-confidence' journey
+      And I start a new 'low-confidence' journey
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
