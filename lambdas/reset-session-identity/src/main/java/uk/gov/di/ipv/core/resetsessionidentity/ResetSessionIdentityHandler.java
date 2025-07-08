@@ -109,7 +109,8 @@ public class ResetSessionIdentityHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+            if (configService.enabled(STORED_IDENTITY_SERVICE)
+                    && !clientOAuthSessionItem.isReverification()) {
                 evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
             }
 

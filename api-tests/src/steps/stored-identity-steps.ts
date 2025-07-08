@@ -31,13 +31,12 @@ Then(
       `Expected "${expectedVot}" but got "${actualSi.levelOfConfidence}"`,
     );
 
-    if (isValidString) {
-      assert.equal(
-        actualSi.isValid,
-        isValidString === "valid",
-        `Expected "${isValidString === "valid"}" but got "${actualSi.isValid}"`,
-      );
-    }
+    assert.equal(
+      actualSi.isValid,
+      // Default to asserting that the SI record is valid
+      isValidString ? isValidString === "valid" : true,
+      `Expected "${isValidString === "valid"}" but got "${actualSi.isValid}"`,
+    );
   },
 );
 

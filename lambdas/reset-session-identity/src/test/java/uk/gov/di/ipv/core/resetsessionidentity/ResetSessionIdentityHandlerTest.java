@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -102,7 +103,32 @@ class ResetSessionIdentityHandlerTest {
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
                         .evcsAccessToken(TEST_EVCS_TOKEN)
+                        .scope(ScopeConstants.OPENID)
                         .build();
+    }
+
+    @Test
+    void handleRequestShouldNotInvalidateSiRecordWhenOnReverificationJourney() throws Exception {
+        // Arrange
+        when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", ALL.name()))
+                        .build();
+
+        // Act
+        resetSessionIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(ipvSessionItem.getIpvSessionId(), ALL);
+        verify(mockEvcsService, times(0)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 
     @Test

@@ -218,11 +218,11 @@ public class EvcsClient {
         }
     }
 
-    private URI getIdentityUri(String identitySubPaths) throws URISyntaxException {
+    private URI getIdentityUri(String path) throws URISyntaxException {
         var subPath =
-                StringUtils.isBlank(identitySubPaths)
+                StringUtils.isBlank(path)
                         ? IDENTITY_SUB_PATH
-                        : String.join("/", IDENTITY_SUB_PATH, identitySubPaths);
+                        : String.join("/", IDENTITY_SUB_PATH, path);
         return getUri(subPath, null, null);
     }
 
