@@ -18,7 +18,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a 'GPG45' stored identity record type with a 'P1' vot
 
     Scenario: Address Update
       When I submit a 'update-details' event
