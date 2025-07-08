@@ -23,6 +23,7 @@ Feature: Failed update details
     Scenario: Reuse journey - failed address change - failed COI (valid identity)
       When I submit a 'address-only' event
       Then I get a 'address' CRI response
+      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
       When I submit 'alice-score-2' details with attributes to the CRI stub
