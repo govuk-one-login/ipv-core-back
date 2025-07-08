@@ -303,7 +303,6 @@ Feature: P2 Web document journey
       Then I get a 'P2' identity
 
     Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - Passport and DL auth source check
-      Given I activate the 'dwpKbvTest' feature set
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -369,7 +368,6 @@ Feature: P2 Web document journey
         | ukPassport     | kenneth-passport-valid       |
 
     Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
-      Given I activate the 'dwpKbvTest' feature set
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub

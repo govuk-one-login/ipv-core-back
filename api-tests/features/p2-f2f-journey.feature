@@ -59,7 +59,7 @@ Feature: P2 F2F journey
   Rule: Successful F2F journeys
     Scenario Outline: Successful P2 identity via F2F using <doc> - <journey-type>
       # Initial journey
-      Given I start a new '<journey-type>' journey
+      When I start a new '<journey-type>' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response

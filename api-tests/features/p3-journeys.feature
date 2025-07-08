@@ -1,7 +1,7 @@
 @Build
 Feature: P3 journeys
   Background: Enable feature sets
-    When I activate the 'disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
 
   Scenario: Only P3 in VTR results in an error
     When I start a new 'high-confidence' journey
