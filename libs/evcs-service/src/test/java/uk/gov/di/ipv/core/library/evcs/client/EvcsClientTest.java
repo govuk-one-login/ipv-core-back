@@ -325,9 +325,10 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+            var res = evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
 
             // Assert
+            assertEquals(HttpStatusCode.ACCEPTED, res.statusCode());
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
             HttpRequest httpRequest = httpRequestCaptor.getValue();
             assertEquals("PATCH", httpRequest.method());
@@ -441,9 +442,10 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID);
+            var res = evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID);
 
             // Assert
+            assertEquals(HttpStatusCode.NO_CONTENT, res.statusCode());
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
             HttpRequest httpRequest = httpRequestCaptor.getValue();
             assertEquals("POST", httpRequest.method());

@@ -164,7 +164,8 @@ public class EvcsClient {
         }
     }
 
-    public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
+    public HttpResponse<String> updateUserVCs(
+            String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
@@ -182,7 +183,7 @@ public class EvcsClient {
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -192,7 +193,8 @@ public class EvcsClient {
         }
     }
 
-    public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
+    public HttpResponse<String> invalidateStoredIdentityRecord(String userId)
+            throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage("Preparing to invalidate user's stored identity record"));
         try {
@@ -208,7 +210,7 @@ public class EvcsClient {
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
