@@ -103,7 +103,6 @@ class ContractTest {
                 .thenReturn(EVCS_API_KEY);
     }
 
-    // GET /vcs/{userId}
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRetrieveVcRequestReturnsUsersVcWith200(
             PactDslWithProvider builder) {
@@ -261,7 +260,6 @@ class ContractTest {
                 });
     }
 
-    // POST /vcs/{userId}
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validCreateUserVcReturnsMessageIdWith202(
             PactDslWithProvider builder) {
@@ -389,7 +387,6 @@ class ContractTest {
                 });
     }
 
-    // PATCH /vcs/{userId}
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validUpdateUserVcReturnsMessageIdWith204(
             PactDslWithProvider builder) {
@@ -475,7 +472,6 @@ class ContractTest {
                 });
     }
 
-    // POST /identity
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postIdentityReturns202(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
@@ -803,7 +799,6 @@ class ContractTest {
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
-    // POST /identity/invalidate
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postIdentityInvalidateReturns204(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
