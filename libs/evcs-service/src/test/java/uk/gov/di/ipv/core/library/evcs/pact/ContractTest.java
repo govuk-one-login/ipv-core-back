@@ -8,6 +8,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
@@ -46,6 +48,8 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final String EVCS_API_KEY = "test-evcs-api-key"; // pragma: allowlist secret
+    private static final String EVCS_INVALID_API_KEY =
+            "invalid-api-key"; // pragma: allowlist secret
     private static final String TEST_EVCS_ACCESS_TOKEN = "test-acess-token";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String INVALID_USER_ID = "invalid-user-id";
@@ -55,7 +59,8 @@ class ContractTest {
     private static final String VC_STRING =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1wLnN0YWdpbmcuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDU5ODY1MjEsInZjIjp7InR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Ik1PUkdBTiJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IlNBUkFIIE1FUkVEWVRIIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTY1LTA3LTA4In1dLCJwYXNzcG9ydCI6W3siZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODciLCJleHBpcnlEYXRlIjoiMjAzMC0wMS0wMSIsImljYW9Jc3N1ZXJDb2RlIjoiR0JSIn1dLCJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6IkdCIiwiYWRkcmVzc0xvY2FsaXR5IjoiR1JFQVQgTUlTU0VOREVOIiwiYnVpbGRpbmdOYW1lIjoiQ09ZIFBPTkQgQlVTSU5FU1MgUEFSSyIsImJ1aWxkaW5nTnVtYmVyIjoiMTYiLCJkZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJMT05HIEVBVE9OIiwiZGVwZW5kZW50U3RyZWV0TmFtZSI6IktJTkdTIFBBUksiLCJkb3VibGVEZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJTT01FIERJU1RSSUNUIiwib3JnYW5pc2F0aW9uTmFtZSI6IkZJTkNIIEdST1VQIiwicG9zdGFsQ29kZSI6IkhQMTYgMEFMIiwic3RyZWV0TmFtZSI6IkJJRyBTVFJFRVQiLCJzdWJCdWlsZGluZ05hbWUiOiJVTklUIDJCIiwidXBybiI6MTAwMTIwMDEyMDc3fV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiY2QyMzQ2Iiwic3RyZW5ndGhTY29yZSI6NCwidmFsaWRpdHlTY29yZSI6MiwidmVyaWZpY2F0aW9uU2NvcmUiOjMsImNpIjpbXSwiY2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6ImRhdGEiLCJkYXRhQ2hlY2siOiJjYW5jZWxsZWRfY2hlY2sifSx7ImNoZWNrTWV0aG9kIjoiZGF0YSIsImRhdGFDaGVjayI6InJlY29yZF9jaGVjayJ9XX1dfX0." // pragma: allowlist secret
                     + VC_SIGNATURE;
-    private static final String SI_JWT_STRING = "";
+    private static final String SI_JWT_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL2lkZW50aXR5LmFjY291bnQuZ292LnVrIiwic3ViIjoidGVzdC11c2VyLWlkIiwiYXVkIjoiaHR0cHM6Ly9yZXVzZS1pZGVudGl0eS5hY2NvdW50Lmdvdi51ayIsIm5iZiI6MjY1ODgyOTcyMCwiaWF0IjoyNjU4ODI5NzIwLCJ2b3QiOiJQMiIsImNyZWRlbnRpYWxzIjpbImhqSmNtTEVFSWJHNkoxSWsydlc1b1JocGF6TDFTdnZ1dnlCZTVUNjJWdGxOaWs1enNLd1B0cWx5MGVEZUplaUNwNG94dGNtQmZHMUFQTU5SYXNiazhBIiwidEpyOGpveXNiUnpieVQwZThxUldUYXk4OGNORkZhOURBNVF5YzZySHZ3VXhsTVlkSVV6RG5WUVlmYjR4OE9fYmVVSGF4eG41TmlNQ3VhMnFkM3hGSHciLCJMRFk2aklQWHBIeEp1RFBrU1FsY1VzSE9MX3k0ajNaZEdMd2hLOHZDQWNlWFZodFIxWFBYbGpwZVc2YVVjajNROG03T3g1NUtCOUxlOVRQckY5eHIxUSJdLCJjbGFpbXMiOnt9fQ.omMIO4KF1uPKlWh252GIX21MgCfrH6qoQGezYcD_yZWDobZ5H0L3dCvQxEt7SVXLWmxtBsoQpv4Lf8kwfGVI2Q"; // pragma: allowlist secret
 
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(PENDING_RETURN);
 
@@ -82,10 +87,10 @@ class ContractTest {
                                     "reason", "testing",
                                     "txmaEventId", "txma-event-id-2",
                                     "timestampMs", "1714478033959")));
-    private static final EvcsStoredIdentityDto EVCS_STORED_IDENTITY_DTO = new EvcsStoredIdentityDto(
-            SI_JWT_STRING,
-            P2
-    );
+    private static final EvcsStoredIdentityDto EVCS_STORED_IDENTITY_DTO =
+            new EvcsStoredIdentityDto(SI_JWT_STRING, P2);
+    private static final EvcsStoredIdentityDto EVCS_INVALID_STORED_IDENTITY_DTO =
+            new EvcsStoredIdentityDto(SI_JWT_STRING, null);
 
     @Mock ConfigService mockConfigService;
 
@@ -192,7 +197,7 @@ class ContractTest {
                 .headers(
                         Map.of(
                                 "x-api-key",
-                                "invalid-api-key",
+                                EVCS_INVALID_API_KEY,
                                 "Authorization",
                                 "Bearer " + TEST_EVCS_ACCESS_TOKEN))
                 .willRespondWith()
@@ -206,7 +211,7 @@ class ContractTest {
         // Mock Data
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
-                .thenReturn("invalid-api-key");
+                .thenReturn(EVCS_INVALID_API_KEY);
 
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
@@ -486,16 +491,16 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                        body -> {
-                            body.stringType("userId", TEST_USER_ID);
-                            body.object("si", si -> {
-                                si.stringType("jwt", SI_JWT_STRING);
-                                si.stringType("vot", P2.toString());
-                                si.stringType("metadata");
-                            });
-                        })
-                        .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                            body.object(
+                                                    "si",
+                                                    si -> {
+                                                        si.stringType("jwt", SI_JWT_STRING);
+                                                        si.stringType("vot", P2.toString());
+                                                    });
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(202)
                 .toPact();
@@ -505,11 +510,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "postIdentityReturns202")
     void testPostIdentityReturns202(MockServer mockServer) throws EvcsServiceException {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
+        var evcsPostIdentityDto =
+                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act
@@ -520,7 +522,142 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact missingSiPostIdentityReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact nullBodyPostIdentityReturns400(PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create a stored identity in EVCS, with null user id")
+                .path("/identity")
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                // Null body
+                .willRespondWith()
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "nullBodyPostIdentityReturns400")
+    void testNullBodyPostIdentityReturns400(MockServer mockServer) {
+        // Arrange
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(null);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact nullUserIdPostIdentityReturns400(PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create a stored identity in EVCS, with null user id")
+                .path("/identity")
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            // Null user id
+                                            body.object(
+                                                    "si",
+                                                    si -> {
+                                                        si.stringType("jwt", SI_JWT_STRING);
+                                                        si.stringType("vot", P2.toString());
+                                                    });
+                                        })
+                                .build())
+                .willRespondWith()
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "nullUserIdPostIdentityReturns400")
+    void testNullUserIdPostIdentityReturns400(MockServer mockServer) {
+        // Arrange
+        var evcsPostIdentityDto = new EvcsPostIdentityDto(null, null, EVCS_STORED_IDENTITY_DTO);
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(evcsPostIdentityDto);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact emptyUserIdPostIdentityReturns400(PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create a stored identity in EVCS, with empty user id")
+                .path("/identity")
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            body.stringType("userId", ""); // Empty user id
+                                            body.object(
+                                                    "si",
+                                                    si -> {
+                                                        si.stringType("jwt", SI_JWT_STRING);
+                                                        si.stringType("vot", P2.toString());
+                                                    });
+                                        })
+                                .build())
+                .willRespondWith()
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "emptyUserIdPostIdentityReturns400")
+    void testEmptyUserIdPostIdentityReturns400(MockServer mockServer) {
+        // Arrange
+        var evcsPostIdentityDto = new EvcsPostIdentityDto("", null, EVCS_STORED_IDENTITY_DTO);
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(evcsPostIdentityDto);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact nullSiPostIdentityReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create a stored identity in EVCS.")
@@ -534,36 +671,34 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", TEST_USER_ID);
-                                    // Missing SI
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                            // Null si
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "missingSiPostIdentityReturns400")
-    void testMissingSiPostIdentityReturns400(MockServer mockServer) {
+    @PactTestFor(pactMethod = "nullSiPostIdentityReturns400")
+    void testNullSiPostIdentityReturns400(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
+        var evcsPostIdentityDto = new EvcsPostIdentityDto(TEST_USER_ID, null, null);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    underTest.storeUserIdentity(evcsPostIdentityDto);
-                });
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(evcsPostIdentityDto);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
-
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidSiPostIdentityReturns400(PactDslWithProvider builder) {
@@ -580,16 +715,16 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", TEST_USER_ID);
-                                    body.object("si", si -> {
-                                        // Missing vot
-                                        si.stringType("jwt", SI_JWT_STRING);
-                                        si.stringType("metadata");
-                                    });
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                            body.object(
+                                                    "si",
+                                                    si -> {
+                                                        // Missing vot
+                                                        si.stringType("jwt", SI_JWT_STRING);
+                                                    });
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(400)
                 .toPact();
@@ -599,82 +734,47 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidSiPostIdentityReturns400")
     void testInvalidSiPostIdentityReturns400(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
+        var evcsPostIdentityDto =
+                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_INVALID_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    underTest.storeUserIdentity(evcsPostIdentityDto);
-                });
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(evcsPostIdentityDto);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact missingBodyPostIdentityReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact forbiddenPostIdentityReturns403(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
-                .given("test-evcs-api-key is a valid API key")
+                .given("invalid-api-key is an invalid API key")
                 .uponReceiving("A request to create a stored identity in EVCS.")
                 .path("/identity")
                 .method("POST")
                 .headers(
                         Map.of(
                                 "x-api-key",
-                                EVCS_API_KEY,
-                                CONTENT_TYPE,
-                                ContentType.APPLICATION_JSON.toString()))
-                // Missing body
-                .willRespondWith()
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "missingBodyPostIdentityReturns400")
-    void testMissingBodyPostIdentityReturns400(MockServer mockServer) {
-        // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
-        var underTest = new EvcsClient(mockConfigService);
-
-        // Act & Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    underTest.storeUserIdentity(evcsPostIdentityDto);
-                });
-    }
-
-    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact forbiddenPostIdentityReturns403(PactDslWithProvider builder) {
-        return builder.given("EVCS client exist")
-                .given("test-evcs-api-key is a valid API key")
-                .uponReceiving("A request to create a stored identity in EVCS.")
-                .path("/identity")
-                .method("POST")
-                .headers(
-                        Map.of(
+                                EVCS_INVALID_API_KEY,
                                 CONTENT_TYPE,
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", TEST_USER_ID);
-                                    body.object("si", si -> {
-                                        si.stringType("jwt", SI_JWT_STRING);
-                                        si.stringType("vot", P2.toString());
-                                        si.stringType("metadata");
-                                    });
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                            body.object(
+                                                    "si",
+                                                    si -> {
+                                                        si.stringType("jwt", SI_JWT_STRING);
+                                                        si.stringType("vot", P2.toString());
+                                                    });
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(403)
                 .toPact();
@@ -684,19 +784,23 @@ class ContractTest {
     @PactTestFor(pactMethod = "forbiddenPostIdentityReturns403")
     void testForbiddenPostIdentityReturns403(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
+        lenient()
+                .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                .thenReturn(EVCS_INVALID_API_KEY);
+        var evcsPostIdentityDto =
+                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    underTest.storeUserIdentity(evcsPostIdentityDto);
-                });
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.storeUserIdentity(evcsPostIdentityDto);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
     // POST /identity/invalidate
@@ -715,11 +819,10 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", TEST_USER_ID);
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(204)
                 .toPact();
@@ -727,27 +830,63 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "postIdentityInvalidateReturns204")
-    void testPostIdentityInvalidateReturns204(MockServer mockServer) {
+    void testPostIdentityInvalidateReturns204(MockServer mockServer) throws EvcsServiceException {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(
-                TEST_USER_ID,
-                EVCS_CREATE_USER_VCS_DTO,
-                EVCS_STORED_IDENTITY_DTO
-        );
         var underTest = new EvcsClient(mockConfigService);
 
         // Act
-        var response = underTest.invalidate(evcsPostIdentityDto);
+        var response = underTest.invalidateStoredIdentityRecord(TEST_USER_ID);
 
         // Assert
-        assertEquals(202, response.statusCode());
+        assertEquals(204, response.statusCode());
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact missingUserIdPostIdentityInvalidateReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact nullUserIdPostIdentityInvalidateReturns400(
+            PactDslWithProvider builder) {
+        // Null user id
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
-                .uponReceiving("A request to invalidate a EVCS user identity")
+                .uponReceiving("A request to invalidate a EVCS user identity, with an null user id")
+                .path("/identity/invalidate")
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(newJsonBody(body -> body.nullValue("userId")).build())
+                .willRespondWith()
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "nullUserIdPostIdentityInvalidateReturns400")
+    void testNullUserIdPostIdentityInvalidateReturns400(MockServer mockServer) {
+        // Arrange
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.invalidateStoredIdentityRecord(null);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact emptyUserIdPostIdentityInvalidateReturns400(
+            PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving(
+                        "A request to invalidate a EVCS user identity, with an empty user id")
                 .path("/identity/invalidate")
                 .method("POST")
                 .headers(
@@ -758,74 +897,53 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {})
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", "");
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "missingUserIdPostIdentityInvalidateReturns400")
-    void testMissingUserIdPostIdentityInvalidateReturns400(MockServer mockServer) {
-        // Under Test
-        EvcsClient evcsClient = new EvcsClient(mockConfigService);
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
-                });
+    @PactTestFor(pactMethod = "emptyUserIdPostIdentityInvalidateReturns400")
+    void testEmptyUserIdPostIdentityInvalidateReturns400(MockServer mockServer) {
+        // Arrange
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.invalidateStoredIdentityRecord("");
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact missingBodyPostIdentityInvalidateReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact forbiddenPostIdentityInvalidateReturns403(
+            PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
-                .given("test-evcs-api-key is a valid API key")
+                .given("invalid-api-key is an invalid API key")
                 .uponReceiving("A request to invalidate a EVCS user identity")
                 .path("/identity/invalidate")
                 .method("POST")
                 .headers(
                         Map.of(
                                 "x-api-key",
-                                EVCS_API_KEY,
-                                CONTENT_TYPE,
-                                ContentType.APPLICATION_JSON.toString()))
-                .willRespondWith()
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "missingBodyPostIdentityInvalidateReturns400")
-    void testMissingBodyPostIdentityInvalidateReturns400(MockServer mockServer) {
-        // Under Test
-        EvcsClient evcsClient = new EvcsClient(mockConfigService);
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
-                });
-    }
-
-    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact forbiddenPostIdentityInvalidateReturns403(PactDslWithProvider builder) {
-        return builder.given("EVCS client exist")
-                .given("test-evcs-api-key is a valid API key")
-                .uponReceiving("A request to invalidate a EVCS user identity")
-                .path("/identity/invalidate")
-                .method("POST")
-                .headers(
-                        Map.of(
+                                EVCS_INVALID_API_KEY,
                                 CONTENT_TYPE,
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", TEST_USER_ID);
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", TEST_USER_ID);
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(403)
                 .toPact();
@@ -834,17 +952,27 @@ class ContractTest {
     @Test
     @PactTestFor(pactMethod = "forbiddenPostIdentityInvalidateReturns403")
     void testForbiddenPostIdentityInvalidateReturns403(MockServer mockServer) {
-        // Under Test
-        EvcsClient evcsClient = new EvcsClient(mockConfigService);
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
-                });
+        // Arrange
+        lenient()
+                .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                .thenReturn(EVCS_INVALID_API_KEY);
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act & Assert
+        var exception =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () -> {
+                            underTest.invalidateStoredIdentityRecord(TEST_USER_ID);
+                        });
+        assertEquals(
+                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact notFoundPostIdentityInvalidateReturns404(PactDslWithProvider builder) {
+    public RequestResponsePact notFoundPostIdentityInvalidateReturns404(
+            PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
                 .given("No user exists with id invalid-user-id")
@@ -859,11 +987,10 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(
                         newJsonBody(
-                                body -> {
-                                    body.stringType("userId", INVALID_USER_ID);
-                                })
-                                .build()
-                )
+                                        body -> {
+                                            body.stringType("userId", INVALID_USER_ID);
+                                        })
+                                .build())
                 .willRespondWith()
                 .status(404)
                 .toPact();
@@ -871,13 +998,15 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "notFoundPostIdentityInvalidateReturns404")
-    void testNotFoundPostIdentityInvalidateReturns404(MockServer mockServer) {
-        // Under Test
-        EvcsClient evcsClient = new EvcsClient(mockConfigService);
-        assertThrows(
-                EvcsServiceException.class,
-                () -> {
-                    evcsClient.updateUserVCs(INVALID_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
-                });
+    void testNotFoundPostIdentityInvalidateReturns404(MockServer mockServer)
+            throws EvcsServiceException {
+        // Arrange
+        var underTest = new EvcsClient(mockConfigService);
+
+        // Act
+        var response = underTest.invalidateStoredIdentityRecord(TEST_USER_ID);
+
+        // Assert
+        assertEquals(404, response.statusCode());
     }
 }
