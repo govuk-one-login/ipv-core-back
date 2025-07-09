@@ -49,6 +49,7 @@ services:
       PORT: 4501
       LANGUAGE_TOGGLE: true
       USE_DEVICE_INTELLIGENCE: true
+      MAY_2025_REBRAND_ENABLED: true
       CDN_DOMAIN:
       ENABLE_PREVIEW: "development"
       NPM_CONFIG_NODE_OPTIONS: "--inspect=0.0.0.0"
