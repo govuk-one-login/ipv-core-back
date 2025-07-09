@@ -22,6 +22,7 @@ core:
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
+      P3: 10
       PCL200: 3
       PCL250: 3
     returnCodes:

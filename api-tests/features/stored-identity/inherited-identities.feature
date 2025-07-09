@@ -71,7 +71,7 @@ Feature: Inherited Identity journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a 'GPG45' stored identity record type with a 'P3' vot
 
     # New journey with inherited identity
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
@@ -80,4 +80,4 @@ Feature: Inherited Identity journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a 'GPG45' stored identity record type with a 'P3' vot

@@ -343,3 +343,54 @@ Feature: Repeat fraud check journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+
+  Rule: Match H1A
+    Scenario: Successful RFC journey
+      Given the subject already has the following credentials
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
+      And the subject already has the following expired credentials
+        | CRI   | scenario        |
+        | fraud | kenneth-score-2 |
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P3' identity
+
+    Scenario: Initial P2 credentials followed by high-medium confidence RFC update journey
+      Given the subject already has the following credentials
+        | CRI        | scenario               |
+        | ukPassport | kenneth-passport-valid |
+        | address    | kenneth-current        |
+        | kbv        | kenneth-score-2        |
+      And the subject already has the following expired credentials
+        | CRI   | scenario        |
+        | fraud | kenneth-score-2 |
+
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+      When I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      When I submit a 'update-name' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P3' identity

@@ -309,7 +309,7 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "identity_type": "new",
-      "vot": "P2",
+      "vot": "P3",
       "sis_record_created": false
     },
     "restricted": {
