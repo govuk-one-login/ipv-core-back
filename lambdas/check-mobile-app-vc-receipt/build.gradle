@@ -10,6 +10,7 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
+			project(":libs:cri-checking-service"),
 			project(":libs:cri-response-service"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:cimit-service"),

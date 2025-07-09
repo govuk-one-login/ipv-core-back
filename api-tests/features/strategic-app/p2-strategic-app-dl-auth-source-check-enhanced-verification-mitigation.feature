@@ -217,12 +217,12 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
-#      And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
+      And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute | Values          |
@@ -241,33 +241,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    Scenario: Separate session DCMAW enhanced verification mitigation - user abandons DCMAW
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit a 'appTriage' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces an 'access_denied' error response
-      # This will probably need to change once the polling is working
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get a 'pyi-post-office' page response
-      When I submit an 'end' event
-      Then I get a 'pyi-another-way' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAw with no ci *e.g. failed likeness) - mitigate via F2F
+    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit a 'appTriage' event
@@ -279,12 +253,12 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
-      # This will probably need to change once the polling is working
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
+      And I start a new 'medium-confidence' journey
       Then I get a 'pyi-post-office' page response
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
@@ -299,12 +273,12 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
+      And I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -323,12 +297,12 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
+      And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
         | Attribute | Values          |
@@ -352,12 +326,12 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
       When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
+      And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'

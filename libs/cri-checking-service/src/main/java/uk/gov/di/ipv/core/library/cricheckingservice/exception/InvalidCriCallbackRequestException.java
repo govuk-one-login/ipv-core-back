@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.exception;
+package uk.gov.di.ipv.core.library.cricheckingservice.exception;
 
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
