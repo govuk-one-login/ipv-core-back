@@ -5,6 +5,9 @@ description: >-
 entryEvents:
   appTriage:
     targetState: IDENTIFY_DEVICE
+  dl-auth-source-check:
+    targetState: STRATEGIC_APP_HANDLE_RESULT
+    targetEntryEvent: dl-auth-source-check
 
 nestedJourneyStates:
   IDENTIFY_DEVICE:

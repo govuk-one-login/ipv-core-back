@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -49,6 +50,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -117,6 +119,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcClaimDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
@@ -133,6 +136,8 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYN
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -181,6 +186,10 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
@@ -196,6 +205,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
+    @Mock private CriCheckingService criCheckingService;
     @Mock private CriResponseService criResponseService;
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private IpvSessionService ipvSessionService;
@@ -457,6 +467,85 @@ class CheckExistingIdentityHandlerTest {
 
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnJourneyFailForUnsuccessfulDcmawAsync()
+                throws IpvSessionNotFoundException,
+                        HttpResponseExceptionWithErrorBody,
+                        CredentialParseException,
+                        VerifiableCredentialException,
+                        EvcsServiceException,
+                        CiExtractionException,
+                        ConfigException,
+                        CiRetrievalException,
+                        MissingSecurityCheckCredential {
+            // Arrange
+            when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
+                    .thenReturn(
+                            CriResponseItem.builder()
+                                    .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                    .build());
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
+                    .thenReturn(
+                            CriOAuthSessionItem.builder()
+                                    .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                                    .build());
+            var previousIpvSession = new IpvSessionItem();
+            previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
+            when(ipvSessionService.getIpvSessionByClientOAuthSessionId(
+                            TEST_CLIENT_OAUTH_SESSION_ID))
+                    .thenReturn(previousIpvSession);
+            var vcs = List.of(vcDcmawAsyncDrivingPermitDvaFailedChecks());
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    DCMAW_ASYNC,
+                                    AsyncCriStatus.STATUS_PENDING,
+                                    false,
+                                    true,
+                                    false));
+            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            clientOAuthSessionItem.setVtr(List.of(Vot.P2.name()));
+            when(criCheckingService.checkVcResponse(
+                            vcs,
+                            TEST_CLIENT_SOURCE_IP,
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            vcs))
+                    .thenReturn(JOURNEY_FAIL_WITH_NO_CI);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            assertEquals(JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE, journeyResponse);
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
+            verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            assertEquals(
+                    TEST_PREVIOUS_IPV_SESSION_ID,
+                    ((AuditExtensionPreviousIpvSessionId)
+                                    auditEventArgumentCaptor.getValue().getExtensions())
+                            .getPreviousIpvSessionId());
             assertEquals(Vot.P0, ipvSessionItem.getVot());
         }
 

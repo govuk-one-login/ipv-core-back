@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -32,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -77,9 +79,15 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -121,9 +129,22 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH);
+    private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK =
+            new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH);
+    private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE =
+            new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH);
+    private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE =
+            new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
+    private final CriCheckingService criCheckingService;
     private final CriResponseService criResponseService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final IpvSessionService ipvSessionService;
@@ -145,6 +166,7 @@ public class CheckExistingIdentityHandler
             IpvSessionService ipvSessionService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            CriCheckingService criCheckingService,
             CriResponseService criResponseService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
@@ -157,6 +179,7 @@ public class CheckExistingIdentityHandler
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        this.criCheckingService = criCheckingService;
         this.criResponseService = criResponseService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
@@ -183,6 +206,14 @@ public class CheckExistingIdentityHandler
         this.criResponseService = new CriResponseService(configService);
         this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
+        this.criCheckingService =
+                new CriCheckingService(
+                        configService,
+                        auditService,
+                        userIdentityService,
+                        cimitService,
+                        cimitUtilityService,
+                        ipvSessionService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
@@ -341,6 +372,8 @@ public class CheckExistingIdentityHandler
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
+                                    ipAddress,
+                                    ipvSessionItem,
                                     targetVot,
                                     clientOAuthSessionItem,
                                     auditEventUser,
@@ -375,6 +408,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND, e);
         } catch (CiExtractionException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC, e);
+        } catch (MissingSecurityCheckCredential e) {
+            return buildErrorResponse(ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL, e);
         }
     }
 
@@ -458,11 +493,20 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildDCMAWContinuationResponse(
             VerifiableCredentialBundle credentialBundle,
+            String ipAddress,
+            IpvSessionItem ipvSessionItem,
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws IpvSessionNotFoundException, VerifiableCredentialException {
+            throws IpvSessionNotFoundException,
+                    VerifiableCredentialException,
+                    CiExtractionException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    ConfigException,
+                    CiRetrievalException,
+                    MissingSecurityCheckCredential {
         var criResponseItem =
                 criResponseService.getCriResponseItem(
                         clientOAuthSessionItem.getUserId(), DCMAW_ASYNC);
@@ -474,10 +518,10 @@ public class CheckExistingIdentityHandler
         if (criOAuthSessionItem == null) {
             return null;
         }
+
         var previousIpvSessionItem =
                 ipvSessionService.getIpvSessionByClientOAuthSessionId(
                         criOAuthSessionItem.getClientOAuthSessionId());
-
         sendAuditEventWithPreviousIpvSessionId(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,
                 auditEventUser,
@@ -486,6 +530,31 @@ public class CheckExistingIdentityHandler
 
         sessionCredentialsService.persistCredentials(
                 credentialBundle.credentials, auditEventUser.getSessionId(), true);
+
+        var forcedJourney =
+                criCheckingService.checkVcResponse(
+                        credentialBundle.credentials,
+                        ipAddress,
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        credentialBundle.credentials);
+        if (forcedJourney != null) {
+            if (JOURNEY_FAIL_WITH_NO_CI.equals(forcedJourney)) {
+                return switch (lowestGpg45ConfidenceRequested) {
+                    case P1 -> JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE;
+                    case P2 -> JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE;
+                    default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
+                };
+            }
+            if (JOURNEY_DL_AUTH_SOURCE_CHECK.equals(forcedJourney)) {
+                return switch (lowestGpg45ConfidenceRequested) {
+                    case P1 -> JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE;
+                    case P2 -> JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE;
+                    default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
+                };
+            }
+            return forcedJourney;
+        }
 
         return switch (lowestGpg45ConfidenceRequested) {
             case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
