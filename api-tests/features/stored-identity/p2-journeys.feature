@@ -60,6 +60,25 @@ Feature: Stored Identity - P2 journeys
       Then I get a 'P2' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
+    Scenario: Successful stored identity storage - P2 app journey that meets P3
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+      And I have a 'GPG45' stored identity record type with a 'P3' vot
+
     Scenario: Successful stored identity storage - P2 F2F journey
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -130,7 +149,7 @@ Feature: Stored Identity - P2 journeys
         | address | kenneth-current        |
         | fraud   | kenneth-score-2        |
 
-    Scenario: Reuse journey - identity is stored to EVCS - no existing SI
+    Scenario: Reuse journey - identity is stored to EVCS - no existing SI - identity meets P3
       And I don't have a stored identity in EVCS
 
       When I start a new 'medium-confidence' journey
@@ -139,10 +158,21 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a 'GPG45' stored identity record type with a 'P3' vot
+
+    Scenario: Reuse journey - identity is stored to EVCS - no existing SI - identity only meets P2
+      And I don't have a stored identity in EVCS
+
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+      And I have a 'GPG45' stored identity record type with a 'P3' vot
 
     Scenario: Reuse journey with update - SI record stored to EVCS - existing SI
-      And I have an existing stored identity record with a 'P2' vot
+      And I have an existing stored identity record with a 'P3' vot
 
       # New reuse p2 journey with update name
       When I start a new 'medium-confidence' journey
@@ -154,7 +184,7 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'invalid'
 
       When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -168,4 +198,4 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'valid'
+      And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'valid'

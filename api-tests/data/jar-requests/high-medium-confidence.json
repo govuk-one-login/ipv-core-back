@@ -1,0 +1,39 @@
+{
+  "sub": "",
+  "iss": "orchApiTest",
+  "response_type": "code",
+  "client_id": "orchApiTest",
+  "govuk_signin_journey_id": "",
+  "aud": "",
+  "nbf": 1,
+  "email_address": "dev-platform-testing@digital.cabinet-office.gov.uk",
+  "vtr": ["P2", "P3"],
+  "scope": "openid phone email",
+  "claims": {
+    "userinfo": {
+      "https://vocab.account.gov.uk/v1/coreIdentityJWT": {
+        "essential": true
+      },
+      "https://vocab.account.gov.uk/v1/address": {
+        "essential": true
+      },
+      "https://vocab.account.gov.uk/v1/passport": {
+        "essential": true
+      },
+      "https://vocab.account.gov.uk/v1/drivingPermit": {
+        "essential": true
+      },
+      "https://vocab.account.gov.uk/v1/returnCode": {
+        "essential": true
+      },
+      "https://vocab.account.gov.uk/v1/storageAccessToken": {
+        "values": [""]
+      }
+    }
+  },
+  "redirect_uri": "",
+  "state": "",
+  "exp": 1,
+  "iat": 1,
+  "jti": ""
+}
