@@ -286,6 +286,10 @@ public class EvcsService {
         return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
     }
 
+    public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
+        evcsClient.invalidateStoredIdentityRecord(userId);
+    }
+
     private void updateExistingUserVCs(
             String userId,
             List<VerifiableCredential> credentials,

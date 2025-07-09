@@ -66,6 +66,7 @@ import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -245,10 +246,14 @@ public class CheckExistingIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
+            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
+                evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
+            }
+
             return getJourneyResponse(
                             ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
                     .toObjectMap();
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();

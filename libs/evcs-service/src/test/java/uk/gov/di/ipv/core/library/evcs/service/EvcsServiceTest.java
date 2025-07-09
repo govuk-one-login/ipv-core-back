@@ -717,4 +717,13 @@ class EvcsServiceTest {
         verify(mockEvcsClient, never()).updateUserVCs(any(), any());
         verify(mockEvcsClient, never()).storeUserVCs(any(), any());
     }
+
+    @Test
+    void shouldInvalidateStoredIdentityRecord() throws Exception {
+        // Act
+        evcsService.invalidateStoredIdentityRecord(TEST_USER_ID);
+
+        // Assert
+        verify(mockEvcsClient, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
+    }
 }
