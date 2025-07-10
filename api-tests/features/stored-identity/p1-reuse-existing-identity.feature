@@ -1,16 +1,19 @@
 @Build
 Feature: Stored Identity - Update Existing Identity
-  Background:
+  Background: Create user with existing credentials
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    When I start a new 'low-confidence' journey
-    Then I get a 'page-ipv-reuse' page response
 
-  Rule: Non-update journey
+  Rule: Non-update journey - no existing SI record
+    Background: Start new P1 reuse journey
+      And I don't have a stored identity in EVCS
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
+
     Scenario: Reuse journey with no update
       When I submit a 'next' event
       Then I get an OAuth response
@@ -18,8 +21,11 @@ Feature: Stored Identity - Update Existing Identity
       Then I get a 'P1' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
-  Rule: Update journeys
+  Rule: Update journeys - no existing SI record
     Background: Continue to update details
+      And I don't have a stored identity in EVCS
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
       When I submit a 'update-details' event
       Then I get a 'update-details' page response
 
@@ -38,7 +44,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get a 'P1' identity
       And I have a 'GPG45' stored identity record type with a 'P2' vot
 
-    Scenario Outline: Successful Name Change - <selected-name-change>
+    Scenario Outline: Successful Name Change - <selected-name-change> - meets P2
       When I submit a '<selected-name-change>' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
@@ -67,3 +73,59 @@ Feature: Stored Identity - Update Existing Identity
         | selected-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
         | family-name-only     | kenneth-changed-family-name-driving-permit-valid | kenneth-changed-family-name-score-2 | Kenneth             | Smith                |
         | given-names-only     | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
+
+    Scenario Outline: Successful Name Change - <selected-name-change> - meets P3
+      When I submit a '<selected-name-change>' event
+      Then I get a 'page-update-name' page response
+      When I submit a 'update-name' event
+      Then I get a 'dcmaw' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit '<fraud-details>' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+      And my identity 'GivenName' is '<expected-given-name>'
+      And my identity 'FamilyName' is '<expected-family-name>'
+      And I have a 'GPG45' stored identity record type with a 'P3' vot
+
+      Examples:
+        | selected-name-change | details                                    | fraud-details                       | expected-given-name | expected-family-name |
+        | family-name-only     | kenneth-changed-family-name-passport-valid | kenneth-changed-family-name-score-2 | Kenneth             | Smith                |
+        | given-names-only     | kenneth-changed-given-name-passport-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
+
+  Rule: Update journey - existing SI record
+    Background: User has existing SI record
+      And I have an existing stored identity record with a 'P2' vot
+
+    Scenario: Reuse P1 journey with update
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
+      When I submit an 'update-details' event
+      Then I get a 'update-details' page response
+      When I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response
+      When I submit a 'update-name' event
+      Then I get a 'dcmaw' CRI response
+      # SI record invalidated as part of reset-session-identity lambda
+      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'invalid'
+
+      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P1' identity
+      And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'valid'

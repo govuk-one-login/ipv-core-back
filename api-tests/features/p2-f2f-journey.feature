@@ -57,9 +57,9 @@ Feature: P2 F2F journey
       Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
 
   Rule: Successful F2F journeys
-    Scenario Outline: Successful P2 identity via F2F using <doc>
+    Scenario Outline: Successful P2 identity via F2F using <doc> - <journey-type>
       # Initial journey
-      Given I start a new 'medium-confidence' journey
+      When I start a new '<journey-type>' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -81,16 +81,18 @@ Feature: P2 F2F journey
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
-      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I start new '<journey-type>' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
       Examples:
-        | doc      | details                      |
-        | passport | kenneth-passport-valid       |
-        | DL       | kenneth-driving-permit-valid |
+        | journey-type           | doc      | details                      |
+        | high-medium-confidence | passport | kenneth-passport-valid       |
+        | high-medium-confidence | DL       | kenneth-driving-permit-valid |
+        | medium-confidence      | passport | kenneth-passport-valid       |
+        | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
     Scenario Outline: Successful P2 identity via F2F using <doc> - DCMAW access_denied
       # Initial journey

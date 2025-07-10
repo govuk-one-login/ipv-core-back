@@ -174,6 +174,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: "not-used"
+      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "175872367215": # Core dev02
       environment: dev
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -188,6 +190,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: "not-used"
+      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "457601271792": # Build
       environment: build
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -202,6 +206,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:aws-otel-java-wrapper-arm64-ver-1-32-0-6:1
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp # pragma: allowlist secret
     "335257547869": # Staging
       environment: staging
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -216,6 +222,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: "not-used"
+      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "991138514218": # Integration
       environment: integration
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -230,6 +238,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: "not-used"
+      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "075701497069": # Production
       environment: production
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -244,6 +254,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
+      opentelemetryLayerArn: "not-used"
+      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -711,6 +723,7 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: !Sub manual-f2f-pending-reset-${Environment}
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/dynatrace
@@ -760,6 +773,16 @@ Resources:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       AutoPublishAlias: live
 
   ManualF2fPendingResetFunctionLogGroup:
@@ -2896,18 +2919,39 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
+          OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
+          OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED: false
+          OTEL_INSTRUMENTATION_AWS_LAMBDA_ENABLED: true
+          OTEL_INSTRUMENTATION_AWS_SDK_ENABLED: true
+          DT_CONNECTION_AUTH_TOKEN_OTLP: !If
+            - IsBuild
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
+            - !Ref AWS::NoValue
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - /opt/dynatrace
+            - !If
+              - IsBuild
+              - /opt/otel-handler
+              - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !FindInMap [
-            EnvironmentConfiguration,
-            !Ref 'AWS::AccountId',
-            dynatraceLayerArn,
-          ]
+          - !If
+            - IsBuild
+            - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              opentelemetryLayerArn
+            ]
+            - !FindInMap [
+              EnvironmentConfiguration,
+              !Ref 'AWS::AccountId',
+              dynatraceLayerArn,
+            ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:

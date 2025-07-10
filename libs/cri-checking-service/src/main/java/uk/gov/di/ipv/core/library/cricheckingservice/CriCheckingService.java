@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcricallback.service;
+package uk.gov.di.ipv.core.library.cricheckingservice;
 
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -39,7 +40,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.security.InvalidParameterException;
@@ -60,12 +60,10 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SO
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class CriCheckingService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
@@ -252,6 +250,7 @@ public class CriCheckingService {
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     public JourneyResponse checkVcResponse(
             List<VerifiableCredential> newVcs,
             String ipAddress,
@@ -318,7 +317,7 @@ public class CriCheckingService {
             return JOURNEY_DL_AUTH_SOURCE_CHECK;
         }
 
-        return JOURNEY_NEXT;
+        return null;
     }
 
     private void setFailedIdentityCheckOnIpvSessionItem(IpvSessionItem ipvSessionItem) {

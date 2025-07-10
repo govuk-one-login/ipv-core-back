@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +15,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
@@ -143,7 +145,7 @@ public class EvcsClient {
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getIdentityUri())
+                            .uri(getIdentityUri(null))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(evcsPostIdentity)))
@@ -162,7 +164,8 @@ public class EvcsClient {
         }
     }
 
-    public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
+    public HttpResponse<String> updateUserVCs(
+            String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
@@ -180,7 +183,7 @@ public class EvcsClient {
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -190,8 +193,39 @@ public class EvcsClient {
         }
     }
 
-    private URI getIdentityUri() throws URISyntaxException {
-        return getUri(IDENTITY_SUB_PATH, null, null);
+    public HttpResponse<String> invalidateStoredIdentityRecord(String userId)
+            throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage("Preparing to invalidate user's stored identity record"));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getIdentityUri("invalidate"))
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(
+                                                    new EvcsInvalidateStoredIdentityDto(userId))))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            return sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
+    }
+
+    private URI getIdentityUri(String path) throws URISyntaxException {
+        var subPath =
+                StringUtils.isBlank(path)
+                        ? IDENTITY_SUB_PATH
+                        : String.join("/", IDENTITY_SUB_PATH, path);
+        return getUri(subPath, null, null);
     }
 
     private URI getUri(String subPath, String userId, List<EvcsVCState> vcStatesToQueryFor)

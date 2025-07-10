@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.enums.Vot.P3;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
@@ -32,6 +33,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScor
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.H1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1C;
@@ -61,6 +63,9 @@ class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -84,6 +89,9 @@ class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.of(H1A));
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(M1A));
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -94,7 +102,7 @@ class VotMatcherTest {
 
         assertEquals(
                 new VotMatchingResult(
-                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1A))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P3, Optional.of(H1A))),
                         Optional.of(new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A))),
                         GPG_45_SCORES),
                 votMatch);
@@ -104,6 +112,9 @@ class VotMatcherTest {
     void shouldIgnoreWeakererMatchingGpg45Vots() throws Exception {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(M1A));
@@ -179,6 +190,9 @@ class VotMatcherTest {
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(M1A));
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -238,6 +252,9 @@ class VotMatcherTest {
         var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
                 .thenReturn(Optional.of(Gpg45Profile.M1C));
 
@@ -263,6 +280,9 @@ class VotMatcherTest {
         var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
                 .thenReturn(Optional.of(Gpg45Profile.M1C));
 
@@ -287,6 +307,9 @@ class VotMatcherTest {
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
                 .thenReturn(Optional.of(M2B));
 

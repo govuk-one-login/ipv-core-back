@@ -6,21 +6,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.*;
 
 @ExtendWith(MockitoExtension.class)
 class ManualF2fPendingResetHandlerTest {
@@ -30,6 +37,9 @@ class ManualF2fPendingResetHandlerTest {
     @Mock private Context mockContext;
     @Mock private CriResponseService mockCriResponseService;
     @Mock private ConfigService mockConfigService;
+    @Mock private AuditService auditService;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
+    @Mock ConfigService configService;
 
     @InjectMocks private ManualF2fPendingResetHandler handler;
 
@@ -103,5 +113,39 @@ class ManualF2fPendingResetHandlerTest {
         // Assert
         assertTrue(response.containsKey("result"));
         assertTrue(response.containsKey("message"));
+    }
+
+    @Test
+    void shouldSendAuditEventWithUserId() {
+        // Arrange
+        CriResponseItem mockItem =
+                CriResponseItem.builder()
+                        .userId(TEST_USER_ID)
+                        .credentialIssuer(Cri.F2F.getId())
+                        .build();
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
+
+        // Act
+        handler.handleRequest(TEST_USER_ID, mockContext);
+
+        // Assert
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(IPV_F2F_SUPPORT_CANCEL, auditEvent.getEventName());
+        assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
+        verify(auditService, times(1)).awaitAuditEvents();
+    }
+
+    @Test
+    void shouldNotSendAuditEvent() {
+        // Arrange
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(null);
+
+        // Act
+        handler.handleRequest(TEST_USER_ID, mockContext);
+
+        // Assert
+        verify(auditService, times(0)).sendAuditEvent(any());
     }
 }

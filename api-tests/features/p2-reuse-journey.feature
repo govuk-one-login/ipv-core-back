@@ -48,3 +48,30 @@ Feature: P2 Reuse journey
 
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
+
+  Scenario: Reuse journey - credentials meet P3 identity
+    Given the subject already has the following credentials
+      | CRI        | scenario               |
+      | dcmaw      | kenneth-passport-valid |
+      | address    | kenneth-current        |
+      | fraud      | kenneth-score-2        |
+    When I start a new 'high-medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P3' identity
+
+  Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
+    Given the subject already has the following credentials
+      | CRI            | scenario                     |
+      | dcmaw          | kenneth-driving-permit-valid |
+      | address        | kenneth-current              |
+      | fraud          | kenneth-score-2              |
+      | drivingLicence | kenneth-driving-permit-valid |
+    When I start a new 'high-medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
