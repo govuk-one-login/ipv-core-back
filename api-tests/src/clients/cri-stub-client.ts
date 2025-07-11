@@ -8,6 +8,7 @@ import config from "../config/config.js";
 const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   ticf: "ticf",
   kbv: "experian-kbv-cri",
+  experianKbv: "experian-kbv-cri",
   dcmaw: "dcmaw-cri",
   address: "address-cri",
   fraud: "fraud-cri",
