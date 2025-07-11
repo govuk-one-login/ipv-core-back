@@ -2,11 +2,11 @@
 Feature: Identity reuse update details
     Background:
         Given the subject already has the following credentials
-            | CRI        | scenario               |
-            | ukPassport | kenneth-passport-valid |
-            | address    | kenneth-current        |
-            | fraud      | kenneth-score-2        |
-            | kbv        | kenneth-score-2        |
+            | CRI         | scenario               |
+            | ukPassport  | kenneth-passport-valid |
+            | address     | kenneth-current        |
+            | fraud       | kenneth-score-2        |
+            | experianKbv | kenneth-score-2        |
         And I activate the 'disableStrategicApp' feature set
 
     Scenario Outline: Successful name change - <selected-name-change> name change but user updates <actual-name-change> name instead
