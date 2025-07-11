@@ -81,7 +81,7 @@ Feature: Audit Events
     # We want to wait a suitable period of time to let the request to the process-async-cri lambda to finish before
     # starting a new session. This will hopefully reduce flakiness with this test where we expect an exact sequence
     # of audit events to be generated.
-    When I wait for 3 seconds for the async credential to be processed
+    When I wait for 10 seconds for the async credential to be processed
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
