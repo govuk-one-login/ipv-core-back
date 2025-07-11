@@ -521,7 +521,7 @@ class ContractTest {
     public RequestResponsePact nullBodyPostIdentityReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
-                .uponReceiving("A request to create a stored identity in EVCS, with null user id")
+                .uponReceiving("A request to create a stored identity in EVCS, with null body")
                 .path("/identity")
                 .method("POST")
                 .headers(
