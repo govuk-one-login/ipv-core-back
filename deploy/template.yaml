@@ -2930,13 +2930,7 @@ Resources:
               - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
               - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
             - !Ref AWS::NoValue
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - !If
-              - IsBuild
-              - /opt/otel-handler
-              - /opt/dynatrace
-            - !Ref AWS::NoValue
+          AWS_LAMBDA_EXEC_WRAPPER: !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
