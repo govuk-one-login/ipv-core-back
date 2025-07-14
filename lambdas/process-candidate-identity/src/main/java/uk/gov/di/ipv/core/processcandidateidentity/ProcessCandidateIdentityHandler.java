@@ -529,7 +529,6 @@ public class ProcessCandidateIdentityHandler
                             auditEventParameters);
 
             if (journey != null) {
-                LOGGER.error(String.format("MIKE2! %s %s", journey, processIdentityType));
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
