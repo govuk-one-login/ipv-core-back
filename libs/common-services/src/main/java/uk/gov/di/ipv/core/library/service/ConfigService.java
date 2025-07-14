@@ -59,7 +59,12 @@ public abstract class ConfigService {
         return new AppConfigService();
     }
 
-    // Get environment variables
+    public abstract List<String> getFeatureSet();
+
+    protected abstract String getSecret(String path);
+
+    public abstract void setFeatureSet(List<String> featureSet);
+
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
     }
@@ -73,7 +78,6 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
-    // Get config
     public String getParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
@@ -123,10 +127,6 @@ public abstract class ConfigService {
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
     }
-
-    public abstract List<String> getFeatureSet();
-
-    protected abstract String getSecret(String path);
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
@@ -242,8 +242,8 @@ public abstract class ConfigService {
         var criId = cri.getId();
         var result = new ArrayList<String>();
         try {
-            var parameters = getParametersByPrefix(formatPath(pathTemplate, criId));
-            for (var parameter : parameters.values()) {
+            var criParameters = getParametersByPrefix(formatPath(pathTemplate, criId));
+            for (var parameter : criParameters.values()) {
                 var criConfig = OBJECT_MAPPER.readValue(parameter, CriConfig.class);
 
                 result.add(criConfig.getComponentId());
@@ -256,9 +256,6 @@ public abstract class ConfigService {
                             pathTemplate, e));
         }
     }
-
-    // Set config
-    public abstract void setFeatureSet(List<String> featureSet);
 
     protected void updateParameters(Map<String, String> map, String yaml) {
         try {
