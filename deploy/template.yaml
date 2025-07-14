@@ -4352,6 +4352,16 @@ Resources:
       ApplicationId: !Ref AppConfigApplication
       LocationUri: "hosted"
 
+  AppConfigDeploymentStrategy:
+    Type: AWS::AppConfig::DeploymentStrategy
+    Properties:
+      Name: !Sub "core-back-${Environment}"
+      DeploymentDurationInMinutes: 0
+      FinalBakeTimeInMinutes: 0
+      GrowthFactor: 100
+      GrowthType: LINEAR
+      ReplicateTo: NONE
+
 Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
