@@ -85,7 +85,6 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
-    // Get config
     public String getParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
@@ -142,10 +141,6 @@ public abstract class ConfigService {
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
     }
-
-    public abstract List<String> getFeatureSet();
-
-    protected abstract String getSecret(String path);
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
