@@ -368,7 +368,7 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: false
-    accountInterventionsEnabled: false
+    accountInterventionsEnabled: true
 
   features:
     accountInterventions:
