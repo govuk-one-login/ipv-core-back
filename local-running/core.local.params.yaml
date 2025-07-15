@@ -374,6 +374,9 @@ core:
     accountInterventions:
       featureFlags:
         accountInterventionsEnabled: true
+    disableAccountInterventions:
+      featureFlags:
+        accountInterventionsEnabled: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true

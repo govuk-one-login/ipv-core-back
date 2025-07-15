@@ -145,7 +145,8 @@ Feature: Inherited identity extended scenarios
 
   Scenario: Successfully completes reprove identity journey with a PCL250 HMRC profile and receives a P2
     # Start reprove identity journey with inherited identity after incomplete P2
-    Given I start a new 'medium-confidence-pcl200-pcl250' journey with reprove identity and with inherited identity 'kenneth-vot-pcl250-passport'
+    Given The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'kenneth-vot-pcl250-passport'
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'live-in-uk' page response
