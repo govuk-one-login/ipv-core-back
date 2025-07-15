@@ -63,6 +63,7 @@ Globals:
         OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED: false
         OTEL_INSTRUMENTATION_AWS_LAMBDA_ENABLED: true
         OTEL_INSTRUMENTATION_AWS_SDK_ENABLED: true
+        OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
         DT_CONNECTION_AUTH_TOKEN_OTLP: !If
           - IsBuild
           - !Sub
@@ -3109,7 +3110,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
