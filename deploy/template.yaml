@@ -132,6 +132,10 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
+  IsBuildStagingProd: !Or
+    - !Equals [ !Ref Environment, build ]
+    - !Equals [ !Ref Environment, staging ]
+    - !Equals [ !Ref Environment, production ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -782,6 +786,7 @@ Resources:
 
   ManualF2fPendingResetFunctionManagedPolicy:
     Type: AWS::IAM::ManagedPolicy
+    Condition: IsBuildStagingProd
     Properties:
       ManagedPolicyName: ManualF2fPendingResetManagedPolicy
       Description: Allows invoking the ManualF2f Lambda
@@ -798,6 +803,7 @@ Resources:
 
   ManualF2fPendingResetFunctionInvokeRole:
     Type: AWS::IAM::Role
+    Condition: IsBuildStagingProd
     Properties:
       RoleName: !Sub ${AWS::StackName}-RunbookF2fResetRole
       Description: "This role allows approved support team to perform pending F2F reset"
