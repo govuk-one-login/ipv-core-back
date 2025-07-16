@@ -368,10 +368,10 @@ Feature: Repeat fraud check journeys
 
     Scenario: Initial P2 credentials followed by high-medium confidence RFC update journey
       Given the subject already has the following credentials
-        | CRI         | scenario               |
-        | ukPassport  | kenneth-passport-valid |
-        | address     | kenneth-current        |
-        | experianKbv | kenneth-score-2        |
+        | CRI        | scenario               |
+        | ukPassport | kenneth-passport-valid |
+        | address    | kenneth-current        |
+        | kbv        | kenneth-score-2        |
       And the subject already has the following expired credentials
         | CRI   | scenario        |
         | fraud | kenneth-score-2 |
