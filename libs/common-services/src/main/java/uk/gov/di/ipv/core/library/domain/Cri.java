@@ -17,7 +17,8 @@ public enum Cri {
     DRIVING_LICENCE("drivingLicence"),
     DWP_KBV("dwpKbv"),
     EXPERIAN_FRAUD("fraud"),
-    EXPERIAN_KBV("kbv"),
+    KBV("kbv"),
+    EXPERIAN_KBV("experianKbv"),
     F2F("f2f"),
     HMRC_MIGRATION("hmrcMigration", true),
     NINO("nino"),
@@ -26,7 +27,8 @@ public enum Cri {
 
     private final String id;
     private final boolean isOperationalCri;
-    private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV);
+    private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, KBV, EXPERIAN_KBV);
+    private static final String EXPERIAN_KBV_REDIRECT_ID = "kbv";
 
     Cri(String id) {
         this(id, false);
@@ -42,6 +44,10 @@ public enum Cri {
     }
 
     public static Cri fromId(String id) {
+        if (EXPERIAN_KBV_REDIRECT_ID.equals(id)) {
+            return EXPERIAN_KBV;
+        }
+
         for (var cri : values()) {
             if (cri.getId().equals(id)) {
                 return cri;

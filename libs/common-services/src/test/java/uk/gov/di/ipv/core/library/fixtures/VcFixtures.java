@@ -1249,7 +1249,7 @@ public interface VcFixtures {
     static VerifiableCredential vcExperianKbvM1a() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.EXPERIAN_KBV,
+                Cri.KBV,
                 vcClaimExperianKbv(),
                 EXPERIAN_KBV_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1653403140));

@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.KBV;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -201,18 +201,14 @@ class TokenTests {
     @NotNull
     private static CriOAuthSessionItem getCriOAuthSessionItem() {
         return new CriOAuthSessionItem(
-                "dummySessionId",
-                "dummyOAuthSessionId",
-                EXPERIAN_KBV.getId(),
-                "dummyConnection",
-                900);
+                "dummySessionId", "dummyOAuthSessionId", KBV.getId(), "dummyConnection", 900);
     }
 
     @NotNull
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                EXPERIAN_KBV.getId(),
+                KBV.getId(),
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=kbv",
                 "dummyState",

@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.KBV;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
@@ -116,9 +116,7 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV,
-                        getCriOAuthSessionItem());
+                        new BearerAccessToken("dummyAccessToken"), KBV, getCriOAuthSessionItem());
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialValidator();
@@ -130,7 +128,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV,
+                                                KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -247,9 +245,7 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV,
-                        getCriOAuthSessionItem());
+                        new BearerAccessToken("dummyAccessToken"), KBV, getCriOAuthSessionItem());
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialValidator();
@@ -261,7 +257,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV,
+                                                KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -354,7 +350,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        EXPERIAN_KBV,
+                                        KBV,
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -423,9 +419,7 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV,
-                        getCriOAuthSessionItem());
+                        new BearerAccessToken("dummyAccessToken"), KBV, getCriOAuthSessionItem());
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialValidator();
@@ -437,7 +431,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV,
+                                                KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -545,11 +539,7 @@ class CredentialTests {
     @NotNull
     private static CriOAuthSessionItem getCriOAuthSessionItem() {
         return new CriOAuthSessionItem(
-                "dummySessionId",
-                "dummyOAuthSessionId",
-                EXPERIAN_KBV.getId(),
-                "dummyConnection",
-                900);
+                "dummySessionId", "dummyOAuthSessionId", KBV.getId(), "dummyConnection", 900);
     }
 
     @NotNull
