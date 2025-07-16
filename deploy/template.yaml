@@ -174,8 +174,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "175872367215": # Core dev02
       environment: dev
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -190,8 +188,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "457601271792": # Build
       environment: build
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -206,8 +202,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:aws-otel-java-wrapper-arm64-ver-1-32-0-6:1
-      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp # pragma: allowlist secret
     "335257547869": # Staging
       environment: staging
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -222,8 +216,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "991138514218": # Integration
       environment: integration
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -238,8 +230,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "075701497069": # Production
       environment: production
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -254,8 +244,6 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -529,12 +517,12 @@ Resources:
         - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
-          - IsDevelopment
-          - !If
-            - IsDev01
-            - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+              - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
+            - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
           HostedZoneId: !If
             - IsDevelopment
             - !If
@@ -723,7 +711,6 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: !Sub manual-f2f-pending-reset-${Environment}
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/dynatrace
@@ -732,9 +719,9 @@ Resources:
         - !If
           - UseDynatrace
           - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
           ]
           - !Ref AWS::NoValue
       VpcConfig:
@@ -765,24 +752,17 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CRIResponseTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+            - Sid: AllowGetDeleteCriResponseDynamoDbTable
               Effect: Allow
               Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
+                - 'dynamodb:GetItem'
+                - 'dynamodb:DeleteItem'
               Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/cri-response
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
       AutoPublishAlias: live
 
   ManualF2fPendingResetFunctionLogGroup:
@@ -799,6 +779,43 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
+
+  ManualF2fPendingResetFunctionManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: ManualF2fPendingResetManagedPolicy
+      Description: Allows invoking the ManualF2f Lambda
+      Path: /runbooks/
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+              - lambda:GetFunction
+            Resource:
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}
+
+  ManualF2fPendingResetFunctionInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-RunbookF2fResetRole
+      Description: "This role allows approved support team to perform pending F2F reset"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "sts:AssumeRole"
+            Condition:
+              ArnLike:
+                aws:PrincipalARN:
+                  !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
+      ManagedPolicyArns:
+        - !Ref ManualF2fPendingResetFunctionManagedPolicy
+      MaxSessionDuration: 43200
+      Path: /runbooks/
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -833,9 +850,9 @@ Resources:
         - !If
           - UseDynatrace
           - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
           ]
           - !Ref AWS::NoValue
       VpcConfig:
@@ -2576,25 +2593,25 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
-          - Sid: AppConfigAccess
-            Effect: Allow
-            Action:
-              - appconfig:StartConfigurationSession
-              - appconfig:GetLatestConfiguration
-            Resource:
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   CheckGpg45ScoreFunctionLogGroup:
@@ -2919,39 +2936,18 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
-          OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
-          OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED: false
-          OTEL_INSTRUMENTATION_AWS_LAMBDA_ENABLED: true
-          OTEL_INSTRUMENTATION_AWS_SDK_ENABLED: true
-          DT_CONNECTION_AUTH_TOKEN_OTLP: !If
-            - IsBuild
-            - !Sub
-              - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
-              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
-            - !Ref AWS::NoValue
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsBuild
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/dynatrace
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsBuild
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            dynatraceLayerArn,
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -3307,37 +3303,37 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: IsNotDevelopment
     Properties:
-        AlarmName: PrivateApiGateWay5xxAlarm
-        AlarmDescription: !Sub
-          - 'The internal API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
-          - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
-        ActionsEnabled: true
-        AlarmActions:
-          - !ImportValue sns-topics-AlarmTopic
-        OKActions:
-          - !ImportValue sns-topics-AlarmTopic
-        InsufficientDataActions: []
-        EvaluationPeriods: 3
-        DatapointsToAlarm: 3
-        Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
-        ComparisonOperator: GreaterThanThreshold
-        TreatMissingData: notBreaching
-        Metrics:
-            - Id: e1
-              Label: Sum-of-5xx-Errors
-              ReturnData: true
-              Expression: SUM(METRICS())
-            - Id: m1
-              ReturnData: false
-              MetricStat:
-                  Metric:
-                      Namespace: AWS/ApiGateway
-                      MetricName: 5XXError
-                      Dimensions:
-                          - Name: ApiName
-                            Value: !Sub IPV Core Private API Gateway ${Environment}
-                  Period: 300
-                  Stat: Sum
+      AlarmName: PrivateApiGateWay5xxAlarm
+      AlarmDescription: !Sub
+        - 'The internal API gateway in front of core-back has returned 2 or more 500 errors in a 5 minute period, for 3 periods in a row. See runbook: ${RunbookUrl}'
+        - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue sns-topics-AlarmTopic
+      OKActions:
+        - !ImportValue sns-topics-AlarmTopic
+      InsufficientDataActions: []
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-5xx-Errors
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub IPV Core Private API Gateway ${Environment}
+            Period: 300
+            Stat: Sum
 
   CoreApiExternalGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
