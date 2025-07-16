@@ -148,6 +148,7 @@ public class TracingHttpClient extends HttpClient {
     }
 
     private static HttpClient getOTelInstrumentedHttpClient() {
-        return HttpClient.newHttpClient(); // Open telemetry auto instrumentation is enabled for Java Http Client
+        // Open telemetry auto instrumentation is enabled for Java Http Client
+        return HttpClient.newHttpClient();
     }
 }

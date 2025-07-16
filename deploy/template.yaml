@@ -66,7 +66,7 @@ Globals:
         OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED: true
         OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
         DT_CONNECTION_AUTH_TOKEN_OTLP: !If
-          - IsBuild
+          - IsDevPerf
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
@@ -132,6 +132,7 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
+  IsDevPerf: !Equals [ !Ref Environment, "dev-perf" ]
   IsDevOrBuild: !Or
     - !Condition IsDevelopment
     - !Condition IsBuild
@@ -162,7 +163,7 @@ Conditions:
     - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ]]
   IsPerformanceSensitive: !Or
     - !Not [ !Condition IsDevelopment ]
-    - !Equals [ !Ref Environment, "dev-perf" ]
+    - !Condition IsDevPerf
   UseDynatrace: !Condition IsPerformanceSensitive
 
 # The AWS Account Id is used in the following mapping section because we have
@@ -202,8 +203,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
       dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
+      opentelemetryLayerArn: "arn:aws:lambda:eu-west-2:901920570463:layer:aws-otel-java-wrapper-arm64-ver-1-32-0:6"
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:175872367215:secret:dynatrace_api_token_otlp # pragma: allowlist secret
     "457601271792": # Build
       environment: build
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -739,7 +740,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -747,7 +748,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -850,7 +851,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -858,7 +859,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -957,7 +958,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -965,7 +966,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1070,7 +1071,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1078,7 +1079,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1207,7 +1208,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1215,7 +1216,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1335,7 +1336,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1343,7 +1344,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1482,7 +1483,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1490,7 +1491,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1608,7 +1609,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1616,7 +1617,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1741,7 +1742,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1749,7 +1750,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -1863,7 +1864,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -1871,7 +1872,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2117,7 +2118,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2125,7 +2126,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2235,7 +2236,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2243,7 +2244,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2362,7 +2363,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2370,7 +2371,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2484,7 +2485,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2492,7 +2493,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2699,7 +2700,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2707,7 +2708,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2800,7 +2801,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2808,7 +2809,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -2905,7 +2906,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -2913,7 +2914,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -3015,7 +3016,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -3023,7 +3024,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
@@ -3114,7 +3115,7 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - !If
-              - IsBuild
+              - IsDevPerf
               - /opt/otel-handler
               - /opt/dynatrace
             - !Ref AWS::NoValue
@@ -3122,7 +3123,7 @@ Resources:
         - !If
           - UseDynatrace
           - !If
-            - IsBuild
+            - IsDevPerf
             - !FindInMap [
               EnvironmentConfiguration,
               !Ref 'AWS::AccountId',
