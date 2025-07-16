@@ -339,7 +339,7 @@ public class ProcessCriCallbackHandler
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachCriSessionIdToLogs(callbackRequest.getState());
 
-        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuer().getId());
+        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());
 
         // Validate callback request
         if (callbackRequest.getError() != null) {
