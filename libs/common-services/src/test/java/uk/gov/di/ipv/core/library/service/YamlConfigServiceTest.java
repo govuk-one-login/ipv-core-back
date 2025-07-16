@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -70,12 +71,12 @@ class YamlConfigServiceTest {
     }
 
     @Test
-    void getCriByIssuerReturnsCri() throws Exception {
+    void shouldReturnIssuerCris() throws Exception {
         var configService = getConfigService();
 
-        var cri = configService.getCriByIssuer("test-issuer");
-
-        assertEquals(Cri.ADDRESS, cri);
+        assertEquals(
+                Map.of("test-issuer", Cri.ADDRESS, "alternate-issuer", Cri.DCMAW),
+                configService.getIssuerCris());
     }
 
     @Test
