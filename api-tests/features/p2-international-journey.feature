@@ -71,7 +71,7 @@ Feature: P2 International Address
       Then I get a 'P0' identity
 
   Rule: High-medium confidence journeys
-    Background: Start hihg-medium confidence journey
+    Background: Start high-medium confidence journey
       And I start a new 'high-medium-confidence' journey
       Then I get a 'live-in-uk' page response
 

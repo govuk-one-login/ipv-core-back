@@ -347,7 +347,7 @@ Feature: P2 CIMIT - Alternate doc
 
   Rule: High-medium confidence journey
     Scenario Outline: High-medium confidence journey - alternate-doc mitigation
-      Given I start a new 'medium-confidence' journey
+      Given I start a new 'high-medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response

@@ -1,6 +1,6 @@
 @Build
 Feature: Stored Identity - Update Existing Identity
-  Background: ENable feature sets
+  Background: Enable feature sets
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
 
   Rule: Non-update journey - no existing SI record

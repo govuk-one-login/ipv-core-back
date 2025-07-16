@@ -103,7 +103,7 @@ Feature: P2 reuse journeys
         Then I get a 'P2' identity
         And I have a 'GPG45' stored identity record type with a 'P2' vot
 
-    Rule: Existing identity that meets P2
+    Rule: Existing credentials that meets P2
       Background: User has existing identity that meets P2 identity
         Given the subject already has the following credentials
           | CRI     | scenario                     |

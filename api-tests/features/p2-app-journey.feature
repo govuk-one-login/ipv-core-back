@@ -85,7 +85,6 @@ Feature: P2 App journey
       | high-medium-confidence |
       | medium-confidence      |
 
-
   Scenario: DCMAW returns a 404 from user-info endpoint
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
