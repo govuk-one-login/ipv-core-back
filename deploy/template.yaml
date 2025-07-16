@@ -820,6 +820,7 @@ Resources:
                   !Sub arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*/AWSReservedSSO_ApprovedServiceSupport*
       ManagedPolicyArns:
         - !Ref ManualF2fPendingResetFunctionManagedPolicy
+      PermissionsBoundary: !Sub "${PermissionsBoundary}"
       MaxSessionDuration: 43200
       Path: /runbooks/
 
