@@ -63,7 +63,7 @@ Feature: Return exit codes
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'experianKbv' CRI response
+    Then I get a 'kbv' CRI response
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -86,7 +86,7 @@ Feature: Return exit codes
       | drivingLicence   | kenneth-driving-permit-valid        |
       | address          | kenneth-current                     |
       | fraud            | kenneth-score-2                     |
-      | experianKbv      | kenneth-needs-enhanced-verification |
+      | kbv              | kenneth-needs-enhanced-verification |
 
     # Start new session
     When I start a new 'medium-confidence' journey
@@ -148,7 +148,7 @@ Feature: Return exit codes
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'experianKbv' CRI response
+    Then I get a 'kbv' CRI response
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |

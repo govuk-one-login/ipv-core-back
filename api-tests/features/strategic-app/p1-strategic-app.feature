@@ -92,7 +92,7 @@ Feature: M2B Strategic App Journeys
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
+      Then I get a 'kbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
