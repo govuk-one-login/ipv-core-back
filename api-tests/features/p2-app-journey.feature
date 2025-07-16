@@ -66,6 +66,26 @@ Feature: P2 App journey
     | high-medium-confidence |
     | medium-confidence      |
 
+  Scenario Outline: Failed DCMAW with CI should result in P0 - <journey-type>
+    When I start a new '<journey-type>' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
+    Then I get a 'pyi-no-match' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
+
+    Examples:
+      | journey-type           |
+      | high-medium-confidence |
+      | medium-confidence      |
+
+
   Scenario: DCMAW returns a 404 from user-info endpoint
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
