@@ -267,10 +267,11 @@ public class ProcessCandidateIdentityHandler
 
             String userId = clientOAuthSessionItem.getUserId();
 
-            // We skip AIS checks for reverification journeys
+            // We skip AIS checks for reverification journeys or if we don't have a user ID to check
+            // against (in some error cases)
             if (configService.enabled(AIS_ENABLED)
                     && !SKIP_AIS_TYPES.contains(processIdentityType)
-                    && userId != null) {
+                    && !StringUtils.isBlank(userId)) {
                 var interventionState = aisService.fetchAccountState(userId);
                 if (midJourneyInterventionDetected(
                         ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
