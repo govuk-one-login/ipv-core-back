@@ -27,6 +27,18 @@ nestedJourneyStates:
         targetState: PRE_EXPERIAN_PAGE
       fail-with-ci:
         exitEventToEmit: fail-with-ci
+  EXPERIAN_KBV_CRI:
+    response:
+      type: cri
+      criId: experianKbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        exitEventToEmit: fail-with-no-ci
+      next:
+        exitEventToEmit: next
+      fail-with-ci:
+        exitEventToEmit: fail-with-ci
   CRI_EXPERIAN_KBV:
     response:
       type: cri
@@ -45,7 +57,7 @@ nestedJourneyStates:
       pageId: page-pre-experian-kbv-transition
     events:
       next:
-        targetState: CRI_EXPERIAN_KBV
+        targetState: EXPERIAN_KBV_CRI
   PRE_DWP_KBV_PIP_PAGE:
     response:
       type: page
