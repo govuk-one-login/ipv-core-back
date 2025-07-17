@@ -146,7 +146,8 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I start a new 'medium-confidence' journey with reprove identity
+    And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+    And I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'live-in-uk' page response
