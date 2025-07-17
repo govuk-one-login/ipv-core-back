@@ -1,7 +1,7 @@
 name: New P2 Identity
 description: >-
-  The routes a user can take to prove their identity to a medium
-  confidence level (P2).
+  The routes a user can take to prove their identity to at least
+  a medium confidence level (P2).
 
 states:
   # Entry points
