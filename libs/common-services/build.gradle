@@ -9,7 +9,6 @@ dependencies {
 	api libs.nimbusdsOauth2OidcSdk,
 			libs.diVocab
 	implementation platform(libs.awsSdkBom),
-			platform(libs.openTelemetryBom),
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,
@@ -19,7 +18,7 @@ dependencies {
 			libs.commonsCollections,
 			libs.jacksonDatabind,
 			libs.jacksonDataformatYaml,
-			libs.openTelemetryJavaHttpClient,
+			libs.openTelemetryApi,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			libs.powertoolsMetrics
