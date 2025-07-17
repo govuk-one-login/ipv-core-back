@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.evcs.metadata.InheritedIdentityMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
@@ -133,33 +132,42 @@ public class EvcsService {
             getParsedVerifiableCredentialsFromEvcsResponse(
                     String userId, List<EvcsGetUserVCDto> evcsUserVcs)
                     throws CredentialParseException {
-        Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
-        for (var vc : evcsUserVcs) {
-            try {
+        var credentials = new EnumMap<EvcsVCState, List<VerifiableCredential>>(EvcsVCState.class);
+
+        try {
+            var issuerCris = configService.getIssuerCris();
+            var cimitComponentId =
+                    configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
+
+            for (var vc : evcsUserVcs) {
                 var jwt = SignedJWT.parse(vc.vc());
+                var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the
                 // credential bundle so we skip the VC if it's from CIMIT.
-                if (configService
-                        .getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID)
-                        .equals(jwt.getJWTClaimsSet().getIssuer())) {
+                if (cimitComponentId.equals(issuer)) {
                     continue;
                 }
 
-                var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+                var cri = issuerCris.get(issuer);
+                if (cri == null) {
+                    throw new CredentialParseException(
+                            String.format(
+                                    "Failed to find credential issuer for vc issuer: %s in %s",
+                                    issuer, issuerCris));
+                }
+
                 var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
                 if (!credentials.containsKey(vc.state())) {
                     credentials.put(vc.state(), new ArrayList<>());
                 }
                 credentials.get(vc.state()).add(credential);
-            } catch (NoCriForIssuerException e) {
-                throw new CredentialParseException("Failed to find credential issuer for vc", e);
-            } catch (ParseException e) {
-                throw new CredentialParseException(
-                        "Encountered a parsing error while attempting to parse evcs credentials",
-                        e);
             }
+        } catch (ParseException e) {
+            throw new CredentialParseException(
+                    "Encountered a parsing error while attempting to parse evcs credentials", e);
         }
+
         return credentials;
     }
 

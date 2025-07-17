@@ -11,6 +11,7 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
+import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -248,13 +249,15 @@ public class ProcessCandidateIdentityHandler
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
 
+        IpvSessionItem ipvSessionItem = null;
+
         try {
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
             var processIdentityType = RequestHelper.getProcessIdentityType(request);
 
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -264,14 +267,15 @@ public class ProcessCandidateIdentityHandler
 
             String userId = clientOAuthSessionItem.getUserId();
 
-            // We skip AIS checks for reverification journeys
+            // We skip AIS checks for reverification journeys or if we don't have a user ID to check
+            // against (in some error cases)
             if (configService.enabled(AIS_ENABLED)
-                    && !SKIP_AIS_TYPES.contains(processIdentityType)) {
+                    && !SKIP_AIS_TYPES.contains(processIdentityType)
+                    && !StringUtils.isBlank(userId)) {
                 var interventionState = aisService.fetchAccountState(userId);
                 if (midJourneyInterventionDetected(
                         ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
-                    updateIpvSessionWithIntervention(ipvSessionItem);
-                    return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
+                    throw new AccountInterventionException();
                 }
                 ipvSessionItem.setInitialAccountInterventionState(interventionState);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -292,7 +296,9 @@ public class ProcessCandidateIdentityHandler
                     ipAddress,
                     sessionVcs,
                     auditEventUser);
-
+        } catch (AccountInterventionException e) {
+            updateIpvSessionWithIntervention(ipvSessionItem);
+            return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             var errorMessage = LogHelper.buildErrorMessage("Failed to process identity", e);
             if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
@@ -453,7 +459,8 @@ public class ProcessCandidateIdentityHandler
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
                     ParseException,
-                    CiExtractionException {
+                    CiExtractionException,
+                    AccountInterventionException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
         var auditEventParameters =
@@ -665,7 +672,8 @@ public class ProcessCandidateIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
-            SharedAuditEventParameters sharedAuditEventParameters) {
+            SharedAuditEventParameters sharedAuditEventParameters)
+            throws AccountInterventionException {
         try {
             // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
             // validation), we cannot make a request to TICF as we will have missing required
@@ -714,8 +722,7 @@ public class ProcessCandidateIdentityHandler
 
             if (configService.enabled(AIS_ENABLED)
                     && checkHasRelevantIntervention(ipvSessionItem, ticfVcs)) {
-                updateIpvSessionWithIntervention(ipvSessionItem);
-                return JOURNEY_ACCOUNT_INTERVENTION;
+                throw new AccountInterventionException();
             }
 
             if (!clientOAuthSessionItem.isReverification()) {

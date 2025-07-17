@@ -10,7 +10,8 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      When I start a new 'medium-confidence' journey with reprove identity
+      And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
       When I submit a 'next' event
       Then I get a 'live-in-uk' page response
@@ -55,7 +56,8 @@ Feature: Reprove Identity Journey
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey after popping out to the Post Office
-      When I start new 'medium-confidence' journeys with reprove identity until I get a 'page-ipv-reuse' page response
+      Given The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -69,7 +71,8 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      When I start a new 'low-confidence' journey with reprove identity
+      And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start a new 'low-confidence' journey
       Then I get a 'reprove-identity-start' page response
       When I submit a 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
