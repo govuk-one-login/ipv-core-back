@@ -40,7 +40,7 @@ Feature: Disabled CRI journeys
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -50,11 +50,11 @@ Feature: Disabled CRI journeys
 
     Scenario: Separate session enhanced verification mitigation with DCMAW leads to technical failure
       Given the subject already has the following credentials
-        | CRI        | scenario                            |
-        | ukPassport | kenneth-passport-valid              |
-        | address    | kenneth-current                     |
-        | fraud      | kenneth-score-2                     |
-        | kbv        | kenneth-needs-enhanced-verification |
+        | CRI         | scenario                            |
+        | ukPassport  | kenneth-passport-valid              |
+        | address     | kenneth-current                     |
+        | fraud       | kenneth-score-2                     |
+        | experianKbv | kenneth-needs-enhanced-verification |
       And I activate the 'dcmawOffTest' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -80,7 +80,7 @@ Feature: Disabled CRI journeys
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -145,11 +145,11 @@ Feature: Disabled CRI journeys
 
     Scenario: Separate session mitigation with enhanced verification and no photo ID leads to ineligible
       Given the subject already has the following credentials
-        | CRI        | scenario                            |
-        | ukPassport | kenneth-passport-valid              |
-        | address    | kenneth-current                     |
-        | fraud      | kenneth-score-2                     |
-        | kbv        | kenneth-needs-enhanced-verification |
+        | CRI         | scenario                            |
+        | ukPassport  | kenneth-passport-valid              |
+        | address     | kenneth-current                     |
+        | fraud       | kenneth-score-2                     |
+        | experianKbv | kenneth-needs-enhanced-verification |
       And I activate the 'f2fDisabled' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -158,11 +158,11 @@ Feature: Disabled CRI journeys
 
     Scenario: Separate session mitigation with enhanced verification and access-denied from DCMAW leads to ineligible
       Given the subject already has the following credentials
-        | CRI        | scenario                            |
-        | ukPassport | kenneth-passport-valid              |
-        | address    | kenneth-current                     |
-        | fraud      | kenneth-score-2                     |
-        | kbv        | kenneth-needs-enhanced-verification |
+        | CRI         | scenario                            |
+        | ukPassport  | kenneth-passport-valid              |
+        | address     | kenneth-current                     |
+        | fraud       | kenneth-score-2                     |
+        | experianKbv | kenneth-needs-enhanced-verification |
       And I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response

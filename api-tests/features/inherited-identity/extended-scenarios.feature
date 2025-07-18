@@ -23,7 +23,7 @@ Feature: Inherited identity extended scenarios
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -167,7 +167,7 @@ Feature: Inherited identity extended scenarios
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -236,7 +236,7 @@ Feature: Inherited identity extended scenarios
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |

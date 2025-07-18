@@ -161,8 +161,8 @@ core:
           "requiresAdditionalEvidence":"false",
           "jwksUrl":"https://fraud-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
-    kbv:
-      id: kbv
+    experianKbv:
+      id: experianKbv
       name: Experian KBV
       enabled: "true"
       unavailable: false # temporarily unavailable
