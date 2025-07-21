@@ -130,7 +130,7 @@ Feature: Stored Identity - P1 journeys
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
     When I submit an 'end' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details to the CRI stub

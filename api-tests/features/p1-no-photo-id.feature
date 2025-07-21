@@ -284,7 +284,7 @@ Feature: P1 No Photo Id Journey
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
     When I submit an 'end' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'end' event
     Then I get a 'pyi-escape' page response
 

@@ -119,7 +119,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit a 'postOffice' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details to the CRI stub
