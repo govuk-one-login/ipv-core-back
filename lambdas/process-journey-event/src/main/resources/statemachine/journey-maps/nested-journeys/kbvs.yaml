@@ -39,6 +39,18 @@ nestedJourneyStates:
         exitEventToEmit: next
       fail-with-ci:
         exitEventToEmit: fail-with-ci
+  CRI_EXPERIAN_KBV:
+    response:
+      type: cri
+      criId: kbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        exitEventToEmit: fail-with-no-ci
+      next:
+        exitEventToEmit: next
+      fail-with-ci:
+        exitEventToEmit: fail-with-ci
   PRE_EXPERIAN_PAGE:
     response:
       type: page
