@@ -17,6 +17,7 @@ public enum Cri {
     DRIVING_LICENCE("drivingLicence"),
     DWP_KBV("dwpKbv"),
     EXPERIAN_FRAUD("fraud"),
+    KBV("kbv"),
     EXPERIAN_KBV("experianKbv"),
     F2F("f2f"),
     HMRC_MIGRATION("hmrcMigration", true),
@@ -26,7 +27,7 @@ public enum Cri {
 
     private final String id;
     private final boolean isOperationalCri;
-    private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV);
+    private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, KBV, EXPERIAN_KBV);
     private static final String EXPERIAN_KBV_REDIRECT_ID = "kbv";
 
     Cri(String id) {
