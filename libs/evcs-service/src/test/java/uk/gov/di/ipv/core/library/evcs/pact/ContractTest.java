@@ -803,6 +803,7 @@ class ContractTest {
     public RequestResponsePact postIdentityInvalidateReturns204(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
+                .given("test-user-id has a valid identity record")
                 .uponReceiving("A request to invalidate a EVCS user identity")
                 .path("/identity/invalidate")
                 .method("POST")
@@ -842,6 +843,7 @@ class ContractTest {
         // Null user id
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
+                .given("test-user-id has a valid identity record")
                 .uponReceiving("A request to invalidate a EVCS user identity, with an null user id")
                 .path("/identity/invalidate")
                 .method("POST")
@@ -879,6 +881,7 @@ class ContractTest {
     public RequestResponsePact emptyUserIdPostIdentityInvalidateReturns400(
             PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
+                .given("test-user-id has a valid identity record")
                 .given("test-evcs-api-key is a valid API key")
                 .uponReceiving(
                         "A request to invalidate a EVCS user identity, with an empty user id")
@@ -923,6 +926,7 @@ class ContractTest {
     public RequestResponsePact forbiddenPostIdentityInvalidateReturns403(
             PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
+                .given("test-user-id has a valid identity record")
                 .given("invalid-api-key is an invalid API key")
                 .uponReceiving("A request to invalidate a EVCS user identity")
                 .path("/identity/invalidate")
