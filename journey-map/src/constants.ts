@@ -13,8 +13,6 @@ export const JOURNEY_TYPES: Record<string, string> = {
   F2F_HAND_OFF: "F2F hand off",
   F2F_PENDING: "F2F pending",
   F2F_FAILED: "F2F failed",
-  OPERATIONAL_PROFILE_MIGRATION: "Operational profile migration",
-  OPERATIONAL_PROFILE_REUSE: "Operational profile reuse",
   REVERIFICATION: "Reverification",
 };
 

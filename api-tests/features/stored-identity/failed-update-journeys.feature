@@ -23,7 +23,7 @@ Feature: Failed update details
     Scenario: Reuse journey - failed address change - failed COI (valid identity)
       When I submit a 'address-only' event
       Then I get a 'address' CRI response
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
       When I submit 'alice-score-2' details with attributes to the CRI stub
@@ -34,7 +34,7 @@ Feature: Failed update details
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'valid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'valid'
 
     Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
       When I submit a 'given-names-only' event
@@ -42,14 +42,14 @@ Feature: Failed update details
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
       When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: Reuse journey - failed name change - fail with no ci (valid identity)
       When I submit a 'given-names-only' event
@@ -57,14 +57,14 @@ Feature: Failed update details
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
       When I submit 'kenneth-passport-verification-zero' details to the CRI stub
       Then I get an 'update-details-failed' page response
       When I submit a 'continue' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'valid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'valid'
 
     Scenario: Reuse journey - failed name change - user abandons journey
       When I submit a 'given-names-only' event
@@ -72,12 +72,12 @@ Feature: Failed update details
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
       When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress'
 
       # User stops here and abandons journey
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
   Rule: Repeat fraud check
     Background: Start repeat fraud check journey
@@ -89,7 +89,7 @@ Feature: Failed update details
       # Start repeat fraud check journey with update name
       When I start a new 'low-confidence' journey
       Then I get a 'confirm-your-details' page response
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed address change - failed COI (invalid identity)
       When I submit a 'address-only' event
@@ -104,7 +104,7 @@ Feature: Failed update details
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - fail with CI (invalid identity)
       When I submit a 'given-names-only' event
@@ -117,7 +117,7 @@ Feature: Failed update details
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - fail with no CI (invalid identity)
       When I submit a 'given-names-only' event
@@ -130,7 +130,7 @@ Feature: Failed update details
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - user abandons journey
       When I submit a 'given-names-only' event
@@ -141,4 +141,4 @@ Feature: Failed update details
       Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress'
 
       # User stops here and abandons journey
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'

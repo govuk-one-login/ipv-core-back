@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
@@ -77,7 +76,6 @@ import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.io.UncheckedIOException;
-import java.text.ParseException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -335,7 +333,7 @@ public class ProcessCandidateIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (ParseException | CredentialParseException e) {
+        } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -458,7 +456,6 @@ public class ProcessCandidateIdentityHandler
             throws EvcsServiceException,
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
-                    ParseException,
                     CiExtractionException,
                     AccountInterventionException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
@@ -652,18 +649,15 @@ public class ProcessCandidateIdentityHandler
         ipvSessionItem.setVot(matchedVot.vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
-            var profile = matchedVot.profile();
-            if (profile.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Matched GPG45 vot result does not have a profile");
-            }
-            sendProfileMatchedAuditEvent(
-                    profile.get(),
-                    votMatchingResult.gpg45Scores(),
-                    VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
-                    sharedAuditEventParameters);
+        var profile = matchedVot.profile();
+        if (profile.isEmpty()) {
+            throw new IllegalArgumentException("Matched GPG45 vot result does not have a profile");
         }
+        sendProfileMatchedAuditEvent(
+                profile.get(),
+                votMatchingResult.gpg45Scores(),
+                sessionVcs,
+                sharedAuditEventParameters);
 
         return null;
     }
@@ -829,7 +823,6 @@ public class ProcessCandidateIdentityHandler
             boolean areVcsCorrelated)
             throws CiExtractionException,
                     CredentialParseException,
-                    ParseException,
                     HttpResponseExceptionWithErrorBody {
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             throw new HttpResponseExceptionWithErrorBody(

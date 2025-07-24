@@ -27,7 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.*;
+import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_F2F_SUPPORT_CANCEL;
 
 @ExtendWith(MockitoExtension.class)
 class ManualF2fPendingResetHandlerTest {

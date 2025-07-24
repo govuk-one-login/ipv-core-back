@@ -55,7 +55,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 
 import java.io.UncheckedIOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,9 +69,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
-import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -88,16 +84,13 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
-import static uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper.filterVCBasedOnProfileType;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -107,10 +100,6 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
-    private static final JourneyResponse JOURNEY_OPERATIONAL_PROFILE_REUSE =
-            new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
-    private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
-            new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -396,8 +385,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
-        } catch (ParseException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
         } catch (CredentialParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
         } catch (ConfigException e) {
@@ -427,11 +414,7 @@ public class CheckExistingIdentityHandler
 
         var evcsIdentityVcs = new ArrayList<VerifiableCredential>();
         if (hasValidPendingReturnVcs) {
-            // + inherited VCs & pending VCs
-            evcsIdentityVcs.addAll(
-                    vcs.getOrDefault(CURRENT, List.of()).stream()
-                            .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
-                            .toList());
+            // + pending return VCs
             evcsIdentityVcs.addAll(pendingReturnVcs);
         } else {
             // + all vcs
@@ -449,7 +432,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators)
-            throws ParseException, VerifiableCredentialException {
+            throws VerifiableCredentialException {
         // Check for attained vot from requested vots
         var votMatchingResult =
                 votMatcher.findStrongestMatches(
@@ -572,7 +555,6 @@ public class CheckExistingIdentityHandler
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
-                && attainedVot.getProfileType() == GPG45
                 && allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -592,24 +574,8 @@ public class CheckExistingIdentityHandler
         ipvSessionItem.setVot(attainedVot);
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (attainedVot.getProfileType() == OPERATIONAL_HMRC) {
-            boolean isCurrentlyMigrating = ipvSessionItem.isInheritedIdentityReceivedThisSession();
-
-            sessionCredentialsService.persistCredentials(
-                    filterVCBasedOnProfileType(credentialBundle.credentials, OPERATIONAL_HMRC),
-                    auditEventUser.getSessionId(),
-                    isCurrentlyMigrating);
-
-            return isCurrentlyMigrating
-                    ? JOURNEY_IN_MIGRATION_REUSE
-                    : JOURNEY_OPERATIONAL_PROFILE_REUSE;
-        }
-
         sessionCredentialsService.persistCredentials(
-                filterVCBasedOnProfileType(
-                        credentialBundle.credentials, attainedVot.getProfileType()),
-                auditEventUser.getSessionId(),
-                false);
+                credentialBundle.credentials, auditEventUser.getSessionId(), false);
 
         return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }

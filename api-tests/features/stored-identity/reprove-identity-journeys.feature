@@ -35,7 +35,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P3' vot
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: User reproves with F2F
       When I submit an 'end' event
@@ -62,7 +62,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: P1 Journeys
     Background:
@@ -94,7 +94,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P3' vot
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: User reproves with F2F
       When I submit an 'end' event
@@ -122,4 +122,4 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot

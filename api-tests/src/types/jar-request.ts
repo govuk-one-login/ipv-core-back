@@ -41,7 +41,4 @@ interface UserInfo {
   "https://vocab.account.gov.uk/v1/storageAccessToken": {
     values: string[];
   };
-  "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"?: {
-    values: string[];
-  };
 }

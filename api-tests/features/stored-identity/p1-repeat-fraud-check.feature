@@ -27,7 +27,7 @@ Rule: No existing SI record for user
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
   Scenario Outline: Fraud 6 Months Expiry + Address and Name Change - <selected-name-change> - meets P2
     When I submit a '<selected-name-change>' event
@@ -56,7 +56,7 @@ Rule: No existing SI record for user
     Then I get a 'P1' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | selected-name-change    | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -84,7 +84,7 @@ Rule: No existing SI record for user
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P3' vot
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
     Examples:
       | selected-name-change    | details                                    | fraud-details                       |
@@ -98,7 +98,7 @@ Rule: No existing SI record for user
     Scenario: Successful repeat fraud check journey with update name
       When I start a new 'low-confidence' journey
       Then I get a 'confirm-your-details' page response
-      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
@@ -115,4 +115,4 @@ Rule: No existing SI record for user
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'valid'
+      And I have a GPG45 stored identity record type with a 'P3' vot that is 'valid'

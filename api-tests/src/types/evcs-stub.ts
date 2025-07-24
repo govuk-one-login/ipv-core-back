@@ -9,7 +9,7 @@ export interface EvcsStubPostVcsCredential {
 
 export interface EvcsStoredIdentity {
   userId: string;
-  recordType: StoredIdentityRecordtype.GPG45 | StoredIdentityRecordtype.HMRC;
+  recordType: StoredIdentityRecordtype.GPG45;
   storedIdentity: string;
   levelOfConfidence: string;
   isValid: boolean;
@@ -17,5 +17,4 @@ export interface EvcsStoredIdentity {
 
 export enum StoredIdentityRecordtype {
   GPG45 = "idrec:gpg45",
-  HMRC = "idrec:Inherited:hmrc",
 }

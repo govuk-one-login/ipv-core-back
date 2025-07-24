@@ -20,7 +20,7 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And I have a 'GPG45' stored identity record type with a 'P3' vot
+        And I have a GPG45 stored identity record type with a 'P3' vot
 
       Scenario: Reuse journey - identity is stored to EVCS - no existing SI - identity only meets P2
         And I don't have a stored identity in EVCS
@@ -31,7 +31,7 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And I have a 'GPG45' stored identity record type with a 'P3' vot
+        And I have a GPG45 stored identity record type with a 'P3' vot
 
       Scenario: Medium-confidence reuse journey with update - SI record stored to EVCS - existing SI
         And I have an existing stored identity record with a 'P3' vot
@@ -46,7 +46,7 @@ Feature: P2 reuse journeys
         When I submit a 'update-name' event
         Then I get a 'dcmaw' CRI response
         # SI record invalidated as part of reset-session-identity lambda
-        And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'invalid'
+        And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
         When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -60,7 +60,7 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'valid'
+        And I have a GPG45 stored identity record type with a 'P3' vot that is 'valid'
 
       Scenario: High-medium confidence journey - previous P3 identity downgraded to P2 when updating with DL details
         And I don't have a stored identity in EVCS
@@ -72,7 +72,7 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P3' identity
-        And I have a 'GPG45' stored identity record type with a 'P3' vot
+        And I have a GPG45 stored identity record type with a 'P3' vot
 
         # Reuse journey with update
         When I start a new 'high-medium-confidence' journey
@@ -84,7 +84,7 @@ Feature: P2 reuse journeys
         When I submit a 'update-name' event
         Then I get a 'dcmaw' CRI response
         # SI record invalidated as part of reset-session-identity lambda
-        And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'invalid'
+        And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
         Then I get a 'drivingLicence' CRI response
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
@@ -101,7 +101,7 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And I have a 'GPG45' stored identity record type with a 'P2' vot
+        And I have a GPG45 stored identity record type with a 'P2' vot
 
     Rule: Existing credentials that meets P2
       Background: User has existing identity that meets P2 identity
@@ -122,7 +122,7 @@ Feature: P2 reuse journeys
         When I submit a 'update-name' event
         Then I get a 'dcmaw' CRI response
         # SI record invalidated as part of reset-session-identity lambda
-        And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'invalid'
+        And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
         When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
         When I submit a 'next' event
@@ -135,4 +135,4 @@ Feature: P2 reuse journeys
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And I have a 'GPG45' stored identity record type with a 'P3' vot
+        And I have a GPG45 stored identity record type with a 'P3' vot

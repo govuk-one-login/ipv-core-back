@@ -37,7 +37,6 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -51,7 +50,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAd
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingName;
@@ -379,8 +377,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 vcWebPassportSuccessful(),
                                 vcAddressM1a(),
                                 vcExperianFraudM1a(),
-                                vcExperianKbvM1a(),
-                                vcHmrcMigrationPCL200NoEvidence()));
+                                vcExperianKbvM1a()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -395,37 +392,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReceive200ResponseCodeProvenUserIdentityDetailsForOperationalProfile()
-            throws Exception {
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250);
-        when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
-        when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                vcWebPassportSuccessful(),
-                                vcAddressM1a(),
-                                vcExperianFraudM1a(),
-                                vcExperianKbvM1a(),
-                                vcHmrcMigrationPCL200NoEvidence()));
-
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var input = createRequestEvent();
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                toResponseClass(
-                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
-
-        assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
-        assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
-        assertNull(provenUserIdentityDetails.getAddresses());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 

@@ -19,23 +19,16 @@ public enum Cri {
     EXPERIAN_FRAUD("fraud"),
     EXPERIAN_KBV("experianKbv"),
     F2F("f2f"),
-    HMRC_MIGRATION("hmrcMigration", true),
     NINO("nino"),
     PASSPORT("ukPassport"),
     TICF("ticf");
 
     private final String id;
-    private final boolean isOperationalCri;
     private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV);
     private static final String EXPERIAN_KBV_REDIRECT_ID = "kbv";
 
     Cri(String id) {
-        this(id, false);
-    }
-
-    Cri(String id, boolean isOperational) {
         this.id = id;
-        this.isOperationalCri = isOperational;
     }
 
     public boolean isKbvCri() {

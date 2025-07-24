@@ -23,8 +23,6 @@ core:
       P1: 5
       P2: 10
       P3: 10
-      PCL200: 3
-      PCL250: 3
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
@@ -343,15 +341,6 @@ core:
           "requiresApiKey": "true",
           "requestTimeout": 5
         }'
-    hmrcMigration:
-      id: hmrcMigration
-      name: HMRC migration
-      activeConnection: "stub"
-      connections:
-        stub: '{
-          "signingKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}",
-          "componentId": "https://orch.stubs.account.gov.uk/migration/v1"
-        }'
   local:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
@@ -359,7 +348,6 @@ core:
     resetIdentity: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: true
-    inheritedIdentity: true
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
@@ -395,9 +383,6 @@ core:
     disableStrategicApp:
       featureFlags:
         strategicAppEnabled: false
-    inheritedIdentity:
-      featureFlags:
-        inheritedIdentity: true
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodHours: 0

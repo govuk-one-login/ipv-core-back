@@ -13,13 +13,9 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.ContraIndicator;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
-import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -38,25 +34,16 @@ public class VotMatcher {
             List<Vot> requestedVots,
             List<VerifiableCredential> vcs,
             List<ContraIndicator> contraIndicators,
-            boolean areGpg45VcsCorrelated)
-            throws ParseException {
+            boolean areGpg45VcsCorrelated) {
 
         Optional<VotMatchingResult.VotAndProfile> strongestMatchedVot = Optional.empty();
         Optional<VotMatchingResult.VotAndProfile> strongestRequestedMatchedVot = Optional.empty();
 
-        var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
-        var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcs, GPG45);
-        var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
+        var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
         for (Vot vot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
             var potentialMatch =
-                    checkMatch(
-                            vot,
-                            gpg45Scores,
-                            operationalVcs,
-                            gpg45Vcs,
-                            contraIndicators,
-                            areGpg45VcsCorrelated);
+                    checkMatch(vot, gpg45Scores, vcs, contraIndicators, areGpg45VcsCorrelated);
 
             if (potentialMatch.isPresent()) {
                 if (strongestMatchedVot.isEmpty()) {
@@ -79,22 +66,17 @@ public class VotMatcher {
     private Optional<VotMatchingResult.VotAndProfile> checkMatch(
             Vot vot,
             Gpg45Scores gpg45Scores,
-            List<VerifiableCredential> operationalVcs,
             List<VerifiableCredential> gpg45Vcs,
             List<ContraIndicator> contraIndicators,
-            boolean areGpg45VcsCorrelated)
-            throws ParseException {
+            boolean areGpg45VcsCorrelated) {
 
-        if (vot.getProfileType().equals(GPG45) && areGpg45VcsCorrelated) {
+        if (areGpg45VcsCorrelated) {
             var matchedGpg45Profile =
                     achievedWithGpg45Profile(vot, gpg45Vcs, gpg45Scores, contraIndicators);
 
             if (matchedGpg45Profile.isPresent()) {
                 return Optional.of(new VotMatchingResult.VotAndProfile(vot, matchedGpg45Profile));
             }
-        } else if (vot.getProfileType() == OPERATIONAL_HMRC
-                && hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
-            return Optional.of(new VotMatchingResult.VotAndProfile(vot, Optional.empty()));
         }
 
         return Optional.empty();
@@ -127,28 +109,6 @@ public class VotMatcher {
                                 LOG_GPG45_PROFILE.getFieldName(),
                                 matchedGpg45Profile.get().getLabel()));
         return matchedGpg45Profile;
-    }
-
-    private boolean hasOperationalProfileVc(
-            Vot requestedVot,
-            List<VerifiableCredential> vcs,
-            List<ContraIndicator> contraIndicators)
-            throws ParseException {
-        for (var vc : vcs) {
-            var vcContainsVot =
-                    requestedVot.name().equals(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
-
-            if (!vcContainsVot || isBreaching(contraIndicators, requestedVot)) {
-                continue;
-            }
-
-            // Successful match
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Operational profile matched")
-                            .with(LOG_VOT.getFieldName(), requestedVot));
-            return true;
-        }
-        return false;
     }
 
     private boolean isBreaching(List<ContraIndicator> contraIndicators, Vot vot) {

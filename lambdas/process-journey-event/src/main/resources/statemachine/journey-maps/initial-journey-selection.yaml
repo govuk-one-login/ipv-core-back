@@ -32,12 +32,6 @@ states:
       reuse-with-store:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: REUSE_WITH_STORE_IDENTITY
-      operational-profile-reuse:
-        targetJourney: OPERATIONAL_PROFILE_REUSE
-        targetState: START
-      in-migration-reuse:
-        targetJourney: OPERATIONAL_PROFILE_MIGRATION
-        targetState: START
       pending:
         targetJourney: F2F_PENDING
         targetState: PENDING

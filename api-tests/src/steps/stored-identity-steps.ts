@@ -4,38 +4,30 @@ import {
   createStoredIdentity,
   getStoredIdentity,
 } from "../clients/evcs-stub-client.js";
-import { StoredIdentityRecordtype } from "../types/evcs-stub.js";
 import assert from "assert";
 
 Then(
-  /I have a '(GPG45|HMRC)' stored identity record type with a '(\w+)' vot(?: that is '(invalid|valid)')?/,
+  /I have a GPG45 stored identity record type with a '(\w+)' vot(?: that is '(invalid|valid)')?/,
   async function (
     this: World,
-    expectedRecordType: "GPG45" | "HMRC",
     expectedVot: string,
     isValidString: "invalid" | "valid",
   ) {
     const { storedIdentities } = await getStoredIdentity(this.userId);
+    const actualSi = storedIdentities?.[0];
 
-    const actualSi = storedIdentities?.find(
-      (si) => si.recordType === StoredIdentityRecordtype[expectedRecordType],
-    );
-
-    assert.ok(
-      actualSi,
-      `Expected a "${expectedRecordType}" record type but got none.`,
-    );
+    assert.ok(actualSi, `Expected a stored identity record but got none.`);
     assert.equal(
-      actualSi.levelOfConfidence,
+      actualSi?.levelOfConfidence,
       expectedVot,
-      `Expected "${expectedVot}" but got "${actualSi.levelOfConfidence}"`,
+      `Expected "${expectedVot}" but got "${actualSi?.levelOfConfidence}"`,
     );
 
     assert.equal(
-      actualSi.isValid,
+      actualSi?.isValid,
       // Default to asserting that the SI record is valid
       isValidString ? isValidString === "valid" : true,
-      `Expected "${isValidString === "valid"}" but got "${actualSi.isValid}"`,
+      `Expected "${isValidString === "valid"}" but got "${actualSi?.isValid}"`,
     );
   },
 );

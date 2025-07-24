@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,23 +44,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.CLIENT_OAUTH_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE;
 import static uk.gov.di.ipv.core.library.domain.ReverificationFailureCode.NO_IDENTITY_AVAILABLE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
-import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
-import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckL1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -75,8 +69,6 @@ class CheckReverificationIdentityHandlerTest {
     private static final String TEST_EVCS_ACCESS_TOKEN = "test-evcs-access-token";
     private static final JourneyRequest REQUEST =
             JourneyRequest.builder().ipvSessionId(TEST_IPV_SESSION_ID).build();
-    private static VerifiableCredential pcl200vc;
-    private static VerifiableCredential pcl250vc;
     private static VerifiableCredential m1BFraudVc;
     private static VerifiableCredential l1AEvidenceVc;
     private static VerifiableCredential m1AVerificationVc;
@@ -94,8 +86,6 @@ class CheckReverificationIdentityHandlerTest {
 
     @BeforeAll
     static void beforeAll() {
-        pcl200vc = vcHmrcMigrationPCL200();
-        pcl250vc = vcHmrcMigrationPCL250();
         m1BFraudVc = vcExperianFraudScoreTwo();
         l1AEvidenceVc = vcNinoIdentityCheckL1a();
         m1AVerificationVc = vcExperianKbvM1a();
@@ -130,7 +120,7 @@ class CheckReverificationIdentityHandlerTest {
         void shouldReturnJourneyFoundIfUserHasP2Identity() throws Exception {
             var addressVc = vcAddressOne();
             var m1bDrivingPermitVc = vcDcmawDrivingPermitDvaM1b();
-            var p2Vcs = List.of(m1bDrivingPermitVc, addressVc, m1BFraudVc, pcl250vc);
+            var p2Vcs = List.of(m1bDrivingPermitVc, addressVc, m1BFraudVc);
             when(mockUserIdentityService.areVcsCorrelated(
                             List.of(m1bDrivingPermitVc, addressVc, m1BFraudVc)))
                     .thenReturn(true);
@@ -189,59 +179,7 @@ class CheckReverificationIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyFoundIfUserHasPcl250Identity() throws Exception {
-            when(mockEvcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                    .thenReturn(List.of(pcl250vc));
-            when(mockVotMatcher.findStrongestMatches(
-                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(pcl250vc),
-                            EMPTY_CONTRA_INDICATORS,
-                            false))
-                    .thenReturn(
-                            new VotMatchingResult(
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    PCL250, Optional.empty())),
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    PCL250, Optional.empty())),
-                                    null));
-
-            var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
-
-            assertEquals("/journey/found", response.get("journey"));
-            verify(ipvSession, never()).setFailureCode(any());
-        }
-
-        @Test
-        void shouldReturnJourneyFoundIfUserHasPcl200Identity() throws Exception {
-            when(mockEvcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                    .thenReturn(List.of(pcl200vc));
-            when(mockVotMatcher.findStrongestMatches(
-                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(pcl200vc),
-                            EMPTY_CONTRA_INDICATORS,
-                            false))
-                    .thenReturn(
-                            new VotMatchingResult(
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    PCL200, Optional.empty())),
-                                    Optional.of(
-                                            new VotMatchingResult.VotAndProfile(
-                                                    PCL200, Optional.empty())),
-                                    null));
-
-            var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
-
-            assertEquals("/journey/found", response.get("journey"));
-            verify(ipvSession, never()).setFailureCode(any());
-        }
-
-        @Test
-        void shouldReturnJourneyNotFoundWhenNoVotMatched() throws Exception {
+        void shouldReturnJourneyNotFoundWhenNoVotMatched() {
             when(mockVotMatcher.findStrongestMatches(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(),
@@ -346,26 +284,6 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals("/journey/error", response.get("journey"));
             assertEquals(SC_SERVER_ERROR, response.get("statusCode"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), response.get("message"));
-            verify(ipvSession, never()).setFailureCode(any());
-        }
-
-        @Test
-        void shouldReturnJourneyErrorIfErrorMatchingVot() throws Exception {
-            when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSession);
-            when(mockClientSessionService.getClientOAuthSession(TEST_CLIENT_SESSION_ID))
-                    .thenReturn(clientSession);
-            when(mockVotMatcher.findStrongestMatches(
-                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(),
-                            EMPTY_CONTRA_INDICATORS,
-                            false))
-                    .thenThrow(new ParseException("😬", 0));
-
-            var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
-
-            assertEquals("/journey/error", response.get("journey"));
-            assertEquals(SC_SERVER_ERROR, response.get("statusCode"));
-            assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
         }
 

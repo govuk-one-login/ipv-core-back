@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
-import uk.gov.di.ipv.core.library.evcs.metadata.InheritedIdentityMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
@@ -28,9 +27,7 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.EXTERNAL;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 
@@ -67,34 +64,6 @@ public class EvcsService {
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(), CURRENT, null, ONLINE))
                         .toList());
-    }
-
-    public void storeInheritedIdentity(
-            String userId,
-            VerifiableCredential incomingInheritedIdentity,
-            List<VerifiableCredential> existingInheritedIdentity)
-            throws EvcsServiceException {
-        if (!existingInheritedIdentity.isEmpty()) {
-            evcsClient.updateUserVCs(
-                    userId,
-                    existingInheritedIdentity.stream()
-                            .map(
-                                    id ->
-                                            new EvcsUpdateUserVCsDto(
-                                                    getVcSignature(id.getVcString()),
-                                                    HISTORIC,
-                                                    null))
-                            .toList());
-        }
-        evcsClient.storeUserVCs(
-                userId,
-                List.of(
-                        new EvcsCreateUserVCsDto(
-                                incomingInheritedIdentity.getVcString(),
-                                CURRENT,
-                                new InheritedIdentityMetadata(
-                                        incomingInheritedIdentity.getCri().getId()),
-                                EXTERNAL)));
     }
 
     public List<VerifiableCredential> getVerifiableCredentials(
@@ -348,11 +317,6 @@ public class EvcsService {
             var existingCurrentUserVcsNotInSessionToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
-                            .filter(
-                                    vc ->
-                                            vc.metadata() == null
-                                                    || vc.metadata().get("inheritedIdentity")
-                                                            == null) // Don't update inherited
                             // identity VCs
                             .filter(
                                     vc ->
