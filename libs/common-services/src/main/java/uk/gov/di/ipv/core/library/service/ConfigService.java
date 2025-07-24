@@ -144,10 +144,21 @@ public abstract class ConfigService {
                         connection);
         var parameters =
                 getParametersByPrefix(prefix).entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().substring(prefix.length() + 1),
-                                        Map.Entry::getValue));
+                        .map(
+                                entry ->
+                                        Map.entry(
+                                                entry.getKey().substring(prefix.length() + 1),
+                                                entry.getValue()))
+                        .map(
+                                entry -> {
+                                    String key = entry.getKey();
+                                    String value = entry.getValue();
+                                    if (key.equals("signingKey") || key.equals("encryptionKey")) {
+                                        return Map.entry(key, value.replace("\\", ""));
+                                    }
+                                    return Map.entry(key, value);
+                                })
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         if (parameters.size() > 1) {
             var returnObject = OBJECT_MAPPER.convertValue(parameters, configType);
