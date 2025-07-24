@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -207,19 +208,47 @@ public abstract class ConfigService {
             var value = entry.getValue();
 
             var cri = findCriFromPath(fullPath);
-            if (cri == null) continue;
+            if (cri == null) {
+                continue;
+            }
 
-            try {
-                var criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
-                var issuer = criConfig.getComponentId();
-                issuerToCriMap.put(issuer, cri);
-            } catch (JsonProcessingException e) {
-                throw new ConfigParseException(
-                        String.format(
-                                "Failed to parse credential issuer configuration at path '%s': %s",
-                                fullPath, e));
+            var regex = String.format("/%s/connections/([^/]+)/[^/]+", cri.getId());
+            var pattern = Pattern.compile(regex);
+            var matcher = pattern.matcher(fullPath);
+
+            var data =
+                    allCriParameters.entrySet().stream()
+                            .filter(e -> pattern.matcher(e.getKey()).matches())
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            if (data.size() > 1) {
+
+                if (matcher.find()) {
+                    var keyPrefix =
+                            String.format("/%s/connections/%s", cri.getId(), matcher.group(1));
+                    var criConfig =
+                            CriConfig.builder()
+                                    .componentId(
+                                            data.get(String.format("%s/componentId", keyPrefix)))
+                                    .signingKey(data.get(String.format("%s/signingKey", keyPrefix)))
+                                    .build();
+                    var issuer = criConfig.getComponentId();
+                    issuerToCriMap.put(issuer, cri);
+                }
+            } else {
+                try {
+                    var criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
+                    var issuer = criConfig.getComponentId();
+                    issuerToCriMap.put(issuer, cri);
+                } catch (JsonProcessingException e) {
+                    throw new ConfigParseException(
+                            String.format(
+                                    "Failed to parse credential issuer configuration at path '%s': %s",
+                                    fullPath, e));
+                }
             }
         }
+
         return issuerToCriMap;
     }
 
