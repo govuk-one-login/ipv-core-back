@@ -42,9 +42,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
     public Map<String, String> getParametersByPrefix(String path) {
         return parameters.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(path))
-                .collect(
-                        Collectors.toMap(
-                                e -> e.getKey().substring(path.length()), Map.Entry::getValue));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     protected void updateParameters(Map<String, String> map, String yaml) {

@@ -137,6 +137,23 @@ public abstract class ConfigService {
 
     private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
         String criId = cri.getId();
+        var prefix =
+                String.format(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                        criId,
+                        connection);
+        var parameters =
+                getParametersByPrefix(prefix).entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(prefix.length() + 1),
+                                        Map.Entry::getValue));
+
+        if (parameters.size() > 1) {
+            var returnObject = OBJECT_MAPPER.convertValue(parameters, configType);
+            return returnObject;
+        }
+
         try {
             String parameter =
                     getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, criId, connection);
@@ -200,7 +217,14 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        var allCriParameters = getParametersByPrefix("credentialIssuers");
+        var prefix = "credentialIssuers";
+        var allCriParameters =
+                getParametersByPrefix("credentialIssuers").entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        e -> e.getKey().substring(prefix.length()),
+                                        Map.Entry::getValue));
+
         var issuerToCriMap = new HashMap<String, Cri>();
 
         for (Map.Entry<String, String> entry : allCriParameters.entrySet()) {
@@ -212,6 +236,11 @@ public abstract class ConfigService {
                 continue;
             }
 
+            // REFACTORING REQUIRED!!!!
+            // REFACTORING REQUIRED!!!!
+            // REFACTORING REQUIRED!!!!
+            // REFACTORING REQUIRED!!!!
+            // REFACTORING REQUIRED!!!!
             var regex = String.format("/%s/connections/([^/]+)/[^/]+", cri.getId());
             var pattern = Pattern.compile(regex);
             var matcher = pattern.matcher(fullPath);
