@@ -60,30 +60,6 @@ export const generateJarPayload = async (
     "https://vocab.account.gov.uk/v1/storageAccessToken"
   ].values = [await createEvcsAccessToken(session.subject)];
 
-  if (session.inheritedIdentity) {
-    const { inheritedIdentityId, errorJwt } = session.inheritedIdentity;
-
-    if (errorJwt) {
-      payload.claims.userinfo[
-        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
-      ] = { values: ["invalid-jwt"] };
-    } else if (inheritedIdentityId) {
-      const inheritedIdentity = JSON.parse(
-        await fs.readFile(
-          path.join(
-            __dirname,
-            `../../data/inherited-identities/${inheritedIdentityId}.json`,
-          ),
-          "utf8",
-        ),
-      );
-
-      payload.claims.userinfo[
-        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
-      ] = { values: [await createSignedJwt(inheritedIdentity)] };
-    }
-  }
-
   return payload;
 };
 

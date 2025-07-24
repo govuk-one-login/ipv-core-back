@@ -259,21 +259,6 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
-  Scenario: Inherited identity journey
-    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'PCL200' identity
-    And audit events for 'inherited-identity-journey' are recorded [local only]
-
-  Scenario: Inherited identity journey - identity stored
-    Given I activate the 'storedIdentityService' feature set
-    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'PCL200' identity
-    And audit events for 'inherited-identity-journey-identity-stored' are recorded [local only]
-
   Scenario: International address journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

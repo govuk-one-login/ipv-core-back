@@ -27,7 +27,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped BRP
       When I submit 'kenneth-brp-valid' details to the CRI stub
@@ -44,7 +44,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: No stored identity - unsuccessful M1C journey
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -91,7 +91,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Returning existing M1C user goes through details confirmation
     Background:
@@ -124,7 +124,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get a 'P2' identity
       And my identity 'GivenName' is '<expected-given-name>'
       And my identity 'FamilyName' is '<expected-family-name>'
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | selected-name-change    | details                                    | fraud-details                           | expected-given-name | expected-family-name |

@@ -14,9 +14,7 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserId
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -101,10 +99,8 @@ public class BuildProvenUserIdentityDetailsHandler
             provenUserIdentityDetailsBuilder.nameParts(identity.getNameParts());
             provenUserIdentityDetailsBuilder.dateOfBirth(identity.getBirthDate().get(0).getValue());
 
-            if (ipvSessionItem.getVot().getProfileType().equals(ProfileType.GPG45)) {
-                var addresses = getProvenIdentityAddresses(vcs);
-                provenUserIdentityDetailsBuilder.addresses(addresses);
-            }
+            var addresses = getProvenIdentityAddresses(vcs);
+            provenUserIdentityDetailsBuilder.addresses(addresses);
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Successfully retrieved proven identity response."));
@@ -113,8 +109,6 @@ public class BuildProvenUserIdentityDetailsHandler
                     HTTPResponse.SC_OK, provenUserIdentityDetailsBuilder.build());
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildJourneyErrorResponse(e.getErrorResponse(), e.getResponseCode());
-        } catch (CredentialParseException e) {
-            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (ProvenUserIdentityDetailsException e) {
             return buildJourneyErrorResponse(
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
@@ -143,7 +137,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private IdentityClaim getProvenIdentity(List<VerifiableCredential> vcs)
-            throws ProvenUserIdentityDetailsException, CredentialParseException {
+            throws ProvenUserIdentityDetailsException {
         try {
             final Optional<IdentityClaim> identityClaim =
                     userIdentityService.findIdentityClaim(vcs);

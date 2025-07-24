@@ -16,7 +16,7 @@ class VotHelperTest {
     void getThresholdVotUsesAchievedIfNotP0() {
         var ipvSessionItem = IpvSessionItem.builder().vot(Vot.P1).build();
         var clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder().vtr(List.of("P1", "P2", "PCL250")).build();
+                ClientOAuthSessionItem.builder().vtr(List.of("P1", "P2")).build();
 
         var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
@@ -27,7 +27,7 @@ class VotHelperTest {
     void getThresholdVotUsesLowestRequestedIfAchievedP0() {
         var ipvSessionItem = IpvSessionItem.builder().vot(Vot.P0).build();
         var clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder().vtr(List.of("P1", "P2", "PCL250")).build();
+                ClientOAuthSessionItem.builder().vtr(List.of("P1", "P2")).build();
 
         var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 

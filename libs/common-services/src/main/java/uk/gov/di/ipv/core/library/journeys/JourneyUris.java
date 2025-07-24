@@ -35,15 +35,12 @@ public class JourneyUris {
     public static final String JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH =
             "/journey/fail-with-no-ci-medium";
     public static final String JOURNEY_FOUND = "/journey/found";
-    public static final String JOURNEY_IN_MIGRATION_REUSE_PATH = "/journey/in-migration-reuse";
     public static final String JOURNEY_INVALID_REQUEST_PATH = "/journey/invalid-request";
     public static final String JOURNEY_IPV_GPG45_LOW_PATH = "/journey/ipv-gpg45-low";
     public static final String JOURNEY_IPV_GPG45_MEDIUM_PATH = "/journey/ipv-gpg45-medium";
     public static final String JOURNEY_MET_PATH = "/journey/met";
     public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
-    public static final String JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH =
-            "/journey/operational-profile-reuse";
     public static final String JOURNEY_F2F_PENDING_PATH = "/journey/pending";
     public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
     public static final String JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH =

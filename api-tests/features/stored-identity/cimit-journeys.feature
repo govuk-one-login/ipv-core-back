@@ -38,7 +38,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot
+      And I have a GPG45 stored identity record type with a 'P1' vot
 
       Examples:
         | initialCri     | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
@@ -78,7 +78,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P1' vot
+      And I have a GPG45 stored identity record type with a 'P1' vot
 
       Examples:
         | initialCri     | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigatingCri  | mitigatingDoc                |
@@ -121,7 +121,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | initialCri     | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
@@ -162,7 +162,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | initialCri     | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigatingCri  | mitigatingDoc                |
@@ -208,7 +208,7 @@ Feature: Stored Identity Service - CIMIT journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Successful F2F enhanced verification mitigation - separate session
       When I start a new 'low-confidence' journey
