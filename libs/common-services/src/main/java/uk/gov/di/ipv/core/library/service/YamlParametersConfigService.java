@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -44,18 +43,9 @@ public abstract class YamlParametersConfigService extends ConfigService {
     public Map<String, String> getParametersByPrefix(String path) {
         return parameters.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(path))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    @Override
-    public Map<String, String> getParametersByPrefixYaml(String path) {
-        return parameters.entrySet().stream()
-                .filter(e -> e.getKey().startsWith(path))
                 .collect(
                         Collectors.collectingAndThen(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().substring(path.length() + 1),
-                                        Map.Entry::getValue),
+                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue),
                                 map ->
                                         Optional.of(map)
                                                 .filter(m -> !m.isEmpty())
@@ -91,16 +81,5 @@ public abstract class YamlParametersConfigService extends ConfigService {
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
         }
-    }
-
-    @Override
-    protected boolean isConfigInYaml() {
-        var pattern = Pattern.compile("credentialIssuers/address/connections/[^/]+/[^/]+$");
-        for (String key : parameters.keySet()) {
-            if (pattern.matcher(key).matches()) {
-                return true;
-            }
-        }
-        return false;
     }
 }
