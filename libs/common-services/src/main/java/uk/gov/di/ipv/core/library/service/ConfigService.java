@@ -145,24 +145,18 @@ public abstract class ConfigService {
         var parameters =
                 getParametersByPrefix(prefix).entrySet().stream()
                         .map(
-                                entry ->
-                                        Map.entry(
-                                                entry.getKey().substring(prefix.length() + 1),
-                                                entry.getValue()))
-                        .map(
                                 entry -> {
-                                    String key = entry.getKey();
-                                    String value = entry.getValue();
+                                    var key = entry.getKey().substring(prefix.length() + 1);
+                                    var value = entry.getValue();
                                     if (key.equals("signingKey") || key.equals("encryptionKey")) {
-                                        return Map.entry(key, value.replace("\\", ""));
+                                        value = value.replace("\\", "");
                                     }
                                     return Map.entry(key, value);
                                 })
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         if (parameters.size() > 1) {
-            var returnObject = OBJECT_MAPPER.convertValue(parameters, configType);
-            return returnObject;
+            return OBJECT_MAPPER.convertValue(parameters, configType);
         }
 
         try {
@@ -247,37 +241,13 @@ public abstract class ConfigService {
                 continue;
             }
 
-            // REFACTORING REQUIRED!!!!
-            // REFACTORING REQUIRED!!!!
-            // REFACTORING REQUIRED!!!!
-            // REFACTORING REQUIRED!!!!
-            // REFACTORING REQUIRED!!!!
-            var regex = String.format("/%s/connections/([^/]+)/[^/]+", cri.getId());
-            var pattern = Pattern.compile(regex);
-            var matcher = pattern.matcher(fullPath);
-
-            var data =
-                    allCriParameters.entrySet().stream()
-                            .filter(e -> pattern.matcher(e.getKey()).matches())
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-            if (data.size() > 1) {
-
-                if (matcher.find()) {
-                    var keyPrefix =
-                            String.format("/%s/connections/%s", cri.getId(), matcher.group(1));
-                    var criConfig =
-                            CriConfig.builder()
-                                    .componentId(
-                                            data.get(String.format("%s/componentId", keyPrefix)))
-                                    .signingKey(data.get(String.format("%s/signingKey", keyPrefix)))
-                                    .build();
-                    var issuer = criConfig.getComponentId();
-                    issuerToCriMap.put(issuer, cri);
-                }
+            var criConfig = createCriConfigFromParameters(allCriParameters, cri, fullPath);
+            if (criConfig != null) {
+                var issuer = criConfig.getComponentId();
+                issuerToCriMap.put(issuer, cri);
             } else {
                 try {
-                    var criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
+                    criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
                     var issuer = criConfig.getComponentId();
                     issuerToCriMap.put(issuer, cri);
                 } catch (JsonProcessingException e) {
@@ -290,6 +260,27 @@ public abstract class ConfigService {
         }
 
         return issuerToCriMap;
+    }
+
+    private CriConfig createCriConfigFromParameters(
+            Map<String, String> allCriParameters, Cri cri, String fullPath) {
+        var regex = String.format("/%s/connections/([^/]+)/[^/]+", cri.getId());
+        var pattern = Pattern.compile(regex);
+        var matcher = pattern.matcher(fullPath);
+
+        var data =
+                allCriParameters.entrySet().stream()
+                        .filter(e -> pattern.matcher(e.getKey()).matches())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (matcher.find()) {
+            var key = String.format("/%s/connections/%s", cri.getId(), matcher.group(1));
+            return CriConfig.builder()
+                    .componentId(data.get(String.format("%s/componentId", key)))
+                    .signingKey(data.get(String.format("%s/signingKey", key)))
+                    .build();
+        }
+        return null;
     }
 
     private Cri findCriFromPath(String parameterPath) {
