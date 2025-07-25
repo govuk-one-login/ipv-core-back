@@ -67,7 +67,7 @@ core:
     # Test CIMIT config
     config:
       NEEDS-ENHANCED-VERIFICATION:
-        - event: "/journey/enhanced-verification"
+        - event: /journey/enhanced-verification
       NEEDS-ALTERNATE-DOC:
         - event: /journey/alternate-doc-invalid-dl
           document: drivingPermit
