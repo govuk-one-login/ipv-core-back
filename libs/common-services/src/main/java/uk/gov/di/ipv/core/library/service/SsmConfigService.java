@@ -18,8 +18,10 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.nio.file.Path;
@@ -139,31 +141,19 @@ public class SsmConfigService extends ConfigService {
     }
 
     @Override
-    protected boolean isConfigInYaml() {
-        var criId = Cri.ADDRESS.getId();
-        var activeConnection = getActiveConnection(Cri.ADDRESS);
-        var basePath =
-                String.format("credentialIssuers/%s/connections/%s", criId, activeConnection);
-        try {
-            ssmProvider.get(resolvePath(basePath));
-        } catch (ParameterNotFoundException e) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     protected Map<String, String> getParametersByPrefix(String path) {
-        return ssmProvider.getMultiple(resolvePath(path));
-    }
-
-    @Override
-    protected Map<String, String> getParametersByPrefixYaml(String path) {
         var parameters = ssmProvider.getMultiple(path);
         if (parameters.isEmpty()) {
-            throw new ConfigParameterNotFoundException("SSM parameter not found for path: " + path);
+            throw new NoConfigForConnectionException("SSM parameter not found for path: " + path);
         }
         return parameters;
+    }
+
+    @Override
+    protected String resolvePath(
+            ConfigurationVariable configurationVariable, String connection, Cri cri) {
+        var initialPrefix = String.format(configurationVariable.getPath(), cri.getId(), connection);
+        return resolvePath(initialPrefix);
     }
 
     @Override

@@ -123,30 +123,37 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
-
-        return getCriConfigForType(connection, cri, OauthCriConfig.class);
+        var paramPath =
+                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+        return getCriConfigForType(paramPath, OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(connection, cri, RestCriConfig.class);
+        var paramPath =
+                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+        return getCriConfigForType(paramPath, RestCriConfig.class);
     }
 
     public CriConfig getCriConfig(Cri cri) {
-        return getCriConfigForType(getActiveConnection(cri), cri, CriConfig.class);
+        var paramPath =
+                resolvePath(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG,
+                        getActiveConnection(cri),
+                        cri);
+        return getCriConfigForType(paramPath, CriConfig.class);
     }
 
-    private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
-        String criId = cri.getId();
-        var prefix =
-                String.format(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                        criId,
-                        connection);
+    protected String resolvePath(
+            ConfigurationVariable configurationVariable, String connection, Cri cri) {
+        return String.format(configurationVariable.getPath(), cri.getId(), connection);
+    }
+
+    private <T> T getCriConfigForType(String paramPath, Class<T> configType) {
         var parameters =
-                getParametersByPrefix(prefix).entrySet().stream()
+                getParametersByPrefix(paramPath).entrySet().stream()
                         .map(
                                 entry -> {
-                                    var key = entry.getKey().substring(prefix.length() + 1);
+                                    var key = entry.getKey().substring(paramPath.length() + 1);
                                     var value = unescapeSigEncKey(key, entry.getValue());
                                     return Map.entry(key, value);
                                 })
@@ -181,22 +188,27 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        var prefix = ConfigurationVariable.CIMIT_CONFIG.getPath();
-        return getParametersByPrefix(prefix).entrySet().stream()
-                .map(
-                        entry ->
-                                Map.entry(
-                                        entry.getKey().substring(prefix.length() + 1),
-                                        parseCimitRoute(entry.getValue())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+        var prefix = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
 
-    private List<MitigationRoute> parseCimitRoute(String json) {
-        try {
-            return OBJECT_MAPPER.readValue(json, new TypeReference<>() {});
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse route for cimit: " + e);
+        var rawData =
+                getParametersByPrefix(prefix).entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(prefix.length() + 1),
+                                        Map.Entry::getValue));
+
+        var parsedData = new HashMap<String, List<MitigationRoute>>();
+        for (var entry : rawData.entrySet()) {
+            try {
+                var list =
+                        OBJECT_MAPPER.readValue(
+                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
+                parsedData.put(entry.getKey(), list);
+            } catch (JsonProcessingException e) {
+                throw new ConfigException("Failed to parse route for cimit: " + e);
+            }
         }
+        return parsedData;
     }
 
     public boolean enabled(FeatureFlag featureFlag) {
@@ -215,15 +227,19 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        var prefix = "credentialIssuers";
+        var prefix = resolvePath("credentialIssuers");
         var pattern = Pattern.compile("/([^/]+)/connections/[^/]+/componentId$");
-        return getParametersByPrefix("credentialIssuers").entrySet().stream()
+        return getParametersByPrefix(prefix).entrySet().stream()
                 .map(e -> Map.entry(e.getKey().substring(prefix.length()), e.getValue()))
                 .filter(e -> pattern.matcher(e.getKey()).matches())
                 .collect(
                         Collectors.toMap(
-                                Map.Entry::getKey,
+                                Map.Entry::getValue,
                                 e -> Cri.fromId(extractCriId(e.getKey(), pattern))));
+    }
+
+    protected String resolvePath(String path) {
+        return path;
     }
 
     private String extractCriId(String key, Pattern pattern) {
