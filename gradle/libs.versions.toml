@@ -53,4 +53,4 @@ awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 [plugins]
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.14"
 sonar = "org.sonarqube:5.1.0.4882"
-spotless = "com.diffplug.spotless:7.0.1"
+spotless = "com.diffplug.spotless:7.2.1"
