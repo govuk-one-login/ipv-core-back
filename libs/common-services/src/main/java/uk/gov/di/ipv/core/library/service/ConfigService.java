@@ -124,6 +124,7 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
+
         return getCriConfigForType(connection, cri, OauthCriConfig.class);
     }
 
@@ -142,20 +143,22 @@ public abstract class ConfigService {
                         ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
                         criId,
                         connection);
-        var parameters =
-                getParametersByPrefix(prefix).entrySet().stream()
-                        .map(
-                                entry -> {
-                                    var key = entry.getKey().substring(prefix.length() + 1);
-                                    var value = entry.getValue();
-                                    if (key.equals("signingKey") || key.equals("encryptionKey")) {
-                                        value = value.replace("\\", "");
-                                    }
-                                    return Map.entry(key, value);
-                                })
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
+        var parameters = getParametersByPrefix(prefix);
         if (parameters.size() > 1) {
+            parameters =
+                    parameters.entrySet().stream()
+                            .map(
+                                    entry -> {
+                                        var key = entry.getKey().substring(prefix.length() + 1);
+                                        var value = entry.getValue();
+                                        if (key.equals("signingKey")
+                                                || key.equals("encryptionKey")) {
+                                            value = value.replace("\\", "");
+                                        }
+                                        return Map.entry(key, value);
+                                    })
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
             return OBJECT_MAPPER.convertValue(parameters, configType);
         }
 
