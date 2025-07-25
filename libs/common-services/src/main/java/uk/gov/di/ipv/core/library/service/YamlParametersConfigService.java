@@ -48,24 +48,25 @@ public abstract class YamlParametersConfigService extends ConfigService {
     protected void updateParameters(Map<String, String> map, String yaml) {
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
-            addJsonConfig(map, yamlParsed, "");
+            flattenJsonConfig(map, yamlParsed, "");
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
     }
 
-    private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
+    private void flattenJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
                                     entry ->
-                                            addJsonConfig(
+                                            flattenJsonConfig(
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
