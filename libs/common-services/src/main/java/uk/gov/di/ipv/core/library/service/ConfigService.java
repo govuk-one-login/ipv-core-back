@@ -220,8 +220,10 @@ public abstract class ConfigService {
         return getParametersByPrefix("credentialIssuers").entrySet().stream()
                 .map(e -> Map.entry(e.getKey().substring(prefix.length()), e.getValue()))
                 .filter(e -> pattern.matcher(e.getKey()).matches())
-                .map(e -> Map.entry(e.getValue(), Cri.fromId(extractCriId(e.getKey(), pattern))))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> Cri.fromId(extractCriId(e.getKey(), pattern))));
     }
 
     private String extractCriId(String key, Pattern pattern) {
