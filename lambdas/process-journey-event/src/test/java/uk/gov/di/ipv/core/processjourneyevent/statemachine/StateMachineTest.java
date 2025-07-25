@@ -50,7 +50,12 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -69,6 +74,7 @@ class StateMachineTest {
                         stateMachine.transition(
                                 "UNKNOWN_STATE",
                                 "event",
+                                null,
                                 null,
                                 EVENT_RESOLVE_PARAMETERS,
                                 eventResolver));
@@ -95,7 +101,12 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -129,7 +140,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -170,7 +186,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -216,7 +237,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -258,7 +284,7 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", event, null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE", event, null, null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -285,6 +311,7 @@ class StateMachineTest {
                 stateMachine.transition(
                         "START_STATE/NESTED_JOURNEY",
                         "event",
+                        null,
                         null,
                         EVENT_RESOLVE_PARAMETERS,
                         eventResolver);
