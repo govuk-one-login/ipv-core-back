@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -42,7 +43,16 @@ public abstract class YamlParametersConfigService extends ConfigService {
     public Map<String, String> getParametersByPrefix(String path) {
         return parameters.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(path))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue),
+                                map ->
+                                        Optional.of(map)
+                                                .filter(m -> !m.isEmpty())
+                                                .orElseThrow(
+                                                        () ->
+                                                                new ConfigParameterNotFoundException(
+                                                                        path))));
     }
 
     protected void updateParameters(Map<String, String> map, String yaml) {

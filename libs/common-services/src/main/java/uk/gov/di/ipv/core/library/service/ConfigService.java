@@ -201,32 +201,21 @@ public abstract class ConfigService {
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
         var prefix = ConfigurationVariable.CIMIT_CONFIG.getPath();
-        var config = getParametersByPrefix(prefix);
-        if (config.size() > 1) {
-            return config.entrySet().stream()
-                    .map(
-                            entry -> {
-                                var key = entry.getKey().substring(prefix.length() + 1);
-                                try {
-                                    var value =
-                                            OBJECT_MAPPER.readValue(
-                                                    entry.getValue(),
-                                                    new TypeReference<List<MitigationRoute>>() {});
-                                    return Map.entry(key, value);
-                                } catch (JsonProcessingException e) {
-                                    throw new RuntimeException(
-                                            "Failed to parse routes for key: " + entry.getKey(), e);
-                                }
-                            })
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        }
+        return getParametersByPrefix(prefix).entrySet().stream()
+                .map(
+                        entry -> {
+                            var key = entry.getKey().substring(prefix.length() + 1);
+                            var value = parseCimitRoutes(key, entry.getValue());
+                            return Map.entry(key, value);
+                        })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 
-        final String cimitConfig = getParameter(ConfigurationVariable.CIMIT_CONFIG);
+    private List<MitigationRoute> parseCimitRoutes(String key, String json) {
         try {
-            return OBJECT_MAPPER.readValue(
-                    cimitConfig, new TypeReference<HashMap<String, List<MitigationRoute>>>() {});
+            return OBJECT_MAPPER.readValue(json, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
-            throw new ConfigException("Failed to parse CIMit configuration");
+            throw new RuntimeException("Failed to parse routes for key: " + key, e);
         }
     }
 
@@ -246,64 +235,11 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        var prefix = "credentialIssuers";
-        var allCriParameters =
-                getParametersByPrefix("credentialIssuers").entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        e -> e.getKey().substring(prefix.length()),
-                                        Map.Entry::getValue));
-
-        var issuerToCriMap = new HashMap<String, Cri>();
-
-        for (Map.Entry<String, String> entry : allCriParameters.entrySet()) {
-            var fullPath = entry.getKey();
-            var value = entry.getValue();
-
-            var cri = findCriFromPath(fullPath);
-            if (cri == null) {
-                continue;
-            }
-
-            var criConfig = createCriConfigFromParameters(allCriParameters, cri, fullPath);
-            if (criConfig != null) {
-                var issuer = criConfig.getComponentId();
-                issuerToCriMap.put(issuer, cri);
-            } else {
-                try {
-                    criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
-                    var issuer = criConfig.getComponentId();
-                    issuerToCriMap.put(issuer, cri);
-                } catch (JsonProcessingException e) {
-                    throw new ConfigParseException(
-                            String.format(
-                                    "Failed to parse credential issuer configuration at path '%s': %s",
-                                    fullPath, e));
-                }
-            }
-        }
-
-        return issuerToCriMap;
+        return null;
     }
 
     private CriConfig createCriConfigFromParameters(
             Map<String, String> allCriParameters, Cri cri, String fullPath) {
-        var regex = String.format("/%s/connections/([^/]+)/[^/]+", cri.getId());
-        var pattern = Pattern.compile(regex);
-        var matcher = pattern.matcher(fullPath);
-
-        var data =
-                allCriParameters.entrySet().stream()
-                        .filter(e -> pattern.matcher(e.getKey()).matches())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        if (matcher.find()) {
-            var key = String.format("/%s/connections/%s", cri.getId(), matcher.group(1));
-            return CriConfig.builder()
-                    .componentId(data.get(String.format("%s/componentId", key)))
-                    .signingKey(data.get(String.format("%s/signingKey", key)))
-                    .build();
-        }
         return null;
     }
 
