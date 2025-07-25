@@ -200,6 +200,27 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
+        var prefix = ConfigurationVariable.CIMIT_CONFIG.getPath();
+        var config = getParametersByPrefix(prefix);
+        if (config.size() > 1) {
+            return config.entrySet().stream()
+                    .map(
+                            entry -> {
+                                var key = entry.getKey().substring(prefix.length() + 1);
+                                try {
+                                    var value =
+                                            OBJECT_MAPPER.readValue(
+                                                    entry.getValue(),
+                                                    new TypeReference<List<MitigationRoute>>() {});
+                                    return Map.entry(key, value);
+                                } catch (JsonProcessingException e) {
+                                    throw new RuntimeException(
+                                            "Failed to parse routes for key: " + entry.getKey(), e);
+                                }
+                            })
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
         final String cimitConfig = getParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
             return OBJECT_MAPPER.readValue(
