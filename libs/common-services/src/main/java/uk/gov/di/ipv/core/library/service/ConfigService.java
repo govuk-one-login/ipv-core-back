@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -143,40 +142,22 @@ public abstract class ConfigService {
                         ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
                         criId,
                         connection);
-        var parameters = getParametersByPrefix(prefix);
-        if (parameters.size() > 1) {
-            parameters =
-                    parameters.entrySet().stream()
-                            .map(
-                                    entry -> {
-                                        var key = entry.getKey().substring(prefix.length() + 1);
-                                        var value = entry.getValue();
-                                        if (key.equals("signingKey")
-                                                || key.equals("encryptionKey")) {
-                                            value = value.replace("\\", "");
-                                        }
-                                        return Map.entry(key, value);
-                                    })
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        var parameters =
+                getParametersByPrefix(prefix).entrySet().stream()
+                        .map(
+                                entry -> {
+                                    var key = entry.getKey().substring(prefix.length() + 1);
+                                    var value = unescapeSigEncKey(key, entry.getValue());
+                                    return Map.entry(key, value);
+                                })
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return OBJECT_MAPPER.convertValue(parameters, configType);
+    }
 
-            return OBJECT_MAPPER.convertValue(parameters, configType);
-        }
-
-        try {
-            String parameter =
-                    getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, criId, connection);
-            return OBJECT_MAPPER.readValue(parameter, configType);
-        } catch (ConfigParameterNotFoundException e) {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
-        } catch (JsonProcessingException e) {
-            throw new ConfigParseException(
-                    String.format(
-                            "Failed to parse credential issuer configuration '%s' because: '%s'",
-                            criId, e));
-        }
+    private String unescapeSigEncKey(String key, String value) {
+        return (key.equals("signingKey") || key.equals("encryptionKey"))
+                ? value.replace("\\", "")
+                : value;
     }
 
     public String getActiveConnection(Cri cri) {
@@ -235,21 +216,22 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        return null;
+        var prefix = "credentialIssuers";
+        var pattern = Pattern.compile("/([^/]+)/connections/[^/]+/componentId$");
+        return getParametersByPrefix("credentialIssuers").entrySet().stream()
+                .map(e -> Map.entry(e.getKey().substring(prefix.length()), e.getValue()))
+                .filter(e -> pattern.matcher(e.getKey()).matches())
+                .map(e -> Map.entry(e.getValue(), Cri.fromId(extractCriId(e.getKey(), pattern))))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private CriConfig createCriConfigFromParameters(
-            Map<String, String> allCriParameters, Cri cri, String fullPath) {
-        return null;
-    }
-
-    private Cri findCriFromPath(String parameterPath) {
-        Pattern pattern = Pattern.compile("([^/]+)/connections");
-        Matcher matcher = pattern.matcher(parameterPath);
-
-        if (matcher.find()) {
-            return Cri.fromId(matcher.group(1));
+    private String extractCriId(String key, Pattern pattern) {
+        Matcher matcher = pattern.matcher(key);
+        if (!matcher.matches()) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at path %s", key));
         }
-        return null;
+        return matcher.group(1);
     }
 }
