@@ -66,6 +66,11 @@ public class JourneyEngineHandler {
 
     public void journeyEngine(Context ctx) {
         String journeyEvent = ctx.pathParam("event");
+        // This needs to be replicated in AWS
+        String currentPage = ctx.queryParam("currentPage");
+        if (currentPage != null) {
+            journeyEvent += "?currentPage=" + currentPage;
+        }
 
         while (true) {
             var processJourneyEventOutput = processJourneyEvent(ctx, journeyEvent);
