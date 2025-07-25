@@ -184,19 +184,18 @@ public abstract class ConfigService {
         var prefix = ConfigurationVariable.CIMIT_CONFIG.getPath();
         return getParametersByPrefix(prefix).entrySet().stream()
                 .map(
-                        entry -> {
-                            var key = entry.getKey().substring(prefix.length() + 1);
-                            var value = parseCimitRoutes(key, entry.getValue());
-                            return Map.entry(key, value);
-                        })
+                        entry ->
+                                Map.entry(
+                                        entry.getKey().substring(prefix.length() + 1),
+                                        parseCimitRoute(entry.getValue())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private List<MitigationRoute> parseCimitRoutes(String key, String json) {
+    private List<MitigationRoute> parseCimitRoute(String json) {
         try {
             return OBJECT_MAPPER.readValue(json, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse routes for key: " + key, e);
+            throw new RuntimeException("Failed to parse route for cimit: " + e);
         }
     }
 
