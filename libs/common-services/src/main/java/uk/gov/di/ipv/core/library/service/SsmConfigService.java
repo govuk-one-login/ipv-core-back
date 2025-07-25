@@ -18,7 +18,10 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.nio.file.Path;
@@ -139,10 +142,22 @@ public class SsmConfigService extends ConfigService {
 
     @Override
     protected Map<String, String> getParametersByPrefix(String path) {
-        return ssmProvider.getMultiple(resolvePath(path));
+        var parameters = ssmProvider.getMultiple(path);
+        if (parameters.isEmpty()) {
+            throw new NoConfigForConnectionException("SSM parameter not found for path: " + path);
+        }
+        return parameters;
     }
 
-    private String resolvePath(String path) {
+    @Override
+    protected String resolvePath(
+            ConfigurationVariable configurationVariable, String connection, Cri cri) {
+        var initialPrefix = String.format(configurationVariable.getPath(), cri.getId(), connection);
+        return resolvePath(initialPrefix);
+    }
+
+    @Override
+    protected String resolvePath(String path) {
         return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT)) + path;
     }
 

@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -32,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -123,34 +123,48 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(connection, cri, OauthCriConfig.class);
+        var paramPath =
+                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+        return getCriConfigForType(paramPath, OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(connection, cri, RestCriConfig.class);
+        var paramPath =
+                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+        return getCriConfigForType(paramPath, RestCriConfig.class);
     }
 
     public CriConfig getCriConfig(Cri cri) {
-        return getCriConfigForType(getActiveConnection(cri), cri, CriConfig.class);
+        var paramPath =
+                resolvePath(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG,
+                        getActiveConnection(cri),
+                        cri);
+        return getCriConfigForType(paramPath, CriConfig.class);
     }
 
-    private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
-        String criId = cri.getId();
-        try {
-            String parameter =
-                    getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, criId, connection);
-            return OBJECT_MAPPER.readValue(parameter, configType);
-        } catch (ConfigParameterNotFoundException e) {
-            throw new NoConfigForConnectionException(
-                    String.format(
-                            "No config found for connection: '%s' and criId: '%s'",
-                            connection, criId));
-        } catch (JsonProcessingException e) {
-            throw new ConfigParseException(
-                    String.format(
-                            "Failed to parse credential issuer configuration '%s' because: '%s'",
-                            criId, e));
-        }
+    protected String resolvePath(
+            ConfigurationVariable configurationVariable, String connection, Cri cri) {
+        return String.format(configurationVariable.getPath(), cri.getId(), connection);
+    }
+
+    private <T> T getCriConfigForType(String paramPath, Class<T> configType) {
+        var parameters =
+                getParametersByPrefix(paramPath).entrySet().stream()
+                        .map(
+                                entry -> {
+                                    var key = entry.getKey().substring(paramPath.length() + 1);
+                                    var value = unescapeSigEncKey(key, entry.getValue());
+                                    return Map.entry(key, value);
+                                })
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return OBJECT_MAPPER.convertValue(parameters, configType);
+    }
+
+    private String unescapeSigEncKey(String key, String value) {
+        return (key.equals("signingKey") || key.equals("encryptionKey"))
+                ? value.replace("\\", "")
+                : value;
     }
 
     public String getActiveConnection(Cri cri) {
@@ -174,13 +188,27 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        final String cimitConfig = getParameter(ConfigurationVariable.CIMIT_CONFIG);
-        try {
-            return OBJECT_MAPPER.readValue(
-                    cimitConfig, new TypeReference<HashMap<String, List<MitigationRoute>>>() {});
-        } catch (JsonProcessingException e) {
-            throw new ConfigException("Failed to parse CIMit configuration");
+        var prefix = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
+
+        var rawData =
+                getParametersByPrefix(prefix).entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(prefix.length() + 1),
+                                        Map.Entry::getValue));
+
+        var parsedData = new HashMap<String, List<MitigationRoute>>();
+        for (var entry : rawData.entrySet()) {
+            try {
+                var list =
+                        OBJECT_MAPPER.readValue(
+                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
+                parsedData.put(entry.getKey(), list);
+            } catch (JsonProcessingException e) {
+                throw new ConfigException("Failed to parse route for cimit: " + e);
+            }
         }
+        return parsedData;
     }
 
     public boolean enabled(FeatureFlag featureFlag) {
@@ -199,37 +227,28 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        var allCriParameters = getParametersByPrefix("credentialIssuers");
-        var issuerToCriMap = new HashMap<String, Cri>();
-
-        for (Map.Entry<String, String> entry : allCriParameters.entrySet()) {
-            var fullPath = entry.getKey();
-            var value = entry.getValue();
-
-            var cri = findCriFromPath(fullPath);
-            if (cri == null) continue;
-
-            try {
-                var criConfig = OBJECT_MAPPER.readValue(value, CriConfig.class);
-                var issuer = criConfig.getComponentId();
-                issuerToCriMap.put(issuer, cri);
-            } catch (JsonProcessingException e) {
-                throw new ConfigParseException(
-                        String.format(
-                                "Failed to parse credential issuer configuration at path '%s': %s",
-                                fullPath, e));
-            }
-        }
-        return issuerToCriMap;
+        var prefix = resolvePath("credentialIssuers");
+        var pattern = Pattern.compile("/([^/]+)/connections/[^/]+/componentId$");
+        return getParametersByPrefix(prefix).entrySet().stream()
+                .map(e -> Map.entry(e.getKey().substring(prefix.length()), e.getValue()))
+                .filter(e -> pattern.matcher(e.getKey()).matches())
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getValue,
+                                e -> Cri.fromId(extractCriId(e.getKey(), pattern))));
     }
 
-    private Cri findCriFromPath(String parameterPath) {
-        Pattern pattern = Pattern.compile("([^/]+)/connections");
-        Matcher matcher = pattern.matcher(parameterPath);
+    protected String resolvePath(String path) {
+        return path;
+    }
 
-        if (matcher.find()) {
-            return Cri.fromId(matcher.group(1));
+    private String extractCriId(String key, Pattern pattern) {
+        Matcher matcher = pattern.matcher(key);
+        if (!matcher.matches()) {
+            throw new ConfigParseException(
+                    String.format(
+                            "Failed to parse credential issuer configuration at path %s", key));
         }
-        return null;
+        return matcher.group(1);
     }
 }
