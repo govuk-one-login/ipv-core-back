@@ -290,7 +290,7 @@ public abstract class ConfigService {
     public Map<String, Cri> getIssuerCrisInYaml() {
         var prefix = resolvePath("credentialIssuers");
         var pattern = Pattern.compile("([^/]+)/connections/[^/]+/componentId$");
-        return getParametersByPrefix(prefix).entrySet().stream()
+        return getParametersByPrefixYaml(prefix).entrySet().stream()
                 .filter(entry -> pattern.matcher(entry.getKey()).matches())
                 .collect(
                         Collectors.toMap(
