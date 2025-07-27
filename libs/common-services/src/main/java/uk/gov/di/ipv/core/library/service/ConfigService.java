@@ -65,7 +65,7 @@ public abstract class ConfigService {
 
     protected abstract String getSecret(String path);
 
-    protected abstract boolean isCriConfigInYaml();
+    protected abstract boolean isConfigInYaml();
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -145,7 +145,7 @@ public abstract class ConfigService {
 
     private <T extends CriConfig> T getCriConfigForType(
             String connection, Cri cri, Class<T> configType) {
-        if (isCriConfigInYaml()) {
+        if (isConfigInYaml()) {
             return getCriConfigForTypeInYaml(cri, connection, configType);
         }
 
@@ -213,7 +213,7 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        if (isCriConfigInYaml()) {
+        if (isConfigInYaml()) {
             return getCimitConfigInYaml();
         }
 
@@ -259,7 +259,7 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
-        if (isCriConfigInYaml()) {
+        if (isConfigInYaml()) {
             return getIssuerCrisInYaml();
         }
 

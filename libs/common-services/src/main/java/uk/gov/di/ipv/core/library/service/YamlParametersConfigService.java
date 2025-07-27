@@ -96,8 +96,8 @@ public abstract class YamlParametersConfigService extends ConfigService {
     }
 
     @Override
-    protected boolean isCriConfigInYaml() {
-        var pattern = Pattern.compile("^credentialIssuers/address/connections/[^/]+/[^/]+.*$");
+    protected boolean isConfigInYaml() {
+        var pattern = Pattern.compile("credentialIssuers/address/connections/[^/]+/[^/]+$");
         for (String key : parameters.keySet()) {
             if (pattern.matcher(key).matches()) {
                 return true;
