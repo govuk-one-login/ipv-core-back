@@ -143,13 +143,13 @@ public class SsmConfigService extends ConfigService {
         var criId = Cri.ADDRESS.getId();
         var activeConnection = getActiveConnection(Cri.ADDRESS);
         var basePath =
-                String.format("/credentialIssuers/%s/connections/%s", criId, activeConnection);
+                String.format("credentialIssuers/%s/connections/%s", criId, activeConnection);
         try {
             ssmProvider.get(resolvePath(basePath));
         } catch (ParameterNotFoundException e) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     @Override
