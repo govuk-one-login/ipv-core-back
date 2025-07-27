@@ -18,8 +18,6 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -147,13 +145,6 @@ public class SsmConfigService extends ConfigService {
             throw new NoConfigForConnectionException("SSM parameter not found for path: " + path);
         }
         return parameters;
-    }
-
-    @Override
-    protected String resolvePath(
-            ConfigurationVariable configurationVariable, String connection, Cri cri) {
-        var initialPrefix = String.format(configurationVariable.getPath(), cri.getId(), connection);
-        return resolvePath(initialPrefix);
     }
 
     @Override

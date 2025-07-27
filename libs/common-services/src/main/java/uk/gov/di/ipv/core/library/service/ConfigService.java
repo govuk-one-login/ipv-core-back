@@ -66,10 +66,6 @@ public abstract class ConfigService {
         return System.getenv(environmentVariable.name());
     }
 
-    public Integer getIntegerEnvironmentVariable(EnvironmentVariable environmentVariable) {
-        return getIntegerEnvironmentVariable(environmentVariable, null);
-    }
-
     public Integer getIntegerEnvironmentVariable(
             EnvironmentVariable environmentVariable, Integer defaultValue) {
         var value = System.getenv(environmentVariable.name());
@@ -124,28 +120,32 @@ public abstract class ConfigService {
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
         var paramPath =
-                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+                resolvePath(
+                        formatPath(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                                cri.getId(),
+                                connection));
         return getCriConfigForType(paramPath, OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
         var paramPath =
-                resolvePath(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, connection, cri);
+                resolvePath(
+                        formatPath(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                                cri.getId(),
+                                connection));
         return getCriConfigForType(paramPath, RestCriConfig.class);
     }
 
     public CriConfig getCriConfig(Cri cri) {
         var paramPath =
                 resolvePath(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG,
-                        getActiveConnection(cri),
-                        cri);
+                        formatPath(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                                cri.getId(),
+                                getActiveConnection(cri)));
         return getCriConfigForType(paramPath, CriConfig.class);
-    }
-
-    protected String resolvePath(
-            ConfigurationVariable configurationVariable, String connection, Cri cri) {
-        return String.format(configurationVariable.getPath(), cri.getId(), connection);
     }
 
     private <T> T getCriConfigForType(String paramPath, Class<T> configType) {
@@ -242,12 +242,12 @@ public abstract class ConfigService {
         return path;
     }
 
-    private String extractCriId(String key, Pattern pattern) {
-        Matcher matcher = pattern.matcher(key);
+    private String extractCriId(String path, Pattern pattern) {
+        Matcher matcher = pattern.matcher(path);
         if (!matcher.matches()) {
             throw new ConfigParseException(
                     String.format(
-                            "Failed to parse credential issuer configuration at path %s", key));
+                            "Failed to parse credential issuer configuration at path %s", path));
         }
         return matcher.group(1);
     }
