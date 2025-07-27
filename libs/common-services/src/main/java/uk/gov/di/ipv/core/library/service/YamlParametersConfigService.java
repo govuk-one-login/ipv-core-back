@@ -45,7 +45,9 @@ public abstract class YamlParametersConfigService extends ConfigService {
                 .filter(e -> e.getKey().startsWith(path))
                 .collect(
                         Collectors.collectingAndThen(
-                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue),
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(path.length() + 1),
+                                        Map.Entry::getValue),
                                 map ->
                                         Optional.of(map)
                                                 .filter(m -> !m.isEmpty())

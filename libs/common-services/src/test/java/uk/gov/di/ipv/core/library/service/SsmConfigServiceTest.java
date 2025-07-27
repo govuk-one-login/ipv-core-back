@@ -114,25 +114,25 @@ class SsmConfigServiceTest {
 
         private final Map<String, String> criStubConnection =
                 Map.of(
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/tokenUrl",
+                        "tokenUrl",
                         "https://testTokenUrl",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/credentialUrl",
+                        "credentialUrl",
                         "https://testCredentialUrl",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/authorizeUrl",
+                        "authorizeUrl",
                         "https://testAuthoriseUrl",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/clientId",
+                        "clientId",
                         "ipv-core-test",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/signingKey",
+                        "signingKey",
                         EC_PRIVATE_KEY_JWK,
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/encryptionKey",
+                        "encryptionKey",
                         RSA_ENCRYPTION_PUBLIC_JWK,
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/componentId",
+                        "componentId",
                         "https://testComponentId",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/clientCallbackUrl",
+                        "clientCallbackUrl",
                         "https://testClientCallBackUrl",
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/requiresApiKey",
+                        "requiresApiKey",
                         String.valueOf(true),
-                        "/test/core/credentialIssuers/ukPassport/connections/stub/jwksUrl",
+                        "jwksUrl",
                         "https://testWellKnownUrl");
 
         private final OauthCriConfig expectedOauthCriConfig =
@@ -212,13 +212,13 @@ class SsmConfigServiceTest {
             when(ssmProvider.getMultiple("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
                             Map.of(
-                                    "/test/core/credentialIssuers/address/connections/stub/credentialUrl",
+                                    "credentialUrl",
                                     "https://testCredentialUrl",
-                                    "/test/core/credentialIssuers/address/connections/stub/signingKey",
+                                    "signingKey",
                                     EC_PRIVATE_KEY_JWK,
-                                    "/test/core/credentialIssuers/address/connections/stub/componentId",
+                                    "componentId",
                                     "https://testComponentId",
-                                    "/test/core/credentialIssuers/address/connections/stub/requiresApiKey",
+                                    "requiresApiKey",
                                     "true"));
 
             RestCriConfig restCriConfig =
@@ -245,9 +245,9 @@ class SsmConfigServiceTest {
                             "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             Map.of(
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub/signingKey",
+                                    "signingKey",
                                     EC_PRIVATE_KEY_JWK,
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub/componentId",
+                                    "componentId",
                                     "https://testComponentId"));
 
             CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT);
@@ -611,14 +611,10 @@ class SsmConfigServiceTest {
 
     private static Stream<Arguments> provideConfiguredSsmCimitConfig() {
         return Stream.of(
+                Arguments.of(Map.of("X01", "[{\"event\": \"/journey/do-a-thing\"}]"), null),
                 Arguments.of(
                         Map.of(
-                                "/test/core/cimit/config/X01",
-                                "[{\"event\": \"/journey/do-a-thing\"}]"),
-                        null),
-                Arguments.of(
-                        Map.of(
-                                "/test/core/cimit/config/X01",
+                                "X01",
                                 "[{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]"),
                         "drivingPermit"));
     }
@@ -660,13 +656,13 @@ class SsmConfigServiceTest {
             when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
                     .thenReturn(
                             Map.of(
-                                    "/test/core/credentialIssuers/ticf/connections/stub/componentId",
+                                    "ticf/connections/stub/componentId",
                                     "https://stub-ticf-component-id",
-                                    "/test/core/credentialIssuers/ticf/connections/main/componentId",
+                                    "ticf/connections/main/componentId",
                                     "https://main-ticf-component-id",
-                                    "/test/core/credentialIssuers/dcmaw/connections/stub/componentId",
+                                    "dcmaw/connections/stub/componentId",
                                     "https://stub-dcmaw-component-id",
-                                    "/test/core/credentialIssuers/dcmaw/connections/main/componentId",
+                                    "dcmaw/connections/main/componentId",
                                     "https://main-dcmaw-component-id"));
         }
 

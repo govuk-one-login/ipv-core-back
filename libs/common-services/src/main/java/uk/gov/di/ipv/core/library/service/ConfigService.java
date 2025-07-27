@@ -142,15 +142,13 @@ public abstract class ConfigService {
                                 cri.getId(),
                                 connection));
         return getParametersByPrefix(path).entrySet().stream()
-                .map(
-                        entry -> {
-                            var key = entry.getKey().substring(path.length() + 1);
-                            var value = unescapeSigEncKey(key, entry.getValue());
-                            return Map.entry(key, value);
-                        })
                 .collect(
                         Collectors.collectingAndThen(
-                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue),
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry ->
+                                                unescapeSigEncKey(
+                                                        entry.getKey(), entry.getValue())),
                                 parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
     }
 
@@ -181,17 +179,10 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        var prefix = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
-
-        var rawData =
-                getParametersByPrefix(prefix).entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().substring(prefix.length() + 1),
-                                        Map.Entry::getValue));
-
+        var path = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
+        var parameters = getParametersByPrefix(path);
         var parsedData = new HashMap<String, List<MitigationRoute>>();
-        for (var entry : rawData.entrySet()) {
+        for (var entry : parameters.entrySet()) {
             try {
                 var list =
                         OBJECT_MAPPER.readValue(
@@ -221,13 +212,8 @@ public abstract class ConfigService {
 
     public Map<String, Cri> getIssuerCris() {
         var prefix = resolvePath("credentialIssuers");
-        var pattern = Pattern.compile("/([^/]+)/connections/[^/]+/componentId$");
+        var pattern = Pattern.compile("([^/]+)/connections/[^/]+/componentId$");
         return getParametersByPrefix(prefix).entrySet().stream()
-                .map(
-                        entry ->
-                                Map.entry(
-                                        entry.getKey().substring(prefix.length()),
-                                        entry.getValue()))
                 .filter(entry -> pattern.matcher(entry.getKey()).matches())
                 .collect(
                         Collectors.toMap(
