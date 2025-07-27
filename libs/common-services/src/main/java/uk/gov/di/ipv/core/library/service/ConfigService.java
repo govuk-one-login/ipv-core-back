@@ -109,6 +109,10 @@ public abstract class ConfigService {
         return String.format(path, (Object[]) pathProperties);
     }
 
+    protected String resolvePath(String path) {
+        return path;
+    }
+
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
         return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
     }
@@ -119,41 +123,29 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
-        var paramPath =
-                resolvePath(
-                        formatPath(
-                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                                cri.getId(),
-                                connection));
-        return getCriConfigForType(paramPath, OauthCriConfig.class);
+        return getCriConfigForType(cri, connection, OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
-        var paramPath =
+        return getCriConfigForType(cri, connection, RestCriConfig.class);
+    }
+
+    public CriConfig getCriConfig(Cri cri) {
+        return getCriConfigForType(cri, getActiveConnection(cri), CriConfig.class);
+    }
+
+    private <T> T getCriConfigForType(Cri cri, String connection, Class<T> configType) {
+        var path =
                 resolvePath(
                         formatPath(
                                 ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
                                 cri.getId(),
                                 connection));
-        return getCriConfigForType(paramPath, RestCriConfig.class);
-    }
-
-    public CriConfig getCriConfig(Cri cri) {
-        var paramPath =
-                resolvePath(
-                        formatPath(
-                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                                cri.getId(),
-                                getActiveConnection(cri)));
-        return getCriConfigForType(paramPath, CriConfig.class);
-    }
-
-    private <T> T getCriConfigForType(String paramPath, Class<T> configType) {
         var parameters =
-                getParametersByPrefix(paramPath).entrySet().stream()
+                getParametersByPrefix(path).entrySet().stream()
                         .map(
                                 entry -> {
-                                    var key = entry.getKey().substring(paramPath.length() + 1);
+                                    var key = entry.getKey().substring(path.length() + 1);
                                     var value = unescapeSigEncKey(key, entry.getValue());
                                     return Map.entry(key, value);
                                 })
@@ -236,10 +228,6 @@ public abstract class ConfigService {
                         Collectors.toMap(
                                 Map.Entry::getValue,
                                 e -> Cri.fromId(extractCriId(e.getKey(), pattern))));
-    }
-
-    protected String resolvePath(String path) {
-        return path;
     }
 
     private String extractCriId(String path, Pattern pattern) {
