@@ -93,6 +93,12 @@ public class AppConfigService extends YamlParametersConfigService {
         return super.getParametersByPrefixYaml(path);
     }
 
+    @Override
+    protected boolean isConfigInYaml() {
+        reloadParameters();
+        return super.isConfigInYaml();
+    }
+
     private void reloadParameters() {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
