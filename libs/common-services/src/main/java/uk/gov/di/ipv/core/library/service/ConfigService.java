@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -60,7 +61,11 @@ public abstract class ConfigService {
 
     protected abstract Map<String, String> getParametersByPrefix(String path);
 
+    protected abstract Map<String, String> getParametersByPrefixYaml(String path);
+
     protected abstract String getSecret(String path);
+
+    protected abstract boolean isCriConfigInYaml();
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -113,6 +118,10 @@ public abstract class ConfigService {
         return String.format(path, (Object[]) pathProperties);
     }
 
+    protected String resolvePath(String path) {
+        return path;
+    }
+
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
         return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
     }
@@ -134,7 +143,12 @@ public abstract class ConfigService {
         return getCriConfigForType(getActiveConnection(cri), cri, CriConfig.class);
     }
 
-    private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
+    private <T extends CriConfig> T getCriConfigForType(
+            String connection, Cri cri, Class<T> configType) {
+        if (isCriConfigInYaml()) {
+            return getCriConfigForTypeInYaml(cri, connection, configType);
+        }
+
         String criId = cri.getId();
         try {
             String parameter =
@@ -151,6 +165,31 @@ public abstract class ConfigService {
                             "Failed to parse credential issuer configuration '%s' because: '%s'",
                             criId, e));
         }
+    }
+
+    private <T extends CriConfig> T getCriConfigForTypeInYaml(
+            Cri cri, String connection, Class<T> configType) {
+        var path =
+                resolvePath(
+                        formatPath(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                                cri.getId(),
+                                connection));
+        return getParametersByPrefixYaml(path).entrySet().stream()
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry ->
+                                                unescapeSigEncKey(
+                                                        entry.getKey(), entry.getValue())),
+                                parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
+    }
+
+    private String unescapeSigEncKey(String key, String value) {
+        return (key.equals("signingKey") || key.equals("encryptionKey"))
+                ? value.replace("\\", "")
+                : value;
     }
 
     public String getActiveConnection(Cri cri) {
@@ -174,6 +213,10 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
+        if (isCriConfigInYaml()) {
+            return getCimitConfigInYaml();
+        }
+
         final String cimitConfig = getParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
             return OBJECT_MAPPER.readValue(
@@ -181,6 +224,23 @@ public abstract class ConfigService {
         } catch (JsonProcessingException e) {
             throw new ConfigException("Failed to parse CIMit configuration");
         }
+    }
+
+    public Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
+        var path = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
+        var parameters = getParametersByPrefixYaml(path);
+        var parsedData = new HashMap<String, List<MitigationRoute>>();
+        for (var entry : parameters.entrySet()) {
+            try {
+                var list =
+                        OBJECT_MAPPER.readValue(
+                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
+                parsedData.put(entry.getKey(), list);
+            } catch (JsonProcessingException e) {
+                throw new ConfigException("Failed to parse route for cimit: " + e);
+            }
+        }
+        return parsedData;
     }
 
     public boolean enabled(FeatureFlag featureFlag) {
@@ -199,6 +259,10 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
+        if (isCriConfigInYaml()) {
+            return getIssuerCrisInYaml();
+        }
+
         var allCriParameters = getParametersByPrefix("credentialIssuers");
         var issuerToCriMap = new HashMap<String, Cri>();
 
@@ -221,6 +285,27 @@ public abstract class ConfigService {
             }
         }
         return issuerToCriMap;
+    }
+
+    public Map<String, Cri> getIssuerCrisInYaml() {
+        var prefix = resolvePath("credentialIssuers");
+        var pattern = Pattern.compile("([^/]+)/connections/[^/]+/componentId$");
+        return getParametersByPrefix(prefix).entrySet().stream()
+                .filter(entry -> pattern.matcher(entry.getKey()).matches())
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getValue,
+                                entry -> {
+                                    var path = entry.getKey();
+                                    var matcher = pattern.matcher(path);
+                                    if (!matcher.matches()) {
+                                        throw new ConfigParseException(
+                                                String.format(
+                                                        "Failed to parse credential issuer path: %s",
+                                                        path));
+                                    }
+                                    return Cri.fromId(matcher.group(1));
+                                }));
     }
 
     private Cri findCriFromPath(String parameterPath) {
