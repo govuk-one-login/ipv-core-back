@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -134,23 +133,25 @@ public abstract class ConfigService {
         return getCriConfigForType(cri, getActiveConnection(cri), CriConfig.class);
     }
 
-    private <T> T getCriConfigForType(Cri cri, String connection, Class<T> configType) {
+    private <T extends CriConfig> T getCriConfigForType(
+            Cri cri, String connection, Class<T> configType) {
         var path =
                 resolvePath(
                         formatPath(
                                 ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
                                 cri.getId(),
                                 connection));
-        var parameters =
-                getParametersByPrefix(path).entrySet().stream()
-                        .map(
-                                entry -> {
-                                    var key = entry.getKey().substring(path.length() + 1);
-                                    var value = unescapeSigEncKey(key, entry.getValue());
-                                    return Map.entry(key, value);
-                                })
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        return OBJECT_MAPPER.convertValue(parameters, configType);
+        return getParametersByPrefix(path).entrySet().stream()
+                .map(
+                        entry -> {
+                            var key = entry.getKey().substring(path.length() + 1);
+                            var value = unescapeSigEncKey(key, entry.getValue());
+                            return Map.entry(key, value);
+                        })
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue),
+                                parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
     }
 
     private String unescapeSigEncKey(String key, String value) {
@@ -222,21 +223,25 @@ public abstract class ConfigService {
         var prefix = resolvePath("credentialIssuers");
         var pattern = Pattern.compile("/([^/]+)/connections/[^/]+/componentId$");
         return getParametersByPrefix(prefix).entrySet().stream()
-                .map(e -> Map.entry(e.getKey().substring(prefix.length()), e.getValue()))
-                .filter(e -> pattern.matcher(e.getKey()).matches())
+                .map(
+                        entry ->
+                                Map.entry(
+                                        entry.getKey().substring(prefix.length()),
+                                        entry.getValue()))
+                .filter(entry -> pattern.matcher(entry.getKey()).matches())
                 .collect(
                         Collectors.toMap(
                                 Map.Entry::getValue,
-                                e -> Cri.fromId(extractCriId(e.getKey(), pattern))));
-    }
-
-    private String extractCriId(String path, Pattern pattern) {
-        Matcher matcher = pattern.matcher(path);
-        if (!matcher.matches()) {
-            throw new ConfigParseException(
-                    String.format(
-                            "Failed to parse credential issuer configuration at path %s", path));
-        }
-        return matcher.group(1);
+                                entry -> {
+                                    var path = entry.getKey();
+                                    var matcher = pattern.matcher(path);
+                                    if (!matcher.matches()) {
+                                        throw new ConfigParseException(
+                                                String.format(
+                                                        "Failed to parse credential issuer path: %s",
+                                                        path));
+                                    }
+                                    return Cri.fromId(matcher.group(1));
+                                }));
     }
 }

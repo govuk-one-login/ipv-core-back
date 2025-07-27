@@ -102,21 +102,6 @@ class AppConfigServiceTest {
             testClient:
               validRedirectUrls: a,list,of,strings
     """;
-    private static final String TEST_RAW_PARAMETERS_MALFORMED_CRI_CONFIG =
-            """
-        core:
-          self:
-            componentId: "test-component-id"
-            bearerTokenTtl: 1800
-            someStringList: "a,list,of,strings"
-          credentialIssuers:
-            dcmawAsync:
-              activeConnection: test
-              connections:
-                test: '{
-                  componentId: dcmaw-async-issuer
-                }'
-    """;
     @Mock Cri criMock;
     @Mock AppConfigProvider appConfigProvider;
     @Mock SecretsProvider secretsProvider;
