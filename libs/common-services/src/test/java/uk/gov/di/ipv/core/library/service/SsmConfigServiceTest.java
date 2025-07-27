@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
@@ -202,7 +201,7 @@ class SsmConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
 
             assertThrows(
-                    NoConfigForConnectionException.class,
+                    ConfigParameterNotFoundException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
         }
 
