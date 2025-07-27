@@ -139,7 +139,7 @@ public class SsmConfigService extends ConfigService {
     }
 
     @Override
-    protected boolean isCriConfigInYaml() {
+    protected boolean isConfigInYaml() {
         var criId = Cri.ADDRESS.getId();
         var activeConnection = getActiveConnection(Cri.ADDRESS);
         var basePath =
