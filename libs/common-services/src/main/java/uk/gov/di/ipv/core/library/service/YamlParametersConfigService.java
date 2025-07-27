@@ -8,6 +8,8 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -47,6 +49,24 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
     }
 
+    @Override
+    public Map<String, String> getParametersByPrefixYaml(String path) {
+        return parameters.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(path))
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(path.length() + 1),
+                                        Map.Entry::getValue),
+                                map ->
+                                        Optional.of(map)
+                                                .filter(m -> !m.isEmpty())
+                                                .orElseThrow(
+                                                        () ->
+                                                                new ConfigParameterNotFoundException(
+                                                                        path))));
+    }
+
     protected void updateParameters(Map<String, String> map, String yaml) {
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
@@ -59,6 +79,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
@@ -67,10 +88,21 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
         }
+    }
+
+    @Override
+    protected boolean isCriConfigInYaml() {
+        var pattern = Pattern.compile("^credentialIssuers/address/connections/[^/]+/[^/]+.*$");
+        for (String key : parameters.keySet()) {
+            if (pattern.matcher(key).matches()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
