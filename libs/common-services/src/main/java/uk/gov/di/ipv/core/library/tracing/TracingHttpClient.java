@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.tracing;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -26,8 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-// Implementation of java.net.HttpClient that includes OpenTelemetry tracing and additional error
-// handling
+// Implementation of java.net.HttpClient that includes additional error handling
 @ExcludeFromGeneratedCoverageReport
 public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -151,8 +148,6 @@ public class TracingHttpClient extends HttpClient {
     }
 
     private static HttpClient getOTelInstrumentedHttpClient() {
-        return JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
-                .build()
-                .newHttpClient(HttpClient.newHttpClient());
+        return HttpClient.newHttpClient(); // Open telemetry auto instrumentation is enabled for Java Http Client
     }
 }
