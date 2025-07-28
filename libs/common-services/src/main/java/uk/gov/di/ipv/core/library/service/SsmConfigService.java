@@ -145,16 +145,20 @@ public class SsmConfigService extends ConfigService {
         var basePath =
                 String.format("credentialIssuers/%s/connections/%s", criId, activeConnection);
         try {
+            LOGGER.error(LogHelper.buildLogMessage("Checking config if it is in yaml or json"));
             ssmProvider.get(resolvePath(basePath));
         } catch (ParameterNotFoundException e) {
+            LOGGER.error(LogHelper.buildLogMessage("Config in json"));
             return false;
         }
+        LOGGER.error(LogHelper.buildLogMessage("Config in yaml"));
+
         return true;
     }
 
     @Override
     protected Map<String, String> getParametersByPrefix(String path) {
-        return ssmProvider.getMultiple(resolvePath(path));
+        return ssmProvider.getMultiple(resolvePath(path.endsWith("/") ? path : path + "/"));
     }
 
     @Override
