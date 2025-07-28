@@ -295,7 +295,6 @@ class BuildCriOauthRequestHandlerTest {
                                 vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                 IPV_ISSUER));
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID)).thenReturn(vcs);
-        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner())
@@ -382,8 +381,6 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS,
                                         vcClaimFailedWithCis(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
-
-        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

@@ -19,7 +19,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Update journeys - no existing SI record
     Background: Existing identity - continue to update details
@@ -48,7 +48,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Successful Name Change - <selected-name-change> - meets P2
       When I submit a '<selected-name-change>' event
@@ -73,7 +73,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get a 'P1' identity
       And my identity 'GivenName' is '<expected-given-name>'
       And my identity 'FamilyName' is '<expected-family-name>'
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | selected-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -99,7 +99,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get a 'P1' identity
       And my identity 'GivenName' is '<expected-given-name>'
       And my identity 'FamilyName' is '<expected-family-name>'
-      And I have a 'GPG45' stored identity record type with a 'P3' vot
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
       Examples:
         | selected-name-change | details                                    | fraud-details                       | expected-given-name | expected-family-name |
@@ -124,7 +124,7 @@ Feature: Stored Identity - Update Existing Identity
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
 
       When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -138,7 +138,7 @@ Feature: Stored Identity - Update Existing Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P3' vot that is 'valid'
+      And I have a GPG45 stored identity record type with a 'P3' vot that is 'valid'
 
     Scenario: Existing P1 credentials - details used for update meet P2
       Given the subject already has the following credentials
@@ -157,7 +157,7 @@ Feature: Stored Identity - Update Existing Identity
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       # SI record invalidated as part of reset-session-identity lambda
-      And I have a 'GPG45' stored identity record type with a 'P1' vot that is 'invalid'
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'drivingLicence' CRI response
@@ -175,4 +175,4 @@ Feature: Stored Identity - Update Existing Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot that is 'valid'
+      And I have a GPG45 stored identity record type with a 'P2' vot that is 'valid'

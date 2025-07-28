@@ -26,19 +26,15 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
-import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.io.UncheckedIOException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ReverificationFailureCode.NO_IDENTITY_AVAILABLE;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
@@ -150,11 +146,6 @@ public class CheckReverificationIdentityHandler
                             SC_SERVER_ERROR,
                             FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to get VOT from operational VC", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
         } catch (UncheckedIOException e) {
             // Temporary mitigation to force lambda instance to crash and restart by explicitly
             // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
@@ -168,14 +159,13 @@ public class CheckReverificationIdentityHandler
     }
 
     private boolean hasReverificationIdentity(List<VerifiableCredential> vcs)
-            throws ParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         var matchedVot =
                 votMatcher.findStrongestMatches(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                         vcs,
                         List.of(),
-                        userIdentityService.areVcsCorrelated(
-                                VcHelper.filterVCBasedOnProfileType(vcs, GPG45)));
+                        userIdentityService.areVcsCorrelated(vcs));
 
         if (matchedVot.strongestRequestedMatch().isEmpty()) {
             LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));

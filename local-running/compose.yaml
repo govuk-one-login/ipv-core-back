@@ -12,7 +12,6 @@ services:
       context: ../../ipv-stubs/di-ipv-orchestrator-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
-      INHERITED_IDENTITY_JWT_SIGNING_JWK: '{"kty":"EC","kid":"inherited-identity-signing-local-running-FI4xysvMVdRtkt6xmO5gqcaTF4Tf9NKD1zdg3T8y69M","use":"sig","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
       IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:4502/
       IPV_BACKCHANNEL_TOKEN_PATH: token
       IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity

@@ -35,7 +35,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
@@ -45,7 +44,6 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.cr
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PostalAddressGenerator.createPostalAddress;
 import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
-import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
 import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 
@@ -438,6 +436,23 @@ public interface VcFixtures {
                 .build();
     }
 
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaNoEvidence() {
+        return IdentityCheckCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(morganSarahMeredythName()))
+                                .withBirthDate(
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
+                                .withAddress(List.of(ADDRESS_4))
+                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .build())
+                .build();
+    }
+
     static IdentityCheckCredential vcClaimDcmawPassport() {
         var vcClaim = vcClaimDcmawDrivingPermitDva();
         vcClaim.getCredentialSubject().setDrivingPermit(null);
@@ -596,42 +611,6 @@ public interface VcFixtures {
                                         "SPEC12031", "2031-08-02", "NLD", "2021-08-02")));
 
         return vcClaim;
-    }
-
-    private static IdentityCheckCredential vcClaimHmrcMigrationPassportSocialSecurity() {
-        return IdentityCheckCredential.builder()
-                .withType(
-                        List.of(
-                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
-                                VerifiableCredentialType.IDENTITY_CHECK_CREDENTIAL))
-                .withCredentialSubject(
-                        IdentityCheckSubject.builder()
-                                .withName(List.of(kennethDecerqueiraName()))
-                                .withBirthDate(
-                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
-                                .withPassport(passportDetails())
-                                .withSocialSecurityRecord(
-                                        List.of(
-                                                createSocialSecurityRecordDetails(
-                                                        "AB123456C"))) // pragma: allowlist secret
-                                .build())
-                .withEvidence(
-                        List.of(
-                                IdentityCheck.builder()
-                                        .withType(IdentityCheck.IdentityCheckType.IDENTITY_CHECK_)
-                                        .withTxn("d22f8cb1")
-                                        .withStrengthScore(3)
-                                        .withValidityScore(2)
-                                        .withVerificationScore(3)
-                                        .withCheckDetails(
-                                                List.of(
-                                                        CheckDetails.builder()
-                                                                .withCheckMethod(
-                                                                        CheckDetails.CheckMethodType
-                                                                                .DATA)
-                                                                .build()))
-                                        .build()))
-                .build();
     }
 
     private static SecurityCheckCredential vcClaimSecurityCheckNoCis() {
@@ -1282,6 +1261,15 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcDcmawDvaNoEvidence() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimDcmawDrivingPermitDvaNoEvidence(),
+                DCMAW_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcDcmawAsyncDrivingPermitDva() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -1353,53 +1341,13 @@ public interface VcFixtures {
         return generateVerifiableCredential(TEST_SUBJECT, NINO, vcClaimNinoIdentityCheck());
     }
 
-    static VerifiableCredential vcHmrcMigrationPCL200() {
-        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
-        vcClaim.getCredentialSubject().setPassport(null);
+    static VerifiableCredential vcP2Vot() {
         return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION,
-                vcClaim,
-                "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL200.toString(),
-                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
-                "https://hmrc.gov.uk/trustmark");
-    }
-
-    static VerifiableCredential vcHmrcMigrationPCL250() {
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION,
-                vcClaimHmrcMigrationPassportSocialSecurity(),
-                "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL250.toString(),
-                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
-                "https://hmrc.gov.uk/trustmark");
-    }
-
-    static VerifiableCredential vcHmrcMigrationPCL200NoEvidence() {
-        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
-        vcClaim.setEvidence(Collections.emptyList());
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION,
-                vcClaim,
-                "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL200.toString(),
-                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
-                "https://hmrc.gov.uk/trustmark");
-    }
-
-    static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() {
-        var vcClaim = vcClaimHmrcMigrationPassportSocialSecurity();
-        vcClaim.getCredentialSubject().setPassport(null);
-        vcClaim.setEvidence(null);
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION,
-                vcClaim,
-                "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL250.toString(),
+                "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
+                Cri.PASSPORT,
+                vcClaimWebPassportValid(),
+                PASSPORT_ISSUER_STAGING,
+                Vot.P2.name(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
     }
