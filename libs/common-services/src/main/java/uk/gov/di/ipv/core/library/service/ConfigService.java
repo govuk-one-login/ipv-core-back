@@ -228,7 +228,11 @@ public abstract class ConfigService {
         Matcher matcher = pattern.matcher(parameterPath);
 
         if (matcher.find()) {
-            return Cri.fromId(matcher.group(1));
+            try {
+                return Cri.fromId(matcher.group(1));
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         }
         return null;
     }
