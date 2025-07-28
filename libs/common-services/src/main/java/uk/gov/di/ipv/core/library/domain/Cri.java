@@ -21,7 +21,6 @@ public enum Cri {
     F2F("f2f"),
     NINO("nino"),
     PASSPORT("ukPassport"),
-    HMRC_MIGRATION("hmrcMigration"),
     TICF("ticf");
 
     private final String id;
