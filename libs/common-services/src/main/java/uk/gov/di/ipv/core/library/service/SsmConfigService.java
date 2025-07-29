@@ -150,7 +150,7 @@ public class SsmConfigService extends ConfigService {
 
     @Override
     protected Map<String, String> getParametersByPrefix(String path) {
-        return ssmProvider.recursive().getMultiple(resolvePath(path));
+        return ssmProvider.getMultiple(resolvePath(path));
     }
 
     @Override
