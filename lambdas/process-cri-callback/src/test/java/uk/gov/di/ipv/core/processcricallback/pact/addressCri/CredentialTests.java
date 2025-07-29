@@ -51,6 +51,9 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
+
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
@@ -522,6 +525,8 @@ class CredentialTests {
                     "dummyOAuthSessionId",
                     ADDRESS.getId(),
                     "dummyConnection",
+                    MOCK_LOCK,
+                    MOCK_PROCESS_RESULT,
                     900);
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON

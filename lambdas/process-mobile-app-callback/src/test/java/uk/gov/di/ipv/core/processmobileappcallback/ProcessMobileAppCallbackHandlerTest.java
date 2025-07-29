@@ -52,6 +52,9 @@ class ProcessMobileAppCallbackHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = "test_client_oauth_id";
     private static final String TEST_OAUTH_STATE = "test_oauth_state";
     private static final String TEST_USER_ID = "test_user_id";
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
+
     @Mock private Context mockContext;
     @Mock private ConfigService configService;
     @Mock private IpvSessionService ipvSessionService;
@@ -94,6 +97,8 @@ class ProcessMobileAppCallbackHandlerTest {
                         TEST_CLIENT_OAUTH_SESSION_ID,
                         Cri.DCMAW_ASYNC.toString(),
                         "test_connection",
+                        MOCK_LOCK,
+                        MOCK_PROCESS_RESULT,
                         3600);
         when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
                 .thenReturn(criOAuthSessionItem);
@@ -139,6 +144,8 @@ class ProcessMobileAppCallbackHandlerTest {
                         TEST_CLIENT_OAUTH_SESSION_ID,
                         Cri.DCMAW_ASYNC.toString(),
                         "test_connection",
+                        MOCK_LOCK,
+                        MOCK_PROCESS_RESULT,
                         3600);
         when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
                 .thenReturn(criOAuthSessionItem);

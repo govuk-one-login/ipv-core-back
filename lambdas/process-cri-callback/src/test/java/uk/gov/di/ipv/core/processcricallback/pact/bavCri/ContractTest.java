@@ -70,6 +70,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
 
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
@@ -568,7 +570,13 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", BAV.getId(), "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    BAV.getId(),
+                    "dummyConnection",
+                    MOCK_LOCK,
+                    MOCK_PROCESS_RESULT,
+                    900);
 
     // These values have come from the CRI team to make the JWT more realistic and match their test
     // environment
