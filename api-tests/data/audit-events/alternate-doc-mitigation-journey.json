@@ -49,7 +49,7 @@
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "iss": "https://driving-license-cri.stubs.account.gov.uk",
+      "iss": "https://driving-licence-cri.stubs.account.gov.uk",
       "evidence": [
         {
           "activityHistoryScore": 0,
