@@ -118,10 +118,6 @@ public abstract class ConfigService {
         return String.format(path, (Object[]) pathProperties);
     }
 
-    protected String resolvePath(String path) {
-        return path;
-    }
-
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
         return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
     }
@@ -170,11 +166,10 @@ public abstract class ConfigService {
     private <T extends CriConfig> T getCriConfigForTypeInYaml(
             Cri cri, String connection, Class<T> configType) {
         var path =
-                resolvePath(
-                        formatPath(
-                                ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                                cri.getId(),
-                                connection));
+                formatPath(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                        cri.getId(),
+                        connection);
         return getParametersByPrefixYaml(path).entrySet().stream()
                 .collect(
                         Collectors.collectingAndThen(
@@ -227,8 +222,7 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
-        var path = resolvePath(ConfigurationVariable.CIMIT_CONFIG.getPath());
-        var parameters = getParametersByPrefixYaml(path);
+        var parameters = getParametersByPrefixYaml(ConfigurationVariable.CIMIT_CONFIG.getPath());
         var parsedData = new HashMap<String, List<MitigationRoute>>();
         for (var entry : parameters.entrySet()) {
             try {
@@ -260,7 +254,7 @@ public abstract class ConfigService {
 
     public Map<String, Cri> getIssuerCris() {
         if (isConfigInYaml()) {
-            return getIssuerCrisInYaml();
+            return getIssuerCrisYaml();
         }
 
         var allCriParameters = getParametersByPrefix("credentialIssuers");
@@ -287,25 +281,28 @@ public abstract class ConfigService {
         return issuerToCriMap;
     }
 
-    public Map<String, Cri> getIssuerCrisInYaml() {
-        var prefix = resolvePath("credentialIssuers");
-        var pattern = Pattern.compile("([^/]+)/connections/[^/]+/componentId$");
-        return getParametersByPrefixYaml(prefix).entrySet().stream()
-                .filter(entry -> pattern.matcher(entry.getKey()).matches())
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getValue,
-                                entry -> {
-                                    var path = entry.getKey();
-                                    var matcher = pattern.matcher(path);
-                                    if (!matcher.matches()) {
-                                        throw new ConfigParseException(
-                                                String.format(
-                                                        "Failed to parse credential issuer path: %s",
-                                                        path));
-                                    }
-                                    return Cri.fromId(matcher.group(1));
-                                }));
+    public Map<String, Cri> getIssuerCrisYaml() {
+        var issuerToCri = new HashMap<String, Cri>();
+        for (var cri : Cri.values()) {
+            if (cri.getId().equals(Cri.CIMIT.getId())) {
+                continue;
+            }
+            try {
+                var connection = getActiveConnection(cri);
+                var path =
+                        String.format(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_COMPONENT_ID.getPath(),
+                                cri.getId(),
+                                connection);
+                var componentId = getParameter(path);
+                issuerToCri.put(componentId, cri);
+            } catch (ConfigParameterNotFoundException e) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format("Issuer for CRI: %s not configured", cri.getId())));
+            }
+        }
+        return issuerToCri;
     }
 
     private Cri findCriFromPath(String parameterPath) {

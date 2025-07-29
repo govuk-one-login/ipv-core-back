@@ -138,9 +138,7 @@ class AppConfigServiceYamlTest {
         // Act & Assert
         var config = configService.getIssuerCris();
 
-        assertEquals(
-                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "dcmaw-issuer", DCMAW),
-                config);
+        assertEquals(Map.of("main-issuer", ADDRESS, "dcmaw-issuer", DCMAW), config);
     }
 
     // OAuth CRI config

@@ -8,7 +8,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -51,20 +50,18 @@ public abstract class YamlParametersConfigService extends ConfigService {
 
     @Override
     public Map<String, String> getParametersByPrefixYaml(String path) {
-        return parameters.entrySet().stream()
-                .filter(e -> e.getKey().startsWith(path))
-                .collect(
-                        Collectors.collectingAndThen(
+        var lookupParams =
+                parameters.entrySet().stream()
+                        .filter(e -> e.getKey().startsWith(path))
+                        .collect(
                                 Collectors.toMap(
                                         entry -> entry.getKey().substring(path.length() + 1),
-                                        Map.Entry::getValue),
-                                map ->
-                                        Optional.of(map)
-                                                .filter(m -> !m.isEmpty())
-                                                .orElseThrow(
-                                                        () ->
-                                                                new ConfigParameterNotFoundException(
-                                                                        path))));
+                                        Map.Entry::getValue));
+
+        if (lookupParams.isEmpty()) {
+            throw new ConfigParameterNotFoundException(path);
+        }
+        return lookupParams;
     }
 
     protected void updateParameters(Map<String, String> map, String yaml) {

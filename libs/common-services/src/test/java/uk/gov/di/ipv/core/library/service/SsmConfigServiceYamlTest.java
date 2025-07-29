@@ -56,6 +56,8 @@ class SsmConfigServiceYamlTest {
 
     @Mock SSMProvider ssmProvider;
 
+    @Mock SSMProvider ssmProviderRecursive;
+
     @Mock SecretsProvider secretsProvider;
 
     private ConfigService configService;
@@ -129,14 +131,25 @@ class SsmConfigServiceYamlTest {
                         .jwksUrl(URI.create("https://testWellKnownUrl"))
                         .build();
 
+        @BeforeEach
+        void setup() {
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+                    .thenThrow(ParameterNotFoundException.class);
+        }
+
         @Test
         void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
 
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+            when(ssmProvider
+                            .recursive()
+                            .getMultiple(
+                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             OauthCriConfig result = configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT);
@@ -148,8 +161,11 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+            when(ssmProvider
+                            .recursive()
+                            .getMultiple(
+                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             OauthCriConfig result =
@@ -166,8 +182,11 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+            when(ssmProvider
+                            .recursive()
+                            .getMultiple(
+                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT);
@@ -179,6 +198,8 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
 
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+
             assertThrows(
                     ConfigParameterNotFoundException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
@@ -188,7 +209,10 @@ class SsmConfigServiceYamlTest {
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.getMultiple("/test/core/credentialIssuers/address/connections/stub"))
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+            when(ssmProvider
+                            .recursive()
+                            .getMultiple("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
                             Map.of(
                                     "credentialUrl",
@@ -217,11 +241,13 @@ class SsmConfigServiceYamlTest {
         @Test
         void getCriConfigShouldReturnACriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
-
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.getMultiple(
-                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+            when(ssmProvider
+                            .recursive()
+                            .getMultiple(
+                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             Map.of(
                                     "signingKey",
@@ -260,7 +286,13 @@ class SsmConfigServiceYamlTest {
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
 
-        when(ssmProvider.getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
+        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                .thenReturn("stub");
+        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+                .thenThrow(ParameterNotFoundException.class);
+
+        when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+        when(ssmProvider.recursive().getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
         Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
                         "X01",
@@ -287,8 +319,17 @@ class SsmConfigServiceYamlTest {
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.getMultiple("/test/core/cimit/config"))
+
+        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                .thenReturn("stub");
+        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+                .thenThrow(ParameterNotFoundException.class);
+
+        when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
+
+        when(ssmProvider.recursive().getMultiple("/test/core/cimit/config"))
                 .thenReturn(Map.of("/test/core/cimit/config/restOfPath", "}"));
+
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
     }
 
@@ -298,31 +339,102 @@ class SsmConfigServiceYamlTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
-                    .thenReturn(
-                            Map.of(
-                                    "ticf/connections/stub/componentId",
-                                    "https://stub-ticf-component-id",
-                                    "ticf/connections/main/componentId",
-                                    "https://main-ticf-component-id",
-                                    "dcmaw/connections/stub/componentId",
-                                    "https://stub-dcmaw-component-id",
-                                    "dcmaw/connections/main/componentId",
-                                    "https://main-dcmaw-component-id"));
+
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+                    .thenThrow(ParameterNotFoundException.class);
+
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/bav/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/bav/connections/stub/componentId"))
+                    .thenReturn("https://stub-bav-component-id");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/dcmaw/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/dcmaw/connections/stub/componentId"))
+                    .thenReturn("https://stub-dcmaw-component-id");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/cimit/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/credentialIssuers/cimit/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/claimedIdentity/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/claimedIdentity/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/dcmawAsync/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/dcmawAsync/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/drivingLicence/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/drivingLicence/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/dwpKbv/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/dwpKbv/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/fraud/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/credentialIssuers/fraud/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/experianKbv/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/experianKbv/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/f2f/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/credentialIssuers/f2f/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/hmrcMigration/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/hmrcMigration/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/nino/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/credentialIssuers/nino/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/ticf/activeConnection"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/credentialIssuers/ticf/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
         }
 
         @Test
         void shouldReturnCriForValidIssuers() {
             assertEquals(
                     Map.of(
-                            "https://main-ticf-component-id",
-                            Cri.TICF,
-                            "https://stub-ticf-component-id",
-                            Cri.TICF,
-                            "https://main-dcmaw-component-id",
-                            Cri.DCMAW,
                             "https://stub-dcmaw-component-id",
-                            Cri.DCMAW),
+                            Cri.DCMAW,
+                            "https://stub-bav-component-id",
+                            Cri.BAV),
                     configService.getIssuerCris());
         }
     }
