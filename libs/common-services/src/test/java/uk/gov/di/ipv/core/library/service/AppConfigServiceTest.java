@@ -59,6 +59,7 @@ class AppConfigServiceTest {
             """
         core:
           self:
+            configFormat: json
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
@@ -112,6 +113,7 @@ class AppConfigServiceTest {
             """
         core:
           self:
+            configFormat: malformed
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
@@ -359,6 +361,8 @@ class AppConfigServiceTest {
         var testRawParametersInvalidCimit =
                 """
             core:
+              self:
+                configFormat: json
               cimit:
                 config: '{
                   notvalid: at-all

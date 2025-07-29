@@ -56,7 +56,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
-import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
@@ -80,6 +80,8 @@ class SsmConfigServiceTest {
     @SystemStub private SystemProperties systemProperties;
 
     @Mock SSMProvider ssmProvider;
+
+    @Mock private SSMProvider ssmRecursiveMock;
 
     @Mock SecretsProvider secretsProvider;
 
@@ -137,10 +139,14 @@ class SsmConfigServiceTest {
                         .jwksUrl(URI.create("https://testWellKnownUrl"))
                         .build();
 
+        @BeforeEach
+        void setup() {
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
+        }
+
         @Test
         void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
-
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
@@ -204,14 +210,14 @@ class SsmConfigServiceTest {
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+            when(ssmProvider.get("/test/core/credentialIssuers/dcmaw/connections/stub"))
                     .thenReturn(
                             String.format(
                                     "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
             RestCriConfig restCriConfig =
-                    configService.getRestCriConfigForConnection("stub", ADDRESS);
+                    configService.getRestCriConfigForConnection("stub", DCMAW);
 
             var expectedRestCriConfig =
                     RestCriConfig.builder()
@@ -580,6 +586,7 @@ class SsmConfigServiceTest {
     void shouldFetchCimitConfig(String cimitSsmConfig, String expectedDocument)
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn(cimitSsmConfig);
         Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
@@ -605,6 +612,7 @@ class SsmConfigServiceTest {
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
     }
@@ -635,6 +643,8 @@ class SsmConfigServiceTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
+
             when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
                     .thenReturn(
                             Map.of(
@@ -657,9 +667,9 @@ class SsmConfigServiceTest {
                             "https://stub-ticf-component-id",
                             Cri.TICF,
                             "https://main-dcmaw-component-id",
-                            Cri.DCMAW,
+                            DCMAW,
                             "https://stub-dcmaw-component-id",
-                            Cri.DCMAW),
+                            DCMAW),
                     configService.getIssuerCris());
         }
     }

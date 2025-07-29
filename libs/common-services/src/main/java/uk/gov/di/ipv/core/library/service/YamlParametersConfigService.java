@@ -47,6 +47,22 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
     }
 
+    @Override
+    public Map<String, String> getParametersByPrefixYaml(String path) {
+        var lookupParams =
+                parameters.entrySet().stream()
+                        .filter(e -> e.getKey().startsWith(path))
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(path.length() + 1),
+                                        Map.Entry::getValue));
+
+        if (lookupParams.isEmpty()) {
+            throw new ConfigParameterNotFoundException(path);
+        }
+        return lookupParams;
+    }
+
     protected void updateParameters(Map<String, String> map, String yaml) {
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
@@ -59,6 +75,8 @@ public abstract class YamlParametersConfigService extends ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            // Required to add CIMIT config which is declared as array in config file
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
@@ -67,7 +85,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
