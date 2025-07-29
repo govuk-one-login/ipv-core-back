@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -12,6 +13,7 @@ import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -105,5 +107,41 @@ class CriOAuthSessionServiceTest {
 
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());
+    }
+
+    @Test
+    void shouldUpdateCriOAuthSessionItemWithLockTimestamp() {
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId("testState")
+                        .criId(ADDRESS.getId())
+                        .connection("main")
+                        .build();
+
+        criOauthSessionService.setLockedTimestamp(criOAuthSessionItem);
+
+        var criOAuthSessionItemArgumentCaptor = ArgumentCaptor.forClass(CriOAuthSessionItem.class);
+        verify(mockDataStore, times(1)).update(criOAuthSessionItemArgumentCaptor.capture());
+        assertTrue(
+                StringUtils.isNotBlank(
+                        criOAuthSessionItemArgumentCaptor.getValue().getLockedTimestamp()));
+    }
+
+    @Test
+    void shouldUpdateCriOAuthSessionItemWithJourneyResult() {
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId("testState")
+                        .criId(ADDRESS.getId())
+                        .connection("main")
+                        .build();
+
+        criOauthSessionService.setProcessedResult(criOAuthSessionItem, "some-journey-result");
+
+        var criOAuthSessionItemArgumentCaptor = ArgumentCaptor.forClass(CriOAuthSessionItem.class);
+        verify(mockDataStore, times(1)).update(criOAuthSessionItemArgumentCaptor.capture());
+        assertEquals(
+                "some-journey-result",
+                criOAuthSessionItemArgumentCaptor.getValue().getProcessedResult());
     }
 }
