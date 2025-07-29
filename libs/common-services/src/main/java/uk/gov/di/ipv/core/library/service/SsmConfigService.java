@@ -138,24 +138,13 @@ public class SsmConfigService extends ConfigService {
     }
 
     @Override
-    protected boolean isConfigInYaml() {
-        var basePath = "self/configFormat";
-        try {
-            var configFormat = ssmProvider.get(resolvePath(basePath));
-            return configFormat.equals("yaml");
-        } catch (ParameterNotFoundException e) {
-            throw new ConfigParameterNotFoundException("Can not detect config format");
-        }
-    }
-
-    @Override
     protected Map<String, String> getParametersByPrefix(String path) {
         return ssmProvider.getMultiple(resolvePath(path));
     }
 
     @Override
     protected Map<String, String> getParametersByPrefixYaml(String path) {
-        var parameters = ssmProvider.recursive().getMultiple(resolvePath(path));
+        var parameters = ssmProvider.getMultiple(resolvePath(path));
         if (parameters.isEmpty()) {
             throw new ConfigParameterNotFoundException("SSM parameter not found for path: " + path);
         }

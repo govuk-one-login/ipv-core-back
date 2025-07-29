@@ -56,8 +56,6 @@ class SsmConfigServiceYamlTest {
 
     @Mock SSMProvider ssmProvider;
 
-    @Mock SSMProvider ssmProviderRecursive;
-
     @Mock SecretsProvider secretsProvider;
 
     private ConfigService configService;
@@ -142,11 +140,8 @@ class SsmConfigServiceYamlTest {
 
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-            when(ssmProvider
-                            .recursive()
-                            .getMultiple(
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             OauthCriConfig result = configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT);
@@ -158,11 +153,8 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-            when(ssmProvider
-                            .recursive()
-                            .getMultiple(
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             OauthCriConfig result =
@@ -179,11 +171,8 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-            when(ssmProvider
-                            .recursive()
-                            .getMultiple(
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(criStubConnection);
 
             var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT);
@@ -195,8 +184,6 @@ class SsmConfigServiceYamlTest {
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-
             assertThrows(
                     ConfigParameterNotFoundException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
@@ -206,10 +193,7 @@ class SsmConfigServiceYamlTest {
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-            when(ssmProvider
-                            .recursive()
-                            .getMultiple("/test/core/credentialIssuers/address/connections/stub"))
+            when(ssmProvider.getMultiple("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
                             Map.of(
                                     "credentialUrl",
@@ -240,11 +224,8 @@ class SsmConfigServiceYamlTest {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-            when(ssmProvider
-                            .recursive()
-                            .getMultiple(
-                                    "/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
                             Map.of(
                                     "signingKey",
@@ -285,8 +266,7 @@ class SsmConfigServiceYamlTest {
 
         when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
 
-        when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-        when(ssmProvider.recursive().getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
+        when(ssmProvider.getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
         Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
                         "X01",
@@ -316,9 +296,7 @@ class SsmConfigServiceYamlTest {
 
         when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
 
-        when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
-
-        when(ssmProvider.recursive().getMultiple("/test/core/cimit/config"))
+        when(ssmProvider.getMultiple("/test/core/cimit/config"))
                 .thenReturn(Map.of("/test/core/cimit/config/restOfPath", "}"));
 
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());

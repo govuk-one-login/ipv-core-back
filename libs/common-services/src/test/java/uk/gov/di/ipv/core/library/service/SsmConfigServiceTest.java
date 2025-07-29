@@ -645,8 +645,7 @@ class SsmConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
 
-            when(ssmProvider.recursive()).thenReturn(ssmRecursiveMock);
-            when(ssmRecursiveMock.getMultiple("/test/core/credentialIssuers"))
+            when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
                     .thenReturn(
                             Map.of(
                                     "ticf/connections/stub",

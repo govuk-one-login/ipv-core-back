@@ -8,7 +8,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -76,6 +75,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            // Required to add CIMIT config which is declared as array in config file
             case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
@@ -90,15 +90,5 @@ public abstract class YamlParametersConfigService extends ConfigService {
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
         }
-    }
-
-    @Override
-    protected boolean isConfigInYaml() {
-        var configFormat = parameters.get("self/configFormat");
-        if (Objects.isNull(configFormat)) {
-            throw new ConfigParameterNotFoundException(
-                    "Config parameter: configFormat doesn't exist.");
-        }
-        return configFormat.equals("yaml");
     }
 }

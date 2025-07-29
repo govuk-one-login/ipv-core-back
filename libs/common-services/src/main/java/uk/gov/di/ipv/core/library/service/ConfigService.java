@@ -65,8 +65,6 @@ public abstract class ConfigService {
 
     protected abstract String getSecret(String path);
 
-    protected abstract boolean isConfigInYaml();
-
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
     }
@@ -317,5 +315,10 @@ public abstract class ConfigService {
             }
         }
         return null;
+    }
+
+    private boolean isConfigInYaml() {
+        var path = "self/configFormat";
+        return getParameter(path).equals("yaml");
     }
 }
