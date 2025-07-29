@@ -8,7 +8,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -94,12 +93,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
 
     @Override
     protected boolean isConfigInYaml() {
-        var pattern = Pattern.compile("credentialIssuers/address/connections/[^/]+/[^/]+$");
-        for (String key : parameters.keySet()) {
-            if (pattern.matcher(key).matches()) {
-                return true;
-            }
-        }
-        return false;
+        var configFormat = parameters.get("self/configFormat");
+        return configFormat.equals("yaml");
     }
 }

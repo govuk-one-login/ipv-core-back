@@ -39,6 +39,7 @@ class AppConfigServiceYamlTest {
             """
         core:
           self:
+            configFormat: yaml
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
@@ -115,6 +116,8 @@ class AppConfigServiceYamlTest {
         var testRawParametersInvalidCimit =
                 """
             core:
+              self:
+                configFormat: yaml
               cimit:
                 config:
                   notvalid: at-all

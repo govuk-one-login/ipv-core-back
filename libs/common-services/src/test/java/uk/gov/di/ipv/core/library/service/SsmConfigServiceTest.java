@@ -141,10 +141,7 @@ class SsmConfigServiceTest {
 
         @BeforeEach
         void setup() {
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                    .thenReturn("just-to-pass-json");
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
         }
 
         @Test
@@ -589,10 +586,7 @@ class SsmConfigServiceTest {
     void shouldFetchCimitConfig(String cimitSsmConfig, String expectedDocument)
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                .thenReturn("stub");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                .thenReturn("just-to-pass-json");
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn(cimitSsmConfig);
         Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
@@ -618,10 +612,7 @@ class SsmConfigServiceTest {
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                .thenReturn("stub");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                .thenReturn("just-to-pass-json");
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
     }
@@ -652,10 +643,7 @@ class SsmConfigServiceTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                    .thenReturn("just-to-pass-json");
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
 
             when(ssmProvider.recursive()).thenReturn(ssmRecursiveMock);
             when(ssmRecursiveMock.getMultiple("/test/core/credentialIssuers"))

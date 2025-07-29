@@ -18,7 +18,6 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
@@ -140,16 +139,13 @@ public class SsmConfigService extends ConfigService {
 
     @Override
     protected boolean isConfigInYaml() {
-        var criId = Cri.ADDRESS.getId();
-        var activeConnection = getActiveConnection(Cri.ADDRESS);
-        var basePath =
-                String.format("credentialIssuers/%s/connections/%s", criId, activeConnection);
+        var basePath = "self/configFormat";
         try {
-            ssmProvider.get(resolvePath(basePath));
+            var configFormat = ssmProvider.get(resolvePath(basePath));
+            return configFormat.equals("yaml");
         } catch (ParameterNotFoundException e) {
-            return true;
+            throw new ConfigParameterNotFoundException("Can not detect config format");
         }
-        return false;
     }
 
     @Override

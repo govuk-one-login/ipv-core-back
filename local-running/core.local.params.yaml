@@ -3,6 +3,7 @@
 ---
 core:
   self:
+    configFormat: "yaml"
     componentId: "https://identity.local.account.gov.uk"
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600

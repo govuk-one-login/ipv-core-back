@@ -133,10 +133,7 @@ class SsmConfigServiceYamlTest {
 
         @BeforeEach
         void setup() {
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
         }
 
         @Test
@@ -286,10 +283,7 @@ class SsmConfigServiceYamlTest {
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
 
-        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                .thenReturn("stub");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                .thenThrow(ParameterNotFoundException.class);
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
 
         when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
         when(ssmProvider.recursive().getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
@@ -320,10 +314,7 @@ class SsmConfigServiceYamlTest {
     void shouldThrowErrorOnInvalidCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
 
-        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                .thenReturn("stub");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
-                .thenThrow(ParameterNotFoundException.class);
+        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
 
         when(ssmProvider.recursive()).thenReturn(ssmProviderRecursive);
 
@@ -339,6 +330,8 @@ class SsmConfigServiceYamlTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
 
             when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
                     .thenReturn("stub");
