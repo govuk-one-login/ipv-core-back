@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -94,6 +95,10 @@ public abstract class YamlParametersConfigService extends ConfigService {
     @Override
     protected boolean isConfigInYaml() {
         var configFormat = parameters.get("self/configFormat");
+        if (Objects.isNull(configFormat)) {
+            throw new ConfigParameterNotFoundException(
+                    "Config parameter: configFormat doesn't exist.");
+        }
         return configFormat.equals("yaml");
     }
 }
