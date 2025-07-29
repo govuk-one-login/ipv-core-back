@@ -221,7 +221,7 @@ public abstract class ConfigService {
         }
     }
 
-    public Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
+    private Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
         var parameters = getParametersByPrefixYaml(ConfigurationVariable.CIMIT_CONFIG.getPath());
         var parsedData = new HashMap<String, List<MitigationRoute>>();
         for (var entry : parameters.entrySet()) {
@@ -281,7 +281,7 @@ public abstract class ConfigService {
         return issuerToCriMap;
     }
 
-    public Map<String, Cri> getIssuerCrisYaml() {
+    private Map<String, Cri> getIssuerCrisYaml() {
         var issuerToCri = new HashMap<String, Cri>();
         for (var cri : Cri.values()) {
             if (cri.getId().equals(Cri.CIMIT.getId())) {
@@ -297,7 +297,7 @@ public abstract class ConfigService {
                 var componentId = getParameter(path);
                 issuerToCri.put(componentId, cri);
             } catch (ConfigParameterNotFoundException e) {
-                LOGGER.info(
+                LOGGER.warn(
                         LogHelper.buildLogMessage(
                                 String.format("Issuer for CRI: %s not configured", cri.getId())));
             }
