@@ -57,7 +57,6 @@ class AppConfigServiceTest {
             """
         core:
           self:
-            configFormat: yaml
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
