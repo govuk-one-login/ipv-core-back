@@ -31,14 +31,14 @@ public class YamlConfigService extends YamlParametersConfigService {
     }
 
     public YamlConfigService(File parametersFile, File secretsFile) {
-        setParameters(updateParameters(parametersFile));
-        secrets = updateParameters(secretsFile);
+        setParameters(parseParameters(parametersFile));
+        secrets = parseParameters(secretsFile);
     }
 
-    private Map<String, String> updateParameters(File yamlFile) {
+    private Map<String, String> parseParameters(File yamlFile) {
         try {
             String yamlContent = Files.readString(yamlFile.toPath());
-            return updateParameters(yamlContent);
+            return parseParameters(yamlContent);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }

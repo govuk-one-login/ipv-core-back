@@ -99,7 +99,7 @@ public class AppConfigService extends YamlParametersConfigService {
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            setParameters(updateParameters(paramsRaw));
+            setParameters(parseParameters(paramsRaw));
             paramsRawHash = retrievedParamsHash;
         }
     }

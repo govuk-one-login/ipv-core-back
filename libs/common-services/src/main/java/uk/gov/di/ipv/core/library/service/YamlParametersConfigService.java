@@ -67,7 +67,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
         return lookupParams;
     }
 
-    protected Map<String, String> updateParameters(String yaml) {
+    protected Map<String, String> parseParameters(String yaml) {
         var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
