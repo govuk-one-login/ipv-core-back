@@ -202,10 +202,12 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsUpdatedParameters() {
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var bearerTokenTtl = configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
 
         // Assert
-        assertEquals("test-component-id", param);
+        assertEquals("test-component-id", componentId);
+        assertEquals("1800", bearerTokenTtl);
 
         // Arrange
         when(appConfigProvider.get(any()))
@@ -217,10 +219,10 @@ class AppConfigServiceTest {
         """);
 
         // Act
-        param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
         // Assert
-        assertEquals("different-component-id", param);
+        assertEquals("different-component-id", componentId);
         assertThrows(
                 ConfigParameterNotFoundException.class,
                 () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
