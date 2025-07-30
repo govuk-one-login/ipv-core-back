@@ -134,19 +134,15 @@ public abstract class ConfigService {
                         ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
                         cri.getId(),
                         connection);
-        var value =
-                getParametersByPrefix(path).entrySet().stream()
-                        .collect(
-                                Collectors.collectingAndThen(
-                                        Collectors.toMap(
-                                                Map.Entry::getKey,
-                                                entry ->
-                                                        unescapeSigEncKey(
-                                                                entry.getKey(), entry.getValue())),
-                                        parameters ->
-                                                OBJECT_MAPPER.convertValue(
-                                                        parameters, configType)));
-        return value;
+        return getParametersByPrefix(path).entrySet().stream()
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry ->
+                                                unescapeSigEncKey(
+                                                        entry.getKey(), entry.getValue())),
+                                parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
     }
 
     private String unescapeSigEncKey(String key, String value) {
