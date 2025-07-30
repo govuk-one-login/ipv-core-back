@@ -64,6 +64,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
     }
 
     protected void updateParameters(Map<String, String> map, String yaml) {
+        map.clear();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             addJsonConfig(map, yamlParsed, "");
