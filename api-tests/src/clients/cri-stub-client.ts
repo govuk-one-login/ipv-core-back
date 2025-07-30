@@ -12,7 +12,7 @@ const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   address: "address-cri",
   fraud: "fraud-cri",
   ukPassport: "passport-cri",
-  drivingLicence: "driving-license-cri",
+  drivingLicence: "driving-licence-cri",
   claimedIdentity: "claimed-identity-cri",
   f2f: "f2f-cri",
   nino: "nino-cri",
