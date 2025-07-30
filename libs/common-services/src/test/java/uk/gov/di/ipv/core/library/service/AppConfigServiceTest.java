@@ -221,6 +221,9 @@ class AppConfigServiceTest {
 
         // Assert
         assertEquals("different-component-id", param);
+        assertThrows(
+                ConfigParameterNotFoundException.class,
+                () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
     }
 
     // Feature flags
