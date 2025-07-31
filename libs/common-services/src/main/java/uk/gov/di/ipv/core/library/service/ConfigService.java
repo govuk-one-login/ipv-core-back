@@ -285,15 +285,19 @@ public abstract class ConfigService {
             if (cri.getId().equals(Cri.CIMIT.getId())) {
                 continue;
             }
+
+            var connectionsPath =
+                    String.format(
+                            ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
+                            cri.getId());
+
+            var pattern = Pattern.compile("[^/]+/componentId");
             try {
-                var connection = getActiveConnection(cri);
-                var path =
-                        String.format(
-                                ConfigurationVariable.CREDENTIAL_ISSUER_COMPONENT_ID.getPath(),
-                                cri.getId(),
-                                connection);
-                var componentId = getParameter(path);
-                issuerToCri.put(componentId, cri);
+                var connections =
+                        getParametersByPrefixYaml(connectionsPath).entrySet().stream()
+                                .filter(entry -> pattern.matcher(entry.getKey()).find())
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                connections.values().forEach(value -> issuerToCri.put(value, cri));
             } catch (ConfigParameterNotFoundException e) {
                 LOGGER.warn(
                         LogHelper.buildLogMessage(

@@ -81,8 +81,6 @@ class SsmConfigServiceTest {
 
     @Mock SSMProvider ssmProvider;
 
-    @Mock private SSMProvider ssmRecursiveMock;
-
     @Mock SecretsProvider secretsProvider;
 
     private ConfigService configService;
