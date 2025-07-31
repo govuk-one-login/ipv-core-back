@@ -291,11 +291,10 @@ public abstract class ConfigService {
                             ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
                             cri.getId());
 
-            var pattern = Pattern.compile("[^/]++/componentId");
             try {
                 var connections =
                         getParametersByPrefixYaml(connectionsPath).entrySet().stream()
-                                .filter(entry -> pattern.matcher(entry.getKey()).find())
+                                .filter(entry -> entry.getKey().endsWith("/componentId"))
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 connections.values().forEach(value -> issuerToCri.put(value, cri));
             } catch (ConfigParameterNotFoundException e) {
