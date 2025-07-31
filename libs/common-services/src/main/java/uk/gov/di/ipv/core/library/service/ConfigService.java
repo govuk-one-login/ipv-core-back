@@ -291,7 +291,7 @@ public abstract class ConfigService {
                             ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
                             cri.getId());
 
-            var pattern = Pattern.compile("[^/]+/componentId");
+            var pattern = Pattern.compile("[^/]++/componentId");
             try {
                 var connections =
                         getParametersByPrefixYaml(connectionsPath).entrySet().stream()
