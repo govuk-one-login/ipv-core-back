@@ -717,6 +717,43 @@ Resources:
           "responseLength":"$context.responseLength"
           }
 
+  IPVCoreAnalyticsAPIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - IPVCoreAnalyticsAPI
+    Properties:
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      Description: !Sub "Deployment for ${Environment}"
+
+  IPVCoreAnalyticsAPIStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: !Sub ${Environment}
+      DeploymentId: !Ref IPVCoreAnalyticsAPIDeployment
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      TracingEnabled: true
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: '*'
+          LoggingLevel: INFO
+          ResourcePath: '/*'
+          MetricsEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
+        Format: >-
+          {
+          "requestId":"$context.requestId",
+          "ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "path":"$context.path",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLatency":"$context.responseLatency",
+          "responseLength":"$context.responseLength"
+          }
+
   IPVCoreAnalyticsAPILogGroup:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
@@ -737,7 +774,7 @@ Resources:
 
   IPVCoreAnalyticsAPIKey:
     Type: AWS::ApiGateway::ApiKey
-    DependsOn: IPVCoreAnalyticsAPI
+    DependsOn: IPVCoreAnalyticsAPIStage
     Properties:
       Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
       Enabled: true
@@ -747,7 +784,7 @@ Resources:
 
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: IPVCoreAnalyticsAPI
+    DependsOn: IPVCoreAnalyticsAPIStage
     Properties:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
