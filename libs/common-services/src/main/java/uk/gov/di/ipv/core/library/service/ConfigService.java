@@ -211,7 +211,7 @@ public abstract class ConfigService {
                                         entry ->
                                                 unescapeSigEncKey(
                                                         entry.getKey(), entry.getValue())),
-                                parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
+                                params -> OBJECT_MAPPER.convertValue(params, configType)));
     }
 
     private String unescapeSigEncKey(String key, String value) {
@@ -255,9 +255,9 @@ public abstract class ConfigService {
     }
 
     private Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
-        var parameters = getParametersByPrefixYaml(ConfigurationVariable.CIMIT_CONFIG.getPath());
+        var params = getParametersByPrefixYaml(ConfigurationVariable.CIMIT_CONFIG.getPath());
         var parsedData = new HashMap<String, List<MitigationRoute>>();
-        for (var entry : parameters.entrySet()) {
+        for (var entry : params.entrySet()) {
             try {
                 var list =
                         OBJECT_MAPPER.readValue(
