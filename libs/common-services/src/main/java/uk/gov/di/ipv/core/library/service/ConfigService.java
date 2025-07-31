@@ -211,6 +211,7 @@ public abstract class ConfigService {
         var params = getParametersByPrefix(ConfigurationVariable.CIMIT_CONFIG.getPath());
         var parsedData = new HashMap<String, List<MitigationRoute>>();
         for (var entry : params.entrySet()) {
+        for (var entry : params.entrySet()) {
             try {
                 var list =
                         OBJECT_MAPPER.readValue(
