@@ -10,7 +10,7 @@ import uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentit
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.service.YamlConfigService;
+import uk.gov.di.ipv.core.library.service.LocalConfigService;
 import uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
@@ -39,7 +39,7 @@ public class JourneyEngineHandler {
     public static final String FEATURE_SET = "feature-set";
     public static final String LANGUAGE = "language";
 
-    private final YamlConfigService configService;
+    private final LocalConfigService configService;
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
     private final ResetSessionIdentityHandler resetSessionIdentityHandler;
@@ -51,7 +51,7 @@ public class JourneyEngineHandler {
     private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     public JourneyEngineHandler() throws IOException {
-        this.configService = new YamlConfigService();
+        this.configService = new LocalConfigService();
         this.processJourneyEventHandler = new ProcessJourneyEventHandler(configService);
         this.checkExistingIdentityHandler = new CheckExistingIdentityHandler(configService);
         this.resetSessionIdentityHandler = new ResetSessionIdentityHandler(configService);

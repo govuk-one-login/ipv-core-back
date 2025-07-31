@@ -13,12 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class YamlConfigServiceTest {
+class LocalConfigServiceTest {
 
-    private YamlConfigService getConfigService() throws Exception {
-        return new YamlConfigService(
-                new File(YamlConfigServiceTest.class.getResource("/test-parameters.yaml").toURI()),
-                new File(YamlConfigServiceTest.class.getResource("/test-secrets.yaml").toURI()));
+    private LocalConfigService getConfigService() throws Exception {
+        return new LocalConfigService(
+                new File(LocalConfigServiceTest.class.getResource("/test-parameters.yaml").toURI()),
+                new File(LocalConfigServiceTest.class.getResource("/test-secrets.yaml").toURI()));
     }
 
     @Test

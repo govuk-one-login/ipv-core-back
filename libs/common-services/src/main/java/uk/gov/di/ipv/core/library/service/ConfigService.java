@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Collectors;
+
+import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -46,16 +50,20 @@ public abstract class ConfigService {
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    public final Map<String, String> parameters = new HashMap<>();
+    private Map<String, String> parameters = new HashMap<>();
 
     @Getter @Setter private static boolean local = false;
 
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
         if (isLocal()) {
-            return new YamlConfigService();
+            return new LocalConfigService();
         }
         return new AppConfigService();
+    }
+
+    protected void setParameters(Map<String, String> parameters) {
+        this.parameters = parameters;
     }
 
     public abstract List<String> getFeatureSet();
@@ -254,10 +262,12 @@ public abstract class ConfigService {
         return issuerToCri;
     }
 
-    protected void updateParameters(Map<String, String> map, String yaml) {
+    protected Map<String, String> updateParameters(String yaml) {
+        var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             addJsonConfig(map, yamlParsed, "");
+            return map;
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
@@ -267,6 +277,8 @@ public abstract class ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            // Required to add CIMIT config which is declared as array in config file
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
@@ -275,7 +287,7 @@ public abstract class ConfigService {
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
