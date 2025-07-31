@@ -19,7 +19,6 @@ import { getRandomString } from "../utils/random-string-generator.js";
 import {
   isClientResponse,
   isCriResponse,
-  isErrorResponse,
   isJourneyResponse,
   isPageResponse,
   JourneyEngineResponse,
@@ -91,9 +90,6 @@ const startNewJourney = async (
   world: World,
   journeyType: string,
   reproveIdentity: boolean,
-  inheritedIdentity:
-    | { inheritedIdentityId?: string; errorJwt?: boolean }
-    | undefined,
   aisStubResponse: AisValidResponseTypes | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
@@ -104,7 +100,6 @@ const startNewJourney = async (
       journeyId: world.journeyId,
       journeyType,
       isReproveIdentity: reproveIdentity,
-      inheritedIdentity,
     }),
     world.featureSet,
   );
@@ -137,22 +132,13 @@ When(
 );
 
 When(
-  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: and)?(?: with inherited identity '([<>\w-]+)')?$/,
+  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
-    inheritedIdentityId: string | undefined,
   ): Promise<void> {
-    await startNewJourney(
-      this,
-      journeyType,
-      !!reproveIdentity,
-      {
-        inheritedIdentityId,
-      },
-      undefined,
-    );
+    await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
   },
 );
 
@@ -160,7 +146,7 @@ When(
   "I start a new {string} journey with invalid redirect uri",
   async function (this: World, journeyType: string): Promise<void> {
     try {
-      await startNewJourney(this, journeyType, false, undefined, undefined);
+      await startNewJourney(this, journeyType, false, undefined);
     } catch (e) {
       if (e instanceof Error) {
         this.error = e;
@@ -181,7 +167,7 @@ When(
         AisValidResponseTypes[
           aisResponseType as keyof typeof AisValidResponseTypes
         ];
-      await startNewJourney(this, journeyType, false, undefined, responseType);
+      await startNewJourney(this, journeyType, false, responseType);
     } catch (e) {
       if (e instanceof Error) {
         this.error = e;
@@ -211,35 +197,6 @@ Then(
   },
 );
 
-Then(
-  /I get an error response with message '([\w,: ]+)' and status code '(\d{3})'/,
-  function (this: World, expectedMessage: string, expectedStatusCode: number) {
-    if (!this.lastJourneyEngineResponse) {
-      throw new Error("No last journey engine response found.");
-    }
-
-    assert.ok(
-      isErrorResponse(this.lastJourneyEngineResponse),
-      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
-    );
-    assert.equal(this.lastJourneyEngineResponse.statusCode, expectedStatusCode);
-    assert.equal(this.lastJourneyEngineResponse.errorMessage, expectedMessage);
-  },
-);
-
-When(
-  "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
-  async function (this: World, journeyType: string): Promise<void> {
-    await startNewJourney(
-      this,
-      journeyType,
-      false,
-      { errorJwt: true },
-      undefined,
-    );
-  },
-);
-
 // Currently this method is only needed for audit log tests where an exact list of audit events is needed.
 // For other tests you probably want to use the "I start new '<journey>' journeys until I get a '<page>' page response" step
 When(
@@ -261,13 +218,7 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(
-        this,
-        journeyType,
-        !!reproveIdentity,
-        undefined,
-        undefined,
-      );
+      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
@@ -513,11 +464,6 @@ Then(
     if (config.localAuditEvents) {
       const expectedEvents = await getAuditEventsForJourneyType(journeyName);
       const actualEvents = await auditClient.getAuditEvents(this.userId);
-
-      if (journeyName === "strategic-app-cross-browser-journey") {
-        // Find events with no userId (only IPV_APP_MISSING_CONTEXT)
-        actualEvents.push(...(await auditClient.getAuditEvents(undefined)));
-      }
 
       const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
       assert.ok(

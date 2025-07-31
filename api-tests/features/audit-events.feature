@@ -16,7 +16,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -38,6 +40,21 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey' are recorded [local only]
 
+  Scenario: Reuse journey - identity is stored when SIS is enabled
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    And I activate the 'storedIdentityService' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And audit events for 'reuse-journey-identity-stored' are recorded [local only]
+
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -51,7 +68,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
       | Attribute          | Values                                      |
@@ -84,7 +103,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute          | Values                                      |
@@ -125,7 +146,8 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I start a new 'medium-confidence' journey with reprove identity
+    And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+    And I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'live-in-uk' page response
@@ -139,7 +161,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -169,7 +193,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -223,20 +249,15 @@ Feature: Audit Events
             | Attribute | Values               |
             | context   | "international_user" |
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+    When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-ipv-success' page response with context 'updateIdentity'
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And audit events for 'update-name-and-address-journey' are recorded [local only]
-
-  Scenario: Inherited identity journey
-    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'PCL200' identity
-    And audit events for 'inherited-identity-journey' are recorded [local only]
 
   Scenario: International address journey
     And I start a new 'medium-confidence' journey
@@ -281,7 +302,7 @@ Feature: Audit Events
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
-    Then I get an error response with message 'Missing ipv session id header' and status code '400'
+    Then I get an OAuth response with error code 'access_denied'
     # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
     # has managed to log back in to the site.
     When I poll for async DCMAW credential receipt
@@ -291,7 +312,9 @@ Feature: Audit Events
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -334,7 +357,9 @@ Feature: Audit Events
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response

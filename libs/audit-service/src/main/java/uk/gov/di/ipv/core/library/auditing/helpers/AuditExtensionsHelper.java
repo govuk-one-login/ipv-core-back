@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedAsync;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
-import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -85,22 +83,6 @@ public class AuditExtensionsHelper {
         } else {
             LOGGER.warn(LogHelper.buildLogMessage("VC not of type IdentityCheckCredential."));
             return new AuditRestrictedAsync(null);
-        }
-    }
-
-    public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
-            VerifiableCredential vc, String deviceInformation) {
-        if (vc.getCredential().getCredentialSubject()
-                instanceof IdentityCheckSubject credentialSubject) {
-            return new AuditRestrictedInheritedIdentity(
-                    credentialSubject.getName(),
-                    credentialSubject.getBirthDate(),
-                    credentialSubject.getSocialSecurityRecord(),
-                    new DeviceInformation(deviceInformation));
-        } else {
-            LOGGER.warn(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
-            return new AuditRestrictedInheritedIdentity(
-                    null, null, null, new DeviceInformation(deviceInformation));
         }
     }
 }

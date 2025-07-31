@@ -466,7 +466,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidDrivingLicenseCredential(MessagePactBuilder builder) {
+    public MessagePact f2fMessageContainsValidDrivingLicenceCredential(MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
@@ -477,18 +477,18 @@ public class ContractTest {
                 .given("VC middle name is Jane")
                 .given("VC familyName is Parker")
                 .given("VC birthDate is 1970-01-01")
-                .given("VC driving license personalNumber is PARKE710112PBFGA")
-                .given("VC driving license expiryDate is 2032-02-02")
-                .given("VC driving license issueDate is 2005-02-02")
-                .given("VC driving license issuedBy is DVLA")
-                .given("VC driving license fullAddress is dummyTestAddress")
+                .given("VC driving licence personalNumber is PARKE710112PBFGA")
+                .given("VC driving licence expiryDate is 2032-02-02")
+                .given("VC driving licence issueDate is 2005-02-02")
+                .given("VC driving licence issuedBy is DVLA")
+                .given("VC driving licence fullAddress is dummyTestAddress")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence verificationScore is 3")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence type is IdentityCheck")
                 .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
                 .given("VC jti is test-jti")
-                .expectsToReceive("A valid F2F CRI with Driving License")
+                .expectsToReceive("A valid F2F CRI with Driving Licence")
                 .withContent(
                         newJsonBody(
                                         body -> {
@@ -518,9 +518,9 @@ public class ContractTest {
 
     @Test
     @PactTestFor(
-            pactMethod = "f2fMessageContainsValidDrivingLicenseCredential",
+            pactMethod = "f2fMessageContainsValidDrivingLicenceCredential",
             providerType = ProviderType.ASYNCH)
-    void testF2fMessageReturnsIssuedDrivingLicenseCredential(
+    void testF2fMessageReturnsIssuedDrivingLicenceCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
         VerifiableCredentialValidator verifiableCredentialValidator =
                 new VerifiableCredentialValidator(
@@ -559,7 +559,7 @@ public class ContractTest {
                                                 credentialSubject.get(NAME).get(0).get(NAME_PARTS);
                                         JsonNode birthDateNode =
                                                 credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode drivingLicenseNode =
+                                        JsonNode drivingLicenceNode =
                                                 credentialSubject.get(DRIVING_PERMIT).get(0);
 
                                         assertEquals(
@@ -579,18 +579,18 @@ public class ContractTest {
 
                                         assertEquals(
                                                 "2032-02-02",
-                                                drivingLicenseNode.get(EXPIRY_DATE).asText());
+                                                drivingLicenceNode.get(EXPIRY_DATE).asText());
                                         assertEquals(
                                                 "2005-02-02",
-                                                drivingLicenseNode.get(ISSUE_DATE).asText());
+                                                drivingLicenceNode.get(ISSUE_DATE).asText());
                                         assertEquals(
                                                 "dummyTestAddress",
-                                                drivingLicenseNode.get(FULL_ADDRESS).asText());
+                                                drivingLicenceNode.get(FULL_ADDRESS).asText());
                                         assertEquals(
-                                                "DVLA", drivingLicenseNode.get(ISSUED_BY).asText());
+                                                "DVLA", drivingLicenceNode.get(ISSUED_BY).asText());
                                         assertEquals(
                                                 "PARKE710112PBFGA",
-                                                drivingLicenseNode.get(PERSONAL_NUMBER).asText());
+                                                drivingLicenceNode.get(PERSONAL_NUMBER).asText());
 
                                         assertEquals(
                                                 "1970-01-01", birthDateNode.get(VALUE).asText());
@@ -606,7 +606,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "F2fCriProvider", consumer = "IpvCoreBack")
-    public MessagePact f2fMessageContainsValidEuDrivingLicenseCredential(
+    public MessagePact f2fMessageContainsValidEuDrivingLicenceCredential(
             MessagePactBuilder builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -618,18 +618,18 @@ public class ContractTest {
                 .given("VC middle name is Jane")
                 .given("VC familyName is Parker")
                 .given("VC birthDate is 1970-01-01")
-                .given("VC driving license personalNumber is DOE99751010AL9OD")
-                .given("VC driving license expiryDate is 2022-02-02")
-                .given("VC driving license issueDate is 2012-02-02")
-                .given("VC driving license issuingCountry is DE")
-                .given("VC driving license issuedBy is Landratsamt")
+                .given("VC driving licence personalNumber is DOE99751010AL9OD")
+                .given("VC driving licence expiryDate is 2022-02-02")
+                .given("VC driving licence issueDate is 2012-02-02")
+                .given("VC driving licence issuingCountry is DE")
+                .given("VC driving licence issuedBy is Landratsamt")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence verificationScore is 3")
                 .given("VC evidence strengthScore is 3")
                 .given("VC evidence type is IdentityCheck")
                 .given("VC evidence txn is eda339dd-aa83-495c-a4d4-75021e9415f9")
                 .given("VC jti is test-jti")
-                .expectsToReceive("A valid F2F CRI with Driving License")
+                .expectsToReceive("A valid F2F CRI with Driving Licence")
                 .withContent(
                         newJsonBody(
                                         body -> {
@@ -659,9 +659,9 @@ public class ContractTest {
 
     @Test
     @PactTestFor(
-            pactMethod = "f2fMessageContainsValidEuDrivingLicenseCredential",
+            pactMethod = "f2fMessageContainsValidEuDrivingLicenceCredential",
             providerType = ProviderType.ASYNCH)
-    void testF2fMessageReturnsIssuedEuDrivingLicenseCredential(
+    void testF2fMessageReturnsIssuedEuDrivingLicenceCredential(
             List<Message> messageList, MockServer mockServer) throws URISyntaxException {
         VerifiableCredentialValidator verifiableCredentialValidator =
                 new VerifiableCredentialValidator(
@@ -700,7 +700,7 @@ public class ContractTest {
                                                 credentialSubject.get(NAME).get(0).get(NAME_PARTS);
                                         JsonNode birthDateNode =
                                                 credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode drivingLicenseNode =
+                                        JsonNode drivingLicenceNode =
                                                 credentialSubject.get(DRIVING_PERMIT).get(0);
 
                                         assertEquals(
@@ -720,16 +720,16 @@ public class ContractTest {
 
                                         assertEquals(
                                                 "2022-02-02",
-                                                drivingLicenseNode.get(EXPIRY_DATE).asText());
+                                                drivingLicenceNode.get(EXPIRY_DATE).asText());
                                         assertEquals(
                                                 "2012-02-02",
-                                                drivingLicenseNode.get(ISSUE_DATE).asText());
+                                                drivingLicenceNode.get(ISSUE_DATE).asText());
                                         assertEquals(
                                                 "Landratsamt",
-                                                drivingLicenseNode.get(ISSUED_BY).asText());
+                                                drivingLicenceNode.get(ISSUED_BY).asText());
                                         assertEquals(
                                                 "DOE99751010AL9OD",
-                                                drivingLicenseNode.get(PERSONAL_NUMBER).asText());
+                                                drivingLicenceNode.get(PERSONAL_NUMBER).asText());
 
                                         assertEquals(
                                                 "1970-01-01", birthDateNode.get(VALUE).asText());

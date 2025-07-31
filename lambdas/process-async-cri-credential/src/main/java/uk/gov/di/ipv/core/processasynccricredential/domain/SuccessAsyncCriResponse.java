@@ -13,8 +13,11 @@ public class SuccessAsyncCriResponse extends BaseAsyncCriResponse {
 
     @Builder
     private SuccessAsyncCriResponse(
-            String userId, String oauthState, List<String> verifiableCredentialJWTs) {
-        super(userId, oauthState);
+            String userId,
+            String oauthState,
+            List<String> verifiableCredentialJWTs,
+            String journeyId) {
+        super(userId, oauthState, journeyId);
         this.verifiableCredentialJWTs = verifiableCredentialJWTs;
     }
 }

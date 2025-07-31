@@ -1,6 +1,5 @@
 @Build
 Feature: Reprove Identity Journey
-
   Background:
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
 
@@ -11,7 +10,8 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      When I start a new 'medium-confidence' journey with reprove identity
+      And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
       When I submit a 'next' event
       Then I get a 'live-in-uk' page response
@@ -27,13 +27,15 @@ Feature: Reprove Identity Journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: User reproves with F2F
       When I submit an 'end' event
@@ -44,7 +46,9 @@ Feature: Reprove Identity Journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
@@ -52,12 +56,13 @@ Feature: Reprove Identity Journey
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey after popping out to the Post Office
-      When I start new 'medium-confidence' journeys with reprove identity until I get a 'page-ipv-reuse' page response
+      Given The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: P1 Journeys
     Background:
@@ -66,7 +71,8 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      When I start a new 'low-confidence' journey with reprove identity
+      And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      When I start a new 'low-confidence' journey
       Then I get a 'reprove-identity-start' page response
       When I submit a 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -80,26 +86,30 @@ Feature: Reprove Identity Journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: User reproves with F2F
       When I submit an 'end' event
       Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
       When I submit an 'end' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+      Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
@@ -112,4 +122,4 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot

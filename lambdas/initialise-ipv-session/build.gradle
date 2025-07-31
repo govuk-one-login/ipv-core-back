@@ -13,10 +13,7 @@ dependencies {
 			project(":libs:ais-service"),
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
-			project(":libs:evcs-service"),
-			project(":libs:oauth-key-service"),
-			project(":libs:user-identity-service"),
-			project(":libs:verifiable-credentials")
+			project(":libs:oauth-key-service")
 
 	compileOnly	libs.lombok
 	annotationProcessor libs.lombok

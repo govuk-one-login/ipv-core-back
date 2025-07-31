@@ -25,7 +25,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[TEST\\ntest-page]:::page");
+    assert.strictEqual(actual, "    TEST[TEST\ntest-page]:::page");
   });
 
   it("should render a cri state", () => {
@@ -44,7 +44,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST([TEST\\ntest-cri]):::cri");
+    assert.strictEqual(actual, "    TEST([TEST\ntest-cri]):::cri");
   });
 
   it("should render a cri state with context", () => {
@@ -66,7 +66,7 @@ describe("renderState", () => {
     // Assert
     assert.strictEqual(
       actual,
-      "    TEST([TEST\\ntest-cri\\n context: test-context]):::cri",
+      "    TEST([TEST\ntest-cri\n context: test-context]):::cri",
     );
   });
 
@@ -86,7 +86,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST(TEST\\ntest-lambda):::process");
+    assert.strictEqual(actual, "    TEST(TEST\ntest-lambda):::process");
   });
 
   it("should render a journey transition state", () => {
@@ -108,7 +108,7 @@ describe("renderState", () => {
     // Assert
     assert.strictEqual(
       actual,
-      "    TEST(TEST_JOURNEY\\nTEST_STATE):::journey_transition",
+      "    TEST(TEST_JOURNEY\nTEST_STATE):::journey_transition",
     );
   });
 
@@ -129,7 +129,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST(FAILED\\nFAILED):::error_transition");
+    assert.strictEqual(actual, "    TEST(FAILED\nFAILED):::error_transition");
   });
 
   it("should render a nested journey state", () => {
@@ -148,10 +148,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(
-      actual,
-      "    TEST(TEST\\nTEST_JOURNEY):::nested_journey",
-    );
+    assert.strictEqual(actual, "    TEST(TEST\nTEST_JOURNEY):::nested_journey");
   });
 
   it("should render a synthetic entry state", () => {
@@ -167,7 +164,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[ENTRY\\ntest-entry]:::other");
+    assert.strictEqual(actual, "    TEST[ENTRY\ntest-entry]:::other");
   });
 
   it("should render a synthetic exit state", () => {
@@ -183,7 +180,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[EXIT\\ntest-exit]:::other");
+    assert.strictEqual(actual, "    TEST[EXIT\ntest-exit]:::other");
   });
 });
 
@@ -230,7 +227,10 @@ describe("renderTransition", () => {
     const actual = renderTransition(transition);
 
     // Assert
-    assert.strictEqual(actual, "    SOURCE-->|test-event|TARGET");
+    assert.strictEqual(
+      actual,
+      '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel">test-event</p>|TARGET',
+    );
   });
 
   it("should render a transition with journeyContext", () => {
@@ -249,7 +249,7 @@ describe("renderTransition", () => {
     // Assert
     assert.strictEqual(
       actual,
-      '    SOURCE-->|<span class="journeyCtxTransition">test-event - journeyContext: test-context</span>|TARGET',
+      '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel journeyCtxTransition">test-event - journeyContext: test-context</p>|TARGET',
     );
   });
 
@@ -269,7 +269,7 @@ describe("renderTransition", () => {
     // Assert
     assert.strictEqual(
       actual,
-      '    SOURCE-->|<span class="mitigationTransition">test-event - mitigation: test-mitigation</span>|TARGET',
+      '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel mitigationTransition">test-event - mitigation: test-mitigation</p>|TARGET',
     );
   });
 
@@ -291,7 +291,7 @@ describe("renderTransition", () => {
     // Assert
     assert.strictEqual(
       actual,
-      '    SOURCE-->|test-event\\n<span class="journeyCtxTransition">test-event - journeyContext: test-context</span>\\n<span class="mitigationTransition">test-event - mitigation: test-mitigation</span>|TARGET',
+      '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel">test-event</p>\n<p class="defaultEdgeLabel journeyCtxTransition">test-event - journeyContext: test-context</p>\n<p class="defaultEdgeLabel mitigationTransition">test-event - mitigation: test-mitigation</p>|TARGET',
     );
   });
 });

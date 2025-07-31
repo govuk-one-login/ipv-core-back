@@ -1,7 +1,7 @@
 name: New P1 Identity
 description: >-
-  The routes a user can take to prove their identity to a low
-  confidence level (P1).
+  The routes a user can take to prove their identity to at least
+  a low confidence level (P1).
 
 states:
   # Entry points
@@ -23,6 +23,24 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+
+  DCMAW_ASYNC_ANOTHER_WAY:
+    events:
+      next:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
+
+  DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK:
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: dl-auth-source-check
 
   DCMAW_ASYNC_COMPLETE:
     events:
@@ -160,7 +178,6 @@ states:
   F2F_START_PAGE:
     response:
       type: page
-      context: lastChoice
       pageId: page-ipv-identity-postoffice-start
     events:
       next:

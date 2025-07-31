@@ -6,7 +6,7 @@ const MITIGATIONS_TRANSITION_CLASSNAME = "mitigationTransition";
 
 export const getMermaidHeader = (graphDirection: "TD" | "LR"): string =>
   // These styles should be kept in sync with the key in style.css
-  `graph ${graphDirection}
+  `flowchart ${graphDirection}
     classDef process fill:#ffa,stroke:#000;
     classDef page fill:#ae8,stroke:#000;
     classDef cri fill:#faf,stroke:#000;
@@ -23,10 +23,10 @@ export interface StateNode {
 export const renderState = ({ name, definition }: StateNode): string => {
   // Special cases for synthetic states
   if (definition.exitEvent) {
-    return `    ${name}[EXIT\\n${definition.exitEvent}]:::other`;
+    return `    ${name}[EXIT\n${definition.exitEvent}]:::other`;
   }
   if (definition.entryEvent) {
-    return `    ${name}[ENTRY\\n${definition.entryEvent}]:::other`;
+    return `    ${name}[ENTRY\n${definition.entryEvent}]:::other`;
   }
 
   // Types for basic nodes
@@ -35,24 +35,24 @@ export const renderState = ({ name, definition }: StateNode): string => {
   // cri     - response.type = cri,
   switch (definition.response?.type) {
     case "process":
-      return `    ${name}(${name}\\n${definition.response.lambda}):::process`;
+      return `    ${name}(${name}\n${definition.response.lambda}):::process`;
     case "page":
     case "error":
-      return `    ${name}[${name}\\n${definition.response.pageId}]:::page`;
+      return `    ${name}[${name}\n${definition.response.pageId}]:::page`;
     case "cri": {
       const contextInfo = definition.response.context
-        ? `\\n context: ${definition.response.context}`
+        ? `\n context: ${definition.response.context}`
         : "";
-      return `    ${name}([${name}\\n${definition.response.criId}${contextInfo}]):::cri`;
+      return `    ${name}([${name}\n${definition.response.criId}${contextInfo}]):::cri`;
     }
     case "nestedJourney":
-      return `    ${name}(${name}\\n${definition.response.nestedJourney}):::nested_journey`;
+      return `    ${name}(${name}\n${definition.response.nestedJourney}):::nested_journey`;
     case "journeyTransition": {
       const { targetJourney, targetState } = definition.response;
       return FAILURE_JOURNEYS.includes(targetJourney as string) ||
         ERROR_JOURNEYS.includes(targetJourney as string)
-        ? `    ${name}(${targetJourney}\\n${targetState}):::error_transition`
-        : `    ${name}(${targetJourney}\\n${targetState}):::journey_transition`;
+        ? `    ${name}(${targetJourney}\n${targetState}):::error_transition`
+        : `    ${name}(${targetJourney}\n${targetState}):::journey_transition`;
     }
     default:
       return `    ${name}:::other`;
@@ -85,30 +85,30 @@ const createTransitionLabel = ({
 }: TransitionEvent): string => {
   const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
 
-  const labelWithClass = (
-    className: string,
-    label: string,
-    value: string,
+  const createEventHtmlLabel = (
+    label?: string,
+    value?: string,
+    className?: string,
   ): string =>
-    `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
+    `<p class="defaultEdgeLabel${className ? ` ${className}` : ""}">${eventLabel}${label ? ` - ${label}: ${value}` : ""}</p>`;
 
   if (journeyContext) {
-    return labelWithClass(
-      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
+    return createEventHtmlLabel(
       "journeyContext",
       journeyContext,
+      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
     );
   }
 
   if (mitigation) {
-    return labelWithClass(
-      MITIGATIONS_TRANSITION_CLASSNAME,
+    return createEventHtmlLabel(
       "mitigation",
       mitigation,
+      MITIGATIONS_TRANSITION_CLASSNAME,
     );
   }
 
-  return eventLabel;
+  return createEventHtmlLabel();
 };
 
 export const renderTransition = ({
@@ -116,6 +116,6 @@ export const renderTransition = ({
   targetState,
   transitionEvents,
 }: TransitionEdge): string => {
-  const label = transitionEvents.map(createTransitionLabel).join("\\n");
-  return `    ${sourceState}-->|${label}|${targetState}`;
+  const label = transitionEvents.map(createTransitionLabel).join("\n");
+  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}|${targetState}`;
 };

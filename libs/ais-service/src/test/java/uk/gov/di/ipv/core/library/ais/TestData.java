@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.ais;
 import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
 import uk.gov.di.ipv.core.library.ais.enums.AisAuditLevel;
 import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 public class TestData {
     public static final String AIS_RESPONSE_NO_INTERVENTION =
@@ -38,13 +39,7 @@ public class TestData {
                                     .resetPasswordAt(1696875903456L)
                                     .accountDeletedAt(1696969359935L)
                                     .build())
-                    .state(
-                            AccountInterventionStatusDto.AccountState.builder()
-                                    .blocked(false)
-                                    .suspended(false)
-                                    .reproveIdentity(false)
-                                    .resetPassword(false)
-                                    .build())
+                    .state(new AccountInterventionState(false, false, false, false))
                     .auditLevel(AisAuditLevel.STANDARD)
                     .history(new AccountInterventionStatusDto.InterventionHistory[0])
                     .build();
@@ -82,13 +77,7 @@ public class TestData {
                                     .resetPasswordAt(1696875903456L)
                                     .accountDeletedAt(1696969359935L)
                                     .build())
-                    .state(
-                            AccountInterventionStatusDto.AccountState.builder()
-                                    .blocked(false)
-                                    .suspended(true)
-                                    .reproveIdentity(true)
-                                    .resetPassword(false)
-                                    .build())
+                    .state(new AccountInterventionState(false, true, true, false))
                     .auditLevel(AisAuditLevel.STANDARD)
                     .history(new AccountInterventionStatusDto.InterventionHistory[0])
                     .build();

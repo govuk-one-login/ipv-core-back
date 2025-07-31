@@ -1,6 +1,7 @@
 ---
 core:
   self:
+    configFormat: json
     componentId: "test-component-id"
   credentialIssuers:
     address:

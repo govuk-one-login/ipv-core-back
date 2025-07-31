@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +15,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -49,6 +51,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_C
 public class EvcsClient {
     public static final String X_API_KEY_HEADER = "x-api-key";
     public static final String VC_STATE_PARAM = "state";
+    private static final String VCS_SUB_PATH = "vcs";
+    private static final String IDENTITY_SUB_PATH = "identity";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(401, 429);
@@ -79,7 +83,7 @@ public class EvcsClient {
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getUri(userId, vcStatesToQueryFor))
+                            .uri(getUri(VCS_SUB_PATH, userId, vcStatesToQueryFor))
                             .GET()
                             .header(
                                     X_API_KEY_HEADER,
@@ -107,41 +111,16 @@ public class EvcsClient {
         }
     }
 
-    public HttpResponse<String> storeUserVCs(EvcsPutUserVCsDto userVCsForEvcs)
-            throws EvcsServiceException {
-        LOGGER.info(LogHelper.buildLogMessage("Preparing to store user VCs using PUT method"));
-
-        try {
-            HttpRequest.Builder httpRequestBuilder =
-                    HttpRequest.newBuilder()
-                            .uri(getUri())
-                            .PUT(
-                                    HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
-                            .header(
-                                    X_API_KEY_HEADER,
-                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
-                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-
-            return sendHttpRequest(httpRequestBuilder.build());
-        } catch (URISyntaxException e) {
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
-        } catch (JsonProcessingException e) {
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
-        }
-    }
-
     public HttpResponse<String> storeUserVCs(
             String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs) throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        "Preparing to store %d user VCs".formatted(userVCsForEvcs.size())));
+                        "Preparing to store %d user VCs using POST /vcs endpoint"
+                                .formatted(userVCsForEvcs.size())));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getUri(userId, null))
+                            .uri(getUri(VCS_SUB_PATH, userId, null))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
@@ -160,25 +139,22 @@ public class EvcsClient {
         }
     }
 
-    public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
+    public HttpResponse<String> storeUserIdentity(EvcsPostIdentityDto evcsPostIdentity)
             throws EvcsServiceException {
-        LOGGER.info(
-                LogHelper.buildLogMessage(
-                        "Preparing to update %d user VCs".formatted(evcsUserVCsToUpdate.size())));
+        LOGGER.info(LogHelper.buildLogMessage("Preparing to store user's stored identity record"));
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getUri(userId, null))
-                            .method(
-                                    "PATCH",
+                            .uri(getIdentityUri(null))
+                            .POST(
                                     HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
+                                            OBJECT_MAPPER.writeValueAsString(evcsPostIdentity)))
                             .header(
                                     X_API_KEY_HEADER,
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            sendHttpRequest(httpRequestBuilder.build());
+            return sendHttpRequest(httpRequestBuilder.build());
         } catch (URISyntaxException e) {
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
@@ -188,14 +164,74 @@ public class EvcsClient {
         }
     }
 
-    private URI getUri() throws URISyntaxException {
-        return getUri(null, null);
+    public HttpResponse<String> updateUserVCs(
+            String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
+            throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to update %d user VCs".formatted(evcsUserVCsToUpdate.size())));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getUri(VCS_SUB_PATH, userId, null))
+                            .method(
+                                    "PATCH",
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            return sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
     }
 
-    private URI getUri(String userId, List<EvcsVCState> vcStatesToQueryFor)
+    public HttpResponse<String> invalidateStoredIdentityRecord(String userId)
+            throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage("Preparing to invalidate user's stored identity record"));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getIdentityUri("invalidate"))
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(
+                                                    new EvcsInvalidateStoredIdentityDto(userId))))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            return sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
+    }
+
+    private URI getIdentityUri(String path) throws URISyntaxException {
+        var subPath =
+                StringUtils.isBlank(path)
+                        ? IDENTITY_SUB_PATH
+                        : String.join("/", IDENTITY_SUB_PATH, path);
+        return getUri(subPath, null, null);
+    }
+
+    private URI getUri(String subPath, String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
 
-        var baseUri = "%s/vcs".formatted(configService.getParameter(EVCS_APPLICATION_URL));
+        var baseUri = "%s/%s".formatted(configService.getParameter(EVCS_APPLICATION_URL), subPath);
 
         if (userId != null) {
             baseUri =

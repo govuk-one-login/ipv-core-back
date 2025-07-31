@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -60,6 +59,7 @@ class AppConfigServiceTest {
             """
         core:
           self:
+            configFormat: json
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
@@ -88,13 +88,7 @@ class AppConfigServiceTest {
               activeConnection: test
               connections:
                 test: '{
-                  "componentId":"alternate-issuer"
-                }'
-            criWithMalformedConfig:
-              activeConnection: test
-              connections:
-                test: '{
-                  componentId: alternate-issuer
+                  "componentId":"dcmaw-issuer"
                 }'
           featureFlags:
             testFeatureFlag: false
@@ -114,6 +108,22 @@ class AppConfigServiceTest {
           clients:
             testClient:
               validRedirectUrls: a,list,of,strings
+    """;
+    private static final String TEST_RAW_PARAMETERS_MALFORMED_CRI_CONFIG =
+            """
+        core:
+          self:
+            configFormat: malformed
+            componentId: "test-component-id"
+            bearerTokenTtl: 1800
+            someStringList: "a,list,of,strings"
+          credentialIssuers:
+            dcmawAsync:
+              activeConnection: test
+              connections:
+                test: '{
+                  componentId: dcmaw-async-issuer
+                }'
     """;
     @Mock Cri criMock;
     @Mock AppConfigProvider appConfigProvider;
@@ -192,10 +202,12 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsUpdatedParameters() {
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var bearerTokenTtl = configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
 
         // Assert
-        assertEquals("test-component-id", param);
+        assertEquals("test-component-id", componentId);
+        assertEquals("1800", bearerTokenTtl);
 
         // Arrange
         when(appConfigProvider.get(any()))
@@ -207,10 +219,13 @@ class AppConfigServiceTest {
         """);
 
         // Act
-        param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
         // Assert
-        assertEquals("different-component-id", param);
+        assertEquals("different-component-id", componentId);
+        assertThrows(
+                ConfigParameterNotFoundException.class,
+                () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
     }
 
     // Feature flags
@@ -331,15 +346,6 @@ class AppConfigServiceTest {
         assertTrue(configMap.isEmpty());
     }
 
-    @Test
-    void getCriByIssuerReturnsCri() throws NoCriForIssuerException {
-        // Act
-        var cri = configService.getCriByIssuer("main-issuer");
-
-        // Assert
-        assertEquals(ADDRESS, cri);
-    }
-
     // CIMIT config
 
     @Test
@@ -360,6 +366,8 @@ class AppConfigServiceTest {
         var testRawParametersInvalidCimit =
                 """
             core:
+              self:
+                configFormat: json
               cimit:
                 config: '{
                   notvalid: at-all
@@ -375,30 +383,11 @@ class AppConfigServiceTest {
     // Get CRI by issuer
 
     @Test
-    void shouldReturnCriForValidIssuers() throws NoCriForIssuerException {
+    void shouldReturnIssuerCris() {
         // Act & Assert
-        assertEquals(ADDRESS, configService.getCriByIssuer("main-issuer"));
-        assertEquals(ADDRESS, configService.getCriByIssuer("stub-issuer"));
-        assertEquals(DCMAW, configService.getCriByIssuer("alternate-issuer"));
-    }
-
-    @Test
-    void shouldErrorForInvalidIssuer() {
-        // Act & Assert
-        assertThrows(
-                NoCriForIssuerException.class,
-                () -> configService.getCriByIssuer("non-existent-issuer"));
-    }
-
-    @Test
-    void getAllCrisByIssuerShouldReturnMapOfAllIssuersAndCri() {
-        // Act
-        var actual = configService.getAllCrisByIssuer();
-
-        // Assert
         assertEquals(
-                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "alternate-issuer", DCMAW),
-                actual);
+                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "dcmaw-issuer", DCMAW),
+                configService.getIssuerCris());
     }
 
     // OAuth CRI config
@@ -464,7 +453,8 @@ class AppConfigServiceTest {
         @Test
         void getOauthCriConfigForConnectionShouldThrowIfCriConfigMalformed() {
             // Arrange
-            when(criMock.getId()).thenReturn("criWithMalformedConfig");
+            when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS_MALFORMED_CRI_CONFIG);
+            when(criMock.getId()).thenReturn("dcmawAsync");
 
             // Act & Assert
             assertThrows(

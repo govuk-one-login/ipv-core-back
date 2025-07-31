@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.evcs.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,8 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -101,13 +102,9 @@ class EvcsClientTest {
                     new EvcsUpdateUserVCsDto("VC_Signature1", EvcsVCState.HISTORIC, TEST_METADATA),
                     new EvcsUpdateUserVCsDto(
                             "VC_Signature2", EvcsVCState.ABANDONED, TEST_METADATA));
-    private static final EvcsPutUserVCsDto EVCS_PUT_USER_VCS_DTO =
-            new EvcsPutUserVCsDto(
-                    TEST_USER_ID,
-                    List.of(
-                            new EvcsCreateUserVCsDto(
-                                    "VC_Signature1", EvcsVCState.CURRENT, TEST_METADATA, null)),
-                    new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
+    private static final EvcsPostIdentityDto EVCS_POST_IDENTITY_DTO_SI_ONLY =
+            new EvcsPostIdentityDto(
+                    TEST_USER_ID, null, new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(CURRENT, PENDING_RETURN);
 
     @Mock private ConfigService mockConfigService;
@@ -321,51 +318,6 @@ class EvcsClientTest {
     }
 
     @Test
-    void storeUserVcs_shouldSubmitVcs_ifValidRequest() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
-        // Act
-        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
-                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.storeUserVCs(EVCS_PUT_USER_VCS_DTO);
-
-            // Assert
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            HttpRequest httpRequest = httpRequestCaptor.getValue();
-            assertEquals("PUT", httpRequest.method());
-            assertTrue(httpRequest.bodyPublisher().isPresent());
-            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
-            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-
-            mockedBodyPublishers.verify(
-                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
-            var userVCsForEvcs =
-                    OBJECT_MAPPER.readValue(
-                            stringCaptor.getValue(), new TypeReference<EvcsPutUserVCsDto>() {});
-            assertEquals(EVCS_PUT_USER_VCS_DTO.vcs().get(0).vc(), userVCsForEvcs.vcs().get(0).vc());
-            assertEquals(EVCS_PUT_USER_VCS_DTO.si().jwt(), userVCsForEvcs.si().jwt());
-            assertEquals(EVCS_PUT_USER_VCS_DTO.userId(), userVCsForEvcs.userId());
-        }
-    }
-
-    @Test
-    void storeUserVcs_shouldThrowException_ifBadUrl() {
-        // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("\\");
-
-        // Act/Assert
-        var exception =
-                assertThrows(
-                        EvcsServiceException.class,
-                        () -> evcsClient.storeUserVCs(EVCS_PUT_USER_VCS_DTO));
-
-        assertEquals(ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI, exception.getErrorResponse());
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
-    }
-
-    @Test
     void testUpdateUserVCs() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
@@ -373,9 +325,10 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+            var res = evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
 
             // Assert
+            assertEquals(HttpStatusCode.ACCEPTED, res.statusCode());
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
             HttpRequest httpRequest = httpRequestCaptor.getValue();
             assertEquals("PATCH", httpRequest.method());
@@ -447,5 +400,88 @@ class EvcsClientTest {
         inOrder.verify(mockSleeper, times(1)).sleep(2000);
         inOrder.verify(mockSleeper, times(1)).sleep(4000);
         inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void storeUserIdentityShouldSuccessfullySendRequest() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            evcsClient.storeUserIdentity(EVCS_POST_IDENTITY_DTO_SI_ONLY);
+
+            // Assert
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/identity", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var evcsPostIdentityDto =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsPostIdentityDto>() {});
+            assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
+            assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
+            assertEquals(TEST_USER_ID, evcsPostIdentityDto.userId());
+        }
+    }
+
+    @Test
+    void invalidateStoredIdentityRecordShouldSuccessfullySendRequest() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NO_CONTENT);
+
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            var res = evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID);
+
+            // Assert
+            assertEquals(HttpStatusCode.NO_CONTENT, res.statusCode());
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/identity/invalidate", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var evcsInvalidateSiDto =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsInvalidateStoredIdentityDto>() {});
+            assertEquals(TEST_USER_ID, evcsInvalidateSiDto.userId());
+        }
+    }
+
+    @Test
+    void invalidateStoredIdentityRecordShouldNotThrowIfEvcsResponseReturns404() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
+
+        // Act/Assert
+        assertDoesNotThrow(() -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
+    }
+
+    @Test
+    void invalidateStoredIdentityRecordShouldThrowIfBadUri() {
+        // Arrange
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn("\\");
+        // Act/Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
     }
 }

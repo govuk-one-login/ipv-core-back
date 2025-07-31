@@ -13,4 +13,8 @@ public class AsyncVerifiableCredentialException extends RuntimeException {
     public String getMessage() {
         return errorResponse.getMessage();
     }
+
+    public ErrorResponse getErrorResponse() {
+        return errorResponse;
+    }
 }

@@ -93,7 +93,12 @@ export const callbackFromStrategicApp = async (
 
   const body = await response.json();
 
-  return await sendJourneyEvent(body?.journey, ipvSessionId, featureSet);
+  return await sendJourneyEvent(
+    body?.journey,
+    ipvSessionId,
+    featureSet,
+    body?.clientOAuthSessionId,
+  );
 };
 
 // Returns the response if there is a VC, or undefined if no VC is found (404). Any other response will trigger an error.

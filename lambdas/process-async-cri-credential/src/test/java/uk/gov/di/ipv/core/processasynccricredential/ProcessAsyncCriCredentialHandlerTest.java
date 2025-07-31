@@ -44,6 +44,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,6 +63,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_MESSAGE_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER_ID = F2F.getId();
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
+    private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final Cri TEST_CRI = Cri.F2F;
     private static final String TEST_COMPONENT_ID = TEST_CRI.getId();
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
@@ -299,9 +301,12 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         // Assert
         assertEquals("Test error", thrown.getMessage());
-        var logMessage = logCollector.getLogMessages().get(0);
-        assertThat(logMessage, containsString("Unhandled lambda exception"));
-        assertThat(logMessage, containsString("Test error"));
+        Optional<String> logMessage =
+                logCollector.getLogMessages().stream()
+                        .filter(msg -> msg.contains("Unhandled lambda exception"))
+                        .findFirst();
+        assertTrue(logMessage.isPresent());
+        assertThat(logMessage.get(), containsString("Test error"));
     }
 
     private SQSEvent createErrorTestEvent(String errorType) throws JsonProcessingException {
@@ -310,6 +315,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 new CriResponseMessageDto(
                         TEST_USER_ID,
                         TEST_OAUTH_STATE,
+                        TEST_JOURNEY_ID,
                         null,
                         errorType,
                         TEST_ASYNC_ERROR_DESCRIPTION);
@@ -324,7 +330,12 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
-                        TEST_USER_ID, testOauthState, List.of(F2F_VC.getVcString()), null, null);
+                        TEST_USER_ID,
+                        testOauthState,
+                        TEST_JOURNEY_ID,
+                        List.of(F2F_VC.getVcString()),
+                        null,
+                        null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
         message.setMessageId(TEST_MESSAGE_ID);
         message.setBody(OBJECT_MAPPER.writeValueAsString(criResponseMessageDto));

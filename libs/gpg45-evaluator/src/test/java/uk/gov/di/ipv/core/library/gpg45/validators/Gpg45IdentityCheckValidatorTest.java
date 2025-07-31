@@ -106,7 +106,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F", "HMRC_MIGRATION"})
+    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F"})
     void isSuccessfulShouldReturnTrueForCombinedDocVerificationWithValidEvidence(Cri cri) {
         var identityCheck = new IdentityCheck();
         identityCheck.setStrengthScore(4);
@@ -122,7 +122,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F", "HMRC_MIGRATION"})
+    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F"})
     void isSuccessfulShouldReturnFalseForCombinedDocVerificationWithNoStrength(Cri cri) {
         var identityCheck = new IdentityCheck();
         identityCheck.setStrengthScore(0);
@@ -138,7 +138,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F", "HMRC_MIGRATION"})
+    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F"})
     void isSuccessfulShouldReturnFalseForCombinedDocVerificationWithNoValidity(Cri cri) {
         var identityCheck = new IdentityCheck();
         identityCheck.setStrengthScore(4);
@@ -154,7 +154,7 @@ class Gpg45IdentityCheckValidatorTest {
     }
 
     @ParameterizedTest
-    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F", "HMRC_MIGRATION"})
+    @EnumSource(names = {"DCMAW", "DCMAW_ASYNC", "F2F"})
     void isSuccessfulShouldReturnFalseForCombinedDocVerificationWithNoBiometricVerification(
             Cri cri) {
         var identityCheck = new IdentityCheck();

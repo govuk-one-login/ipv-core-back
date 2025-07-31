@@ -22,6 +22,9 @@ public class CriResponseMessageDto {
     @JsonProperty("state")
     private String oauthState;
 
+    @JsonProperty("govuk_signin_journey_id")
+    private String journeyId;
+
     @JsonProperty("https://vocab.account.gov.uk/v1/credentialJWT")
     private List<String> verifiableCredentialJWTs;
 

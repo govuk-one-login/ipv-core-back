@@ -6,14 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.EVCS_ACCESS_TOKEN_CLAIM_NAME;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.INHERITED_IDENTITY_JWT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NAME;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record JarUserInfo(
         @JsonProperty(value = ADDRESS_CLAIM_NAME) Essential addressClaim,
         @JsonProperty(value = CORE_IDENTITY_JWT_CLAIM_NAME) Essential coreIdentityJwtClaim,
-        @JsonProperty(value = INHERITED_IDENTITY_JWT_CLAIM_NAME)
-                StringListClaim inheritedIdentityClaim,
         @JsonProperty(value = EVCS_ACCESS_TOKEN_CLAIM_NAME) StringListClaim evcsAccessToken,
         @JsonProperty(value = PASSPORT_CLAIM_NAME) Essential passportClaim) {}

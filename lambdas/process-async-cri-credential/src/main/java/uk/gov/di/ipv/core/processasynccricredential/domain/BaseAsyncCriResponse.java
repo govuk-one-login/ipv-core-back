@@ -11,4 +11,5 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public abstract class BaseAsyncCriResponse {
     private final String userId;
     private final String oauthState;
+    private final String journeyId;
 }

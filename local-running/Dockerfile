@@ -2,7 +2,7 @@ FROM amazoncorretto:21.0.7@sha256:d51610ff3c790833e308318d25424361a69680a4b79683
 
 WORKDIR /core-back
 
-RUN yum update && yum install -y findutils tar
+RUN yum update -y && yum install -y findutils tar
 
 COPY gradle ./gradle
 COPY gradlew ./

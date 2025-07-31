@@ -19,13 +19,15 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped BRP
       When I submit 'kenneth-brp-valid' details to the CRI stub
@@ -34,13 +36,15 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: No stored identity - unsuccessful M1C journey
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -51,7 +55,9 @@ Feature: Stored Identity - M1C Outcomes
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -77,13 +83,15 @@ Feature: Stored Identity - M1C Outcomes
         | Attribute | Values               |
         | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Returning existing M1C user goes through details confirmation
     Background:
@@ -106,7 +114,9 @@ Feature: Stored Identity - M1C Outcomes
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit '<fraud-details>' details to the CRI stub
+      When I submit '<fraud-details>' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -114,7 +124,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get a 'P2' identity
       And my identity 'GivenName' is '<expected-given-name>'
       And my identity 'FamilyName' is '<expected-family-name>'
-      And I have a 'GPG45' stored identity record type with a 'P2' vot
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | selected-name-change    | details                                    | fraud-details                           | expected-given-name | expected-family-name |

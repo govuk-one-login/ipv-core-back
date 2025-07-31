@@ -64,7 +64,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -93,7 +95,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -115,14 +119,16 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit a 'postOffice' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
       | Attribute          | Values                     |
@@ -159,7 +165,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
       | Attribute          | Values                                      |
@@ -240,7 +248,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -269,7 +279,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
         | Attribute | Values               |
         | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-and-address-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-and-address-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -303,11 +315,11 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
   Rule: Separate session enhanced verification mitigation with DCMAW + DL auth source check
     Background: User returns with an enhanced verification CI and mitigates with DCMAW but user drops out of DL CRI
       And the subject already has the following credentials
-        | CRI        | scenario                            |
-        | ukPassport | kenneth-passport-valid              |
-        | address    | kenneth-current                     |
-        | fraud      | kenneth-score-2                     |
-        | kbv        | kenneth-needs-enhanced-verification |
+        | CRI         | scenario                            |
+        | ukPassport  | kenneth-passport-valid              |
+        | address     | kenneth-current                     |
+        | fraud       | kenneth-score-2                     |
+        | experianKbv | kenneth-needs-enhanced-verification |
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -353,10 +365,12 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |

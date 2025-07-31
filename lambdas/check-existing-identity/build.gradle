@@ -9,6 +9,7 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:cimit-service"),
+			project(":libs:cri-checking-service"),
 			project(":libs:cri-response-service"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
