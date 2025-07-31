@@ -24,21 +24,21 @@ public class YamlConfigService extends YamlParametersConfigService {
         this.featureSet.remove();
     }
 
-    private final Map<String, String> secrets = new HashMap<>();
+    private Map<String, String> secrets = new HashMap<>();
 
     public YamlConfigService() {
         this(PARAMETERS_FILE, SECRETS_FILE);
     }
 
     public YamlConfigService(File parametersFile, File secretsFile) {
-        updateParameters(parameters, parametersFile);
-        updateParameters(secrets, secretsFile);
+        setParameters(parseParameters(parametersFile));
+        secrets = parseParameters(secretsFile);
     }
 
-    private void updateParameters(Map<String, String> map, File yamlFile) {
+    private Map<String, String> parseParameters(File yamlFile) {
         try {
             String yamlContent = Files.readString(yamlFile.toPath());
-            updateParameters(map, yamlContent);
+            return parseParameters(yamlContent);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }

@@ -19,7 +19,11 @@ public abstract class YamlParametersConfigService extends ConfigService {
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    public final Map<String, String> parameters = new HashMap<>();
+    private Map<String, String> parameters = new HashMap<>();
+
+    protected void setParameters(Map<String, String> newParameters) {
+        parameters = newParameters;
+    }
 
     @Override
     public String getParameter(String path) {
@@ -63,10 +67,12 @@ public abstract class YamlParametersConfigService extends ConfigService {
         return lookupParams;
     }
 
-    protected void updateParameters(Map<String, String> map, String yaml) {
+    protected Map<String, String> parseParameters(String yaml) {
+        var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             addJsonConfig(map, yamlParsed, "");
+            return map;
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
