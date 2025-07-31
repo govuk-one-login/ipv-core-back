@@ -27,7 +27,11 @@ public class FetchJourneyTransitionsHandler
     private static final String LOG_GROUP = "/aws/lambda/process-journey-event-dev";
     private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
 
-    private final AWSLogs logsClient = AWSLogsClientBuilder.defaultClient();
+    private final AWSLogs logsClient = getLogsClient();
+
+    protected AWSLogs getLogsClient() {
+        return AWSLogsClientBuilder.defaultClient();
+    }
 
     @Override
     @Logging(clearState = true)

@@ -17,6 +17,7 @@ include "lambdas",
 		"lambdas:check-existing-identity",
 		"lambdas:check-gpg45-score",
 		"lambdas:check-reverification-identity",
+		"lambdas:fetch-journey-transitions",
 		"lambdas:initialise-ipv-session",
 		"lambdas:issue-client-access-token",
 		"lambdas:process-async-cri-credential",
@@ -57,5 +58,3 @@ dependencyResolutionManagement {
 		}
 	}
 }
-include 'lambdas:fetch-journey-transitions'
-findProject(':lambdas:fetch-journey-transitions')?.name = 'fetch-journey-transitions'
