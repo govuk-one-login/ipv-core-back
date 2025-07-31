@@ -75,6 +75,7 @@ public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CURRENT_PAGE = "currentPage";
+    private static final String CURRENT_CRI = "currentCriId";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
@@ -158,6 +159,7 @@ public class ProcessJourneyEventHandler
             String ipAddress = RequestHelper.getIpAddress(journeyRequest);
             String deviceInformation = journeyRequest.getDeviceInformation();
             String currentPage = RequestHelper.getJourneyParameter(journeyRequest, CURRENT_PAGE);
+            String currentCri = RequestHelper.getJourneyParameter(journeyRequest, CURRENT_CRI);
             configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
 
             // Get/ set session items/ config
@@ -185,6 +187,7 @@ public class ProcessJourneyEventHandler
                             auditEventUser,
                             deviceInformation,
                             currentPage,
+                            currentCri,
                             clientOAuthSessionItem);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -219,6 +222,7 @@ public class ProcessJourneyEventHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             String currentPage,
+            String currentCri,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws JourneyEngineException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
@@ -235,6 +239,7 @@ public class ProcessJourneyEventHandler
                             ipvSessionItem,
                             journeyEvent,
                             currentPage,
+                            currentCri,
                             auditEventUser,
                             deviceInformation,
                             clientOAuthSessionItem);
@@ -256,6 +261,7 @@ public class ProcessJourneyEventHandler
                                 journeyStateFrom(journeyChangeState),
                                 ipvSessionItem,
                                 NEXT_EVENT,
+                                null,
                                 null,
                                 auditEventUser,
                                 deviceInformation,
@@ -296,12 +302,17 @@ public class ProcessJourneyEventHandler
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
+    @SuppressWarnings({
+        "java:S3776",
+        "java:S107"
+    }) // // Cognitive Complexity of methods should not be too high, Methods should not have too
+    // many parameters
     private State executeStateTransition(
             JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
             String journeyEvent,
             String currentPage,
+            String currentCri,
             AuditEventUser auditEventUser,
             String deviceInformation,
             ClientOAuthSessionItem clientOAuthSessionItem)
@@ -334,6 +345,7 @@ public class ProcessJourneyEventHandler
                         initialJourneyState.state(),
                         journeyEvent,
                         currentPage,
+                        currentCri,
                         new EventResolveParameters(
                                 ipvSessionItem.getJourneyContext(),
                                 ipvSessionItem,

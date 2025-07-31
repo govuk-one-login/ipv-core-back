@@ -108,7 +108,7 @@ paths:
             Fn::Sub: >
               {
               "input": "{
-              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))?currentPage=$util.escapeJavaScript($input.params().querystring.get('currentPage'))\",
+              \"journey\":\"/journey/$util.escapeJavaScript($input.params('journeyStep'))?currentPage=$util.escapeJavaScript($input.params().querystring.get('currentPage'))&currentCriId=$util.escapeJavaScript($input.params().querystring.get('currentCriId'))\",
               \"ipAddress\":\"$util.escapeJavaScript($input.params('ip-address'))\",
               \"deviceInformation\":\"$util.escapeJavaScript($input.params('txma-audit-encoded'))\",
               \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",

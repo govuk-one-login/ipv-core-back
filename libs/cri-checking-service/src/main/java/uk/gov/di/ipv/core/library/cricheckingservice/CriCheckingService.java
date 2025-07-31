@@ -206,8 +206,7 @@ public class CriCheckingService {
         if (StringUtils.isBlank(state)) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
         }
-        if (criOAuthSessionItem == null
-                || !state.equals(criOAuthSessionItem.getCriOAuthSessionId())) {
+        if (!state.equals(criOAuthSessionItem.getCriOAuthSessionId())) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
         try {

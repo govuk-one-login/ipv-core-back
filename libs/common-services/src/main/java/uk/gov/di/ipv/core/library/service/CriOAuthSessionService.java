@@ -14,6 +14,8 @@ import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.retry.Retry;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 
+import java.time.Instant;
+
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_OAUTH_SESSIONS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_OAUTH_SESSION_ID;
@@ -86,5 +88,15 @@ public class CriOAuthSessionService {
                                 LOG_CRI_OAUTH_SESSION_ID.getFieldName(),
                                 criOAuthSessionItem.getCriOAuthSessionId()));
         return criOAuthSessionItem;
+    }
+
+    public void setLockedTimestamp(CriOAuthSessionItem criOAuthSessionItem) {
+        criOAuthSessionItem.setLockedTimestamp(Instant.now().toString());
+        dataStore.update(criOAuthSessionItem);
+    }
+
+    public void setProcessedResult(CriOAuthSessionItem criOAuthSessionItem, String resultingEvent) {
+        criOAuthSessionItem.setProcessedResult(resultingEvent);
+        dataStore.update(criOAuthSessionItem);
     }
 }

@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,6 +61,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 
 import java.io.UncheckedIOException;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
@@ -74,6 +76,8 @@ public class ProcessCriCallbackHandler
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
     private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
+    private static final int LOCK_EXPIRY_MINS = 5;
+
     private static final JourneyResponse JOURNEY_NOT_FOUND =
             new JourneyResponse(JOURNEY_NOT_FOUND_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
@@ -189,7 +193,7 @@ public class ProcessCriCallbackHandler
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatusCode.UNAUTHORIZED, pageOutput);
                 }
-                case INVALID_OAUTH_STATE -> {
+                case INVALID_OAUTH_STATE, REPEAT_CRI_CALLBACK -> {
                     LOGGER.warn(LogHelper.buildErrorMessage(e.getErrorResponse()));
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatusCode.BAD_REQUEST,
@@ -347,37 +351,77 @@ public class ProcessCriCallbackHandler
                     callbackRequest, criOAuthSessionItem, ipvSessionItem);
             return criCheckingService.handleCallbackError(callbackRequest, clientOAuthSessionItem);
         }
+
+        if (criOAuthSessionItem == null) {
+            throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
+        }
+
         criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
 
-        // Retrieve, store and check cri credentials
-        var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
-        var vcResponse =
-                criApiService.fetchVerifiableCredential(
-                        accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
-        var sessionVcs =
-                sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true);
+        if (!isCriOauthSessionItemLocked(criOAuthSessionItem.getLockedTimestamp())) {
+            criOAuthSessionService.setLockedTimestamp(criOAuthSessionItem);
 
-        var vcs =
-                validateAndStoreResponse(
-                        callbackRequest,
-                        vcResponse,
-                        clientOAuthSessionItem,
-                        criOAuthSessionItem,
-                        ipvSessionItem,
-                        sessionVcs);
+            // Retrieve, store and check cri credentials
+            var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
+            var vcResponse =
+                    criApiService.fetchVerifiableCredential(
+                            accessToken,
+                            callbackRequest.getCredentialIssuer(),
+                            criOAuthSessionItem);
+            var sessionVcs =
+                    sessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(),
+                            clientOAuthSessionItem.getUserId(),
+                            true);
 
-        var forcedJourney =
-                criCheckingService.checkVcResponse(
-                        vcs,
-                        callbackRequest.getIpAddress(),
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        sessionVcs);
-        if (forcedJourney != null) {
-            return forcedJourney;
+            var vcs =
+                    validateAndStoreResponse(
+                            callbackRequest,
+                            vcResponse,
+                            clientOAuthSessionItem,
+                            criOAuthSessionItem,
+                            ipvSessionItem,
+                            sessionVcs);
+
+            var forcedJourney =
+                    criCheckingService.checkVcResponse(
+                            vcs,
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            sessionVcs);
+            if (forcedJourney != null) {
+                criOAuthSessionService.setProcessedResult(
+                        criOAuthSessionItem, forcedJourney.getJourney());
+                return forcedJourney;
+            }
+
+            criOAuthSessionService.setProcessedResult(
+                    criOAuthSessionItem, JOURNEY_NEXT.getJourney());
+
+            return JOURNEY_NEXT;
+        } else {
+
+            // If the record is locked, this means that the cri oauth session is already being
+            // processed from a previous callback
+            if (!StringUtils.isBlank(criOAuthSessionItem.getProcessedResult())) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "CRI oauth session locked but previous callback has finished processing. Returning result of previous callback."));
+                return new JourneyResponse(criOAuthSessionItem.getProcessedResult());
+            }
+
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "CRI oauth session locked and processing has not finished."));
+            throw new InvalidCriCallbackRequestException(ErrorResponse.REPEAT_CRI_CALLBACK);
         }
-        return JOURNEY_NEXT;
+    }
+
+    private boolean isCriOauthSessionItemLocked(String lockedTimestamp) {
+        return lockedTimestamp != null
+                && !Instant.parse(lockedTimestamp)
+                        .isBefore(Instant.now().minusSeconds(LOCK_EXPIRY_MINS * 60L));
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(

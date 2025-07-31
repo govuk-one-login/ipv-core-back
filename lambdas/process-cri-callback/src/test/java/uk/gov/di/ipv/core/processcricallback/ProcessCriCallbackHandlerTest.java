@@ -40,6 +40,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -406,6 +408,171 @@ class ProcessCriCallbackHandlerTest {
         assertEquals("error", errorPageResponse.get("type"));
         assertEquals(401, errorPageResponse.get("statusCode"));
         assertEquals("pyi-timeout-recoverable", errorPageResponse.get("page"));
+    }
+
+    @Test
+    void shouldReturnAttemptRecoveryPageIfCriOauthSessionItemIsLockedAndNoProcessedResult()
+            throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criId(ADDRESS.getId())
+                        .criOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID)
+                        .lockedTimestamp(Instant.now().toString())
+                        .build();
+
+        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var errorPageResponse =
+                OBJECT_MAPPER.readValue(
+                        lambdaResponse.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertEquals("error", errorPageResponse.get("type"));
+        assertEquals(400, errorPageResponse.get("statusCode"));
+        assertEquals("pyi-attempt-recovery", errorPageResponse.get("page"));
+    }
+
+    @Test
+    void shouldReturnProcessedResultIfRecordIsLockedAndProcessedResultExistsOnCriOauthSessionItem()
+            throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criId(ADDRESS.getId())
+                        .criOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID)
+                        .lockedTimestamp(Instant.now().toString())
+                        .processedResult("/journey/next")
+                        .build();
+
+        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+    }
+
+    @Test
+    void shouldProcessRecordIfCriOauthSessionItemLockIsOld() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criId(ADDRESS.getId())
+                        .criOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID)
+                        .lockedTimestamp(Instant.now().minus(10L, ChronoUnit.MINUTES).toString())
+                        .build();
+        var bearerToken = new BearerAccessToken("value");
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId(clientOAuthSessionItem.getUserId())
+                        .verifiableCredentials(List.of(vcWebPassportSuccessful().getVcString()))
+                        .credentialStatus(VerifiableCredentialStatus.CREATED)
+                        .build();
+        var vcs = List.of(vcWebPassportSuccessful());
+        var sessionVcs = List.of(vcAddressM1a());
+
+        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
+                .thenReturn(bearerToken);
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
+                .thenReturn(vcResponse);
+        when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
+                .thenReturn(vcs);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(sessionVcs);
+        when(mockCriCheckingService.checkVcResponse(
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem),
+                        eq(sessionVcs)))
+                .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
+        when(mockConfigService.getOauthCriConfig(any()))
+                .thenReturn(
+                        OauthCriConfig.builder()
+                                .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .build());
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+    }
+
+    @Test
+    void shouldReturnAttemptRecoveryPageIfCriOauthSessionItemIsNull() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(null);
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var errorPageResponse =
+                OBJECT_MAPPER.readValue(
+                        lambdaResponse.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertEquals("error", errorPageResponse.get("type"));
+        assertEquals(400, errorPageResponse.get("statusCode"));
+        assertEquals("pyi-attempt-recovery", errorPageResponse.get("page"));
     }
 
     @Test

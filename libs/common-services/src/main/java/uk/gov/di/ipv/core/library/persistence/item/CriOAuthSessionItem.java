@@ -19,6 +19,8 @@ public class CriOAuthSessionItem implements PersistenceItem {
     private String clientOAuthSessionId;
     private String criId;
     private String connection;
+    private String lockedTimestamp;
+    private String processedResult;
     private long ttl;
 
     @DynamoDbPartitionKey

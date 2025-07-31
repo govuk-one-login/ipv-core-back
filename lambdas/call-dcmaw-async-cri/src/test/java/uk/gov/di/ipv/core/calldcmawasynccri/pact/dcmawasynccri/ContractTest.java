@@ -63,12 +63,16 @@ class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
                     "dummySessionId",
                     "dummyOAuthSessionId",
                     DCMAW_ASYNC.getId(),
                     "dummyConnection",
+                    MOCK_LOCK,
+                    MOCK_PROCESS_RESULT,
                     900);
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")

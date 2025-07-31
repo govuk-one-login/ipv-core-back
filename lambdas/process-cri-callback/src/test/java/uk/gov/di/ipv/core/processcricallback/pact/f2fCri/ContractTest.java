@@ -58,6 +58,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @PactTestFor(providerName = "F2fCriProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private CoreSigner mockSigner;
@@ -118,6 +120,8 @@ class ContractTest {
                                 "dummyOAuthSessionId",
                                 F2F.getId(),
                                 "dummyConnection",
+                                MOCK_LOCK,
+                                MOCK_PROCESS_RESULT,
                                 900));
 
         assertEquals(
@@ -205,6 +209,8 @@ class ContractTest {
                                 "dummyOAuthSessionId",
                                 F2F.getId(),
                                 "dummyConnection",
+                                MOCK_LOCK,
+                                MOCK_PROCESS_RESULT,
                                 900));
         // Assert
         assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
@@ -286,6 +292,8 @@ class ContractTest {
                                             "dummyOAuthSessionId",
                                             F2F.getId(),
                                             "dummyConnection",
+                                            MOCK_LOCK,
+                                            MOCK_PROCESS_RESULT,
                                             900));
                         });
 
