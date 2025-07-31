@@ -686,6 +686,7 @@ Resources:
 
   IPVCoreAnalyticsAPI:
     Type: AWS::Serverless::Api
+    DependsOn: FetchJourneyTransitionsFunction
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Analytics API Gateway ${Environment}
@@ -694,49 +695,13 @@ Resources:
           ResourcePath: '/*'
           HttpMethod: '*'
           MetricsEnabled: true
+      StageName: !Sub ${Environment}
       TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-analytics.yaml"
-      AccessLogSetting:
-        DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-
-  IPVCoreAnalyticsAPIDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn:
-      - IPVCoreAnalyticsAPI
-    Properties:
-      RestApiId: !Ref IPVCoreAnalyticsAPI
-      Description: !Sub "Deployment for ${Environment}"
-
-  IPVCoreAnalyticsAPIStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      StageName: !Sub ${Environment}
-      DeploymentId: !Ref IPVCoreAnalyticsAPIDeployment
-      RestApiId: !Ref IPVCoreAnalyticsAPI
-      TracingEnabled: true
-      MethodSettings:
-        - DataTraceEnabled: true
-          HttpMethod: '*'
-          LoggingLevel: INFO
-          ResourcePath: '/*'
-          MetricsEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
         Format: >-
@@ -773,7 +738,7 @@ Resources:
 
   IPVCoreAnalyticsAPIKey:
     Type: AWS::ApiGateway::ApiKey
-    DependsOn: IPVCoreAnalyticsAPIStage
+    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
       Enabled: true
@@ -783,7 +748,7 @@ Resources:
 
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: IPVCoreAnalyticsAPIStage
+    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
