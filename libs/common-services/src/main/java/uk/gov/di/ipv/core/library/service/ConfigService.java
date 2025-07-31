@@ -27,19 +27,16 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -50,21 +47,23 @@ public abstract class ConfigService {
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    public final Map<String, String> parameters = new HashMap<>();
+    private Map<String, String> parameters = new HashMap<>();
 
     @Getter @Setter private static boolean local = false;
 
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
         if (isLocal()) {
-            return new YamlConfigService();
+            return new LocalConfigService();
         }
         return new AppConfigService();
     }
 
-    public abstract List<String> getFeatureSet();
+    protected void setParameters(Map<String, String> parameters) {
+        this.parameters = parameters;
+    }
 
-    protected abstract Map<String, String> getParametersByPrefixYaml(String path);
+    public abstract List<String> getFeatureSet();
 
     protected abstract String getSecret(String path);
 
@@ -110,6 +109,21 @@ public abstract class ConfigService {
                 .collect(
                         Collectors.toMap(
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
+    }
+
+    public Map<String, String> getParametersByPrefixYaml(String path) {
+        var lookupParams =
+                parameters.entrySet().stream()
+                        .filter(e -> e.getKey().startsWith(path))
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(path.length() + 1),
+                                        Map.Entry::getValue));
+
+        if (lookupParams.isEmpty()) {
+            throw new ConfigParameterNotFoundException(path);
+        }
+        return lookupParams;
     }
 
     public boolean getBooleanParameter(
@@ -343,10 +357,12 @@ public abstract class ConfigService {
         return getParameter(path).equals("yaml");
     }
 
-    protected void updateParameters(Map<String, String> map, String yaml) {
+    protected Map<String, String> parseParameters(String yaml) {
+        var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             addJsonConfig(map, yamlParsed, "");
+            return map;
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
@@ -356,6 +372,8 @@ public abstract class ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            // Required to add CIMIT config which is declared as array in config file
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
@@ -364,7 +382,7 @@ public abstract class ConfigService {
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));

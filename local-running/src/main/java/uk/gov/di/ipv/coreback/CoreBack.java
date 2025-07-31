@@ -2,7 +2,7 @@ package uk.gov.di.ipv.coreback;
 
 import io.javalin.Javalin;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.YamlConfigService;
+import uk.gov.di.ipv.core.library.service.LocalConfigService;
 import uk.gov.di.ipv.coreback.handlers.AuditHandler;
 import uk.gov.di.ipv.coreback.handlers.HomeHandler;
 import uk.gov.di.ipv.coreback.handlers.JourneyEngineHandler;
@@ -59,7 +59,7 @@ public class CoreBack {
     }
 
     private void startAsyncPoller() throws URISyntaxException {
-        var configService = new YamlConfigService();
+        var configService = new LocalConfigService();
         var asyncQueueUrl = configService.getParameter("local/asyncQueue/apiBaseUrl");
         var asyncQueueApiKey = configService.getSecret("local/asyncQueue/apiKey");
         var asyncQueueName = configService.getSecret("local/asyncQueue/queueName");
