@@ -694,7 +694,6 @@ Resources:
           ResourcePath: '/*'
           HttpMethod: '*'
           MetricsEnabled: true
-      StageName: !Sub ${Environment}
       TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
