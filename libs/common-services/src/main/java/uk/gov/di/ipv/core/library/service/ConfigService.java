@@ -216,7 +216,7 @@ public abstract class ConfigService {
 
             try {
                 var connections =
-                        getParametersByPrefixYaml(connectionsPath).entrySet().stream()
+                        getParametersByPrefix(connectionsPath).entrySet().stream()
                                 .filter(entry -> entry.getKey().endsWith("/componentId"))
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 connections.values().forEach(value -> issuerToCri.put(value, cri));

@@ -366,9 +366,9 @@ class AppConfigServiceTest {
     @Test
     void shouldReturnIssuerCris() {
         // Act & Assert
-        var config = configService.getIssuerCris();
-
-        assertEquals(Map.of("main-issuer", ADDRESS, "dcmaw-issuer", DCMAW), config);
+        assertEquals(
+                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "dcmaw-issuer", DCMAW),
+                configService.getIssuerCris());
     }
 
     // OAuth CRI config
