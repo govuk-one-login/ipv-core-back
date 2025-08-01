@@ -19,37 +19,12 @@ Globals:
         APP_CONFIG_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
-        DT_CONNECTION_AUTH_TOKEN: !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}' # pragma: allowlist secret
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
         DT_CONNECTION_BASE_URL: !If
           - UseDynatrace
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_BASE_URL}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
           - !Ref AWS::NoValue
-        DT_CLUSTER_ID: !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CLUSTER_ID}}' # pragma: allowlist secret
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
-        DT_LOG_COLLECTION_AUTH_TOKEN: !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_LOG_COLLECTION_AUTH_TOKEN}}' # pragma: allowlist secret
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
-        DT_TENANT: !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_TENANT}}' # pragma: allowlist secret
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
-        DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: "true"
         OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_USE_PROPAGATOR_FOR_MESSAGING: true
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
         POWERTOOLS_METRICS_NAMESPACE: !Sub CoreBackEmbeddedMetrics-${Environment}
@@ -63,10 +38,9 @@ Globals:
         OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED: false
         OTEL_INSTRUMENTATION_AWS_LAMBDA_ENABLED: true
         OTEL_INSTRUMENTATION_AWS_SDK_ENABLED: true
-        OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED: true
         OPENTELEMETRY_COLLECTOR_CONFIG_URI: '/var/task/collector.yaml'
         DT_CONNECTION_AUTH_TOKEN_OTLP: !If
-          - IsDevPerf
+          - UseDynatrace
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceOtlpSecretArn ]
@@ -186,8 +160,8 @@ Mappings:
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
+      opentelemetryCollectorLayerArn: "not-used"
+      opentelemetryJavaWrapperLayerArn: "not-used"
       dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
     "175872367215": # Core dev02
       environment: dev
@@ -202,8 +176,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "arn:aws:lambda:eu-west-2:901920570463:layer:aws-otel-java-wrapper-arm64-ver-1-32-0:6"
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-collector-arm64-0_16_0:1
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:175872367215:secret:dynatrace_api_token_otlp # pragma: allowlist secret
     "457601271792": # Build
       environment: build
@@ -218,8 +192,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:aws-otel-java-wrapper-arm64-ver-1-32-0-6:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-collector-arm64-0_16_0:1
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp # pragma: allowlist secret
     "335257547869": # Staging
       environment: staging
@@ -234,9 +208,9 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:730335288219:key/d2326cb1-e2fc-4a81-98dc-3b6101bdb01f"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-collector-arm64-0_16_0:1
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-javawrapper-0_14_0:1
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:335257547869:secret:/staging/core/dynatrace/openTelemetryApiKey-T2LX5E # pragma: allowlist secret
     "991138514218": # Integration
       environment: integration
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -250,9 +224,9 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:992382392501:key/c3d600cd-bde4-4595-a5e2-991c46802cbb"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-collector-arm64-0_16_0:1
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-javawrapper-0_14_0:1
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:991138514218:secret:/integration/core/dynatrace/openTelemetryApiKey-ACu0S2 # pragma: allowlist secret
     "075701497069": # Production
       environment: production
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -266,9 +240,9 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:339712924890:key/24e580d2-ea02-4e41-986b-1a53242480a5"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
-      dynatraceLayerArn: arn:aws:lambda:eu-west-2:216552277552:layer:Dynatrace_OneAgent_1_311_51_20250331-143707_with_collector_java:1
-      opentelemetryLayerArn: "not-used"
-      dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-collector-arm64-0_16_0:1
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-javawrapper-0_14_0:1
+      dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:075701497069:secret:/production/core/dynatrace/openTelemetryApiKey-xj1sKg # pragma: allowlist secret
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -739,26 +713,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -850,26 +822,24 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -957,26 +927,24 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1070,26 +1038,24 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1207,26 +1173,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1335,26 +1299,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1482,26 +1444,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1608,26 +1568,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1741,26 +1699,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -1863,26 +1819,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2117,26 +2071,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2235,26 +2187,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-proxy-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2362,26 +2312,24 @@ Resources:
           # https://govukverify.atlassian.net/browse/PYIC-8220
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2484,26 +2432,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2699,26 +2645,24 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2800,26 +2744,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -2905,26 +2847,24 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -3015,26 +2955,24 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
@@ -3114,26 +3052,24 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
-            - !If
-              - IsDevPerf
-              - /opt/otel-handler
-              - /opt/dynatrace
+            - /opt/otel-handler
             - !Ref AWS::NoValue
       Layers:
         - !If
           - UseDynatrace
-          - !If
-            - IsDevPerf
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              opentelemetryLayerArn
-            ]
-            - !FindInMap [
-              EnvironmentConfiguration,
-              !Ref 'AWS::AccountId',
-              dynatraceLayerArn,
-            ]
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
           - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
