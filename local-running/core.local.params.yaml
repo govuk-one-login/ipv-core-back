@@ -20,7 +20,6 @@ core:
     authCodeExpirySeconds: 3600
     oauthKeyCacheDurationMins: 5
     # Test CI scoring values
-    ciScoringThreshold: 10
     ciScoringConfig:
       - ci: "NON-BREACHING"
         detectedScore: 2

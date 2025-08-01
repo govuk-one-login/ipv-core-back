@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
@@ -268,6 +269,15 @@ public abstract class ConfigService {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             flattenParameters(map, yamlParsed, "");
             return map;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        }
+    }
+
+    public static Config generateConfiguration(String yaml) {
+        try {
+            var coreConfig = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            return OBJECT_MAPPER.treeToValue(coreConfig, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
