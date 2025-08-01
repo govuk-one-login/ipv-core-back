@@ -92,13 +92,13 @@ public class StoredIdentityService {
         try {
             var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
 
-            return createSignedJwt(storedIdentity, signerFactory.getSigner()).serialize();
+            return createSignedJwt(storedIdentity, signerFactory.getSisSigner()).serialize();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildLogMessage(e.getErrorResponse().getMessage()));
             throw new FailedToCreateStoredIdentityForEvcsException(
                     e.getErrorResponse().getMessage());
         } catch (JOSEException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to create signed JWT"));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create signed JWT", e));
             throw new FailedToCreateStoredIdentityForEvcsException("Failed to create signed JWT");
         }
     }

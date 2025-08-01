@@ -83,7 +83,7 @@ class StoredIdentityServiceTest {
         var userClaims =
                 UserClaims.builder().passportClaim(List.of(PASSPORT_CLAIM, PASSPORT_CLAIM)).build();
 
-        when(mockSignerFactory.getSigner()).thenReturn(signer);
+        when(mockSignerFactory.getSisSigner()).thenReturn(signer);
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(MOCK_COMPONENT_ID);
         when(mockConfigService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
                 .thenReturn(MOCK_SIS_COMPONENT_ID);
