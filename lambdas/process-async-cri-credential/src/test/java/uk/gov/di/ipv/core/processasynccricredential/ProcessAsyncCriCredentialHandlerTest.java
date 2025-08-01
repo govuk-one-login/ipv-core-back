@@ -66,6 +66,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final Cri TEST_CRI = Cri.F2F;
     private static final String TEST_COMPONENT_ID = TEST_CRI.getId();
+    private static final String TEST_ENCRYPTION_KEY = "test-encryption-key";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
@@ -444,7 +445,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .authorizeUrl(new URI(""))
                 .clientId("ipv-core")
                 .signingKey(EC_PRIVATE_KEY_JWK)
-                .encryptionKey(null)
+                .encryptionKey(TEST_ENCRYPTION_KEY)
                 .componentId(TEST_COMPONENT_ID)
                 .clientCallbackUrl(new URI(""))
                 .requiresApiKey(false)
