@@ -63,9 +63,17 @@ class OAuthKeyServiceTest {
         static void setUp() throws Exception {
             oauthCriConfig =
                     OauthCriConfig.builder()
+                            .tokenUrl(new URI(""))
+                            .credentialUrl(new URI(""))
+                            .authorizeUrl(new URI(""))
+                            .clientId("ipv-core")
+                            .signingKey("")
                             .jwksUrl(new URI(TEST_JWKS_ENDPOINT))
                             .encryptionKey(TEST_KEY)
                             .componentId(TEST_ISSUER)
+                            .clientCallbackUrl(new URI(""))
+                            .requiresApiKey(false)
+                            .requiresAdditionalEvidence(false)
                             .build();
         }
 
@@ -140,7 +148,19 @@ class OAuthKeyServiceTest {
         @Test
         @MockitoSettings(strictness = LENIENT)
         void getEncryptionKeyShouldReturnKeyFromConfigIfNoJwksUrl() throws Exception {
-            var oauthConfigNoJwksUrl = OauthCriConfig.builder().encryptionKey(TEST_KEY).build();
+            var oauthConfigNoJwksUrl =
+                    OauthCriConfig.builder()
+                            .tokenUrl(new URI(""))
+                            .credentialUrl(new URI(""))
+                            .authorizeUrl(new URI(""))
+                            .clientId("ipv-core")
+                            .signingKey("")
+                            .encryptionKey(TEST_KEY)
+                            .componentId(TEST_ISSUER)
+                            .clientCallbackUrl(new URI(""))
+                            .requiresApiKey(false)
+                            .requiresAdditionalEvidence(false)
+                            .build();
             var key = oAuthKeyService.getEncryptionKey(oauthConfigNoJwksUrl);
 
             assertEquals(RSAKey.parse(TEST_KEY), key);

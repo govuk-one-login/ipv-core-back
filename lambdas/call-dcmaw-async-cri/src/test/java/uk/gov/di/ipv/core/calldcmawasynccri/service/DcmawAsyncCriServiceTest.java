@@ -46,9 +46,11 @@ class DcmawAsyncCriServiceTest {
     private static final String CRI_OAUTH_STATE = "cri-oauth-state";
     public static final String TEST_SECRET = "test-secret";
     public static final String CRI_CLIENT_ID = "cri-client-id";
+    public static final String AUTHORIZE_URL = "https://example.com/authorize";
     public static final String CREDENTIAL_URL = "https://example.com/credentialbackUrl";
     public static final String TOKEN_URL = "https://example.com/tokenUrl";
     private static final String REDIRECT_URL = "https://example.com/callbackUrl";
+    public static final String TEST_ENCRYPTION = "test-secret";
     public static final String ACCESS_TOKEN = "accessToken";
     public static final String USER_ID = "userId";
     public static final String JOURNEY_ID = "journeyId";
@@ -83,11 +85,13 @@ class DcmawAsyncCriServiceTest {
         var criConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI(TOKEN_URL))
+                        .authorizeUrl(new URI(AUTHORIZE_URL))
                         .credentialUrl(new URI(CREDENTIAL_URL))
                         .clientId(CRI_CLIENT_ID)
                         .clientCallbackUrl(URI.create(REDIRECT_URL))
                         .requiresApiKey(false)
                         .requiresAdditionalEvidence(false)
+                        .encryptionKey(TEST_ENCRYPTION)
                         .build();
 
         var criOAuthSessionItem =

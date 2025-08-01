@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -27,7 +26,7 @@ class LocalConfigServiceTest {
 
         var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
-        assertEquals("test-component-id", param);
+        assertEquals("https://identity.local.account.gov.uk", param);
     }
 
     @Test
@@ -48,7 +47,7 @@ class LocalConfigServiceTest {
 
         var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
-        assertEquals("test-component-id", param);
+        assertEquals("https://identity.local.account.gov.uk", param);
         configService.removeFeatureSet();
     }
 
@@ -58,7 +57,7 @@ class LocalConfigServiceTest {
 
         assertThrows(
                 ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL));
+                () -> configService.getParameter("evcs/invalidPath"));
     }
 
     @Test
@@ -75,8 +74,11 @@ class LocalConfigServiceTest {
         var configService = getConfigService();
 
         assertEquals(
-                Map.of("test-issuer", Cri.ADDRESS, "alternate-issuer", Cri.DCMAW),
-                configService.getIssuerCris());
+                Cri.NINO,
+                configService.getIssuerCris().get("https://nino-cri.stubs.account.gov.uk"));
+        assertEquals(
+                Cri.EXPERIAN_KBV,
+                configService.getIssuerCris().get("https://experian-kbv-cri.stubs.account.gov.uk"));
     }
 
     @Test

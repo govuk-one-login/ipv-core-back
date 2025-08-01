@@ -1,0 +1,4 @@
+---
+core:
+  self:
+    invalidAttribute: 123

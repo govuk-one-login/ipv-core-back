@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -136,7 +137,16 @@ class ProcessCriCallbackHandlerTest {
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
                         OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .encryptionKey("")
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
                                 .build());
 
         // Act
@@ -261,7 +271,16 @@ class ProcessCriCallbackHandlerTest {
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
                         OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .encryptionKey("")
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
                                 .build());
         when(mockCriCheckingService.checkVcResponse(
                         any(),
