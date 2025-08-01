@@ -1,60 +1,64 @@
 import org.gradle.api.initialization.resolve.RepositoriesMode
 
 if (file("secrets.gradle").exists()) {
-	apply from: "secrets.gradle"
+    apply from: "secrets.gradle"
 } else {
-	ext.githubUsername = System.getenv("GITHUB_ACTOR")
-	ext.githubToken = System.getenv("GITHUB_TOKEN")
+    ext.githubUsername = System.getenv("GITHUB_ACTOR")
+    ext.githubToken = System.getenv("GITHUB_TOKEN")
 }
 
 rootProject.name = 'di-ipv-core-back'
 include "lambdas",
-		"lambdas:build-client-oauth-response",
-		"lambdas:build-cri-oauth-request",
-		"lambdas:build-proven-user-identity-details",
-		"lambdas:build-user-identity",
-		"lambdas:call-dcmaw-async-cri",
-		"lambdas:check-existing-identity",
-		"lambdas:check-gpg45-score",
-		"lambdas:check-reverification-identity",
-		"lambdas:initialise-ipv-session",
-		"lambdas:issue-client-access-token",
-		"lambdas:process-async-cri-credential",
-		"lambdas:process-candidate-identity",
-		"lambdas:process-cri-callback",
-		"lambdas:process-journey-event",
-		"lambdas:reset-session-identity",
-		"lambdas:user-reverification",
-		"lambdas:process-mobile-app-callback",
-		"lambdas:check-mobile-app-vc-receipt",
-		"lambdas:manual-f2f-pending-reset",
-		"libs:ais-service",
-		"libs:audit-service",
-		"libs:cimit-service",
-		"libs:common-services",
-		"libs:cri-api-service",
-		"libs:cri-checking-service",
-		"libs:cri-response-service",
-		"libs:cri-storing-service",
-		"libs:evcs-service",
-		"libs:gpg45-evaluator",
-		"libs:test-helpers",
-		"libs:user-identity-service",
-		"libs:verifiable-credentials",
-		"libs:oauth-key-service",
-		"libs:ticf-cri-service",
-		"local-running"
+        "lambdas:build-client-oauth-response",
+        "lambdas:build-cri-oauth-request",
+        "lambdas:build-proven-user-identity-details",
+        "lambdas:build-user-identity",
+        "lambdas:call-dcmaw-async-cri",
+        "lambdas:check-existing-identity",
+        "lambdas:check-gpg45-score",
+        "lambdas:check-reverification-identity",
+        "lambdas:initialise-ipv-session",
+        "lambdas:issue-client-access-token",
+        "lambdas:process-async-cri-credential",
+        "lambdas:process-candidate-identity",
+        "lambdas:process-cri-callback",
+        "lambdas:process-journey-event",
+        "lambdas:reset-session-identity",
+        "lambdas:user-reverification",
+        "lambdas:process-mobile-app-callback",
+        "lambdas:check-mobile-app-vc-receipt",
+        "lambdas:manual-f2f-pending-reset",
+        "lambdas:validate-app-config",
+        "libs:ais-service",
+        "libs:audit-service",
+        "libs:cimit-service",
+        "libs:common-services",
+        "libs:cri-api-service",
+        "libs:cri-checking-service",
+        "libs:cri-response-service",
+        "libs:cri-storing-service",
+        "libs:evcs-service",
+        "libs:gpg45-evaluator",
+        "libs:test-helpers",
+        "libs:user-identity-service",
+        "libs:verifiable-credentials",
+        "libs:oauth-key-service",
+        "libs:ticf-cri-service",
+        "local-running"
 
 dependencyResolutionManagement {
-	repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
-	repositories {
-		mavenCentral()
-		maven {
-			url = uri("https://maven.pkg.github.com/govuk-one-login/data-vocab")
-			credentials {
-				username = githubUsername
-				password = githubToken
-			}
-		}
-	}
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/govuk-one-login/data-vocab")
+            credentials {
+                username = githubUsername
+                password = githubToken
+            }
+        }
+    }
 }
+
+include 'lambdas:validate-app-config'
+include 'lambdas:validate-app-config'
