@@ -343,8 +343,6 @@ class AppConfigServiceTest {
         var testRawParametersInvalidCimit =
                 """
             core:
-              self:
-                configFormat: yaml
               cimit:
                 config:
                   notvalid: at-all
