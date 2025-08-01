@@ -24,7 +24,6 @@ public enum ConfigurationVariable {
     CREDENTIAL_ISSUER_ACTIVE_CONNECTION("credentialIssuers/%s/activeConnection"),
     CREDENTIAL_ISSUER_CONNECTION_PREFIX("credentialIssuers/%s/connections"),
     CREDENTIAL_ISSUER_CONFIG("credentialIssuers/%s/connections/%s"),
-    CREDENTIAL_ISSUER_COMPONENT_ID("credentialIssuers/%s/connections/%s/componentId"),
     CREDENTIAL_ISSUER_ENABLED("credentialIssuers/%s/enabled"),
     CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS("credentialIssuers/%s/historicSigningKeys"),
     CREDENTIAL_ISSUER_SHARED_ATTRIBUTES("credentialIssuers/%s/allowedSharedAttributes"),
