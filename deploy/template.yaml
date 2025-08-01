@@ -2994,6 +2994,12 @@ Resources:
                 - 'kms:sign'
               Resource:
                 - !ImportValue SigningKeyArn
+            - Sid: kmsSisSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue StoredIdentitySigningKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
