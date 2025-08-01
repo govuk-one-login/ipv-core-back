@@ -3,9 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -210,7 +208,6 @@ public abstract class ConfigService {
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
         var params = getParametersByPrefix(ConfigurationVariable.CIMIT_CONFIG.getPath());
         var parsedData = new HashMap<String, List<MitigationRoute>>();
-        for (var entry : params.entrySet()) {
         for (var entry : params.entrySet()) {
             try {
                 var list =
