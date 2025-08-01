@@ -1,0 +1,21 @@
+plugins {
+	id 'java'
+	id "idea"
+	id "jacoco"
+	id "java-library"
+	alias libs.plugins.postCompileWeaving
+}
+
+dependencies {
+	implementation libs.bundles.awsLambda,
+			project(":libs:common-services")
+
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
+			libs.mockitoJunit
+	testRuntimeOnly libs.junitPlatform
+}
+
+test {
+	useJUnitPlatform()
+}
