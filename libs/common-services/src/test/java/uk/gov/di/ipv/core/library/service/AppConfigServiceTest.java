@@ -25,8 +25,6 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -59,7 +57,6 @@ class AppConfigServiceTest {
             """
         core:
           self:
-            configFormat: json
             componentId: "test-component-id"
             bearerTokenTtl: 1800
             someStringList: "a,list,of,strings"
@@ -67,29 +64,26 @@ class AppConfigServiceTest {
             address:
               activeConnection: main
               connections:
-                main: '{
-                  "componentId":"main-issuer",
-                  "authorizeUrl":"https://testAuthoriseUrl",
-                  "tokenUrl":"https://testTokenUrl",
-                  "credentialUrl":"https://testCredentialUrl",
-                  "clientId":"ipv-core-test",
-                  "signingKey":"{\\"kty\\":\\"EC\\",\\"kid\\":\\"test-fixtures-ec-key\\",\\"use\\":\\"sig\\",\\"d\\":\\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\\",\\"y\\":\\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\\"}",
-                  "encryptionKey":"{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"use\\":\\"enc\\",\\"kid\\":\\"nfwejnfwefcojwnk\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}",
-                  "clientCallbackUrl":"https://testClientCallBackUrl",
-                  "requiresApiKey":"true",
-                  "requiresAdditionalEvidence":"false",
-                  "jwksUrl":"https://testWellKnownUrl"
-                }' # pragma: allowlist secret
-                stub: '{
-                  "componentId":"stub-issuer"
-                }'
+                main:
+                  componentId: main-issuer
+                  authorizeUrl: https://testAuthoriseUrl
+                  tokenUrl: https://testTokenUrl
+                  credentialUrl: https://testCredentialUrl
+                  clientId: ipv-core-test
+                  signingKey: '{\\"kty\\":\\"EC\\",\\"kid\\":\\"test-fixtures-ec-key\\",\\"use\\":\\"sig\\",\\"d\\":\\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\\",\\"y\\":\\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\\"}' # pragma: allowlist secret
+                  encryptionKey: '{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"use\\":\\"enc\\",\\"kid\\":\\"nfwejnfwefcojwnk\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}' # pragma: allowlist secret
+                  clientCallbackUrl: https://testClientCallBackUrl
+                  requiresApiKey: true
+                  requiresAdditionalEvidence: false
+                  jwksUrl: https://testWellKnownUrl
+                stub:
+                  componentId: stub-issuer
               historicSigningKeys: '{"kty":"EC","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}/{"kty":"EC","crv":"P-256","x":"MjTFSolNjla11Dl8Zk9UpcpnMyWumfjIbO1E-0c8v-E","y":"xTdKNukh5sOvMgNTKjo0hVYNNcAS-N7X1R1S0cjllTo"}' # pragma: allowlist secret
             dcmaw:
               activeConnection: test
               connections:
-                test: '{
-                  "componentId":"dcmaw-issuer"
-                }'
+                test:
+                  componentId: dcmaw-issuer
           featureFlags:
             testFeatureFlag: false
             anotherFeatureFlag: true
@@ -100,30 +94,13 @@ class AppConfigServiceTest {
               self:
                 componentId: "alternate-component-id"
           cimit:
-            config: '{
-              "NEEDS-ALTERNATE-DOC":[
-                {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"}
-              ]
-            }'
+            config:
+              NEEDS-ALTERNATE-DOC:
+                - event: /journey/alternate-doc-invalid-dl
+                  document: drivingPermit
           clients:
             testClient:
               validRedirectUrls: a,list,of,strings
-    """;
-    private static final String TEST_RAW_PARAMETERS_MALFORMED_CRI_CONFIG =
-            """
-        core:
-          self:
-            configFormat: malformed
-            componentId: "test-component-id"
-            bearerTokenTtl: 1800
-            someStringList: "a,list,of,strings"
-          credentialIssuers:
-            dcmawAsync:
-              activeConnection: test
-              connections:
-                test: '{
-                  componentId: dcmaw-async-issuer
-                }'
     """;
     @Mock Cri criMock;
     @Mock AppConfigProvider appConfigProvider;
@@ -366,12 +343,14 @@ class AppConfigServiceTest {
         var testRawParametersInvalidCimit =
                 """
             core:
-              self:
-                configFormat: json
               cimit:
-                config: '{
+                config:
                   notvalid: at-all
-                }'
+              credentialIssuers:
+                address:
+                  connections:
+                    main:
+                      componentId: main-issuer
         """;
         when(appConfigProvider.get(any())).thenReturn(testRawParametersInvalidCimit);
         configService = new AppConfigService(appConfigProvider, secretsProvider);
@@ -446,20 +425,8 @@ class AppConfigServiceTest {
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             // Act & Assert
             assertThrows(
-                    NoConfigForConnectionException.class,
+                    ConfigParameterNotFoundException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
-        }
-
-        @Test
-        void getOauthCriConfigForConnectionShouldThrowIfCriConfigMalformed() {
-            // Arrange
-            when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS_MALFORMED_CRI_CONFIG);
-            when(criMock.getId()).thenReturn("dcmawAsync");
-
-            // Act & Assert
-            assertThrows(
-                    ConfigParseException.class,
-                    () -> configService.getOauthCriConfigForConnection("test", criMock));
         }
 
         @Test

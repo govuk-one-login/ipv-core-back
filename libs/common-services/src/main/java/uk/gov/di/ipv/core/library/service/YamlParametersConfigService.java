@@ -44,15 +44,6 @@ public abstract class YamlParametersConfigService extends ConfigService {
 
     @Override
     public Map<String, String> getParametersByPrefix(String path) {
-        return parameters.entrySet().stream()
-                .filter(e -> e.getKey().startsWith(path))
-                .collect(
-                        Collectors.toMap(
-                                e -> e.getKey().substring(path.length()), Map.Entry::getValue));
-    }
-
-    @Override
-    public Map<String, String> getParametersByPrefixYaml(String path) {
         var lookupParams =
                 parameters.entrySet().stream()
                         .filter(e -> e.getKey().startsWith(path))

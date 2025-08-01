@@ -1,19 +1,18 @@
 ---
 core:
   self:
-    configFormat: json
     componentId: "test-component-id"
   credentialIssuers:
     address:
+      activeConnection: test
       connections:
-        test: '{
-          "componentId":"test-issuer"
-        }'
+        test:
+          componentId: test-issuer
     dcmaw:
+      activeConnection: test
       connections:
-        test: '{
-          "componentId":"alternate-issuer"
-        }'
+        test:
+          componentId: alternate-issuer
   features:
     testFeature:
       self:
