@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -18,10 +19,10 @@ import java.text.ParseException;
 @EqualsAndHashCode(callSuper = true)
 @ExcludeFromGeneratedCoverageReport
 public class OauthCriConfig extends RestCriConfig {
-    private URI tokenUrl;
-    private URI authorizeUrl;
-    private String clientId;
-    private String encryptionKey;
+    @NonNull private URI tokenUrl;
+    @NonNull private URI authorizeUrl;
+    @NonNull private String clientId;
+    @NonNull private String encryptionKey;
     private URI clientCallbackUrl;
     private boolean requiresAdditionalEvidence;
     private URI jwksUrl;

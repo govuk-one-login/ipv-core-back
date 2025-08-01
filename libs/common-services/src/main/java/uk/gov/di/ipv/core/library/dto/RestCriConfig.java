@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 import java.net.URI;
@@ -17,7 +18,7 @@ public class RestCriConfig extends CriConfig {
     private static final long DEFAULT_REQUEST_TIMEOUT = 30;
 
     private Long requestTimeout;
-    private URI credentialUrl;
+    @NonNull private URI credentialUrl;
     private boolean requiresApiKey;
 
     public long getRequestTimeout() {
