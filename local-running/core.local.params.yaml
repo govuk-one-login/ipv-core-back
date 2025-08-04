@@ -3,6 +3,31 @@
 ---
 core:
   self:
+    ciConfig:
+      - ci: "NON-BREACHING"
+        detectedScore: 2
+        checkedScore: -2
+        returnCode: "non-breaching"
+      - ci: "BREACHING"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "breaching"
+      - ci: "BREACHING-P1-ONLY"
+        detectedScore: 7
+        checkedScore: -7
+        returnCode: "breaching-p1-only"
+      - ci: "NEEDS-ENHANCED-VERIFICATION"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-enhanced-verification"
+      - ci: "NEEDS-ALTERNATE-DOC"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-alternate-doc"
+      - ci: "ALWAYS-REQUIRED"
+        detectedScore: 1
+        checkedScore: -1
+        returnCode: "always-required"
     componentId: "https://identity.local.account.gov.uk"
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
