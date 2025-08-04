@@ -190,7 +190,7 @@ public abstract class ConfigService {
 
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
         try {
-            String secretValue = getSecret(ConfigurationVariable.CI_CONFIG);
+            var secretValue = getParameter(ConfigurationVariable.CI_CONFIG);
             List<ContraIndicatorConfig> configList =
                     OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();

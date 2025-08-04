@@ -292,9 +292,21 @@ class AppConfigServiceTest {
     @Test
     void shouldGetContraIndicatorConfigMap() {
         // Arrange
-        when(secretsProvider.get(any()))
-                .thenReturn(
-                        "[{\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"returnCode\":\"1\"},{\"ci\":\"Z03\",\"detectedScore\":5,\"checkedScore\":-3,\"returnCode\":\"1\"}]");
+        var testRawParametersCiConfig =
+                """
+            core:
+              self:
+                  ciConfig:
+                    - ci: "X01"
+                      detectedScore: 3
+                      checkedScore: -3
+                      returnCode: "1"
+                    - ci: "Z03"
+                      detectedScore: 5
+                      checkedScore: -3
+                      returnCode: "1"
+        """;
+        when(appConfigProvider.get(any())).thenReturn(testRawParametersCiConfig);
 
         // Act
         var configMap = configService.getContraIndicatorConfigMap();
@@ -312,9 +324,15 @@ class AppConfigServiceTest {
     @Test
     void shouldReturnEmptyCollectionOnInvalidContraIndicatorConfigsMap() {
         // Arrange
-        when(secretsProvider.get(any()))
-                .thenReturn(
-                        "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"returnCode\":\"1\"}]");
+        var testRawParametersInvalidCiConfig =
+                """
+            core:
+              self:
+                  ciConfig:
+                    - ci: "SomeCi"
+                      invalidKey: "invalidValue"
+        """;
+        when(appConfigProvider.get(any())).thenReturn(testRawParametersInvalidCiConfig);
 
         // Act
         var configMap = configService.getContraIndicatorConfigMap();
