@@ -31,8 +31,6 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
@@ -56,13 +54,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
@@ -116,11 +112,28 @@ class SsmConfigServiceTest {
     @DisplayName("active credential issuer config")
     class ActiveOauthCriConfig {
 
-        private final String oauthCriJsonConfig =
-                String.format(
-                        "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\",\"jwksUrl\":\"https://testWellKnownUrl\"}",
-                        EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
-                        RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
+        private final Map<String, String> criStubConnection =
+                Map.of(
+                        "tokenUrl",
+                        "https://testTokenUrl",
+                        "credentialUrl",
+                        "https://testCredentialUrl",
+                        "authorizeUrl",
+                        "https://testAuthoriseUrl",
+                        "clientId",
+                        "ipv-core-test",
+                        "signingKey",
+                        EC_PRIVATE_KEY_JWK,
+                        "encryptionKey",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "componentId",
+                        "https://testComponentId",
+                        "clientCallbackUrl",
+                        "https://testClientCallBackUrl",
+                        "requiresApiKey",
+                        String.valueOf(true),
+                        "jwksUrl",
+                        "https://testWellKnownUrl");
 
         private final OauthCriConfig expectedOauthCriConfig =
                 OauthCriConfig.builder()
@@ -137,18 +150,15 @@ class SsmConfigServiceTest {
                         .jwksUrl(URI.create("https://testWellKnownUrl"))
                         .build();
 
-        @BeforeEach
-        void setup() {
-            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
-        }
-
         @Test
         void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
             environmentVariables.set("ENVIRONMENT", "test");
+
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenReturn(oauthCriJsonConfig);
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+                    .thenReturn(criStubConnection);
 
             OauthCriConfig result = configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT);
 
@@ -158,8 +168,10 @@ class SsmConfigServiceTest {
         @Test
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenReturn(oauthCriJsonConfig);
+
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+                    .thenReturn(criStubConnection);
 
             OauthCriConfig result =
                     configService.getOauthCriConfig(
@@ -174,8 +186,10 @@ class SsmConfigServiceTest {
         @Test
         void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenReturn(oauthCriJsonConfig);
+
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
+                    .thenReturn(criStubConnection);
 
             var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT);
 
@@ -185,22 +199,9 @@ class SsmConfigServiceTest {
         @Test
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenThrow(ConfigParameterNotFoundException.class);
 
             assertThrows(
-                    NoConfigForConnectionException.class,
-                    () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
-        }
-
-        @Test
-        void getOauthCriConfigForConnectionShouldThrowIfCriConfigMalformed() {
-            environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenReturn("not-json");
-
-            assertThrows(
-                    ConfigParseException.class,
+                    ConfigParameterNotFoundException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
         }
 
@@ -208,14 +209,20 @@ class SsmConfigServiceTest {
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/dcmaw/connections/stub"))
+            when(ssmProvider.getMultiple("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
-                            String.format(
-                                    "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
-                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
+                            Map.of(
+                                    "credentialUrl",
+                                    "https://testCredentialUrl",
+                                    "signingKey",
+                                    EC_PRIVATE_KEY_JWK,
+                                    "componentId",
+                                    "https://testComponentId",
+                                    "requiresApiKey",
+                                    "true"));
 
             RestCriConfig restCriConfig =
-                    configService.getRestCriConfigForConnection("stub", DCMAW);
+                    configService.getRestCriConfigForConnection("stub", ADDRESS);
 
             var expectedRestCriConfig =
                     RestCriConfig.builder()
@@ -231,14 +238,16 @@ class SsmConfigServiceTest {
         @Test
         void getCriConfigShouldReturnACriConfig() {
             environmentVariables.set("ENVIRONMENT", "test");
-
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(
-                            String.format(
-                                    "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
-                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
+                            Map.of(
+                                    "signingKey",
+                                    EC_PRIVATE_KEY_JWK,
+                                    "componentId",
+                                    "https://testComponentId"));
 
             CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT);
 
@@ -581,11 +590,11 @@ class SsmConfigServiceTest {
 
     @ParameterizedTest
     @MethodSource("provideConfiguredSsmCimitConfig")
-    void shouldFetchCimitConfig(String cimitSsmConfig, String expectedDocument)
+    void shouldFetchCimitConfig(Map<String, String> cimitData, String expectedDocument)
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
-        when(ssmProvider.get("/test/core/cimit/config")).thenReturn(cimitSsmConfig);
+
+        when(ssmProvider.getMultiple("/test/core/cimit/config")).thenReturn(cimitData);
         Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
                         "X01",
@@ -601,17 +610,21 @@ class SsmConfigServiceTest {
 
     private static Stream<Arguments> provideConfiguredSsmCimitConfig() {
         return Stream.of(
-                Arguments.of("{\"X01\": [{\"event\": \"/journey/do-a-thing\"}]}", null),
+                Arguments.of(Map.of("X01", "[{\"event\": \"/journey/do-a-thing\"}]"), null),
                 Arguments.of(
-                        "{\"X01\": [{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]}",
+                        Map.of(
+                                "X01",
+                                "[{\"event\": \"/journey/do-a-thing\", \"document\": \"drivingPermit\"}]"),
                         "drivingPermit"));
     }
 
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
-        when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
+
+        when(ssmProvider.getMultiple("/test/core/cimit/config"))
+                .thenReturn(Map.of("/test/core/cimit/config/restOfPath", "}"));
+
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
     }
 
@@ -641,33 +654,78 @@ class SsmConfigServiceTest {
         @BeforeEach
         void setup() {
             environmentVariables.set("ENVIRONMENT", "test");
-            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("json");
 
-            when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
+            when(ssmProvider.get("/test/core/self/configFormat")).thenReturn("yaml");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
+                    .thenThrow(ParameterNotFoundException.class);
+
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.getMultiple("/test/core/credentialIssuers/bav/connections"))
                     .thenReturn(
                             Map.of(
-                                    "ticf/connections/stub",
-                                    "{\"componentId\":\"https://stub-ticf-component-id\"}",
-                                    "ticf/connections/main",
-                                    "{\"componentId\":\"https://main-ticf-component-id\"}",
-                                    "dcmaw/connections/stub",
-                                    "{\"componentId\":\"https://stub-dcmaw-component-id\"}",
-                                    "dcmaw/connections/main",
-                                    "{\"componentId\":\"https://main-dcmaw-component-id\"}"));
+                                    "stub/componentId", "https://stub-bav-component-id",
+                                    "test/componentId", "https://test-bav-component-id",
+                                    "random/key", "randomValue"));
+
+            when(ssmProvider.getMultiple("/test/core/credentialIssuers/dcmaw/connections"))
+                    .thenReturn(
+                            Map.of(
+                                    "stub/componentId", "https://stub-dcmaw-component-id",
+                                    "random/key", "randomValue"));
+
+            when(ssmProvider.get("/test/core/credentialIssuers/cimit/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/claimedIdentity/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/dcmawAsync/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/drivingLicence/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/dwpKbv/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/fraud/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/experianKbv/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/f2f/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/hmrcMigration/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/nino/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
+
+            when(ssmProvider.get("/test/core/credentialIssuers/ticf/connections"))
+                    .thenThrow(ConfigParameterNotFoundException.class);
         }
 
         @Test
         void shouldReturnCriForValidIssuers() {
             assertEquals(
                     Map.of(
-                            "https://main-ticf-component-id",
-                            Cri.TICF,
-                            "https://stub-ticf-component-id",
-                            Cri.TICF,
-                            "https://main-dcmaw-component-id",
-                            DCMAW,
                             "https://stub-dcmaw-component-id",
-                            DCMAW),
+                            Cri.DCMAW,
+                            "https://test-bav-component-id",
+                            Cri.BAV,
+                            "https://stub-bav-component-id",
+                            Cri.BAV),
                     configService.getIssuerCris());
         }
     }
