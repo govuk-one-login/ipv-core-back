@@ -46,6 +46,7 @@ public enum ConfigurationVariable {
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),
     SIGNING_KEY_JWK("self/signingKey"),
+    SIS_SIGNING_KEY_ID("self/sisSigningKeyId"),
     STORED_IDENTITY_SERVICE_COMPONENT_ID("storedIdentityService/componentId"),
     DCMAW_ASYNC_VC_PENDING_RETURN_TTL("self/dcmawAsyncVcPendingReturnTtl");
 
