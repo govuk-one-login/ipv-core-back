@@ -36,6 +36,7 @@ public class StateMachine {
             String startState,
             String event,
             String currentPage,
+            String currentCri,
             EventResolveParameters eventResolveParameters,
             EventResolver eventResolver)
             throws UnknownEventException, UnknownStateException, JourneyEngineException {
@@ -56,6 +57,14 @@ public class StateMachine {
                                 "Unexpected page event (%s) from page (%s) received in process state (%s)",
                                 event, currentPage, startState));
             }
+        }
+
+        // Check CRI event is allowed
+        if (currentCri != null
+                && state instanceof BasicState basicState
+                && basicState.getResponse() instanceof CriStepResponse criStepResponse
+                && !criStepResponse.getCriId().equals(currentCri)) {
+            return new TransitionResult(state);
         }
 
         var result = state.transition(event, startState, eventResolveParameters, eventResolver);

@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
@@ -50,7 +51,12 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -69,6 +75,7 @@ class StateMachineTest {
                         stateMachine.transition(
                                 "UNKNOWN_STATE",
                                 "event",
+                                null,
                                 null,
                                 EVENT_RESOLVE_PARAMETERS,
                                 eventResolver));
@@ -95,7 +102,12 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -129,7 +141,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -170,7 +187,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -216,7 +238,12 @@ class StateMachineTest {
         // Act
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE",
+                        "event",
+                        null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         // Assert
         var expectedResult =
@@ -258,7 +285,7 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE", event, null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+                        "START_STATE", event, null, null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -286,6 +313,33 @@ class StateMachineTest {
                         "START_STATE/NESTED_JOURNEY",
                         "event",
                         null,
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
+
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldHandleIfCriStateDoesNotMatchExpectedCri() throws Exception {
+        var startingState = mock(BasicState.class);
+        var criStepResponse = new CriStepResponse();
+        criStepResponse.setCriId("notTheRightIssuer");
+        when(startingState.getResponse()).thenReturn(criStepResponse);
+        var expectedResult = new TransitionResult(startingState);
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE",
+                        "event",
+                        null,
+                        "exampleIssuer",
                         EVENT_RESOLVE_PARAMETERS,
                         eventResolver);
 

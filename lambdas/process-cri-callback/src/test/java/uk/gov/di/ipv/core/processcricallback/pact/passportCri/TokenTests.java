@@ -55,6 +55,9 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @PactTestFor(providerName = "PassportTokenProvider")
 @MockServerConfig(hostInterface = "localhost")
 class TokenTests {
+    private static final String MOCK_LOCK = "2025-07-28T10:14:07.494907165Z";
+    private static final String MOCK_PROCESS_RESULT = "/journey/next";
+
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private CoreSigner mockSigner;
@@ -246,6 +249,8 @@ class TokenTests {
                     "dummyOAuthSessionId",
                     PASSPORT.getId(),
                     "dummyConnection",
+                    MOCK_LOCK,
+                    MOCK_PROCESS_RESULT,
                     900);
 
     private static final String CLIENT_ASSERTION_SIGNING_KID = "testKid";
