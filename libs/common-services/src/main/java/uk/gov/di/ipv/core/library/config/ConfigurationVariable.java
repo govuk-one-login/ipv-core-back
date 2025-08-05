@@ -11,7 +11,7 @@ public enum ConfigurationVariable {
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_API_BASE_URL("cimit/apiBaseUrl"),
     CIMIT_API_KEY("cimitApi/apiKey"),
-    CI_CONFIG("self/ciConfig"),
+    CI_SCORING_CONFIG("self/ciScoringConfig"),
     CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_JWKS_URL("clients/%s/jwksUrl"),

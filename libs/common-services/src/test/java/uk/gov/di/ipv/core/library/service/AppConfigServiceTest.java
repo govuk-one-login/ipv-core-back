@@ -296,7 +296,7 @@ class AppConfigServiceTest {
                 """
             core:
               self:
-                  ciConfig:
+                  ciScoringConfig:
                     - ci: "X01"
                       detectedScore: 3
                       checkedScore: -3
@@ -328,7 +328,7 @@ class AppConfigServiceTest {
                 """
             core:
               self:
-                  ciConfig:
+                  ciScoringConfig:
                     - ci: "SomeCi"
                       invalidKey: "invalidValue"
         """;
