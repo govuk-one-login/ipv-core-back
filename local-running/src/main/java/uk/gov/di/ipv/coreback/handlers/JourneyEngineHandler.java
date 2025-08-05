@@ -148,10 +148,7 @@ public class JourneyEngineHandler {
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
-                .journey(
-                        !journeyEvent.startsWith("/journey/")
-                                ? "/journey/" + journeyWithQuery
-                                : journeyWithQuery)
+                .journey(journeyWithQuery)
                 .build();
     }
 
