@@ -19,6 +19,31 @@ core:
     oauthKeyCacheDurationMins: 5
     # Test CI scoring values
     ciScoringThreshold: 10
+    ciScoringConfig:
+      - ci: "NON-BREACHING"
+        detectedScore: 2
+        checkedScore: -2
+        returnCode: "non-breaching"
+      - ci: "BREACHING"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "breaching"
+      - ci: "BREACHING-P1-ONLY"
+        detectedScore: 7
+        checkedScore: -7
+        returnCode: "breaching-p1-only"
+      - ci: "NEEDS-ENHANCED-VERIFICATION"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-enhanced-verification"
+      - ci: "NEEDS-ALTERNATE-DOC"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-alternate-doc"
+      - ci: "ALWAYS-REQUIRED"
+        detectedScore: 1
+        checkedScore: -1
+        returnCode: "always-required"
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
