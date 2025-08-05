@@ -72,7 +72,7 @@ public class AisClient {
             var response = sendHttpRequest(httpRequestBuilder.build());
             return OBJECT_MAPPER.readValue(response.body(), AccountInterventionStatusDto.class);
         } catch (JsonProcessingException e) {
-            throw new AisClientException("Failed parse AIS response body", e);
+            throw new AisClientException("Failed to parse AIS response body", e);
         }
     }
 
