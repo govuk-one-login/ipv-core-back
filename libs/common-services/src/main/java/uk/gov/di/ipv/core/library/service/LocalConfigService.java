@@ -38,7 +38,7 @@ public class LocalConfigService extends ConfigService {
     private Map<String, String> parseParameters(File yamlFile) {
         try {
             String yamlContent = Files.readString(yamlFile.toPath());
-            return parseParameters(yamlContent);
+            return updateParameters(yamlContent);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }
