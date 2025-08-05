@@ -34,7 +34,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVI
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
 
-public class AppConfigService extends YamlParametersConfigService {
+public class AppConfigService extends ConfigService {
     private static final Logger LOGGER = LogManager.getLogger(AppConfigService.class);
     private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
     private static final String CORE_BASE_PATH = "/%s/core/";
@@ -93,7 +93,7 @@ public class AppConfigService extends YamlParametersConfigService {
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            setParameters(parseParameters(paramsRaw));
+            setParameters(updateParameters(paramsRaw));
             paramsRawHash = retrievedParamsHash;
         }
     }

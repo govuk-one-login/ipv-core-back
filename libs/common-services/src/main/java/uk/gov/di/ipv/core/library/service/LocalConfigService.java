@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class YamlConfigService extends YamlParametersConfigService {
+public class LocalConfigService extends ConfigService {
     private static final File PARAMETERS_FILE = new File("./core.local.params.yaml");
     private static final File SECRETS_FILE = new File("./core.local.secrets.yaml");
     private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
@@ -26,11 +26,11 @@ public class YamlConfigService extends YamlParametersConfigService {
 
     private Map<String, String> secrets = new HashMap<>();
 
-    public YamlConfigService() {
+    public LocalConfigService() {
         this(PARAMETERS_FILE, SECRETS_FILE);
     }
 
-    public YamlConfigService(File parametersFile, File secretsFile) {
+    public LocalConfigService(File parametersFile, File secretsFile) {
         setParameters(parseParameters(parametersFile));
         secrets = parseParameters(secretsFile);
     }
@@ -38,7 +38,7 @@ public class YamlConfigService extends YamlParametersConfigService {
     private Map<String, String> parseParameters(File yamlFile) {
         try {
             String yamlContent = Files.readString(yamlFile.toPath());
-            return parseParameters(yamlContent);
+            return updateParameters(yamlContent);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }

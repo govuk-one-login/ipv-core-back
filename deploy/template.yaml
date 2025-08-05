@@ -15,7 +15,6 @@ Globals:
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
-        CONFIG_SOURCE: "app-config"
         APP_CONFIG_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
