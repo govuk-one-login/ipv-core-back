@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.coreback.handlers;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.javalin.http.Context;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
@@ -133,14 +134,21 @@ public class JourneyEngineHandler {
         };
     }
 
-    private JourneyRequest buildJourneyRequest(Context ctx, String journey) {
+    private JourneyRequest buildJourneyRequest(Context ctx, String journeyEvent) {
+        var currentPage =
+                StringUtils.isBlank(ctx.queryParam("currentPage"))
+                        ? ""
+                        : String.format("?currentPage=%s", ctx.queryParam("currentPage"));
+
+        var journeyWithQuery = journeyEvent + currentPage;
+
         return JourneyRequest.builder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
                 .ipAddress(ctx.header(IP_ADDRESS))
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
-                .journey(journey)
+                .journey(journeyWithQuery)
                 .build();
     }
 
