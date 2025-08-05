@@ -3,7 +3,23 @@
 ---
 core:
   self:
-    ciConfig:
+    componentId: "https://identity.local.account.gov.uk"
+    audienceForClients: "https://identity.local.account.gov.uk"
+    jwtTtlSeconds: 3600
+    maxAllowedAuthClientTtl: 3600
+    fraudCheckExpiryPeriodHours: 720
+    dcmawAsyncVcPendingReturnTtl: 1800
+    coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
+    backendSessionTimeout: 3600
+    backendSessionTtl: 3600
+    bearerTokenTtl: 3600
+    criResponseTtl: 3600
+    sessionCredentialTtl: 3600
+    authCodeExpirySeconds: 3600
+    oauthKeyCacheDurationMins: 5
+    # Test CI scoring values
+    ciScoringThreshold: 10
+    ciScoringConfig:
       - ci: "NON-BREACHING"
         detectedScore: 2
         checkedScore: -2
@@ -28,22 +44,6 @@ core:
         detectedScore: 1
         checkedScore: -1
         returnCode: "always-required"
-    componentId: "https://identity.local.account.gov.uk"
-    audienceForClients: "https://identity.local.account.gov.uk"
-    jwtTtlSeconds: 3600
-    maxAllowedAuthClientTtl: 3600
-    fraudCheckExpiryPeriodHours: 720
-    dcmawAsyncVcPendingReturnTtl: 1800
-    coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
-    backendSessionTimeout: 3600
-    backendSessionTtl: 3600
-    bearerTokenTtl: 3600
-    criResponseTtl: 3600
-    sessionCredentialTtl: 3600
-    authCodeExpirySeconds: 3600
-    oauthKeyCacheDurationMins: 5
-    # Test CI scoring values
-    ciScoringThreshold: 10
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
