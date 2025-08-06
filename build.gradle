@@ -50,7 +50,7 @@ allprojects {
 	plugins.withType(JavaPlugin).whenPluginAdded {
 		dependencies {
 			constraints {
-				implementation("com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2:2.18.2") {
+				implementation("com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2:2.19.0") {
 					because "older versions are incompatible with Jackson > 2.15"
 				}
 			}
