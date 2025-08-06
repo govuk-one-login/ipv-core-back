@@ -35,7 +35,7 @@ log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.26"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.27"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.18.1-alpha"
 openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
