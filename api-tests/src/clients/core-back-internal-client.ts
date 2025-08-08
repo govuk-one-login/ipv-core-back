@@ -47,8 +47,14 @@ export const sendJourneyEvent = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
   clientOAuthSessionId?: string,
+  currentPage?: string,
 ): Promise<JourneyEngineResponse> => {
-  const url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
+  let url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
+
+  if (currentPage) {
+    url += `?currentPage=${currentPage}`;
+  }
+
   const response = await fetch(url, {
     method: POST,
     headers: {
@@ -98,6 +104,7 @@ export const callbackFromStrategicApp = async (
     ipvSessionId,
     featureSet,
     body?.clientOAuthSessionId,
+    "pyi-triage-mobile-download-app",
   );
 };
 
