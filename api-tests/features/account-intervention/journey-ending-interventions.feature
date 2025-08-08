@@ -17,7 +17,38 @@ Feature: Journey ending interventions
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
     When The AIS stub will return an '<second_ais_response>' result
-    And TICF CRI will respond with default parameters and
+    And I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
+    Then I get an OAuth response with error code 'session_invalidated'
+    And I don't have a stored identity in EVCS
+
+    Examples:
+      | intervention                        | when  | first_ais_response             | second_ais_response                                |
+      | Blocked                             | start | AIS_ACCOUNT_BLOCKED            | AIS_NO_INTERVENTION                                |
+      | Suspended                           | start | AIS_ACCOUNT_SUSPENDED          | AIS_NO_INTERVENTION                                |
+      | Password reset                      | start | AIS_FORCED_USER_PASSWORD_RESET | AIS_NO_INTERVENTION                                |
+      | Blocked                             | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_BLOCKED                                |
+      | Suspended                           | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_SUSPENDED                              |
+      | Password reset                      | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET                     |
+      | Reprove identity                    | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_IDENTITY_VERIFY                    |
+      | Password reset and reprove identity | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
+
+  Scenario Outline: TICF <intervention> result during identity proving journey
+    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When TICF CRI will respond with default parameters and
       | interventionCode | <ticf_intervention_code> |
     And I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
@@ -26,20 +57,12 @@ Feature: Journey ending interventions
     And I don't have a stored identity in EVCS
 
     Examples:
-      | intervention                        | when  | first_ais_response             | second_ais_response                                | ticf_intervention_code |
-      | Blocked                             | start | AIS_ACCOUNT_BLOCKED            | AIS_NO_INTERVENTION                                | 00                     |
-      | Suspended                           | start | AIS_ACCOUNT_SUSPENDED          | AIS_NO_INTERVENTION                                | 00                     |
-      | Password reset                      | start | AIS_FORCED_USER_PASSWORD_RESET | AIS_NO_INTERVENTION                                | 00                     |
-      | Blocked                             | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_BLOCKED                                | 00                     |
-      | Suspended                           | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_SUSPENDED                              | 00                     |
-      | Password reset                      | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET                     | 00                     |
-      | Reprove identity                    | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_IDENTITY_VERIFY                    | 00                     |
-      | Password reset and reprove identity | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY | 00                     |
-      | Blocked                             | end   | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION                                | 03                     |
-      | Suspended                           | end   | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION                                | 01                     |
-      | Password reset                      | end   | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION                                | 04                     |
-      | Reprove identity                    | end   | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION                                | 05                     |
-      | Password reset and reprove identity | end   | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION                                | 06                     |
+      | intervention                        | ticf_intervention_code |
+      | Blocked                             | 03                     |
+      | Suspended                           | 01                     |
+      | Password reset                      | 04                     |
+      | Reprove identity                    | 05                     |
+      | Password reset and reprove identity | 06                     |
 
   Scenario Outline: <intervention> intervention at <when> of reprove identity journey
     Given I activate the 'accountInterventions,disableStrategicApp' feature set

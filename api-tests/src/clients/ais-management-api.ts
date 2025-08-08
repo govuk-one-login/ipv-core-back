@@ -1,13 +1,39 @@
 import config from "../config/config.js";
 
+interface AisManagementRequestBody {
+  intervention: string;
+  statusCode?: number;
+}
+
 export const primeResponseForUser = async (
   userId: string,
   desiredResponse: AisValidResponseTypes,
 ) => {
-  const url = `${config.ais.managementAisUrl}/management/user/${userId}`;
-  const requestBody = {
+  const requestBody: AisManagementRequestBody = {
     intervention: AisValidResponseTypes[desiredResponse],
   };
+
+  await sendManagementRequest(userId, requestBody);
+};
+
+export const primeErrorResponseForUser = async (
+  userId: string,
+  statusCode: number,
+) => {
+  const requestBody: AisManagementRequestBody = {
+    intervention:
+      AisValidResponseTypes[AisValidResponseTypes.AIS_NO_INTERVENTION],
+    statusCode: statusCode,
+  };
+
+  await sendManagementRequest(userId, requestBody);
+};
+
+async function sendManagementRequest(
+  userId: string,
+  requestBody: AisManagementRequestBody,
+) {
+  const url = `${config.ais.managementAisUrl}/management/user/${userId}`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -22,7 +48,7 @@ export const primeResponseForUser = async (
       `AIS Management API request failed: ${response.statusText}`,
     );
   }
-};
+}
 
 export enum AisValidResponseTypes {
   AIS_NO_INTERVENTION,
