@@ -68,3 +68,4 @@ api-tests/.env*
 !api-tests/.env.build
 
 journey-map/public/application.js*
+journey-map/.env

@@ -9,6 +9,7 @@ This is a small JavaScript-based tool to display the journey map in an interacti
 ## Running the map
 
 - Run `npm install` to install dependencies.
+- Copy `.env.template` into a new `.env` file and fill in the placeholder values. These can be found in AWS console or in ipv-stubs-common-infra
 - Run `npm run dev` to start the application in watch mode
 - Open [http://localhost:3000] in a web browser
 
