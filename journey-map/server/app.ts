@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { authorise } from "./auth-middleware";
+import { authorise } from "./auth-middleware.js";
 
 const port = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV === "development";
