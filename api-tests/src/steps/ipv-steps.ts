@@ -17,11 +17,12 @@ import {
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
 import {
-    isClientResponse,
-    isCriResponse,
-    isJourneyResponse,
-    isPageResponse,
-    JourneyEngineResponse, PageResponse,
+  isClientResponse,
+  isCriResponse,
+  isJourneyResponse,
+  isPageResponse,
+  JourneyEngineResponse,
+  PageResponse,
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
 import {
@@ -283,7 +284,7 @@ When(
       this.featureSet,
       this.clientOAuthSessionId,
       // Assumes currently on a page state
-      (this.lastJourneyEngineResponse as PageResponse).page
+      (this.lastJourneyEngineResponse as PageResponse).page,
     );
   },
 );
