@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -59,6 +60,8 @@ public abstract class ConfigService {
     protected abstract String getParameter(String path);
 
     protected abstract Map<String, String> getParametersByPrefix(String path);
+
+    protected abstract Map<String, String> getParametersByPrefixYaml(String path);
 
     protected abstract String getSecret(String path);
 
@@ -134,7 +137,12 @@ public abstract class ConfigService {
         return getCriConfigForType(getActiveConnection(cri), cri, CriConfig.class);
     }
 
-    private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
+    private <T extends CriConfig> T getCriConfigForType(
+            String connection, Cri cri, Class<T> configType) {
+        if (isConfigInYaml()) {
+            return getCriConfigForTypeInYaml(cri, connection, configType);
+        }
+
         String criId = cri.getId();
         try {
             String parameter =
@@ -151,6 +159,30 @@ public abstract class ConfigService {
                             "Failed to parse credential issuer configuration '%s' because: '%s'",
                             criId, e));
         }
+    }
+
+    private <T extends CriConfig> T getCriConfigForTypeInYaml(
+            Cri cri, String connection, Class<T> configType) {
+        var path =
+                formatPath(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
+                        cri.getId(),
+                        connection);
+        return getParametersByPrefixYaml(path).entrySet().stream()
+                .collect(
+                        Collectors.collectingAndThen(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry ->
+                                                unescapeSigEncKey(
+                                                        entry.getKey(), entry.getValue())),
+                                parameters -> OBJECT_MAPPER.convertValue(parameters, configType)));
+    }
+
+    private String unescapeSigEncKey(String key, String value) {
+        return (key.equals("signingKey") || key.equals("encryptionKey"))
+                ? value.replace("\\", "")
+                : value;
     }
 
     public String getActiveConnection(Cri cri) {
@@ -174,6 +206,10 @@ public abstract class ConfigService {
     }
 
     public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
+        if (isConfigInYaml()) {
+            return getCimitConfigInYaml();
+        }
+
         final String cimitConfig = getParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
             return OBJECT_MAPPER.readValue(
@@ -181,6 +217,22 @@ public abstract class ConfigService {
         } catch (JsonProcessingException e) {
             throw new ConfigException("Failed to parse CIMit configuration");
         }
+    }
+
+    private Map<String, List<MitigationRoute>> getCimitConfigInYaml() throws ConfigException {
+        var parameters = getParametersByPrefixYaml(ConfigurationVariable.CIMIT_CONFIG.getPath());
+        var parsedData = new HashMap<String, List<MitigationRoute>>();
+        for (var entry : parameters.entrySet()) {
+            try {
+                var list =
+                        OBJECT_MAPPER.readValue(
+                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
+                parsedData.put(entry.getKey(), list);
+            } catch (JsonProcessingException e) {
+                throw new ConfigException("Failed to parse route for cimit: " + e);
+            }
+        }
+        return parsedData;
     }
 
     public boolean enabled(FeatureFlag featureFlag) {
@@ -199,6 +251,10 @@ public abstract class ConfigService {
     }
 
     public Map<String, Cri> getIssuerCris() {
+        if (isConfigInYaml()) {
+            return getIssuerCrisYaml();
+        }
+
         var allCriParameters = getParametersByPrefix("credentialIssuers");
         var issuerToCriMap = new HashMap<String, Cri>();
 
@@ -223,13 +279,49 @@ public abstract class ConfigService {
         return issuerToCriMap;
     }
 
+    private Map<String, Cri> getIssuerCrisYaml() {
+        var issuerToCri = new HashMap<String, Cri>();
+        for (var cri : Cri.values()) {
+            if (cri.getId().equals(Cri.CIMIT.getId())) {
+                continue;
+            }
+
+            var connectionsPath =
+                    String.format(
+                            ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
+                            cri.getId());
+
+            try {
+                var connections =
+                        getParametersByPrefixYaml(connectionsPath).entrySet().stream()
+                                .filter(entry -> entry.getKey().endsWith("/componentId"))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                connections.values().forEach(value -> issuerToCri.put(value, cri));
+            } catch (ConfigParameterNotFoundException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                String.format("Issuer for CRI: %s not configured", cri.getId())));
+            }
+        }
+        return issuerToCri;
+    }
+
     private Cri findCriFromPath(String parameterPath) {
         Pattern pattern = Pattern.compile("([^/]+)/connections");
         Matcher matcher = pattern.matcher(parameterPath);
 
         if (matcher.find()) {
-            return Cri.fromId(matcher.group(1));
+            try {
+                return Cri.fromId(matcher.group(1));
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         }
         return null;
+    }
+
+    private boolean isConfigInYaml() {
+        var path = "self/configFormat";
+        return getParameter(path).equals("yaml");
     }
 }

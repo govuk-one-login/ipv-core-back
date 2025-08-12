@@ -26,7 +26,7 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P1' vot
+    And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P3
     When I submit an 'appTriage' event
@@ -45,7 +45,7 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P3' vot
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P2
     When I submit an 'appTriage' event
@@ -66,7 +66,7 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
   Scenario: Successful stored identity storage - P1 web journey
     When I submit an 'appTriage' event
@@ -84,7 +84,7 @@ Feature: Stored Identity - P1 journeys
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -93,7 +93,7 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P1' vot
+    And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 no photo ID
     When I submit an 'end' event
@@ -115,7 +115,7 @@ Feature: Stored Identity - P1 journeys
       | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -124,13 +124,13 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P1' vot
+    And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 F2F journey
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
     When I submit an 'end' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details to the CRI stub
@@ -153,4 +153,4 @@ Feature: Stored Identity - P1 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And I have a 'GPG45' stored identity record type with a 'P2' vot
+    And I have a GPG45 stored identity record type with a 'P2' vot

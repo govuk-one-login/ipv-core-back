@@ -1,7 +1,7 @@
 name: New P1 Identity
 description: >-
-  The routes a user can take to prove their identity to a low
-  confidence level (P1).
+  The routes a user can take to prove their identity to at least
+  a low confidence level (P1).
 
 states:
   # Entry points
@@ -178,7 +178,6 @@ states:
   F2F_START_PAGE:
     response:
       type: page
-      context: lastChoice
       pageId: page-ipv-identity-postoffice-start
     events:
       next:

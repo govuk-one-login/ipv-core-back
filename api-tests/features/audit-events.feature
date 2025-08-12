@@ -146,7 +146,8 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I start a new 'medium-confidence' journey with reprove identity
+    And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+    And I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'live-in-uk' page response
@@ -257,21 +258,6 @@ Feature: Audit Events
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And audit events for 'update-name-and-address-journey' are recorded [local only]
-
-  Scenario: Inherited identity journey
-    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'PCL200' identity
-    And audit events for 'inherited-identity-journey' are recorded [local only]
-
-  Scenario: Inherited identity journey - identity stored
-    Given I activate the 'storedIdentityService' feature set
-    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'PCL200' identity
-    And audit events for 'inherited-identity-journey-identity-stored' are recorded [local only]
 
   Scenario: International address journey
     And I start a new 'medium-confidence' journey

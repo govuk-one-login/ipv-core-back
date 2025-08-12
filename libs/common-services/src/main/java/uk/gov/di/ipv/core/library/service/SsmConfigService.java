@@ -142,6 +142,15 @@ public class SsmConfigService extends ConfigService {
         return ssmProvider.getMultiple(resolvePath(path));
     }
 
+    @Override
+    protected Map<String, String> getParametersByPrefixYaml(String path) {
+        var parameters = ssmProvider.getMultiple(resolvePath(path));
+        if (parameters.isEmpty()) {
+            throw new ConfigParameterNotFoundException("SSM parameter not found for path: " + path);
+        }
+        return parameters;
+    }
+
     private String resolvePath(String path) {
         return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT)) + path;
     }

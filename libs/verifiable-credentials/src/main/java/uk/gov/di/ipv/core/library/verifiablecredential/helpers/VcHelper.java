@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -55,8 +54,7 @@ public class VcHelper {
     }
 
     public static boolean isSuccessfulVc(VerifiableCredential vc) {
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential
-                && vc.getCri() != Cri.HMRC_MIGRATION) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var evidence = identityCheckCredential.getEvidence();
             if (isNullOrEmpty(evidence)) {
                 LOGGER.warn(
@@ -71,15 +69,6 @@ public class VcHelper {
                             check -> Gpg45IdentityCheckValidator.isSuccessful(check, vc.getCri()));
         }
         return true;
-    }
-
-    public static List<VerifiableCredential> filterVCBasedOnProfileType(
-            List<VerifiableCredential> vcs, ProfileType profileType) {
-        if (profileType.equals(ProfileType.GPG45)) {
-            return vcs.stream().filter(vc -> !vc.getCri().isOperationalCri()).toList();
-        } else {
-            return vcs.stream().filter(vc -> vc.getCri().isOperationalCri()).toList();
-        }
     }
 
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
@@ -155,12 +144,6 @@ public class VcHelper {
             }
         }
         return null; // NOSONAR
-    }
-
-    public static boolean isOperationalProfileVc(VerifiableCredential vc) throws ParseException {
-        var vot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-        return vot != null
-                && Vot.valueOf(vot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC);
     }
 
     private static Integer getAge(String dobValue) {

@@ -19,7 +19,11 @@ public abstract class YamlParametersConfigService extends ConfigService {
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    public final Map<String, String> parameters = new HashMap<>();
+    private Map<String, String> parameters = new HashMap<>();
+
+    protected void setParameters(Map<String, String> newParameters) {
+        parameters = newParameters;
+    }
 
     @Override
     public String getParameter(String path) {
@@ -47,10 +51,28 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
     }
 
-    protected void updateParameters(Map<String, String> map, String yaml) {
+    @Override
+    public Map<String, String> getParametersByPrefixYaml(String path) {
+        var lookupParams =
+                parameters.entrySet().stream()
+                        .filter(e -> e.getKey().startsWith(path))
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().substring(path.length() + 1),
+                                        Map.Entry::getValue));
+
+        if (lookupParams.isEmpty()) {
+            throw new ConfigParameterNotFoundException(path);
+        }
+        return lookupParams;
+    }
+
+    protected Map<String, String> parseParameters(String yaml) {
+        var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             addJsonConfig(map, yamlParsed, "");
+            return map;
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
@@ -59,6 +81,8 @@ public abstract class YamlParametersConfigService extends ConfigService {
     private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
+            // Required to add CIMIT config which is declared as array in config file
+            case ARRAY -> map.put(prefix.substring(1), tree.toString());
             case OBJECT ->
                     tree.properties()
                             .forEach(
@@ -67,7 +91,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                                     map,
                                                     entry.getValue(),
                                                     prefix + PATH_SEPARATOR + entry.getKey()));
-            case ARRAY, BINARY, MISSING, NULL, POJO ->
+            case BINARY, MISSING, NULL, POJO ->
                     throw new IllegalArgumentException(
                             String.format(
                                     "Invalid config of type %s at %s", tree.getNodeType(), prefix));
