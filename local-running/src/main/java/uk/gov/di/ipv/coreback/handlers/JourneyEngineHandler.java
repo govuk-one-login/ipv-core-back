@@ -67,10 +67,6 @@ public class JourneyEngineHandler {
 
     public void journeyEngine(Context ctx) {
         String journeyEvent = ctx.pathParam("event");
-        String currentPage = ctx.queryParam("currentPage");
-        if (currentPage != null) {
-            journeyEvent += "?currentPage=" + currentPage;
-        }
 
         while (true) {
             var processJourneyEventOutput = processJourneyEvent(ctx, journeyEvent);
