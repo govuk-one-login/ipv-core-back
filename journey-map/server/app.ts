@@ -1,15 +1,14 @@
 import express from "express";
-import dotenv from "dotenv";
 import { authorise } from "./auth-middleware.js";
 
 const port = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV === "development";
 
-dotenv.config();
-
 const app = express();
 
-app.use(authorise);
+if (!isDevelopment) {
+  app.use(authorise);
+}
 
 app.use(express.static("public"));
 app.use(express.static("journey-maps"));
