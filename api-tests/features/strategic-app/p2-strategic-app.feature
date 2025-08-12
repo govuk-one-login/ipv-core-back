@@ -38,7 +38,6 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    @MikeC
     Scenario: Happy path MAM journey declared iphone
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
