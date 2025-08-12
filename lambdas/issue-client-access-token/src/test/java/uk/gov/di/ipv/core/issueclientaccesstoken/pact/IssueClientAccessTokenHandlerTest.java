@@ -141,7 +141,7 @@ class IssueClientAccessTokenHandlerTest {
             "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}") // pragma: allowlist secret
     public void setOrchSigningKey() throws Exception {
         var signingKey =
-                "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
+                "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"f17da8669a951afc3fb499e901186d77e99af23b5d1962d3ce85e9d6c82d3a69\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
         when(mockOauthKeyService.getClientSigningKey(eq(TEST_CLIENT_ID), any()))
                 .thenReturn(ECKey.parse(signingKey));
@@ -151,7 +151,7 @@ class IssueClientAccessTokenHandlerTest {
             "the JWT is signed with {\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}") // pragma: allowlist secret
     public void setAuthSigningKey() throws Exception {
         var signingKey =
-                "{\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
+                "{\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"f17da8669a951afc3fb499e901186d77e99af23b5d1962d3ce85e9d6c82d3a69\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
         when(mockOauthKeyService.getClientSigningKey(eq(TEST_CLIENT_ID), any()))
                 .thenReturn(ECKey.parse(signingKey));
