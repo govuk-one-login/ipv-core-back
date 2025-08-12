@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
@@ -271,12 +269,9 @@ class StateMachineTest {
 
         var startingState = mock(NestedJourneyInvokeState.class);
         var nestedJourneyDefinition = mock(NestedJourneyDefinition.class);
-        when(startingState.getNestedJourneyDefinition()).thenReturn(
-                nestedJourneyDefinition
-        );
-        when(nestedJourneyDefinition.getNestedJourneyStates()).thenReturn(
-                Map.of("NESTED_JOURNEY", new BasicState())
-        );
+        when(startingState.getNestedJourneyDefinition()).thenReturn(nestedJourneyDefinition);
+        when(nestedJourneyDefinition.getNestedJourneyStates())
+                .thenReturn(Map.of("NESTED_JOURNEY", new BasicState()));
         when(startingState.transition(
                         "event",
                         "START_STATE/NESTED_JOURNEY",
@@ -307,10 +302,7 @@ class StateMachineTest {
         var startingState = mock(BasicState.class);
         when(startingState.getResponse()).thenReturn(new PageStepResponse("some-page", null, null));
         when(startingState.transition(
-                "event",
-                "START_STATE",
-                EVENT_RESOLVE_PARAMETERS,
-                eventResolver))
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(new TransitionResult(new BasicState()));
 
         var mockStateMachineInitializer = mock(StateMachineInitializer.class);
@@ -335,20 +327,27 @@ class StateMachineTest {
     void transitionShouldBeBlockedIfUnexpectedCurrentPageInNestedState() throws Exception {
         var startingState = mock(NestedJourneyInvokeState.class);
         var nestedJourneyDefinition = mock(NestedJourneyDefinition.class);
-        when(startingState.getNestedJourneyDefinition()).thenReturn(
-                nestedJourneyDefinition
-        );
+        when(startingState.getNestedJourneyDefinition()).thenReturn(nestedJourneyDefinition);
         var startingBasicState = mock(BasicState.class);
-        when(startingBasicState.getResponse()).thenReturn(new PageStepResponse("some-page", null, null));
-        when(nestedJourneyDefinition.getNestedJourneyStates()).thenReturn(
-                Map.of("NESTED_JOURNEY", startingBasicState)
-        );
+        when(startingBasicState.getResponse())
+                .thenReturn(new PageStepResponse("some-page", null, null));
+        when(nestedJourneyDefinition.getNestedJourneyStates())
+                .thenReturn(Map.of("NESTED_JOURNEY", startingBasicState));
         when(startingState.transition(
-                "event",
-                "START_STATE/NESTED_JOURNEY",
-                EVENT_RESOLVE_PARAMETERS,
-                eventResolver))
-                .thenReturn(new TransitionResult(new BasicState("Unreachable due to incorrect previous pageId", null, null, null, null, null, null)));
+                        "event",
+                        "START_STATE/NESTED_JOURNEY",
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver))
+                .thenReturn(
+                        new TransitionResult(
+                                new BasicState(
+                                        "Unreachable due to incorrect previous pageId",
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null)));
 
         var mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
