@@ -53,7 +53,6 @@ public class CimitService {
     public static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
     public static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
     public static final String GET_VCS_ENDPOINT = "/contra-indicators";
-    private static final String NOT_REQUIRED = "notRequired";
 
     public static final String FAILED_RESPONSE = "fail";
 
@@ -231,15 +230,16 @@ public class CimitService {
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
         var apiKey = configService.getSecret(CIMIT_API_KEY);
-        if (apiKey != null && !apiKey.equals(NOT_REQUIRED)) {
+
+        if (StringUtils.isNotBlank(apiKey)) {
             requestBuilder.header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
         }
 
-        if (govukSigninJourneyId != null) {
+        if (StringUtils.isNotBlank(govukSigninJourneyId)) {
             requestBuilder.header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId);
         }
 
-        if (ipAddress != null) {
+        if (StringUtils.isNotBlank(ipAddress)) {
             requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
         }
         return requestBuilder;

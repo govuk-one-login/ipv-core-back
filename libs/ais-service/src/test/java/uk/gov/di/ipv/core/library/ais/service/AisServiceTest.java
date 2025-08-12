@@ -37,4 +37,17 @@ class AisServiceTest {
         // Assert
         assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
     }
+
+    @Test
+    void fetchAccountState_whenClientErrors_returnsNoInterventionState() throws AisClientException {
+        // Arrange
+        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
+                .thenThrow(new AisClientException("test", new Exception()));
+
+        // Act
+        var result = underTest.fetchAccountState(TEST_USER_ID);
+
+        // Assert
+        assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
+    }
 }

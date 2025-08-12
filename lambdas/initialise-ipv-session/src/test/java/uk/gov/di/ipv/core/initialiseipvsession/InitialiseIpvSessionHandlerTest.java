@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
-import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -300,10 +299,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequestUsingAis()
-            throws JsonProcessingException,
-                    JarValidationException,
-                    ParseException,
-                    AisClientException {
+            throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
         clientOAuthSessionItem.setReproveIdentity(false);
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);

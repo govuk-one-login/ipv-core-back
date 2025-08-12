@@ -2,6 +2,7 @@ import { World } from "../types/world.js";
 import { getRandomString } from "../utils/random-string-generator.js";
 import {
   AisValidResponseTypes,
+  primeErrorResponseForUser,
   primeResponseForUser,
 } from "../clients/ais-management-api.js";
 import { When } from "@cucumber/cucumber";
@@ -10,6 +11,11 @@ When(
   "The AIS stub will return an {string} result",
   async function (this: World, desiredApiResult: string): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
+
+    if (desiredApiResult === "ERROR") {
+      await primeErrorResponseForUser(this.userId, 500);
+      return;
+    }
 
     const checkedDesiredApiResult =
       desiredApiResult as keyof typeof AisValidResponseTypes;

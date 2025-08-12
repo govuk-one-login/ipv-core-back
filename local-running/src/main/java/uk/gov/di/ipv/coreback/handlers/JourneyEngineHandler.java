@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.coreback.handlers;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.javalin.http.Context;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
@@ -10,7 +11,7 @@ import uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentit
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.service.YamlConfigService;
+import uk.gov.di.ipv.core.library.service.LocalConfigService;
 import uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
@@ -39,7 +40,7 @@ public class JourneyEngineHandler {
     public static final String FEATURE_SET = "feature-set";
     public static final String LANGUAGE = "language";
 
-    private final YamlConfigService configService;
+    private final LocalConfigService configService;
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
     private final ResetSessionIdentityHandler resetSessionIdentityHandler;
@@ -51,7 +52,7 @@ public class JourneyEngineHandler {
     private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     public JourneyEngineHandler() throws IOException {
-        this.configService = new YamlConfigService();
+        this.configService = new LocalConfigService();
         this.processJourneyEventHandler = new ProcessJourneyEventHandler(configService);
         this.checkExistingIdentityHandler = new CheckExistingIdentityHandler(configService);
         this.resetSessionIdentityHandler = new ResetSessionIdentityHandler(configService);
@@ -137,14 +138,21 @@ public class JourneyEngineHandler {
         };
     }
 
-    private JourneyRequest buildJourneyRequest(Context ctx, String journey) {
+    private JourneyRequest buildJourneyRequest(Context ctx, String journeyEvent) {
+        var currentPage =
+                StringUtils.isBlank(ctx.queryParam("currentPage"))
+                        ? ""
+                        : String.format("?currentPage=%s", ctx.queryParam("currentPage"));
+
+        var journeyWithQuery = journeyEvent + currentPage;
+
         return JourneyRequest.builder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
                 .ipAddress(ctx.header(IP_ADDRESS))
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
-                .journey(journey)
+                .journey(journeyWithQuery)
                 .build();
     }
 
