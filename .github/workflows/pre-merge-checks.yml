@@ -180,6 +180,11 @@ jobs:
           distribution: 'corretto'
           cache: gradle
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
+        with:
+          gradle-version: "8.13"
+
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
