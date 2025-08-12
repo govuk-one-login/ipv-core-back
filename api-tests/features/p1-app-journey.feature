@@ -3,7 +3,6 @@ Feature: P1 app journey
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
-  @MikeC
   Scenario: P1 App Journey
     Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
