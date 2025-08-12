@@ -104,6 +104,7 @@ export const callbackFromStrategicApp = async (
     ipvSessionId,
     featureSet,
     body?.clientOAuthSessionId,
+    "pyi-triage-mobile-download-app",
   );
 };
 
