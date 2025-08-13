@@ -428,9 +428,10 @@ When(
     this.userId = this.userId ?? getRandomString(16);
     const credentials: string[] = [];
     for (const row of table.hashes()) {
+      const numCredentials = parseInt(row.numCredentials) ?? 1;
       if (row.CRI === "dcmawAsync") {
-        credentials.push(
-          await dcmawAsyncStubClient.generateVc(
+        const asyncCreds = Array.from(Array(numCredentials)).map(async () => {
+          return await dcmawAsyncStubClient.generateVc(
             row.CRI,
             await generateDcmawAsyncVcCreationBodyFromScenario(
               this.userId,
@@ -439,11 +440,13 @@ When(
               [],
               expired ? EXPIRED_NBF : undefined,
             ),
-          ),
-        );
+          );
+        });
+        const resolvedAsyncCreds = await Promise.all(asyncCreds);
+        credentials.push(...resolvedAsyncCreds);
       } else {
-        credentials.push(
-          await criStubClient.generateVc(
+        const creds = Array.from(Array(numCredentials)).map(async () => {
+          return await criStubClient.generateVc(
             row.CRI,
             await generateVcRequestBody(
               this.userId,
@@ -451,8 +454,10 @@ When(
               row.scenario,
               expired ? EXPIRED_NBF : undefined,
             ),
-          ),
-        );
+          );
+        });
+        const resolvedCreds = await Promise.all(creds);
+        credentials.push(...resolvedCreds);
       }
     }
 
