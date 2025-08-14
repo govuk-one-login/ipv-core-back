@@ -277,6 +277,9 @@ public abstract class ConfigService {
     public static Config generateConfiguration(String yaml) {
         try {
             var coreConfig = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            if (coreConfig == null) {
+                throw new IllegalArgumentException("Missing Core config.");
+            }
             return OBJECT_MAPPER.treeToValue(coreConfig, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);

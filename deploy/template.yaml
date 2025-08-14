@@ -2777,7 +2777,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "validate-appconfig-${Environment}"
-      Handler: uk.gov.di.ipv.core.validate-appconfig.ValidateAppConfigHandler::handleRequest
+      Handler: uk.gov.di.ipv.core.validateappconfig.ValidateAppConfigHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/validate-appconfig
       Tracing: Active
@@ -2785,22 +2785,6 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           POWERTOOLS_SERVICE_NAME: !Sub validate-appconfig-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !FindInMap [
-            EnvironmentConfiguration,
-            !Ref 'AWS::AccountId',
-            dynatraceLayerArn,
-          ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2842,8 +2826,8 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: "lambda:InvokeFunction"
-      FunctionName: !Ref ValidateAppConfigFunction.Alias
-      Principal: "apigateway.amazonaws.com"
+      FunctionName: !Ref ValidateAppConfigFunction
+      Principal: "appconfig.amazonaws.com"
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
