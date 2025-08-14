@@ -47,9 +47,10 @@ public class StateMachine {
         }
 
         // Check page event is allowed
-        if (currentPage != null && state instanceof BasicState basicState) {
+        var leafState = getState(startState);
+        if (currentPage != null && leafState instanceof BasicState basicState) {
             if (isPageOrCriStateAndOutOfSync(basicState, currentPage)) {
-                return new TransitionResult(state);
+                return new TransitionResult(leafState);
             } else if (basicState.getResponse() instanceof ProcessStepResponse) {
                 throw new UnknownStateException(
                         String.format(
