@@ -36,55 +36,49 @@ public class AisService {
 
     @ExcludeFromGeneratedCoverageReport
     public AccountInterventionState getStateByIntervention(AisInterventionType interventionType) {
-        switch (interventionType) {
-            case AIS_ACCOUNT_SUSPENDED -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(false)
-                        .isSuspended(true)
-                        .isReproveIdentity(false)
-                        .isResetPassword(false)
-                        .build();
-            }
-            case AIS_ACCOUNT_BLOCKED -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(true)
-                        .isSuspended(false)
-                        .isReproveIdentity(false)
-                        .isResetPassword(false)
-                        .build();
-            }
-            case AIS_FORCED_USER_PASSWORD_RESET -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(false)
-                        .isSuspended(true)
-                        .isReproveIdentity(false)
-                        .isResetPassword(true)
-                        .build();
-            }
-            case AIS_FORCED_USER_IDENTITY_VERIFY -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(false)
-                        .isSuspended(true)
-                        .isReproveIdentity(true)
-                        .isResetPassword(false)
-                        .build();
-            }
-            case AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(false)
-                        .isSuspended(true)
-                        .isReproveIdentity(true)
-                        .isResetPassword(true)
-                        .build();
-            }
-            default -> {
-                return AccountInterventionState.builder()
-                        .isBlocked(false)
-                        .isSuspended(false)
-                        .isReproveIdentity(false)
-                        .isResetPassword(false)
-                        .build();
-            }
-        }
+        return switch (interventionType) {
+            case AIS_ACCOUNT_SUSPENDED ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_ACCOUNT_BLOCKED ->
+                    AccountInterventionState.builder()
+                            .isBlocked(true)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_FORCED_USER_PASSWORD_RESET ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(false)
+                            .isResetPassword(true)
+                            .build();
+            case AIS_FORCED_USER_IDENTITY_VERIFY ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(true)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(true)
+                            .isResetPassword(true)
+                            .build();
+            default ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+        };
     }
 }
