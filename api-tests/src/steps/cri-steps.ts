@@ -428,7 +428,9 @@ When(
     this.userId = this.userId ?? getRandomString(16);
     const credentials: string[] = [];
     for (const row of table.hashes()) {
-      const numCredentials = parseInt(row.numCredentials) ?? 1;
+      const numCredentials = row.numCredentials
+        ? parseInt(row.numCredentials)
+        : 1;
       if (row.CRI === "dcmawAsync") {
         const asyncCreds = Array.from(Array(numCredentials)).map(async () => {
           return await dcmawAsyncStubClient.generateVc(
