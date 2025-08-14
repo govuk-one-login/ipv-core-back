@@ -6,9 +6,6 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 const app = express();
 
-app.use(express.static("public"));
-app.use(express.static("journey-maps"));
-
 app.get("/healthcheck", (req, res) => {
   res.status(200).send("OK");
 });
@@ -16,6 +13,9 @@ app.get("/healthcheck", (req, res) => {
 if (!isDevelopment) {
   app.use(authorise);
 }
+
+app.use(express.static("public"));
+app.use(express.static("journey-maps"));
 
 // In dev we load journey maps directly
 if (isDevelopment) {
