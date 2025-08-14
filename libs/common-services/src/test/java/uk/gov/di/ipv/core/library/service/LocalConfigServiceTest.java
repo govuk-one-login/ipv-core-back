@@ -4,8 +4,9 @@ import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.testdata.CommonData;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,9 +16,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class LocalConfigServiceTest {
 
     private LocalConfigService getConfigService() throws Exception {
-        return new LocalConfigService(
-                new File(LocalConfigServiceTest.class.getResource("/test-parameters.yaml").toURI()),
-                new File(LocalConfigServiceTest.class.getResource("/test-secrets.yaml").toURI()));
+        var parametersYaml =
+                new String(
+                        CommonData.class
+                                .getResourceAsStream("/test-parameters.yaml")
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8);
+        var secretsYaml =
+                new String(
+                        LocalConfigServiceTest.class
+                                .getResourceAsStream("/test-secrets.yaml")
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8);
+
+        return new LocalConfigService(parametersYaml, secretsYaml);
     }
 
     @Test

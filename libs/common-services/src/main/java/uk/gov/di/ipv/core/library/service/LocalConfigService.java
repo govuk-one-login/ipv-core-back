@@ -12,6 +12,20 @@ public class LocalConfigService extends ConfigService {
     private static final File SECRETS_FILE = new File("./core.local.secrets.yaml");
     private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
 
+    public LocalConfigService() {
+        this(PARAMETERS_FILE, SECRETS_FILE);
+    }
+
+    public LocalConfigService(File parametersFile, File secretsFile) {
+        setParameters(parseParameters(parametersFile));
+        secrets = parseParameters(secretsFile);
+    }
+
+    public LocalConfigService(String parametersYaml, String secretsYaml) {
+        setParameters(updateParameters(parametersYaml));
+        secrets = updateParameters(secretsYaml);
+    }
+
     public List<String> getFeatureSet() {
         return featureSet.get();
     }
@@ -25,15 +39,6 @@ public class LocalConfigService extends ConfigService {
     }
 
     private Map<String, String> secrets = new HashMap<>();
-
-    public LocalConfigService() {
-        this(PARAMETERS_FILE, SECRETS_FILE);
-    }
-
-    public LocalConfigService(File parametersFile, File secretsFile) {
-        setParameters(parseParameters(parametersFile));
-        secrets = parseParameters(secretsFile);
-    }
 
     private Map<String, String> parseParameters(File yamlFile) {
         try {

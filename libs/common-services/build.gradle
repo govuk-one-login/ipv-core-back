@@ -30,7 +30,8 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.systemStubs,
-			libs.hamcrest
+			libs.hamcrest,
+			project(path: ':libs:test-data')
 
 	testRuntimeOnly libs.junitPlatform
 

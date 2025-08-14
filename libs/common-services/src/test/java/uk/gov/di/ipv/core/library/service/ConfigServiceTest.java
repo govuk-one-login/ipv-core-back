@@ -1,25 +1,25 @@
 package uk.gov.di.ipv.core.library.service;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.testdata.CommonData;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigServiceTest {
 
     @Test
-    void generateConfigurationCreatesValidConfig() throws IOException, URISyntaxException {
+    void generateConfigurationCreatesValidConfig() throws IOException {
         // Arrange
         String yamlContent =
-                Files.readString(
-                        Paths.get(
-                                ConfigServiceTest.class
-                                        .getResource("/test-parameters.yaml")
-                                        .toURI()));
+                new String(
+                        CommonData.class
+                                .getResourceAsStream("/test-parameters.yaml")
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8);
 
         // Act
         var configuration = ConfigService.generateConfiguration(yamlContent);
@@ -30,14 +30,14 @@ class ConfigServiceTest {
     }
 
     @Test
-    void generateConfigurationThrowsWhenInvalidConfig() throws IOException, URISyntaxException {
+    void generateConfigurationThrowsWhenInvalidConfig() throws IOException {
         // Arrange
         String yamlContent =
-                Files.readString(
-                        Paths.get(
-                                ConfigServiceTest.class
-                                        .getResource("/test-invalid-parameters.yaml")
-                                        .toURI()));
+                new String(
+                        CommonData.class
+                                .getResourceAsStream("/test-invalid-parameters.yaml")
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8);
 
         // Act & Assert
         var exception =
