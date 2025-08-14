@@ -38,6 +38,20 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
+    Scenario: Happy path MAM journey declared iphone
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+
     Scenario: Polling returns 404 until CRI received
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
