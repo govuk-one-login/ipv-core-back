@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,14 +29,12 @@ class ValidateAppConfigHandlerTest {
     @Test
     void validateAppConfigHandlerAcceptsGoodConfig() throws IOException {
         var request = getAppConfigRequest("/test-parameters.yaml");
-
-        validateAppConfigHandler.handleRequest(request, context);
+        assertDoesNotThrow(() -> validateAppConfigHandler.handleRequest(request, context));
     }
 
     @Test
     void validateAppConfigHandlerRejectsBadConfig() throws IOException {
         var request = getAppConfigRequest("/test-invalid-parameters.yaml");
-
         assertThrows(
                 Exception.class, () -> validateAppConfigHandler.handleRequest(request, context));
     }
