@@ -51,6 +51,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_C
 public class EvcsClient {
     public static final String X_API_KEY_HEADER = "x-api-key";
     public static final String VC_STATE_PARAM = "state";
+    public static final String AFTER_KEY_PARAM = "afterKey";
     private static final String VCS_SUB_PATH = "vcs";
     private static final String IDENTITY_SUB_PATH = "identity";
     private static final Logger LOGGER = LogManager.getLogger();
@@ -80,10 +81,44 @@ public class EvcsClient {
             String userId, String evcsAccessToken, List<EvcsVCState> vcStatesToQueryFor)
             throws EvcsServiceException {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving existing user VCs from Evcs."));
+
+        var evcsGetUserVcsDto =
+                attemptGetUserVcsRequest(userId, evcsAccessToken, vcStatesToQueryFor, null);
+        var evcsUserVcs = new java.util.ArrayList<>(evcsGetUserVcsDto.vcs());
+
+        try {
+            var afterKey = evcsGetUserVcsDto.afterKey();
+            while (!StringUtils.isBlank(afterKey)) {
+                LOGGER.info("Attempting additional request to get the rest of the user's VCs");
+                var additionalUserVcs =
+                        attemptGetUserVcsRequest(
+                                userId, evcsAccessToken, vcStatesToQueryFor, afterKey);
+                evcsUserVcs.addAll(additionalUserVcs.vcs());
+                afterKey = additionalUserVcs.afterKey();
+            }
+        } catch (EvcsServiceException e) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Failed to get the rest of the user's VCs with the afterKey."));
+        }
+
+        if (CollectionUtils.isEmpty(evcsUserVcs)) {
+            LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
+        }
+
+        return new EvcsGetUserVCsDto(evcsUserVcs, null);
+    }
+
+    private EvcsGetUserVCsDto attemptGetUserVcsRequest(
+            String userId,
+            String evcsAccessToken,
+            List<EvcsVCState> vcStatesToQueryFor,
+            String afterKey)
+            throws EvcsServiceException {
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getUri(VCS_SUB_PATH, userId, vcStatesToQueryFor))
+                            .uri(getUri(VCS_SUB_PATH, userId, vcStatesToQueryFor, afterKey))
                             .GET()
                             .header(
                                     X_API_KEY_HEADER,
@@ -96,11 +131,12 @@ public class EvcsClient {
                     evcsHttpResponse.statusCode() != 404
                             ? OBJECT_MAPPER.readValue(
                                     evcsHttpResponse.body(), new TypeReference<>() {})
-                            : new EvcsGetUserVCsDto(Collections.emptyList());
+                            : new EvcsGetUserVCsDto(Collections.emptyList(), null);
 
             if (CollectionUtils.isEmpty(evcsGetUserVCs.vcs())) {
                 LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
             }
+
             return evcsGetUserVCs;
         } catch (JsonProcessingException e) {
             throw new EvcsServiceException(
@@ -230,6 +266,12 @@ public class EvcsClient {
 
     private URI getUri(String subPath, String userId, List<EvcsVCState> vcStatesToQueryFor)
             throws URISyntaxException {
+        return getUri(subPath, userId, vcStatesToQueryFor, null);
+    }
+
+    private URI getUri(
+            String subPath, String userId, List<EvcsVCState> vcStatesToQueryFor, String afterKey)
+            throws URISyntaxException {
 
         var baseUri = "%s/%s".formatted(configService.getParameter(EVCS_APPLICATION_URL), subPath);
 
@@ -245,6 +287,10 @@ public class EvcsClient {
                     vcStatesToQueryFor.stream()
                             .map(EvcsVCState::name)
                             .collect(Collectors.joining(",")));
+        }
+
+        if (afterKey != null) {
+            uriBuilder.addParameter(AFTER_KEY_PARAM, afterKey);
         }
         return uriBuilder.build();
     }
