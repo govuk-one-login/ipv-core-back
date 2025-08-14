@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Base64;
@@ -19,17 +18,9 @@ public class ValidateAppConfigHandler implements RequestHandler<Map<String, Obje
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Object handleRequest(Map<String, Object> input, Context context) {
-        LogHelper.attachTraceId();
-        try {
-            var content = input.get("content").toString();
-            var contentDecoded = new String(Base64.getDecoder().decode(content));
-            ConfigService.generateConfiguration(contentDecoded);
-            return true;
-        } catch (Exception e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
-            throw e;
-        } finally {
-            LogManager.shutdown();
-        }
+        var content = input.get("content").toString();
+        var contentDecoded = new String(Base64.getDecoder().decode(content));
+        ConfigService.generateConfiguration(contentDecoded);
+        return true;
     }
 }

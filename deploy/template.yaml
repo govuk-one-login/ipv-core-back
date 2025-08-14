@@ -2828,6 +2828,7 @@ Resources:
       Action: "lambda:InvokeFunction"
       FunctionName: !Ref ValidateAppConfigFunction
       Principal: "appconfig.amazonaws.com"
+      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
