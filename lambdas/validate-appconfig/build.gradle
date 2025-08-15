@@ -18,5 +18,13 @@ dependencies {
 }
 
 test {
-	useJUnitPlatform()
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
 }
