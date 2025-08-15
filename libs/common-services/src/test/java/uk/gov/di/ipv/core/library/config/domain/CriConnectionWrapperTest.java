@@ -2,25 +2,24 @@ package uk.gov.di.ipv.core.library.config.domain;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testdata.CommonData;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CriConnectionWrapperTest {
 
     @Test
-    void getActiveConfigFetchesValidConfig() throws URISyntaxException, IOException {
+    void getActiveConfigFetchesValidConfig() throws IOException {
         // Arrange
         String yamlContent =
-                Files.readString(
-                        Paths.get(
-                                CriConnectionWrapperTest.class
-                                        .getResource("/test-parameters.yaml")
-                                        .toURI()));
+                new String(
+                        CommonData.class
+                                .getResourceAsStream("/test-parameters.yaml")
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8);
 
         // Act
         var criConnectionWrapper =

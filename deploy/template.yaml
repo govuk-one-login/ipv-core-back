@@ -2768,6 +2768,68 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
 
+  ValidateAppConfigFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - ValidateAppConfigFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "validate-appconfig-${Environment}"
+      Handler: uk.gov.di.ipv.core.validateappconfig.ValidateAppConfigHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/validate-appconfig
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub validate-appconfig-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+          - Sid: EnforceStayinSpecificVpc
+            Effect: Allow
+            Action:
+              - 'lambda:CreateFunction'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource:
+              - "*"
+            Condition:
+              StringEquals:
+                "lambda:VpcIds":
+                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      AutoPublishAlias: live
+
+  ValidateAppConfigFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/validate-appconfig-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  ValidateAppConfigFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ValidateAppConfigFunctionLogGroup
+
+  ValidateAppConfigInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref ValidateAppConfigFunction
+      Principal: "appconfig.amazonaws.com"
+      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
+
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -4524,6 +4586,9 @@ Resources:
       Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
       LocationUri: "hosted"
+      Validators:
+        - Type: LAMBDA
+          Content: !GetAtt ValidateAppConfigFunction.Arn
 
   AppConfigDeploymentStrategy:
     Type: AWS::AppConfig::DeploymentStrategy
