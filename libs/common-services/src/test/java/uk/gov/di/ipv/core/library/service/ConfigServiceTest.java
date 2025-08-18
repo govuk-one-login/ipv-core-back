@@ -45,4 +45,14 @@ class ConfigServiceTest {
                         () -> ConfigService.generateConfiguration(yamlContent));
         assertEquals("Could not load parameters yaml", exception.getMessage());
     }
+
+    @Test
+    void generateConfigurationThrowsWhenConfigIsEmpty() {
+        String yamlContent = "";
+        var exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ConfigService.generateConfiguration(yamlContent));
+        assertEquals("Missing Core config.", exception.getMessage());
+    }
 }
