@@ -304,12 +304,12 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setReproveIdentity(false);
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockConfigService.enabled(AIS_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.generateIpvSession(
+                        any(), any(), any(), anyBoolean(), any(AccountInterventionState.class)))
+                .thenReturn(ipvSessionItem);
         when(mockAisService.fetchAccountState(TEST_USER_ID))
                 .thenReturn(new AccountInterventionState(false, false, true, false));
-        var accountInterventionState = new AccountInterventionState(false, false, true, false);
-        when(mockIpvSessionService.generateIpvSession(
-                        any(), any(), any(), anyBoolean(), eq(accountInterventionState)))
-                .thenReturn(ipvSessionItem);
+        when(mockAisService.shouldInvalidateSession(any())).thenReturn(false);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
                         any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -349,20 +349,14 @@ class InitialiseIpvSessionHandlerTest {
                 .updateClientSessionDetails(clientOAuthSessionDetailsCaptor.capture());
         assertTrue(clientOAuthSessionDetailsCaptor.getValue().getReproveIdentity());
 
-        var accountInterventionStateCaptor =
-                ArgumentCaptor.forClass(AccountInterventionState.class);
-        verify(mockIpvSessionService)
-                .generateIpvSession(
-                        anyString(),
-                        any(),
-                        isNull(),
-                        anyBoolean(),
-                        accountInterventionStateCaptor.capture());
-        var capturedState = accountInterventionStateCaptor.getValue();
-        assertFalse(capturedState.isBlocked());
-        assertFalse(capturedState.isSuspended());
-        assertTrue(capturedState.isReproveIdentity());
-        assertFalse(capturedState.isResetPassword());
+        var ipvSessionItemCaptor = ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(ipvSessionItemCaptor.capture());
+        var capturedState = ipvSessionItemCaptor.getValue();
+
+        assertFalse(capturedState.getInitialAccountInterventionState().isBlocked());
+        assertFalse(capturedState.getInitialAccountInterventionState().isSuspended());
+        assertTrue(capturedState.getInitialAccountInterventionState().isReproveIdentity());
+        assertFalse(capturedState.getInitialAccountInterventionState().isResetPassword());
     }
 
     @Test

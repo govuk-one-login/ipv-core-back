@@ -2,12 +2,15 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.nimbusds.oauth2.sdk.Scope;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
+import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -63,16 +66,20 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCOUNT_INTERVENTION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH;
@@ -130,6 +137,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH);
     private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE =
             new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH);
+    private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
+            new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -143,6 +152,7 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final AisService aisService;
     private final VotMatcher votMatcher;
 
     @SuppressWarnings({
@@ -162,6 +172,7 @@ public class CheckExistingIdentityHandler
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService,
+            AisService aisService,
             VotMatcher votMatcher) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -176,6 +187,7 @@ public class CheckExistingIdentityHandler
         this.evcsService = evcsService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.votMatcher = votMatcher;
+        this.aisService = aisService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -206,6 +218,7 @@ public class CheckExistingIdentityHandler
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.aisService = new AisService(configService);
         this.votMatcher =
                 new VotMatcher(
                         userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
@@ -235,6 +248,27 @@ public class CheckExistingIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
+            var isReverification =
+                    configService.enabled(MFA_RESET)
+                            && Scope.parse(clientOAuthSessionItem.getScope())
+                                    .contains(REVERIFICATION);
+
+            // If this is a reverification journey then we can skip the call to AIS
+            if (configService.enabled(AIS_ENABLED) && !isReverification) {
+                String userId = clientOAuthSessionItem.getUserId();
+                var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
+                ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
+
+                if (aisService.shouldInvalidateSession(fetchedAccountInterventionState)) {
+                    throw new AccountInterventionException(ipvSessionItem);
+                }
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+
+                clientOAuthSessionItem.setReproveIdentity(
+                        fetchedAccountInterventionState.isReproveIdentity());
+                clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
+            }
+
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
                 evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
             }
@@ -242,6 +276,11 @@ public class CheckExistingIdentityHandler
             return getJourneyResponse(
                             ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
                     .toObjectMap();
+        } catch (AccountInterventionException e) {
+            var ipvSessionItem = e.getIpvSessionItem();
+            ipvSessionItem.invalidateSession();
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+            return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())

@@ -185,6 +185,14 @@ public class InitialiseIpvSessionHandler
                             .isResetPassword(false)
                             .build();
 
+            IpvSessionItem ipvSessionItem =
+                    ipvSessionService.generateIpvSession(
+                            clientOAuthSessionId,
+                            null,
+                            emailAddress,
+                            isReverification,
+                            initialAccountInterventionState);
+
             // If this is a reverification journey then we can skip the call to AIS
             if (configService.enabled(AIS_ENABLED) && !isReverification) {
                 var fetchedAccountInterventionState =
@@ -193,10 +201,12 @@ public class InitialiseIpvSessionHandler
                 initialAccountInterventionState =
                         AccountInterventionState.from(fetchedAccountInterventionState);
 
-                // DO LOGIC HERE
-                // DO LOGIC HERE
-                // DO LOGIC HERE
-                // DO LOGIC HERE
+                ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
+
+                if (aisService.shouldInvalidateSession(initialAccountInterventionState)) {
+                    ipvSessionItem.invalidateSession();
+                }
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 clientOAuthSessionItem.setReproveIdentity(
                         initialAccountInterventionState.isReproveIdentity());
@@ -204,14 +214,6 @@ public class InitialiseIpvSessionHandler
             }
 
             var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
-
-            IpvSessionItem ipvSessionItem =
-                    ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            null,
-                            emailAddress,
-                            isReverification,
-                            initialAccountInterventionState);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
