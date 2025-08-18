@@ -82,8 +82,9 @@ public class EvcsClient {
             throws EvcsServiceException {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving existing user VCs from Evcs."));
 
+        var apiKey = configService.getSecret(ConfigurationVariable.EVCS_API_KEY);
         var evcsGetUserVcsDto =
-                attemptGetUserVcsRequest(userId, evcsAccessToken, vcStatesToQueryFor, null);
+                attemptGetUserVcsRequest(userId, apiKey, evcsAccessToken, vcStatesToQueryFor, null);
         var evcsUserVcs = new java.util.ArrayList<>(evcsGetUserVcsDto.vcs());
 
         try {
@@ -92,7 +93,7 @@ public class EvcsClient {
                 LOGGER.info("Attempting additional request to get the rest of the user's VCs");
                 var additionalUserVcs =
                         attemptGetUserVcsRequest(
-                                userId, evcsAccessToken, vcStatesToQueryFor, afterKey);
+                                userId, apiKey, evcsAccessToken, vcStatesToQueryFor, afterKey);
                 evcsUserVcs.addAll(additionalUserVcs.vcs());
                 afterKey = additionalUserVcs.afterKey();
             }
@@ -111,6 +112,7 @@ public class EvcsClient {
 
     private EvcsGetUserVCsDto attemptGetUserVcsRequest(
             String userId,
+            String apiKey,
             String evcsAccessToken,
             List<EvcsVCState> vcStatesToQueryFor,
             String afterKey)
@@ -120,9 +122,7 @@ public class EvcsClient {
                     HttpRequest.newBuilder()
                             .uri(getUri(VCS_SUB_PATH, userId, vcStatesToQueryFor, afterKey))
                             .GET()
-                            .header(
-                                    X_API_KEY_HEADER,
-                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(X_API_KEY_HEADER, apiKey)
                             .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());

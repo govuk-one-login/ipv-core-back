@@ -76,10 +76,13 @@ Feature: P2 Reuse journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
+@RealEvcs # Temporary test to be run in whitelisted VPC
+Feature: P2 Reuse journey - Real EVCS
+
   Scenario: Reuse journey - user has more than 25 VCs
     Given the subject already has the following credentials
       | CRI        | scenario               | numCredentials |
-      | dcmaw      | kenneth-passport-valid | 25             |
+      | dcmaw      | kenneth-passport-valid | 100            |
       | address    | kenneth-current        | 1              |
       | fraud      | kenneth-score-2        | 1              |
 
@@ -88,4 +91,5 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I get a 'P3' identity
+    # I should have 102 VCs

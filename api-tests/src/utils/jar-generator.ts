@@ -5,11 +5,12 @@ import fs from "node:fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { getRandomString } from "./random-string-generator.js";
-import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
+import { createSignedJwt } from "./jwt-signer.js";
 import { IpvSessionDetails } from "./ipv-session.js";
 import { JarRequest } from "../types/jar-request.js";
 import { jwks } from "../clients/core-back-external-client.js";
 import { JWK } from "jose";
+import { fetchEvcsAccessToken } from "../clients/evcs-stub-client.js";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -58,7 +59,7 @@ export const generateJarPayload = async (
 
   payload.claims.userinfo[
     "https://vocab.account.gov.uk/v1/storageAccessToken"
-  ].values = [await createEvcsAccessToken(session.subject)];
+  ].values = [await fetchEvcsAccessToken(session.subject)];
 
   return payload;
 };
