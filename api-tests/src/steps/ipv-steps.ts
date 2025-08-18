@@ -359,6 +359,13 @@ When(
   },
 );
 
+Then(/^I have {int} VCs$/, function (this: World, numberOfVcs: number): void {
+  if (!this.vcs) {
+    throw new Error("No credentials found.");
+  }
+  assert.equal(Object.keys(this.vcs).length, numberOfVcs);
+});
+
 Then(
   /^I get a '([<>\w-]+)' identity(?: (with|without) a (.+) VC)?$/,
   function (
