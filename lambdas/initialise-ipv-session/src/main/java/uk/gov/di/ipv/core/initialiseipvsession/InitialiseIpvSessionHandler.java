@@ -57,7 +57,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
@@ -81,7 +80,6 @@ public class InitialiseIpvSessionHandler
 
     private final JarValidator jarValidator;
     private final AuditService auditService;
-    private final AisService aisService;
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
@@ -94,7 +92,6 @@ public class InitialiseIpvSessionHandler
                         configService,
                         new OAuthKeyService(configService));
         this.auditService = AuditService.create(configService);
-        this.aisService = new AisService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -110,7 +107,6 @@ public class InitialiseIpvSessionHandler
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
-        this.aisService = aisService;
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
@@ -176,14 +172,14 @@ public class InitialiseIpvSessionHandler
             // Default the reprove identity value to the value from orchestration so it's consistent
             // if we turn the feature on during a journey.
             var initialAccountInterventionState =
-                    AccountInterventionState.builder()
-                            .isBlocked(false)
-                            .isSuspended(false)
-                            .isReproveIdentity(
-                                    clientOAuthSessionItem.getReproveIdentity() != null
-                                            && clientOAuthSessionItem.getReproveIdentity())
-                            .isResetPassword(false)
-                            .build();
+                    new AccountInterventionState(
+                            false,
+                            false,
+                            clientOAuthSessionItem.getReproveIdentity() != null
+                                    && clientOAuthSessionItem.getReproveIdentity(),
+                            false);
+
+            var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
@@ -192,28 +188,6 @@ public class InitialiseIpvSessionHandler
                             emailAddress,
                             isReverification,
                             initialAccountInterventionState);
-
-            // If this is a reverification journey then we can skip the call to AIS
-            if (configService.enabled(AIS_ENABLED) && !isReverification) {
-                var fetchedAccountInterventionState =
-                        aisService.fetchAccountState(clientOAuthSessionItem.getUserId());
-
-                initialAccountInterventionState =
-                        AccountInterventionState.from(fetchedAccountInterventionState);
-
-                ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
-
-                if (aisService.shouldInvalidateSession(initialAccountInterventionState)) {
-                    ipvSessionItem.invalidateSession();
-                }
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                clientOAuthSessionItem.setReproveIdentity(
-                        initialAccountInterventionState.isReproveIdentity());
-                clientOAuthSessionService.updateClientSessionDetails(clientOAuthSessionItem);
-            }
-
-            var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -248,7 +222,7 @@ public class InitialiseIpvSessionHandler
                 auditService.sendAuditEvent(reverificationAuditEvent);
             }
 
-            if (isReproveIdentity) {
+            if (Boolean.TRUE.equals(isReproveIdentity)) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,

@@ -255,12 +255,14 @@ public class CheckExistingIdentityHandler
 
             // If this is a reverification journey then we can skip the call to AIS
             if (configService.enabled(AIS_ENABLED) && !isReverification) {
-                String userId = clientOAuthSessionItem.getUserId();
+                var userId = clientOAuthSessionItem.getUserId();
                 var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
 
                 if (aisService.shouldInvalidateSession(fetchedAccountInterventionState)) {
-                    throw new AccountInterventionException(ipvSessionItem);
+                    ipvSessionItem.invalidateSession();
+                    ipvSessionService.updateIpvSession(ipvSessionItem);
+                    throw new AccountInterventionException();
                 }
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -277,9 +279,6 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
-            var ipvSessionItem = e.getIpvSessionItem();
-            ipvSessionItem.invalidateSession();
-            ipvSessionService.updateIpvSession(ipvSessionItem);
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
             return new JourneyErrorResponse(
