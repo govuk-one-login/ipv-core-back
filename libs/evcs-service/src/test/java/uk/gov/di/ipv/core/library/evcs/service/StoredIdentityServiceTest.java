@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserClaims;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
@@ -84,12 +83,11 @@ class StoredIdentityServiceTest {
         var userClaims =
                 UserClaims.builder().passportClaim(List.of(PASSPORT_CLAIM, PASSPORT_CLAIM)).build();
 
-        when(mockSignerFactory.getSigner()).thenReturn(signer);
+        when(mockSignerFactory.getSisSigner()).thenReturn(signer);
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(MOCK_COMPONENT_ID);
         when(mockConfigService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
                 .thenReturn(MOCK_SIS_COMPONENT_ID);
-        when(mockUserIdentityService.getUserClaimsForStoredIdentity(P2, vcs))
-                .thenReturn(userClaims);
+        when(mockUserIdentityService.getUserClaims(vcs)).thenReturn(userClaims);
 
         // Act
         var si =
@@ -119,26 +117,9 @@ class StoredIdentityServiceTest {
     }
 
     @Test
-    void getStoredIdentityForEvcsShouldThrowIfFailsToParseCredentials() throws Exception {
-        // Arrange
-        when(mockUserIdentityService.getUserClaimsForStoredIdentity(P2, List.of()))
-                .thenThrow(new CredentialParseException("Failed to parse credentials"));
-
-        // Act/Assert
-        var exception =
-                assertThrows(
-                        FailedToCreateStoredIdentityForEvcsException.class,
-                        () ->
-                                storedIdentityService.getStoredIdentityForEvcs(
-                                        USER_ID, List.of(), STRONGEST_MATCHED_VOT, P2));
-
-        assertEquals("Unable to parse user credentials", exception.getMessage());
-    }
-
-    @Test
     void getStoredIdentityForEvcsShouldThrowIfFailsToGenerateClaims() throws Exception {
         // Arrange
-        when(mockUserIdentityService.getUserClaimsForStoredIdentity(P2, List.of()))
+        when(mockUserIdentityService.getUserClaims(List.of()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM));

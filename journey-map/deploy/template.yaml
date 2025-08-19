@@ -313,6 +313,11 @@ Resources:
         - Essential: true
           Image: CONTAINER-IMAGE-PLACEHOLDER
           Name: app
+          Environment:
+            - Name: JOURNEY_MAP_USERNAME
+              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_USERNAME}}'
+            - Name: JOURNEY_MAP_PASSWORD
+              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_PASSWORD}}'
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp

@@ -70,7 +70,7 @@ class AuthorizationRequestHelperTest {
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
     private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
-            new EvidenceRequest("gpg45", 2, null);
+            new EvidenceRequest("gpg45", 2, null, null);
     private static final Long IPV_TOKEN_TTL = 900L;
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -98,7 +98,9 @@ class AuthorizationRequestHelperTest {
 
     @BeforeEach
     void setUp()
-            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
+            throws InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
                     ParseException {
         signer = new LocalECDSASigner(getPrivateKey());
         rsaEncrypter = new RSAEncrypter((RSAPublicKey) getEncryptionPublicKey());
@@ -211,7 +213,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest("gpg45", 2, null),
+                        new EvidenceRequest("gpg45", 2, null, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
@@ -236,7 +238,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest(null, 2, null),
+                        new EvidenceRequest(null, 2, null, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
@@ -289,7 +291,10 @@ class AuthorizationRequestHelperTest {
 
     @Test
     void shouldCreateJWEObject()
-            throws ParseException, JOSEException, NoSuchAlgorithmException, InvalidKeySpecException,
+            throws ParseException,
+                    JOSEException,
+                    NoSuchAlgorithmException,
+                    InvalidKeySpecException,
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(

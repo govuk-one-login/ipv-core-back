@@ -72,11 +72,11 @@ body {
   right: 0;
   bottom: 0;
   flex: 1 1 auto;
+  user-select: none;
 }
 #diagram > * {
   height: 100%;
   width: 100%;
-  max-width: unset !important;
 }
 form {
   flex: 0 1 525px;
@@ -218,12 +218,22 @@ form fieldset p {
 #state-search {
   font-size: 1rem;
 }
-.journeyCtxTransition {
+#diagramSvg .edgeLabel p.journeyCtxTransition {
   background-color: #f5daa4;
 }
 .journeyCtxList {
   padding: 4px 24px 0;
 }
-.mitigationTransition {
-  background-color: #e4c4ff;
+#diagramSvg .edgeLabel p.mitigationTransition {
+  background-color: #ffbda8;
+}
+.defaultEdgeLabel {
+  text-wrap: wrap;
+  width: 100%;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  border-bottom-color: #9c9ca1;
+}
+span.edgeLabel .defaultEdgeLabel:last-child {
+  border-bottom: none;
 }

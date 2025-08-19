@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -29,12 +30,15 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.InstrumentationHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
@@ -44,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
@@ -98,6 +103,10 @@ public class ProcessAsyncCriCredentialHandler
         try {
             LogHelper.attachTraceId();
             LogHelper.attachComponentId(configService);
+            String queueName = extractQueueName(event);
+            LogHelper.attachQueueNameToLogs(queueName);
+            InstrumentationHelper.setSpanAttribute("sqs.queue.name", queueName);
+
             var failedRecords = new ArrayList<SQSBatchResponse.BatchItemFailure>();
 
             for (var sqsMessage : event.getRecords()) {
@@ -115,7 +124,12 @@ public class ProcessAsyncCriCredentialHandler
 
     private List<SQSBatchResponse.BatchItemFailure> processOrReturnItemFailure(SQSMessage message) {
         try {
+            LogHelper.attachSqsMessageIdToLogs(message.getMessageId());
+
             final var asyncCriResponse = getAsyncResponseMessage(message.getBody());
+            var journeyId = extractJourneyIdFromSqsMessage(asyncCriResponse);
+            journeyId.ifPresent(LogHelper::attachGovukSigninJourneyIdToLogs);
+
             if (isSuccessAsyncCriResponse(asyncCriResponse)) {
                 processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
             } else {
@@ -131,6 +145,12 @@ public class ProcessAsyncCriCredentialHandler
                 | EvcsServiceException
                 | HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
+            if (e instanceof AsyncVerifiableCredentialException asyncVcException
+                    && asyncVcException
+                            .getErrorResponse()
+                            .equals(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL)) {
+                EmbeddedMetricHelper.asyncCriResponseUnexpected(extractQueueName(message));
+            }
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
             LOGGER.error(
@@ -152,8 +172,11 @@ public class ProcessAsyncCriCredentialHandler
 
         criResponseItem.ifPresent(
                 responseItem -> {
-                    if (CriResponseService.ERROR_ACCESS_DENIED.equals(
-                            errorAsyncCriResponse.getError())) {
+                    Cri cri = Cri.fromId(responseItem.getCredentialIssuer());
+                    String errorCode = errorAsyncCriResponse.getError();
+                    EmbeddedMetricHelper.asyncCriErrorResponse(cri.getId(), errorCode);
+
+                    if (CriResponseService.ERROR_ACCESS_DENIED.equals(errorCode)) {
                         responseItem.setStatus(CriResponseService.STATUS_ABANDON);
                     } else {
                         responseItem.setStatus(CriResponseService.STATUS_ERROR);
@@ -161,7 +184,7 @@ public class ProcessAsyncCriCredentialHandler
                     criResponseService.updateCriResponseItem(responseItem);
                 });
 
-        LOGGER.error(
+        StringMapMessage logMessage =
                 new StringMapMessage()
                         .with(
                                 LOG_MESSAGE_DESCRIPTION.getFieldName(),
@@ -169,7 +192,13 @@ public class ProcessAsyncCriCredentialHandler
                         .with(
                                 LOG_ERROR_DESCRIPTION.getFieldName(),
                                 errorAsyncCriResponse.getErrorDescription())
-                        .with(LOG_ERROR_CODE.getFieldName(), errorAsyncCriResponse.getError()));
+                        .with(LOG_ERROR_CODE.getFieldName(), errorAsyncCriResponse.getError());
+
+        if (CriResponseService.ERROR_ACCESS_DENIED.equals(errorAsyncCriResponse.getError())) {
+            LOGGER.info(logMessage);
+        } else {
+            LOGGER.error(logMessage);
+        }
 
         criResponseItem.ifPresent(
                 responseItem ->
@@ -179,9 +208,14 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException, CiPutException, AsyncVerifiableCredentialException,
-                    CiPostMitigationsException, VerifiableCredentialException,
-                    UnrecognisedVotException, CredentialParseException, EvcsServiceException,
+            throws ParseException,
+                    CiPutException,
+                    AsyncVerifiableCredentialException,
+                    CiPostMitigationsException,
+                    VerifiableCredentialException,
+                    UnrecognisedVotException,
+                    CredentialParseException,
+                    EvcsServiceException,
                     HttpResponseExceptionWithErrorBody {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
@@ -313,5 +347,33 @@ public class ProcessAsyncCriCredentialHandler
 
     private void postMitigatingVc(VerifiableCredential vc) throws CiPostMitigationsException {
         cimitService.submitMitigatingVcList(List.of(vc), null, null);
+    }
+
+    private String extractQueueName(SQSEvent event) {
+        var records = event.getRecords();
+        if (!isNullOrEmpty(records)) {
+            SQSMessage firstMessage =
+                    records.get(0); // Batched messages should all come from same queue
+            return extractQueueName(firstMessage);
+        }
+        return "unknown";
+    }
+
+    private Optional<String> extractJourneyIdFromSqsMessage(BaseAsyncCriResponse sqsMessage) {
+        return StringUtils.isBlank(sqsMessage.getJourneyId())
+                ? Optional.empty()
+                : Optional.of(sqsMessage.getJourneyId());
+    }
+
+    private String extractQueueName(SQSMessage message) {
+        try {
+            if (message != null) {
+                String arn = message.getEventSourceArn();
+                return arn.substring(arn.lastIndexOf(":") + 1);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract queue name from SQS message", e);
+        }
+        return "unknown";
     }
 }

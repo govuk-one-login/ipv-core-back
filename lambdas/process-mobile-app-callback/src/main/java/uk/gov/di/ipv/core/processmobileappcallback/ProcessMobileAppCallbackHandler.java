@@ -16,6 +16,7 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.exception.InvalidCriResponseException;
@@ -148,8 +149,10 @@ public class ProcessMobileAppCallbackHandler
     }
 
     private JourneyResponse validateCallback(MobileAppCallbackRequest callbackRequest)
-            throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
-                    ClientOauthSessionNotFoundException, InvalidCriResponseException {
+            throws InvalidMobileAppCallbackRequestException,
+                    IpvSessionNotFoundException,
+                    ClientOauthSessionNotFoundException,
+                    InvalidCriResponseException {
         // Attach variables to logs
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
@@ -165,34 +168,51 @@ public class ProcessMobileAppCallbackHandler
             throw new InvalidMobileAppCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
 
+        // Fetch client session
+        var clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
+        var clientOAuthSessionItem =
+                clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
+        var userId = clientOAuthSessionItem.getUserId();
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+
+        // Attach variables to logs
+        LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
         // Check IPV session
         var ipvSessionId = callbackRequest.getIpvSessionId();
         if (StringUtils.isBlank(ipvSessionId)) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Missing IPV session id - Cross-browser scenario."));
+
+            String previousIpvSessionId = null;
+            try {
+                previousIpvSessionId =
+                        ipvSessionService
+                                .getIpvSessionByClientOAuthSessionId(clientOAuthSessionId)
+                                .getIpvSessionId();
+            } catch (IpvSessionNotFoundException e) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Previous IPV session not found for client OAuth session ID: %s",
+                                        clientOAuthSessionId)));
+            }
+
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_APP_MISSING_CONTEXT,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            null,
+                            new AuditEventUser(
+                                    userId,
+                                    previousIpvSessionId,
+                                    govukSigninJourneyId,
+                                    callbackRequest.getIpAddress()),
                             new AuditRestrictedDeviceInformation(
                                     callbackRequest.getDeviceInformation())));
 
             return new JourneyResponse(
-                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH,
-                    criOAuthSessionItem.getClientOAuthSessionId());
+                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, clientOAuthSessionId);
         }
-
-        // Get set session items
-        var ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.getClientOAuthSession(
-                        ipvSessionItem.getClientOAuthSessionId());
-        var userId = clientOAuthSessionItem.getUserId();
-
-        // Attach variables to logs
-        LogHelper.attachGovukSigninJourneyIdToLogs(
-                clientOAuthSessionItem.getGovukSigninJourneyId());
 
         // Validate cri response item
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);

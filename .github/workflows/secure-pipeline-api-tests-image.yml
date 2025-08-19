@@ -22,9 +22,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
         with:
-          cosign-release: 'v1.9.0'
+          cosign-release: 'v2.5.1'
 
       - name: Set up build AWS creds
         uses: aws-actions/configure-aws-credentials@v4
@@ -51,5 +51,5 @@ jobs:
           docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
           docker push "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"
 
-          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
-          cosign sign --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"
+          cosign sign --yes --tlog-upload=false --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest"
+          cosign sign --yes --tlog-upload=false --key "awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY}" "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}"

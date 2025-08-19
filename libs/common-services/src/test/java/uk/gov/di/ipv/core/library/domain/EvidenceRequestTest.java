@@ -13,27 +13,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class EvidenceRequestTest {
     @SuppressWarnings("java:S125") // Commented out code
     // {"scoringPolicy":"gpg45","strengthScore":2}
-    private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_NULL =
+    private static final String BASE64_ENCODED_GPG45_STRENGTH_2 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ==";
 
     @SuppressWarnings("java:S125") // Commented out code
     // {"scoringPolicy":"gpg45","verificationScore":1}
-    private static final String BASE64_ENCODED_GPG45_STRENGTH_NULL_VERIFICATION_1 =
+    private static final String BASE64_ENCODED_GPG45_VERIFICATION_1 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
 
     @SuppressWarnings("java:S125") // Commented out code
-    // {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1}
+    // {"scoringPolicy":"gpg45","identityFraudScore":1}
+    private static final String BASE64_ENCODED_GPG45_IDENTITY_FRAUD_SCORE_1 =
+            // pragma: allowlist nextline secret
+            "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJpZGVudGl0eUZyYXVkU2NvcmUiOjF9";
+
+    @SuppressWarnings("java:S125") // Commented out code
+    // {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1,"identityFraudScore":1}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_1 =
             // pragma: allowlist nextline secret
-            "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
+            "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyLCJ2ZXJpZmljYXRpb25TY29yZSI6MSwiaWRlbnRpdHlGcmF1ZFNjb3JlIjoxfQ==";
 
     private static Stream<Arguments> base64EncodingsAndValues() {
         return Stream.of(
-                Arguments.of(BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_NULL, "gpg45", 2, null),
-                Arguments.of(BASE64_ENCODED_GPG45_STRENGTH_NULL_VERIFICATION_1, "gpg45", null, 1),
-                Arguments.of(BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_1, "gpg45", 2, 1));
+                Arguments.of(BASE64_ENCODED_GPG45_STRENGTH_2, "gpg45", 2, null, null),
+                Arguments.of(BASE64_ENCODED_GPG45_VERIFICATION_1, "gpg45", null, 1, null),
+                Arguments.of(BASE64_ENCODED_GPG45_IDENTITY_FRAUD_SCORE_1, "gpg45", null, null, 1),
+                Arguments.of(BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_1, "gpg45", 2, 1, 1));
     }
 
     @ParameterizedTest
@@ -42,10 +49,13 @@ class EvidenceRequestTest {
             String expectedResult,
             String scoringPolicy,
             Integer strengthScore,
-            Integer verificationScore)
+            Integer verificationScore,
+            Integer identityFraudScore)
             throws JsonProcessingException {
         // Arrange
-        var underTest = new EvidenceRequest(scoringPolicy, strengthScore, verificationScore);
+        var underTest =
+                new EvidenceRequest(
+                        scoringPolicy, strengthScore, verificationScore, identityFraudScore);
 
         // Act
         var result = underTest.toBase64();
@@ -71,7 +81,7 @@ class EvidenceRequestTest {
     @Test
     void toMapWithNoNulls_whenCalledWithAllNullValues_ReturnsEmptyMap() {
         // Arrange
-        var underTest = new EvidenceRequest(null, null, null);
+        var underTest = new EvidenceRequest(null, null, null, null);
 
         // Act
         var result = underTest.toMapWithNoNulls();
@@ -83,7 +93,7 @@ class EvidenceRequestTest {
     @Test
     void toMapWithNoNulls_whenCalledWithNoNullValues_ReturnsFullMap() {
         // Arrange
-        var underTest = new EvidenceRequest("policy", 1, 2);
+        var underTest = new EvidenceRequest("policy", 1, 2, 1);
 
         // Act
         var result = underTest.toMapWithNoNulls();
@@ -92,5 +102,6 @@ class EvidenceRequestTest {
         assertEquals("policy", result.get("scoringPolicy"));
         assertEquals(1, result.get("strengthScore"));
         assertEquals(2, result.get("verificationScore"));
+        assertEquals(1, result.get("identityFraudScore"));
     }
 }

@@ -20,7 +20,7 @@
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "5.0.1",
-    "mermaid": "10.9.3",
+    "mermaid": "11.6.0",
     "svg-pan-zoom": "3.6.2",
     "yaml": "2.7.1"
   },

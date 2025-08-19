@@ -60,6 +60,7 @@ class ContractTest {
             "https://identity.staging.account.gov.uk/app/callback?state=%s";
     private static final String TEST_OAUTH_STATE = "DUMMY_RANDOM_OAUTH_STATE";
     private static final String TEST_ISSUER = "dummyDcmawAsyncComponentId";
+    private static final String TEST_ENCRYPTION_KEY = "dummyDcmawAsyncEncryptionKey";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
@@ -403,6 +404,7 @@ class ContractTest {
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .componentId(TEST_ISSUER)
+                .encryptionKey(TEST_ENCRYPTION_KEY)
                 .clientCallbackUrl(
                         isMam
                                 ? URI.create(String.format(CALLBACK_URL_TEMPLATE, TEST_OAUTH_STATE))

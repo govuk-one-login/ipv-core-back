@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -887,32 +886,6 @@ class BuildUserIdentityHandlerTest {
         assertEquals(403, response.getStatusCode());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseOnCredentialParseException() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(ipvSessionItem);
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
-                .thenThrow(
-                        new CredentialParseException(
-                                "Encountered a parsing error while attempting to purchase successful VC Store items."));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Failed to parse successful VC Store items. Encountered a parsing error while attempting to purchase successful VC Store items.",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockUserIdentityService, times(1))
-                .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 

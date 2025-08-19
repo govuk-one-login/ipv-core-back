@@ -32,12 +32,6 @@ states:
       reuse-with-store:
         targetJourney: REUSE_EXISTING_IDENTITY
         targetState: REUSE_WITH_STORE_IDENTITY
-      operational-profile-reuse:
-        targetJourney: OPERATIONAL_PROFILE_REUSE
-        targetState: START
-      in-migration-reuse:
-        targetJourney: OPERATIONAL_PROFILE_MIGRATION
-        targetState: START
       pending:
         targetJourney: F2F_PENDING
         targetState: PENDING
@@ -63,6 +57,24 @@ states:
         targetState: REPROVE_IDENTITY_START_P2
       reprove-identity-gpg45-low:
         targetState: REPROVE_IDENTITY_START_P1
+
+      # Routing for check of DCMAW Async VC cross-browser scenario (fail-with-ci already covered).
+      # Should have the same routing as same-session scenario, except fail-with-no-ci must know vtr for choosing another way.
+      fail-with-no-ci-low:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: DCMAW_ASYNC_ANOTHER_WAY
+      fail-with-no-ci-medium:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: DCMAW_ASYNC_ANOTHER_WAY
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check-low:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK
+      dl-auth-source-check-medium:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK
 
   REPROVE_IDENTITY_START_P1:
     response:

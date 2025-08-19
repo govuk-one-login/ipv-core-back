@@ -1,8 +1,9 @@
 @Build
 Feature: M1C Unavailable Journeys
+  Background: Disable the strategic app
+    Given I activate the 'disableStrategicApp' feature set
 
-  Rule: New identities
-
+  Rule: Medium-confidence journeys
     Background:
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -18,7 +19,9 @@ Feature: M1C Unavailable Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -32,7 +35,9 @@ Feature: M1C Unavailable Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -48,15 +53,60 @@ Feature: M1C Unavailable Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-  Rule: Returning existing M1C unavailable user goes through details confirmation
+  Rule: High-medium confidence journeys
+    Scenario: Zero fraud score results in M1C with [P2,P3] VTR
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
 
+  Rule: Returning existing M1C user to high-medium confidence journey
+    Scenario: User goes through details confirmation and receives a P3 identity
+      Given the subject already has the following credentials
+        | CRI           | scenario                     |
+        | dcmawAsync    | kenneth-passport-valid       |
+        | address       | kenneth-current              |
+        | fraud         | kenneth-unavailable          |
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P3' identity
+
+
+  Rule: Returning existing M1C unavailable user goes through medium-confidence details confirmation
     Background:
       Given the subject already has the following credentials
         | CRI           | scenario                     |
@@ -70,7 +120,9 @@ Feature: M1C Unavailable Journeys
       # Repeat fraud check with no update
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit <fraudResponse> details to the CRI stub
+      When I submit <fraudResponse> details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -91,7 +143,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit <fraudResponse> details to the CRI stub
+      When I submit <fraudResponse> details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -108,7 +162,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit <fraudResponse> details to the CRI stub
+      When I submit <fraudResponse> details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -132,7 +188,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit <fraudResponse> details to the CRI stub
+      When I submit <fraudResponse> details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -157,7 +215,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -165,7 +225,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'P2' identity
 
   Rule: Existing non-M1C identity returns
-
     Background:
       Given the subject already has the following credentials
         | CRI           | scenario                     |
@@ -186,7 +245,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-unavailable' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -206,7 +267,9 @@ Feature: M1C Unavailable Journeys
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-unavailable' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
       When I submit a 'returnToRp' event
       Then I get an OAuth response

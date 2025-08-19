@@ -25,6 +25,7 @@ public class EvidenceRequest extends BaseClaim {
     private final String scoringPolicy;
     private final Integer strengthScore;
     private final Integer verificationScore;
+    private final Integer identityFraudScore;
 
     public String toBase64() throws JsonProcessingException {
         var jsonString = objectMapper.writeValueAsString(this);

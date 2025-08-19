@@ -161,8 +161,7 @@ public class StateMachineInitializer {
                             }
                             if (nestedJourneyState
                                     instanceof
-                                    NestedJourneyInvokeState
-                                    subNestedJourneyInvokeState) {
+                                    NestedJourneyInvokeState subNestedJourneyInvokeState) {
                                 initializeNestedJourneyInvokeState(
                                         subNestedJourneyInvokeState,
                                         name,

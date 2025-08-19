@@ -4,7 +4,8 @@ Feature: P2 Reuse journey
   @TrafficGeneration
   Scenario: Successful P2 reuse journey
     # First identity proving journey
-    Given I start a new 'medium-confidence' journey
+    Given I activate the 'disableStrategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -20,7 +21,9 @@ Feature: P2 Reuse journey
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -45,3 +48,30 @@ Feature: P2 Reuse journey
 
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
+
+  Scenario: Reuse journey - credentials meet P3 identity
+    Given the subject already has the following credentials
+      | CRI        | scenario               |
+      | dcmaw      | kenneth-passport-valid |
+      | address    | kenneth-current        |
+      | fraud      | kenneth-score-2        |
+    When I start a new 'high-medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P3' identity
+
+  Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
+    Given the subject already has the following credentials
+      | CRI            | scenario                     |
+      | dcmaw          | kenneth-driving-permit-valid |
+      | address        | kenneth-current              |
+      | fraud          | kenneth-score-2              |
+      | drivingLicence | kenneth-driving-permit-valid |
+    When I start a new 'high-medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity

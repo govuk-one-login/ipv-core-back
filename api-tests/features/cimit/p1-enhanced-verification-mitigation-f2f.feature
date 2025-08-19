@@ -1,7 +1,8 @@
 @Build
 Feature: Mitigating CIs with enhanced verification using the F2F CRI
   Background:
-    Given I start a new 'low-confidence' journey
+    Given I activate the 'disableStrategicApp' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -13,10 +14,12 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -107,7 +110,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'f2f' CRI response
       When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |
@@ -136,7 +141,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'f2f' CRI response
       When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
         | Attribute          | Values                                      |
@@ -153,7 +160,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'f2f' CRI response
       When I get an error from the async CRI stub
       Then I get a 'page-face-to-face-handoff' page response
@@ -178,7 +187,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |
@@ -205,7 +216,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |

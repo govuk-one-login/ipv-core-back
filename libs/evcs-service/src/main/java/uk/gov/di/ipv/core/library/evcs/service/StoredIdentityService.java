@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -60,7 +59,7 @@ public class StoredIdentityService {
 
     private JWTClaimsSet createStoredIdentityJwt(
             String userId, List<VerifiableCredential> vcs, Vot achievedVot)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now(clock);
 
         // the serialiseNullClaims(false) on JWTClaimsSet.Builder doesn't work to
@@ -69,8 +68,7 @@ public class StoredIdentityService {
         // with jackson.
         var parsedUserClaims =
                 OBJECT_MAPPER.convertValue(
-                        userIdentityService.getUserClaimsForStoredIdentity(achievedVot, vcs),
-                        new TypeReference<>() {});
+                        userIdentityService.getUserClaims(vcs), new TypeReference<>() {});
 
         return new JWTClaimsSet.Builder()
                 .issuer(configService.getParameter(COMPONENT_ID))
@@ -94,17 +92,13 @@ public class StoredIdentityService {
         try {
             var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
 
-            return createSignedJwt(storedIdentity, signerFactory.getSigner()).serialize();
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Unable to parse user credentials"));
-            throw new FailedToCreateStoredIdentityForEvcsException(
-                    "Unable to parse user credentials");
+            return createSignedJwt(storedIdentity, signerFactory.getSisSigner()).serialize();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildLogMessage(e.getErrorResponse().getMessage()));
             throw new FailedToCreateStoredIdentityForEvcsException(
                     e.getErrorResponse().getMessage());
         } catch (JOSEException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to create signed JWT"));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create signed JWT", e));
             throw new FailedToCreateStoredIdentityForEvcsException("Failed to create signed JWT");
         }
     }

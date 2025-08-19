@@ -10,6 +10,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -17,13 +18,12 @@ import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsPutUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
@@ -32,23 +32,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
@@ -57,9 +51,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcSecurityCheckNoCis;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
@@ -116,7 +108,7 @@ class EvcsServiceTest {
 
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<List<EvcsUpdateUserVCsDto>> evcsUpdateUserVCsDtosCaptor;
-    @Captor ArgumentCaptor<EvcsPutUserVCsDto> evcsPutUserVCsDtoCaptor;
+    @Captor ArgumentCaptor<EvcsPostIdentityDto> evcsPostIdentityDtoCaptor;
     @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
     @Mock EvcsClient mockEvcsClient;
@@ -134,7 +126,7 @@ class EvcsServiceTest {
         @Test
         void testStoreIdentity_whenNoExistingEvcsUserVCs() throws Exception {
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID, VERIFIABLE_CREDENTIALS, List.of(), false);
 
             // Assert
@@ -158,7 +150,7 @@ class EvcsServiceTest {
         @Test
         void testStorePendingIdentity_onSuccessfulJourney_for_incompleteF2F() throws Exception {
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, List.of(), true);
 
             // Assert
@@ -178,7 +170,7 @@ class EvcsServiceTest {
         @Test
         void testStoreIdentity_for_6MFCJourney() throws Exception {
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID,
                     VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
                     EVCS_GET_USER_VC_DTO,
@@ -225,7 +217,7 @@ class EvcsServiceTest {
                                     EvcsVCState.CURRENT,
                                     Map.of("reason", "testing")));
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID,
                     VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
                     evcsGetUserVcsWithCurrentStateAllExistingDto,
@@ -256,7 +248,7 @@ class EvcsServiceTest {
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of("reason", "testing")));
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID,
                     VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS,
                     evcsGetUserVcsWithPendingAllExistingDto,
@@ -295,7 +287,7 @@ class EvcsServiceTest {
                                     EvcsVCState.PENDING_RETURN,
                                     Map.of("reason", "testing")));
             // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
+            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                     TEST_USER_ID, List.of(), evcsGetUserVcsWithPendingAllExistingDto, false);
 
             // Assert
@@ -311,55 +303,36 @@ class EvcsServiceTest {
                             .count()));
             mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
         }
-
-        @Test
-        void storeCompletedIdentityShouldNotUpdateInheritedIdentity() throws Exception {
-            var vcsInEvcs =
-                    List.of(
-                            new EvcsGetUserVCDto(
-                                    vcHmrcMigrationPCL200().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId())));
-            // Act
-            evcsService.storeCompletedOrPendingIdentityWithPost(
-                    TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, vcsInEvcs, false);
-
-            // Assert
-            InOrder mockOrderVerifier = inOrder(mockEvcsClient);
-
-            mockOrderVerifier.verify(mockEvcsClient, never()).updateUserVCs(any(), any());
-            mockOrderVerifier.verify(mockEvcsClient, times(1)).storeUserVCs(any(), any());
-        }
     }
 
     @Nested
-    class StoreIdentityWithPutMethod {
+    class StoreIdentityWithPostIdentityMethod {
         @Test
-        void shouldStorePendingIdentityWithPutMethod() throws Exception {
+        void shouldStorePendingIdentityWithPostIdentityMethod() throws Exception {
             // Arrange
             var testVcs = List.of(VC_ADDRESS_TEST);
 
             // Act
-            evcsService.storePendingIdentityWithPut(TEST_USER_ID, testVcs);
+            evcsService.storePendingIdentityWithPostIdentity(TEST_USER_ID, testVcs);
 
             // Assert
-            verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
+            verify(mockEvcsClient).storeUserIdentity(evcsPostIdentityDtoCaptor.capture());
 
             assertEquals(
                     clientOAuthSessionItem.getUserId(),
-                    evcsPutUserVCsDtoCaptor.getValue().userId());
+                    evcsPostIdentityDtoCaptor.getValue().userId());
             assertEquals(
                     VC_ADDRESS_TEST.getVcString(),
-                    evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
-            assertEquals(PENDING_RETURN, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
-            assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
+                    evcsPostIdentityDtoCaptor.getValue().vcs().get(0).vc());
+            assertEquals(PENDING_RETURN, evcsPostIdentityDtoCaptor.getValue().vcs().get(0).state());
+            assertEquals(ONLINE, evcsPostIdentityDtoCaptor.getValue().vcs().get(0).provenance());
 
             verify(mockEvcsClient, never()).updateUserVCs(any(), any());
             verify(mockEvcsClient, never()).storeUserVCs(any(), any());
         }
 
         @Test
-        void shouldStoreCompletedIdentityWithPutMethod() throws Exception {
+        void shouldStoreCompletedIdentityWithPostIdentityMethod() throws Exception {
             // Arrange
             var testVcs = List.of(VC_ADDRESS_TEST);
             var testSiJwt = "test.si.jwt";
@@ -368,22 +341,22 @@ class EvcsServiceTest {
                     .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
 
             // Act
-            evcsService.storeCompletedIdentityWithPut(
+            evcsService.storeCompletedIdentityWithPostIdentity(
                     TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
 
             // Assert
-            verify(mockEvcsClient).storeUserVCs(evcsPutUserVCsDtoCaptor.capture());
+            verify(mockEvcsClient).storeUserIdentity(evcsPostIdentityDtoCaptor.capture());
 
             assertEquals(
                     clientOAuthSessionItem.getUserId(),
-                    evcsPutUserVCsDtoCaptor.getValue().userId());
+                    evcsPostIdentityDtoCaptor.getValue().userId());
             assertEquals(
                     VC_ADDRESS_TEST.getVcString(),
-                    evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).vc());
-            assertEquals(CURRENT, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).state());
-            assertEquals(ONLINE, evcsPutUserVCsDtoCaptor.getValue().vcs().get(0).provenance());
-            assertEquals(testSiJwt, evcsPutUserVCsDtoCaptor.getValue().si().jwt());
-            assertEquals(P1, evcsPutUserVCsDtoCaptor.getValue().si().vot());
+                    evcsPostIdentityDtoCaptor.getValue().vcs().get(0).vc());
+            assertEquals(CURRENT, evcsPostIdentityDtoCaptor.getValue().vcs().get(0).state());
+            assertEquals(ONLINE, evcsPostIdentityDtoCaptor.getValue().vcs().get(0).provenance());
+            assertEquals(testSiJwt, evcsPostIdentityDtoCaptor.getValue().si().jwt());
+            assertEquals(P1, evcsPostIdentityDtoCaptor.getValue().si().vot());
 
             verify(mockEvcsClient, never()).updateUserVCs(any(), any());
             verify(mockEvcsClient, never()).storeUserVCs(any(), any());
@@ -456,13 +429,17 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testGetVerifiableCredentials()
-            throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
+    void testGetVerifiableCredentials() throws CredentialParseException, EvcsServiceException {
         // Arrange
-        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.ADDRESS);
-        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.DCMAW);
+        when(mockConfigService.getIssuerCris())
+                .thenReturn(
+                        Map.of(
+                                vcAddressM1a().getClaimsSet().getIssuer(),
+                                Cri.ADDRESS,
+                                vcWebPassportSuccessful().getClaimsSet().getIssuer(),
+                                Cri.DCMAW));
+        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
                 .thenReturn(
@@ -492,11 +469,9 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound()
-            throws NoCriForIssuerException, EvcsServiceException {
+    void testGetVerifiableCredentialsShouldErrorWhenCriNotFound() throws EvcsServiceException {
         // Arrange
-        when(mockConfigService.getCriByIssuer(any()))
-                .thenThrow(new NoCriForIssuerException("not found"));
+        when(mockConfigService.getIssuerCris()).thenReturn(Map.of());
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
                 .thenReturn(
@@ -510,6 +485,8 @@ class EvcsServiceTest {
                                                 vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
                                                 null))));
+        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act/Assert
         assertThrows(
@@ -528,10 +505,15 @@ class EvcsServiceTest {
                         new EvcsGetUserVCDto(
                                 vcWebPassportSuccessful().getVcString(), CURRENT, null));
 
-        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.ADDRESS);
-        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.DCMAW);
+        when(mockConfigService.getIssuerCris())
+                .thenReturn(
+                        Map.of(
+                                vcAddressM1a().getClaimsSet().getIssuer(),
+                                Cri.ADDRESS,
+                                vcWebPassportSuccessful().getClaimsSet().getIssuer(),
+                                Cri.DCMAW));
+        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
         var vcs = evcsService.getVerifiableCredentials(TEST_USER_ID, evcsVcs, CURRENT);
@@ -555,10 +537,15 @@ class EvcsServiceTest {
                         new EvcsGetUserVCDto(
                                 vcWebPassportSuccessful().getVcString(), PENDING_RETURN, null));
 
-        when(mockConfigService.getCriByIssuer(vcAddressM1a().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.ADDRESS);
-        when(mockConfigService.getCriByIssuer(vcWebPassportSuccessful().getClaimsSet().getIssuer()))
-                .thenReturn(Cri.DCMAW);
+        when(mockConfigService.getIssuerCris())
+                .thenReturn(
+                        Map.of(
+                                vcAddressM1a().getClaimsSet().getIssuer(),
+                                Cri.ADDRESS,
+                                vcWebPassportSuccessful().getClaimsSet().getIssuer(),
+                                Cri.DCMAW));
+        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
         var vcs =
@@ -576,80 +563,69 @@ class EvcsServiceTest {
     }
 
     @Test
-    void storeInheritedIdentityShouldStoreCurrentVc() throws Exception {
-        var inheritedId = vcHmrcMigrationPCL200();
+    void getVerifiableCredentialsFiltersOutCimitVcs() throws Exception {
+        // Arrange
+        var evcsVcs =
+                List.of(
+                        new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
+                        new EvcsGetUserVCDto(
+                                vcWebPassportSuccessful().getVcString(), CURRENT, null),
+                        new EvcsGetUserVCDto(vcSecurityCheckNoCis().getVcString(), CURRENT, null));
 
-        evcsService.storeInheritedIdentity(TEST_USER_ID, inheritedId, List.of());
+        when(mockConfigService.getIssuerCris())
+                .thenReturn(
+                        Map.of(
+                                vcAddressM1a().getClaimsSet().getIssuer(),
+                                Cri.ADDRESS,
+                                vcWebPassportSuccessful().getClaimsSet().getIssuer(),
+                                Cri.DCMAW));
+        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn("https://cimit.stubs.account.gov.uk");
 
-        verify(mockEvcsClient)
-                .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
-
-        var createDto = evcsCreateUserVCsDtosCaptor.getValue().get(0);
-        assertEquals(inheritedId.getVcString(), createDto.vc());
-        assertEquals(CURRENT, createDto.state());
-    }
-
-    @Test
-    void storeInheritedIdentityShouldMoveExistingIdentitiesToHistoric() throws Exception {
-        var existingInheritedIds =
-                List.of(vcHmrcMigrationPCL200(), vcHmrcMigrationPCL200NoEvidence());
-        var incomingInheritedId = vcHmrcMigrationPCL250();
-
-        evcsService.storeInheritedIdentity(TEST_USER_ID, incomingInheritedId, existingInheritedIds);
-
-        verify(mockEvcsClient)
-                .updateUserVCs(eq(TEST_USER_ID), evcsUpdateUserVCsDtosCaptor.capture());
-        verify(mockEvcsClient)
-                .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
-
-        var updateDtos = evcsUpdateUserVCsDtosCaptor.getValue();
-
+        // Act
+        var vcs = evcsService.getVerifiableCredentials(TEST_USER_ID, evcsVcs, CURRENT);
+        // Assert
+        assertEquals(2, vcs.size());
         assertEquals(
-                existingInheritedIds.get(0).getSignedJwt().getSignature().toString(),
-                updateDtos.get(0).signature());
-        assertEquals(HISTORIC, updateDtos.get(0).state());
-
-        assertEquals(
-                existingInheritedIds.get(1).getSignedJwt().getSignature().toString(),
-                updateDtos.get(1).signature());
-        assertEquals(HISTORIC, updateDtos.get(1).state());
-
-        var createDto = evcsCreateUserVCsDtosCaptor.getValue().get(0);
-        assertEquals(incomingInheritedId.getVcString(), createDto.vc());
-        assertEquals(CURRENT, createDto.state());
+                2,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCri().equals(Cri.ADDRESS)
+                                                || vc.getCri().equals(Cri.DCMAW))
+                        .count()));
     }
 
     @Test
-    void storeInheritedIdentityShouldThrowIfFailsToCreate() throws Exception {
-        doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_CONSTRUCT_EVCS_URI))
-                .when(mockEvcsClient)
-                .storeUserVCs(any(), any());
+    void shouldStoreStoredIdentityRecord() throws Exception {
+        // Arrange
+        var testVcs = List.of(VC_ADDRESS_TEST);
+        var testSiJwt = "test.si.jwt";
 
-        var evcsServiceException =
-                assertThrows(
-                        EvcsServiceException.class,
-                        () ->
-                                evcsService.storeInheritedIdentity(
-                                        TEST_USER_ID, vcHmrcMigrationPCL200(), List.of()));
+        when(mockStoredIdentityService.getStoredIdentityForEvcs(
+                        TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT))
+                .thenReturn(new EvcsStoredIdentityDto(testSiJwt, P1));
 
-        assertEquals(FAILED_TO_CONSTRUCT_EVCS_URI, evcsServiceException.getErrorResponse());
+        // Act
+        evcsService.storeStoredIdentityRecord(
+                TEST_USER_ID, testVcs, STRONGEST_MATCHED_VOT, ACHIEVED_VOT);
+
+        // Assert
+        verify(mockEvcsClient).storeUserIdentity(evcsPostIdentityDtoCaptor.capture());
+
+        assertEquals(testSiJwt, evcsPostIdentityDtoCaptor.getValue().si().jwt());
+        assertEquals(P1, evcsPostIdentityDtoCaptor.getValue().si().vot());
+
+        verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+        verify(mockEvcsClient, never()).storeUserVCs(any(), any());
     }
 
     @Test
-    void storeInheritedIdentityShouldThrowIfFailsToUpdate() throws Exception {
-        doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_PARSE_EVCS_REQUEST_BODY))
-                .when(mockEvcsClient)
-                .updateUserVCs(any(), any());
+    void shouldInvalidateStoredIdentityRecord() throws Exception {
+        // Act
+        evcsService.invalidateStoredIdentityRecord(TEST_USER_ID);
 
-        var evcsServiceException =
-                assertThrows(
-                        EvcsServiceException.class,
-                        () ->
-                                evcsService.storeInheritedIdentity(
-                                        TEST_USER_ID,
-                                        vcHmrcMigrationPCL200(),
-                                        List.of(vcHmrcMigrationPCL250())));
-
-        assertEquals(FAILED_TO_PARSE_EVCS_REQUEST_BODY, evcsServiceException.getErrorResponse());
+        // Assert
+        verify(mockEvcsClient, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 }

@@ -9,13 +9,11 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserClaims;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -85,9 +83,7 @@ public class UserIdentityService {
             Vot achievedVot,
             Vot targetVot,
             List<ContraIndicator> contraIndicators)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                    UnrecognisedCiException {
-        var profileType = achievedVot.getProfileType();
+            throws HttpResponseExceptionWithErrorBody, UnrecognisedCiException {
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
         var vtm = configService.getParameter(CORE_VTM_CLAIM);
@@ -95,30 +91,23 @@ public class UserIdentityService {
         var userIdentityBuilder =
                 UserIdentity.UserIdentityBuilder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
 
-        buildUserIdentityBasedOnProfileType(
-                achievedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
+        buildUserIdentity(achievedVot, targetVot, contraIndicators, vcs, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         return findIdentityClaim(vcs, true);
     }
 
     public Optional<IdentityClaim> findIdentityClaim(
             List<VerifiableCredential> vcs, boolean checkEvidence)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         var identityClaims = new ArrayList<IdentityClaim>();
         for (var vc : vcs) {
-            try {
-                if (VcHelper.isOperationalProfileVc(vc)
-                        || ((!checkEvidence || isEvidenceVc(vc)) && VcHelper.isSuccessfulVc(vc))) {
-                    identityClaims.add(getIdentityClaim(vc));
-                }
-            } catch (ParseException e) {
-                throw new CredentialParseException(
-                        "Encountered a parsing error while attempting to parse VC store item");
+            if (((!checkEvidence || isEvidenceVc(vc)) && VcHelper.isSuccessfulVc(vc))) {
+                identityClaims.add(getIdentityClaim(vc));
             }
         }
 
@@ -226,28 +215,21 @@ public class UserIdentityService {
     }
 
     private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs) {
-        var successfulVcs = new ArrayList<VerifiableCredential>();
-        for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                successfulVcs.add(vc);
-            }
-        }
-        return successfulVcs;
+        return vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
     }
 
-    private void buildUserIdentityBasedOnProfileType(
+    private void buildUserIdentity(
             Vot achievedVot,
             Vot targetVot,
             List<ContraIndicator> contraIndicators,
-            ProfileType profileType,
             List<VerifiableCredential> vcs,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         if (Vot.P0.equals(achievedVot)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
             var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
-            var userClaims = getUserClaims(profileType, successfulVcs);
+            var userClaims = getUserClaims(successfulVcs);
             userIdentityBuilder
                     .identityClaim(userClaims.getIdentityClaim())
                     .addressClaim(userClaims.getAddressClaim())
@@ -258,46 +240,37 @@ public class UserIdentityService {
         }
     }
 
-    private UserClaims getUserClaims(ProfileType profileType, List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+    public UserClaims getUserClaims(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
         var userClaimsBuilder = UserClaims.builder();
 
         Optional<IdentityClaim> identityClaim = findIdentityClaim(vcs);
         identityClaim.ifPresent(userClaimsBuilder::identityClaim);
 
-        if (profileType.equals(ProfileType.GPG45)) {
-            Optional<List<PostalAddress>> addressClaim = getAddressClaim(vcs);
-            addressClaim.ifPresent(userClaimsBuilder::addressClaim);
+        Optional<List<PostalAddress>> addressClaim = getAddressClaim(vcs);
+        addressClaim.ifPresent(userClaimsBuilder::addressClaim);
 
-            Optional<List<PassportDetails>> passportClaim =
-                    getFirstClaim(vcs, IdentityCheckSubject::getPassport);
-            passportClaim.ifPresent(userClaimsBuilder::passportClaim);
+        Optional<List<PassportDetails>> passportClaim =
+                getFirstClaim(vcs, IdentityCheckSubject::getPassport);
+        passportClaim.ifPresent(userClaimsBuilder::passportClaim);
 
-            Optional<List<DrivingPermitDetails>> drivingPermitClaim =
-                    getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
-            drivingPermitClaim.ifPresent(
-                    drivingPermit -> {
-                        drivingPermit.forEach(
-                                permit -> {
-                                    permit.setFullAddress(null);
-                                    permit.setIssueDate(null);
-                                });
-                        userClaimsBuilder.drivingPermitClaim(drivingPermit);
-                    });
-        }
+        Optional<List<DrivingPermitDetails>> drivingPermitClaim =
+                getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
+        drivingPermitClaim.ifPresent(
+                drivingPermit -> {
+                    drivingPermit.forEach(
+                            permit -> {
+                                permit.setFullAddress(null);
+                                permit.setIssueDate(null);
+                            });
+                    userClaimsBuilder.drivingPermitClaim(drivingPermit);
+                });
 
         Optional<List<SocialSecurityRecordDetails>> ninoClaim =
                 getFirstClaim(vcs, IdentityCheckSubject::getSocialSecurityRecord);
         ninoClaim.ifPresent(userClaimsBuilder::ninoClaim);
 
         return userClaimsBuilder.build();
-    }
-
-    public UserClaims getUserClaimsForStoredIdentity(
-            Vot achievedVot, List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        var profileType = achievedVot.getProfileType();
-        return getUserClaims(profileType, vcs);
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)

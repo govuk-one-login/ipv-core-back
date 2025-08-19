@@ -5,9 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
-import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
-import uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.RiskAssessment;
@@ -23,12 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
-import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitMissingDrivingPermit;
@@ -161,63 +157,5 @@ class AuditExtensionsHelperTest {
 
         assertNull(restricted.getName());
         assertNull(restricted.getDocExpiryDate());
-    }
-
-    @Test
-    void getAuditRestrictedInheritedIdentityShouldReturnTheRightStuff() throws Exception {
-        var restricted =
-                getRestrictedAuditDataForInheritedIdentity(
-                        vcHmrcMigrationPCL200(), "test_device_data");
-
-        var expectedName =
-                List.of(
-                        NameGenerator.createName(
-                                List.of(
-                                        NameGenerator.NamePartGenerator.createNamePart(
-                                                "KENNETH", NamePart.NamePartType.GIVEN_NAME),
-                                        NameGenerator.NamePartGenerator.createNamePart(
-                                                "DECERQUEIRA",
-                                                NamePart.NamePartType.FAMILY_NAME))));
-        var expectedBirthDate = List.of(BirthDateGenerator.createBirthDate("1965-07-08"));
-        var expectedSocialSecurityRecord =
-                List.of(
-                        SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails(
-                                "AB123456C")); // pragma: allowlist secret
-        assertEquals(expectedName, restricted.name());
-        assertEquals(expectedBirthDate, restricted.birthDate());
-        assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
-        assertEquals(
-                "{\"encoded\":\"test_device_data\"}",
-                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
-    }
-
-    @Test
-    void getRestrictedAuditDataForInheritedIdentityShouldReturnNullValuesIfInvalidVcType()
-            throws Exception {
-        var restricted =
-                getRestrictedAuditDataForInheritedIdentity(vcAddressOne(), "test_device_data");
-
-        assertNull(restricted.name());
-        assertNull(restricted.birthDate());
-        assertNull(restricted.socialSecurityRecord());
-        assertEquals(
-                "{\"encoded\":\"test_device_data\"}",
-                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
-    }
-
-    @Test
-    void
-            getRestrictedAuditDataForInheritedIdentityShouldReturnNullValuesIfMissingCredentialSubject()
-                    throws Exception {
-        var restricted =
-                getRestrictedAuditDataForInheritedIdentity(
-                        vcWebDrivingPermitNoCredentialSubjectProperty(), "test_device_data");
-
-        assertNull(restricted.name());
-        assertNull(restricted.birthDate());
-        assertNull(restricted.socialSecurityRecord());
-        assertEquals(
-                "{\"encoded\":\"test_device_data\"}",
-                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
 }
