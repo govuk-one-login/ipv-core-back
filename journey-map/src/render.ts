@@ -22,7 +22,7 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
-import config from "./config.ts";
+import config from "./config.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];

@@ -25,6 +25,7 @@ public class FetchJourneyTransitionsHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String LOG_GROUP = "/aws/lambda/process-journey-event-dev";
+    private static final int MAX_ATTEMPTS = 10;
     private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
 
     private final AWSLogs logsClient = getLogsClient();
@@ -119,15 +120,25 @@ public class FetchJourneyTransitionsHandler
         String queryId = startResult.getQueryId();
         GetQueryResultsResult results;
 
-        do {
+        int attempts = 0;
+        while (attempts++ < MAX_ATTEMPTS) {
             Thread.sleep(1000);
             results = logsClient.getQueryResults(new GetQueryResultsRequest().withQueryId(queryId));
-        } while (!"Complete".equals(results.getStatus()));
+            String status = results.getStatus();
 
-        return results.getResults().stream()
-                .map(this::parseResultRow)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            if ("Complete".equals(status)) {
+                return results.getResults().stream()
+                        .map(this::parseResultRow)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            }
+
+            if ("Failed".equals(status) || "Cancelled".equals(status) || "Timeout".equals(status)) {
+                throw new RuntimeException("CloudWatch query did not succeed: " + status);
+            }
+        }
+
+        throw new RuntimeException("CloudWatch query did not complete within max attempts");
     }
 
     private TransitionCount parseResultRow(List<ResultField> row) {

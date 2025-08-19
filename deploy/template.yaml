@@ -898,7 +898,6 @@ Resources:
 
   IPVCoreAnalyticsAPIKey:
     Type: AWS::ApiGateway::ApiKey
-    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
       Enabled: true
@@ -908,7 +907,6 @@ Resources:
 
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
-    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
@@ -920,7 +918,6 @@ Resources:
 
   IPVCoreAnalyticsUsagePlanKey:
     Type: AWS::ApiGateway::UsagePlanKey
-    DependsOn: IPVCoreAnalyticsAPI
     Properties:
       KeyId: !Ref IPVCoreAnalyticsAPIKey
       KeyType: API_KEY
