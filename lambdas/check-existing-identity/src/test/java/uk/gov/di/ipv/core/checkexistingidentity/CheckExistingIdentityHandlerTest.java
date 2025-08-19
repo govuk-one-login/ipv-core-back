@@ -61,6 +61,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
@@ -74,8 +75,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1432,28 +1436,32 @@ class CheckExistingIdentityHandlerTest {
         verify(mockEvcsService, times(0)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 
-    //    @Test
-    //    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
-    //        // Arrange
-    //        when(ipvSessionService.getIpvSessionWithRetry(anyString()))
-    //                .thenThrow(new RuntimeException("Test error"));
-    //
-    //        var logCollector =
-    // LogCollector.getLogCollectorFor(CheckExistingIdentityHandler.class);
-    //
-    //        // Act
-    //        var thrown =
-    //                assertThrows(
-    //                        Exception.class,
-    //                        () -> checkExistingIdentityHandler.handleRequest(event, context),
-    //                        "Expected handleRequest() to throw, but it didn't");
-    //
-    //        // Assert
-    //        assertEquals("Test error", thrown.getMessage());
-    //        var logMessage = logCollector.getLogMessages().getFirst();
-    //        assertThat(logMessage, containsString("Unhandled lambda exception"));
-    //        assertThat(logMessage, containsString("Test error"));
-    //    }
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(CheckExistingIdentityHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> checkExistingIdentityHandler.handleRequest(event, context),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessages = logCollector.getLogMessages();
+        var logMessage =
+                logMessages.stream()
+                        .filter(m -> m.contains("Unhandled lambda exception"))
+                        .toList()
+                        .getFirst();
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
+    }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
