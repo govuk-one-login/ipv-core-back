@@ -120,5 +120,5 @@ export const renderTransition = ({
   transitionEvents,
 }: TransitionEdge): string => {
   const label = transitionEvents.map(createTransitionLabel).join("\n");
-  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}${transitionCount ? '\n#' + transitionCount : ''}|${targetState}`;
+  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}${transitionCount ? "\n#" + transitionCount : ""}|${targetState}`;
 };
