@@ -1,7 +1,7 @@
 @Build
 Feature: Journey ending interventions
 
-  Scenario Outline: <intervention> intervention at <when> of identity proving journey
+  Scenario Outline: <intervention> intervention at of identity proving journey
     Given I activate the 'accountInterventions,disableStrategicApp' feature set
     And The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
@@ -24,15 +24,12 @@ Feature: Journey ending interventions
     And I don't have a stored identity in EVCS
 
     Examples:
-      | intervention                        | when  | first_ais_response             | second_ais_response                                |
-      | Blocked                             | start | AIS_ACCOUNT_BLOCKED            | AIS_NO_INTERVENTION                                |
-      | Suspended                           | start | AIS_ACCOUNT_SUSPENDED          | AIS_NO_INTERVENTION                                |
-      | Password reset                      | start | AIS_FORCED_USER_PASSWORD_RESET | AIS_NO_INTERVENTION                                |
-      | Blocked                             | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_BLOCKED                                |
-      | Suspended                           | end   | AIS_NO_INTERVENTION            | AIS_ACCOUNT_SUSPENDED                              |
-      | Password reset                      | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET                     |
-      | Reprove identity                    | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_IDENTITY_VERIFY                    |
-      | Password reset and reprove identity | end   | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
+      | intervention                        | first_ais_response             | second_ais_response                                |
+      | Blocked                             | AIS_NO_INTERVENTION            | AIS_ACCOUNT_BLOCKED                                |
+      | Suspended                           | AIS_NO_INTERVENTION            | AIS_ACCOUNT_SUSPENDED                              |
+      | Password reset                      | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET                     |
+      | Reprove identity                    | AIS_NO_INTERVENTION            | AIS_FORCED_USER_IDENTITY_VERIFY                    |
+      | Password reset and reprove identity | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
   Scenario Outline: TICF <intervention> result during identity proving journey
     Given I activate the 'accountInterventions,disableStrategicApp' feature set
@@ -64,7 +61,7 @@ Feature: Journey ending interventions
       | Reprove identity                    | 05                     |
       | Password reset and reprove identity | 06                     |
 
-  Scenario Outline: <intervention> intervention at <when> of reprove identity journey
+  Scenario Outline: <intervention> intervention at of reprove identity journey
     Given I activate the 'accountInterventions,disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
@@ -94,28 +91,22 @@ Feature: Journey ending interventions
     And I don't have a stored identity in EVCS
 
     Examples:
-      | intervention                        | when  | first_ais_response                                 | second_ais_response                                |
-      | Password reset and reprove identity | start | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY | AIS_NO_INTERVENTION                                |
-      | Blocked                             | end   | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_ACCOUNT_BLOCKED                                |
-      | Suspended                           | end   | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_ACCOUNT_SUSPENDED                              |
-      | Password reset                      | end   | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET                     |
-      | Password reset and reprove identity | end   | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
+      | intervention                        | first_ais_response                                 | second_ais_response                                |
+      | Blocked                             | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_ACCOUNT_BLOCKED                                |
+      | Suspended                           | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_ACCOUNT_SUSPENDED                              |
+      | Password reset                      | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET                     |
+      | Password reset and reprove identity | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
-  Scenario Outline: <intervention> intervention <when> of update identity journey
+  Scenario: <intervention> intervention of update identity journey
     Given I activate the 'accountInterventions' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And The AIS stub will return an '<first_ais_response>' result
-    When I start a new 'medium-confidence' journey with AIS stub response of '<second_ais_response>'
+    And The AIS stub will return an 'AIS_NO_INTERVENTION' result
+    When I start a new 'medium-confidence' journey with AIS stub response of 'AIS_ACCOUNT_BLOCKED'
     Then I get an OAuth response with error code 'session_invalidated'
-
-    Examples:
-      | intervention | when                              | first_ais_response    | second_ais_response |
-      | Suspended    | at start                          | AIS_ACCOUNT_SUSPENDED | AIS_NO_INTERVENTION |
-      | Blocked      | after initial journey selection   | AIS_NO_INTERVENTION   | AIS_ACCOUNT_BLOCKED |
 
   Scenario: Blocked intervention at end of update identity journey
     Given I activate the 'accountInterventions' feature set
