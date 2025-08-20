@@ -3391,7 +3391,6 @@ Resources:
               - logs:StartQuery
               - logs:GetQueryResults
             Resource:
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}
               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
       Events:
         IPVCoreAnalyticsAPIJourneyTransitions:
