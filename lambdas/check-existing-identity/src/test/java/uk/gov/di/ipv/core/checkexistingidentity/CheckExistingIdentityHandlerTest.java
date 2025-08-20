@@ -1066,125 +1066,6 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
-    @Nested
-    class ReturnCodes {
-
-        @BeforeEach
-        void setup() throws Exception {
-            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
-                    .thenReturn(ipvSessionItem);
-        }
-
-        @Test
-        void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
-            when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
-                    .thenThrow(CiRetrievalException.class);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of());
-
-            var response =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.getCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), response.getMessage());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        }
-
-        @Test
-        void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
-            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
-                    .thenThrow(CiExtractionException.class);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of());
-
-            var response =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertEquals(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getCode(), response.getCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(),
-                    response.getMessage());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        }
-
-        @Test
-        void shouldReturn500IfUnableToParseCredentials() throws Exception {
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenThrow(CredentialParseException.class);
-
-            var response =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
-                    response.getCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
-                    response.getMessage());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        }
-
-        @Test
-        void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
-            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                    .thenThrow(new ConfigException("Failed to get cimit config"));
-
-            var response =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
-            assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        }
-
-        @Test
-        void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
-            when(cimitService.fetchContraIndicatorsVc(
-                            TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
-                    .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
-
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-
-            var response =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(JourneyUris.JOURNEY_ERROR_PATH, response.getJourney());
-            assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), response.getCode());
-            assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
-        }
-    }
-
     @Test
     void shouldReturn400IfSessionIdNotInHeader() throws Exception {
         var eventWithoutHeaders = JourneyRequest.builder().build();
@@ -1205,6 +1086,126 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionService, never()).updateIpvSession(any());
 
         assertEquals(Vot.P0, ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
+        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
+                .thenThrow(CiRetrievalException.class);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of());
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
+        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                .thenThrow(CiExtractionException.class);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of());
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfUnableToParseCredentials() throws Exception {
+        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenThrow(CredentialParseException.class);
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
+        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
+        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+                .thenThrow(new ConfigException("Failed to get cimit config"));
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
+        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
+        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitService.fetchContraIndicatorsVc(
+                        TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
+                .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
+
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(JourneyUris.JOURNEY_ERROR_PATH, response.getJourney());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), response.getCode());
+        assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
     }
 
     @Nested
