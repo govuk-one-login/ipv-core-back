@@ -902,8 +902,15 @@ Resources:
       Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
       Enabled: true
 
+  IPVCoreAnalyticsDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      StageName: !Sub ${Environment}
+
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn: IPVCoreAnalyticsDeployment
     Properties:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
