@@ -65,7 +65,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
-import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -235,18 +234,18 @@ public class CheckExistingIdentityHandler
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = getIpvSessionId(event);
-            String ipAddress = getIpAddress(event);
-            String deviceInformation = event.getDeviceInformation();
+            var ipvSessionId = getIpvSessionId(event);
+            var ipAddress = getIpAddress(event);
+            var deviceInformation = event.getDeviceInformation();
             configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
-            ClientOAuthSessionItem clientOAuthSessionItem =
+            var ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
+            var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
-            String userId = clientOAuthSessionItem.getUserId();
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
+            var userId = clientOAuthSessionItem.getUserId();
+            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             if (configService.enabled(AIS_ENABLED)) {
                 var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
@@ -264,11 +263,9 @@ public class CheckExistingIdentityHandler
                 clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
             }
 
-            var isReproveIdentity =
-                    ipvSessionItem.getInitialAccountInterventionState().isReproveIdentity();
-            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
 
-            AuditEventUser auditEventUser =
+            var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             if (isReproveIdentity) {
@@ -291,6 +288,7 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             userId,
                             govukSigninJourneyId,
+                            isReproveIdentity,
                             auditEventUser)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
@@ -328,6 +326,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             String userId,
             String govukSigninJourneyId,
+            boolean isReproveIdentity,
             AuditEventUser auditEventUser) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -349,10 +348,9 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
