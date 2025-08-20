@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
-import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -99,8 +98,7 @@ public class InitialiseIpvSessionHandler
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             JarValidator jarValidator,
-            AuditService auditService,
-            AisService aisService) {
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;

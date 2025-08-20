@@ -25,6 +25,7 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
@@ -80,7 +81,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1419,6 +1422,107 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+        }
+    }
+
+    @Nested
+    class JourneysWithAccountInterventionEnabled {
+        @BeforeEach
+        void setup() throws Exception {
+            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
+                    .thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+        }
+
+        @ParameterizedTest
+        @MethodSource("getFetchedAccountInterventionStateForReproveJourney")
+        void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent(
+                AccountInterventionState fetchedAccountInterventionState) {
+            // Arrange
+            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
+            when(mockAisService.fetchAccountState(TEST_USER_ID))
+                    .thenReturn(fetchedAccountInterventionState);
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                    .thenReturn(emptyAsyncCriStatus);
+
+            // Act
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            var extension = (AuditExtensionAccountIntervention) auditEvent.getExtensions();
+            assertEquals(AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START, auditEvent.getEventName());
+            assertEquals("reprove_identity", extension.getType());
+            assertNull(extension.getSuccess());
+            assertTrue(clientOAuthSessionItem.getReproveIdentity());
+            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+        }
+
+        private static Stream<Arguments> getFetchedAccountInterventionStateForReproveJourney() {
+            return Stream.of(
+                    Arguments.of(
+                            AccountInterventionState.builder()
+                                    .isBlocked(false)
+                                    .isSuspended(true)
+                                    .isReproveIdentity(true)
+                                    .isResetPassword(false)
+                                    .build()),
+                    Arguments.of(
+                            AccountInterventionState.builder()
+                                    .isBlocked(false)
+                                    .isSuspended(false)
+                                    .isReproveIdentity(true)
+                                    .isResetPassword(false)
+                                    .build()));
+        }
+
+        @ParameterizedTest
+        @MethodSource("getFetchedAccountInterventionStateForInvalidJourney")
+        void shouldInvalidSession(AccountInterventionState fetchedAccountInterventionState) {
+            // Arrange
+            when(mockAisService.fetchAccountState(TEST_USER_ID))
+                    .thenReturn(fetchedAccountInterventionState);
+
+            // Act
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(JOURNEY_ACCOUNT_INTERVENTION_PATH, journeyResponse.getJourney());
+        }
+
+        private static Stream<Arguments> getFetchedAccountInterventionStateForInvalidJourney() {
+            return Stream.of(
+                    Arguments.of(
+                            AccountInterventionState.builder()
+                                    .isBlocked(true)
+                                    .isSuspended(false)
+                                    .isReproveIdentity(false)
+                                    .isResetPassword(false)
+                                    .build()),
+                    Arguments.of(
+                            AccountInterventionState.builder()
+                                    .isBlocked(false)
+                                    .isSuspended(true)
+                                    .isReproveIdentity(false)
+                                    .isResetPassword(false)
+                                    .build()),
+                    Arguments.of(
+                            AccountInterventionState.builder()
+                                    .isBlocked(false)
+                                    .isSuspended(false)
+                                    .isReproveIdentity(false)
+                                    .isResetPassword(true)
+                                    .build()));
         }
     }
 

@@ -9,6 +9,7 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
+import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -251,7 +252,8 @@ public class CheckExistingIdentityHandler
                 var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
 
-                if (aisService.shouldInvalidateSession(fetchedAccountInterventionState)) {
+                if (AccountInterventionEvaluator.shouldInvalidateSession(
+                        fetchedAccountInterventionState)) {
                     ipvSessionItem.invalidateSession();
                     ipvSessionService.updateIpvSession(ipvSessionItem);
                     throw new AccountInterventionException();
