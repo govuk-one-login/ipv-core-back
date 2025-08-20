@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
-import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
@@ -123,7 +122,6 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
-    @Mock private AisService mockAisService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     @Captor private ArgumentCaptor<ErrorObject> errorObjectArgumentCaptor;
@@ -276,7 +274,7 @@ class InitialiseIpvSessionHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         var capturedValues = auditEventCaptor.getAllValues();
-        assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.getFirst().getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
                 .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
@@ -651,7 +649,7 @@ class InitialiseIpvSessionHandlerTest {
 
         // Assert
         assertEquals("Test error", thrown.getMessage());
-        var logMessage = logCollector.getLogMessages().get(0);
+        var logMessage = logCollector.getLogMessages().getFirst();
         assertThat(logMessage, containsString("Unhandled lambda exception"));
         assertThat(logMessage, containsString("Test error"));
     }
