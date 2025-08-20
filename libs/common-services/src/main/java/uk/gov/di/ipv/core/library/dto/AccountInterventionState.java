@@ -18,12 +18,4 @@ public class AccountInterventionState {
     private boolean isSuspended;
     private boolean isReproveIdentity;
     private boolean isResetPassword;
-
-    public static AccountInterventionState from(AccountInterventionState accountInterventionState) {
-        return new AccountInterventionState(
-                accountInterventionState.isBlocked(),
-                accountInterventionState.isSuspended(),
-                accountInterventionState.isReproveIdentity(),
-                accountInterventionState.isResetPassword());
-    }
 }
