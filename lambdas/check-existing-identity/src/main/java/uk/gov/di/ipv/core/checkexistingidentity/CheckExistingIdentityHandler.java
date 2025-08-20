@@ -268,7 +268,7 @@ public class CheckExistingIdentityHandler
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            if (isReproveIdentity) {
+            if (Boolean.TRUE.equals(isReproveIdentity)) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
@@ -288,7 +288,6 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             userId,
                             govukSigninJourneyId,
-                            isReproveIdentity,
                             auditEventUser)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
@@ -326,7 +325,6 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             String userId,
             String govukSigninJourneyId,
-            boolean isReproveIdentity,
             AuditEventUser auditEventUser) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -348,9 +346,12 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+            if (Boolean.TRUE.equals(isReproveIdentity)
+                            && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
