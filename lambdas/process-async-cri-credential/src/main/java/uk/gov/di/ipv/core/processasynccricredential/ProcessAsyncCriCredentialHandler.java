@@ -223,8 +223,9 @@ public class ProcessAsyncCriCredentialHandler
         var criResponseItem = criResponseService.getCriResponseItemWithState(userId, state);
         if (criResponseItem.isEmpty()) {
             LOGGER.error(
-                    LogHelper.buildLogMessage("No response item found given user id and state"));
-            throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+                    LogHelper.buildLogMessage(
+                            "No pending CRI response item found for given user id and state; discarding message"));
+            return;
         }
 
         var cri = Cri.fromId(criResponseItem.get().getCredentialIssuer());

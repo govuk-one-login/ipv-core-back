@@ -181,7 +181,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldRejectValidUnexpectedVerifiableCredential() throws Exception {
+    void shouldDiscardValidUnexpectedVerifiableCredentialWithoutRetry() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2);
 
         when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE_2))
@@ -190,11 +190,11 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
         verifyVerifiableCredentialNotProcessedFurther();
-        verifyBatchResponseFailures(testEvent, batchResponse);
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
     }
 
     @Test
-    void shouldRejectValidUnsolicitedVerifiableCredential() throws Exception {
+    void shouldDiscardValidUnsolicitedVerifiableCredentialWithoutRetry() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
@@ -204,7 +204,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         verifyVerifiableCredentialNotProcessedFurther();
 
-        verifyBatchResponseFailures(testEvent, batchResponse);
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
     }
 
     @Test
