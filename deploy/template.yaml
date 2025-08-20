@@ -3421,7 +3421,7 @@ Resources:
     DependsOn: FetchJourneyTransitionsFunction
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Sub "fetch-journey-transitions-${Environment}:live"
+      FunctionName: !Ref FetchJourneyTransitionsFunction.Alias
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
