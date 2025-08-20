@@ -251,7 +251,7 @@ public class CheckExistingIdentityHandler
                 var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
 
-                if (AccountInterventionEvaluator.shouldInvalidateSession(
+                if (AccountInterventionEvaluator.isInitialAccountInterventionDetected(
                         fetchedAccountInterventionState)) {
                     ipvSessionService.invalidateSession(ipvSessionItem);
                     throw new AccountInterventionException();

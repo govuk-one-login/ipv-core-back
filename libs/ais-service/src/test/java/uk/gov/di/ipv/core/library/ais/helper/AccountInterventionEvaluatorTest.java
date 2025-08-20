@@ -17,14 +17,18 @@ class AccountInterventionEvaluatorTest {
     @ArgumentsSource(InvalidAccountInterventionArgumentsProvider.class)
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AccountInterventionState accountInterventionState) {
-        assertTrue(AccountInterventionEvaluator.shouldInvalidateSession(accountInterventionState));
+        assertTrue(
+                AccountInterventionEvaluator.isInitialAccountInterventionDetected(
+                        accountInterventionState));
     }
 
     @ParameterizedTest
     @MethodSource("getValidAccountInterventionState")
     void shouldReturnFalseWhenProvideValidAccountIntervention(
             AccountInterventionState accountInterventionState) {
-        assertFalse(AccountInterventionEvaluator.shouldInvalidateSession(accountInterventionState));
+        assertFalse(
+                AccountInterventionEvaluator.isInitialAccountInterventionDetected(
+                        accountInterventionState));
     }
 
     private static Stream<Arguments> getValidAccountInterventionState() {
