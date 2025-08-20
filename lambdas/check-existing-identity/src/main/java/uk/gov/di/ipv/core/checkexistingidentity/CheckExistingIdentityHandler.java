@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -343,6 +344,9 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
+            var previousAchievedVot =
+                    getStrongestAchievableVotFromBundle(credentialBundle.credentials);
+
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
                             userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
@@ -398,7 +402,8 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             credentialBundle,
                             areGpg45VcsCorrelated,
-                            contraIndicators);
+                            contraIndicators,
+                            previousAchievedVot);
             if (profileMatchResponse.isPresent()) {
                 return profileMatchResponse.get();
             }
@@ -485,6 +490,7 @@ public class CheckExistingIdentityHandler
         return new VerifiableCredentialBundle(evcsIdentityVcs, hasValidPendingReturnVcs);
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -492,7 +498,8 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
-            List<ContraIndicator> contraIndicators)
+            List<ContraIndicator> contraIndicators,
+            Vot previousAchievedVot)
             throws VerifiableCredentialException {
         // Check for attained vot from requested vots
         var votMatchingResult =
@@ -514,6 +521,7 @@ public class CheckExistingIdentityHandler
         return Optional.of(
                 buildReuseResponse(
                         requestedMatch.vot(),
+                        previousAchievedVot,
                         ipvSessionItem,
                         credentialBundle,
                         auditEventUser,
@@ -609,6 +617,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
+            Vot previousAchievedVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
             AuditEventUser auditEventUser,
@@ -700,6 +709,17 @@ public class CheckExistingIdentityHandler
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
+    private void sendAuditEventWithPreviousAchievedVot(
+            AuditEventUser auditEventUser, String deviceInformation, Vot previousAchievedVot) {
+        auditService.sendAuditEvent(
+                AuditEvent.createWithDeviceInformation(
+                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionPreviousAchievedVot(previousAchievedVot),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
     private JourneyResponse buildErrorResponse(
             ErrorResponse errorResponse, Exception e, Level level) {
         LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
@@ -724,5 +744,18 @@ public class CheckExistingIdentityHandler
         return f2fStatus.cri() == F2F
                 && f2fStatus.isReproveIdentity()
                 && vcBundle.isPendingReturn();
+    }
+
+    private Vot getStrongestAchievableVotFromBundle(List<VerifiableCredential> credentials) {
+        try {
+            boolean correlated = userIdentityService.areVcsCorrelated(credentials);
+            var result =
+                    votMatcher.findStrongestMatches(
+                            List.of(Vot.P2, Vot.P1), credentials, List.of(), correlated);
+            return result.strongestMatch().map(m -> m.vot()).orElse(null);
+        } catch (Exception e) {
+            LOGGER.warn(LogHelper.buildLogMessage("Failed to compute previous_achieved_vot"), e);
+            return null;
+        }
     }
 }

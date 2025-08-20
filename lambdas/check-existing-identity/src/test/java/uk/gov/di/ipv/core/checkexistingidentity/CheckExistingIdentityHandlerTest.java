@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
@@ -988,6 +989,9 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(
                             List.of(P2), List.of(gpg45Vc), List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2, P1), List.of(gpg45Vc), List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, matchedProfile));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
             var journeyResponse =
@@ -1002,6 +1006,11 @@ class CheckExistingIdentityHandlerTest {
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                     auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
+            var ext =
+                    (AuditExtensionPreviousAchievedVot)
+                            auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
+            assertEquals(P2, ext.getPreviousAchievedVot());
+
             verify(mockSessionCredentialService)
                     .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
 
@@ -1010,6 +1019,38 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldEmitReuseCompleteWithNullPreviousAchievedVotWhenComputationFails()
+                throws Exception {
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2), List.of(gpg45Vc), List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2, P1), List.of(gpg45Vc), List.of(), true))
+                    .thenThrow(new RuntimeException("boom"));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+            var ext =
+                    (AuditExtensionPreviousAchievedVot)
+                            auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
+            assertEquals(null, ext.getPreviousAchievedVot());
         }
 
         @Test
@@ -1028,6 +1069,8 @@ class CheckExistingIdentityHandlerTest {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(mockVotMatcher.findStrongestMatches(List.of(P2, P1), vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
