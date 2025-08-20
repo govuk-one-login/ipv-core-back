@@ -35,7 +35,7 @@ public final class AccountInterventionEvaluator {
         }
 
         if (!initialAccountInterventionState.isBlocked()
-                && !initialAccountInterventionState.isReproveIdentity()
+                && !initialAccountInterventionState.isResetPassword()
                 && !initialAccountInterventionState.isSuspended()) {
             return false;
         }
