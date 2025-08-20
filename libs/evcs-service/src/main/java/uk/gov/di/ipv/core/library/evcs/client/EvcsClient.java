@@ -89,14 +89,31 @@ public class EvcsClient {
 
         try {
             var afterKey = evcsGetUserVcsDto.afterKey();
-            while (!StringUtils.isBlank(afterKey)) {
-                LOGGER.info("Attempting additional request to get the rest of the user's VCs");
+            int attemptCount = 0;
+            final int maxAttempts = 100;
+
+            while (!StringUtils.isBlank(afterKey) && attemptCount < maxAttempts) {
+                attemptCount++;
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Attempt "
+                                        + attemptCount
+                                        + " to get additional user VCs from EVCS."));
+
                 var additionalUserVcs =
                         attemptGetUserVcsRequest(
                                 userId, apiKey, evcsAccessToken, vcStatesToQueryFor, afterKey);
                 evcsUserVcs.addAll(additionalUserVcs.vcs());
                 afterKey = additionalUserVcs.afterKey();
             }
+
+            if (attemptCount >= maxAttempts) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                "Stopped retrieving additional VCs after reaching max attempt limit of "
+                                        + maxAttempts));
+            }
+
         } catch (EvcsServiceException e) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
