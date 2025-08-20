@@ -975,6 +975,7 @@ Resources:
 
   IPVCoreAnalyticsBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: IPVCoreAnalyticsDeployment
     Properties:
       DomainName: !Ref IPVCoreAnalyticsDomain
       RestApiId: !Ref IPVCoreAnalyticsAPI
