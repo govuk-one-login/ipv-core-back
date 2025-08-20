@@ -1497,7 +1497,7 @@ class CheckExistingIdentityHandlerTest {
 
             // Assert
             verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(JOURNEY_ACCOUNT_INTERVENTION_PATH, journeyResponse.getJourney());
+            assertEquals(JOURNEY_ACCOUNT_INTERVENTION, journeyResponse);
         }
 
         private static Stream<Arguments> getFetchedAccountInterventionStateForInvalidJourney() {

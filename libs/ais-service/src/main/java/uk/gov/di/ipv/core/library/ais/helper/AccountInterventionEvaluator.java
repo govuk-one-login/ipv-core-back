@@ -4,6 +4,10 @@ import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 public class AccountInterventionEvaluator {
 
+    private AccountInterventionEvaluator() {
+        // prevent initialisation
+    }
+
     public static boolean shouldInvalidateSession(AccountInterventionState interventionState) {
         // if no flags are set then there is no intervention
         if (!interventionState.isBlocked()
@@ -21,13 +25,8 @@ public class AccountInterventionEvaluator {
             return false;
         }
 
-        //
-        if (!interventionState.isBlocked()
-                && !interventionState.isResetPassword()
-                && !interventionState.isSuspended()) {
-            return false;
-        }
-
-        return true;
+        return interventionState.isBlocked()
+                || interventionState.isResetPassword()
+                || interventionState.isSuspended();
     }
 }
