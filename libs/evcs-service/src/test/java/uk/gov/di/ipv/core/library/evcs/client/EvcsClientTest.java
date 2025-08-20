@@ -55,6 +55,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.AFTER_KEY_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
@@ -74,7 +75,7 @@ class EvcsClientTest {
                     "reason", "testing",
                     "txmaEventId", "txma-event-id-2",
                     "timestampMs", "1714478033959");
-    private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
+    private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO_NO_AFTER_KEY =
             new EvcsGetUserVCsDto(
                     List.of(
                             new EvcsGetUserVCDto(
@@ -84,7 +85,8 @@ class EvcsClientTest {
                             new EvcsGetUserVCDto(
                                     VcFixtures.vcWebDrivingPermitDvaValid().getVcString(),
                                     EvcsVCState.PENDING_RETURN,
-                                    TEST_METADATA)));
+                                    TEST_METADATA)),
+                    null);
     private static final List<EvcsCreateUserVCsDto> EVCS_CREATE_USER_VCS_DTO =
             List.of(
                     new EvcsCreateUserVCsDto(
@@ -133,7 +135,7 @@ class EvcsClientTest {
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
-                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO_NO_AFTER_KEY));
 
         // Act
         var evcsGetUserVCsDto =
@@ -168,7 +170,7 @@ class EvcsClientTest {
         when(mockHttpResponse.body())
                 .thenReturn(
                         OBJECT_MAPPER.writeValueAsString(
-                                new EvcsGetUserVCsDto(Collections.emptyList())));
+                                new EvcsGetUserVCsDto(Collections.emptyList(), null)));
         // Act
         evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
 
@@ -278,6 +280,172 @@ class EvcsClientTest {
     }
 
     @Test
+    void getUserVcs_shouldReturnAllUserVcs_ifAfterKeyIsReturned() throws Exception {
+        // Arrange
+        var evcsGetUserVcsDtoWithAfterKey =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VcFixtures.vcAddressOne().getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        TEST_METADATA)),
+                        "some-afterKey");
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn(EVCS_APPLICATION_URL);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode())
+                .thenReturn(HttpStatusCode.OK)
+                .thenReturn(HttpStatusCode.OK);
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(evcsGetUserVcsDtoWithAfterKey))
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO_NO_AFTER_KEY));
+
+        // Act
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+
+        // Assert
+        verify(mockHttpClient, times(2)).send(httpRequestCaptor.capture(), any());
+        var httpRequests = httpRequestCaptor.getAllValues();
+
+        var initialRequest = httpRequests.get(0);
+        var expectedInitialUri =
+                new URIBuilder(
+                                "%s/vcs/%s"
+                                        .formatted(
+                                                EVCS_APPLICATION_URL,
+                                                URLEncoder.encode(
+                                                        TEST_USER_ID, StandardCharsets.UTF_8)))
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .build();
+        assertEquals(expectedInitialUri.toString(), initialRequest.uri().toString());
+
+        var secondRequest = httpRequests.get(1);
+        var expectedSecondUri =
+                new URIBuilder(
+                                "%s/vcs/%s"
+                                        .formatted(
+                                                EVCS_APPLICATION_URL,
+                                                URLEncoder.encode(
+                                                        TEST_USER_ID, StandardCharsets.UTF_8)))
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .addParameter(AFTER_KEY_PARAM, "some-afterKey")
+                        .build();
+        assertEquals(expectedSecondUri.toString(), secondRequest.uri().toString());
+
+        // Initial call returns 1 VC and second call returns 2
+        assertEquals(3, evcsGetUserVCsDto.vcs().size());
+    }
+
+    @Test
+    void getUserVcs_canHandleMultipleCallsToGetUserVcs() throws Exception {
+        // Arrange
+        var evcsGetUserVcsDtoWithAfterKey =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VcFixtures.vcAddressOne().getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        TEST_METADATA)),
+                        "some-afterKey");
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn(EVCS_APPLICATION_URL);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode())
+                .thenReturn(HttpStatusCode.OK)
+                .thenReturn(HttpStatusCode.OK)
+                .thenReturn(HttpStatusCode.OK)
+                .thenReturn(HttpStatusCode.OK);
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(evcsGetUserVcsDtoWithAfterKey))
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(evcsGetUserVcsDtoWithAfterKey))
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(evcsGetUserVcsDtoWithAfterKey))
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO_NO_AFTER_KEY));
+
+        // Act
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+
+        // Assert
+        verify(mockHttpClient, times(4)).send(httpRequestCaptor.capture(), any());
+
+        assertEquals(5, evcsGetUserVCsDto.vcs().size());
+    }
+
+    @Test
+    void getUserVcs_shouldReturnVcsFromInitialRequest_ifCallWithAfterKeyFails() throws Exception {
+        // Arrange
+        var evcsGetUserVcsDtoWithAfterKey =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VcFixtures.vcAddressOne().getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        TEST_METADATA)),
+                        "some-afterKey");
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn(EVCS_APPLICATION_URL);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode())
+                .thenReturn(HttpStatusCode.OK)
+                .thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(evcsGetUserVcsDtoWithAfterKey));
+
+        // Act
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+
+        // Assert
+        verify(mockHttpClient, times(2)).send(httpRequestCaptor.capture(), any());
+        var httpRequests = httpRequestCaptor.getAllValues();
+
+        var initialRequest = httpRequests.getFirst();
+        var expectedInitialUri =
+                new URIBuilder(
+                                "%s/vcs/%s"
+                                        .formatted(
+                                                EVCS_APPLICATION_URL,
+                                                URLEncoder.encode(
+                                                        TEST_USER_ID, StandardCharsets.UTF_8)))
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .build();
+        assertEquals(expectedInitialUri.toString(), initialRequest.uri().toString());
+
+        var secondRequest = httpRequests.get(1);
+        var expectedSecondUri =
+                new URIBuilder(
+                                "%s/vcs/%s"
+                                        .formatted(
+                                                EVCS_APPLICATION_URL,
+                                                URLEncoder.encode(
+                                                        TEST_USER_ID, StandardCharsets.UTF_8)))
+                        .addParameter(
+                                VC_STATE_PARAM,
+                                VC_STATES_FOR_QUERY.stream()
+                                        .map(EvcsVCState::name)
+                                        .collect(Collectors.joining(",")))
+                        .addParameter(AFTER_KEY_PARAM, "some-afterKey")
+                        .build();
+        assertEquals(expectedSecondUri.toString(), secondRequest.uri().toString());
+
+        // Initial call only returns a single VC
+        assertEquals(1, evcsGetUserVCsDto.vcs().size());
+    }
+
+    @Test
     void testCreateUserVCs() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
@@ -364,7 +532,7 @@ class EvcsClientTest {
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
 
         when(mockHttpResponse.body())
-                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO_NO_AFTER_KEY));
 
         when(mockHttpResponse.statusCode()).thenReturn(429, 429, 200);
 
