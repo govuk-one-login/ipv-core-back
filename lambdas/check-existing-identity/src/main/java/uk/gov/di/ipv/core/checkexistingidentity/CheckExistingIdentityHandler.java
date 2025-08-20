@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.oauth2.sdk.Scope;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +14,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -67,14 +67,12 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -245,17 +243,11 @@ public class CheckExistingIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
+            String userId = clientOAuthSessionItem.getUserId();
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            var isReverification =
-                    configService.enabled(MFA_RESET)
-                            && Scope.parse(clientOAuthSessionItem.getScope())
-                                    .contains(REVERIFICATION);
-
-            // If this is a reverification journey then we can skip the call to AIS
-            if (configService.enabled(AIS_ENABLED) && !isReverification) {
-                var userId = clientOAuthSessionItem.getUserId();
+            if (configService.enabled(AIS_ENABLED)) {
                 var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
 
@@ -271,12 +263,34 @@ public class CheckExistingIdentityHandler
                 clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
             }
 
+            var isReproveIdentity =
+                    ipvSessionItem.getInitialAccountInterventionState().isReproveIdentity();
+            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
+            if (isReproveIdentity) {
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithoutDeviceInformation(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser,
+                                AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
+
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
                 evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
             }
 
             return getJourneyResponse(
-                            ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            ipAddress,
+                            deviceInformation,
+                            userId,
+                            govukSigninJourneyId,
+                            auditEventUser)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
@@ -310,15 +324,11 @@ public class CheckExistingIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
-            String deviceInformation) {
+            String deviceInformation,
+            String userId,
+            String govukSigninJourneyId,
+            AuditEventUser auditEventUser) {
         try {
-            var ipvSessionId = ipvSessionItem.getIpvSessionId();
-            var userId = clientOAuthSessionItem.getUserId();
-            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-
-            var auditEventUser =
-                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
-
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 

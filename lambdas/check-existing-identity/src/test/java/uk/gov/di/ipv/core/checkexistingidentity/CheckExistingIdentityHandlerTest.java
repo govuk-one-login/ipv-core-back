@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -94,7 +95,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -220,6 +220,13 @@ class CheckExistingIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setVot(Vot.P0);
+        ipvSessionItem.setInitialAccountInterventionState(
+                AccountInterventionState.builder()
+                        .isResetPassword(false)
+                        .isSuspended(false)
+                        .isBlocked(false)
+                        .isReproveIdentity(false)
+                        .build());
 
         lenient()
                 .when(mockVotMatcher.findStrongestMatches(any(), any(), any(), anyBoolean()))
@@ -252,12 +259,12 @@ class CheckExistingIdentityHandlerTest {
     class NewIdentityJourneys {
         @BeforeEach
         void setUp() throws Exception {
+            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(configService.enabled(MFA_RESET)).thenReturn(false);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
         }
 
@@ -944,7 +951,6 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(configService.enabled(MFA_RESET)).thenReturn(false);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
         }
 
@@ -1062,7 +1068,6 @@ class CheckExistingIdentityHandlerTest {
 
         @BeforeEach
         void setup() throws Exception {
-            when(configService.enabled(MFA_RESET)).thenReturn(false);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
@@ -1203,7 +1208,6 @@ class CheckExistingIdentityHandlerTest {
     class ReproveIdentity {
         @BeforeEach
         void beforeEach() throws Exception {
-            when(configService.enabled(MFA_RESET)).thenReturn(false);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
@@ -1341,7 +1345,6 @@ class CheckExistingIdentityHandlerTest {
     class RepeatFraudCheck {
         @BeforeEach
         void setup() throws Exception {
-            when(configService.enabled(MFA_RESET)).thenReturn(false);
             when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
@@ -1421,7 +1424,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldNotInvalidateSiIfFeatureFlagDisabled() throws Exception {
-        when(configService.enabled(MFA_RESET)).thenReturn(false);
         when(configService.enabled(AIS_ENABLED)).thenReturn(false);
         when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);

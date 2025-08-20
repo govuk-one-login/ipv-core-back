@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -71,7 +70,6 @@ import java.util.stream.Stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -276,17 +274,17 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         var capturedValues = auditEventCaptor.getAllValues();
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.get(0).getEventName());
-        assertEquals(
-                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                capturedValues.get(1).getEventName());
-
-        AuditExtensionAccountIntervention extensions =
-                (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
-        assertEquals("reprove_identity", extensions.getType());
-        assertNull(extensions.getSuccess());
+        //        assertEquals(
+        //                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+        //                capturedValues.get(1).getEventName());
+        //
+        //        AuditExtensionAccountIntervention extensions =
+        //                (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
+        //        assertEquals("reprove_identity", extensions.getType());
+        //        assertNull(extensions.getSuccess());
 
         verify(mockClientOAuthSessionDetailsService)
                 .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
