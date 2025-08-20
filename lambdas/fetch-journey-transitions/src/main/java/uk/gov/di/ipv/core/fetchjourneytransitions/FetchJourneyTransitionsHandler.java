@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import com.amazonaws.services.logs.model.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.Request;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
+import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
 
 import java.time.Instant;
 import java.util.*;
@@ -57,7 +59,13 @@ public class FetchJourneyTransitionsHandler
                     .withStatusCode(200)
                     .withHeaders(Map.of("Content-Type", "application/json"))
                     .withBody(OBJECT_MAPPER.writeValueAsString(results));
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            LOGGER.warn("Interrupted!", e);
+            Thread.currentThread().interrupt();
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(500)
+                    .withBody("{\"message\": \"Interrupted\"}");
+        } catch (FetchJourneyTransitionException | JsonProcessingException e) {
             LOGGER.error("Unhandled exception", e);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(500)
@@ -89,7 +97,7 @@ public class FetchJourneyTransitionsHandler
     private String buildQuery(Request input) {
         String filter =
                 input.ipvSessionId() != null
-                        ? String.format("| filter ipvSessionId = '%s'\n", input.ipvSessionId())
+                        ? String.format("| filter ipvSessionId = '%s'%n", input.ipvSessionId())
                         : "";
 
         return String.format(
@@ -108,7 +116,7 @@ public class FetchJourneyTransitionsHandler
     }
 
     private List<TransitionCount> executeCloudWatchQuery(String query, long start, long end)
-            throws InterruptedException {
+            throws InterruptedException, FetchJourneyTransitionException {
         StartQueryResult startResult =
                 logsClient.startQuery(
                         new StartQueryRequest()
@@ -130,15 +138,17 @@ public class FetchJourneyTransitionsHandler
                 return results.getResults().stream()
                         .map(this::parseResultRow)
                         .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
+                        .toList();
             }
 
             if ("Failed".equals(status) || "Cancelled".equals(status) || "Timeout".equals(status)) {
-                throw new RuntimeException("CloudWatch query did not succeed: " + status);
+                throw new FetchJourneyTransitionException(
+                        "CloudWatch query did not succeed: " + status);
             }
         }
 
-        throw new RuntimeException("CloudWatch query did not complete within max attempts");
+        throw new FetchJourneyTransitionException(
+                "CloudWatch query did not complete within max attempts");
     }
 
     private TransitionCount parseResultRow(List<ResultField> row) {

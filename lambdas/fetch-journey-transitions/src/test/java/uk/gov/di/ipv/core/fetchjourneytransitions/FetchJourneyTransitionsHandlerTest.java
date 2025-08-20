@@ -54,7 +54,7 @@ class FetchJourneyTransitionHandlerTest {
         // Arrange
         APIGatewayProxyRequestEvent request =
                 new APIGatewayProxyRequestEvent()
-                        .withQueryStringParameters(Map.of("minutes", "30", "limit", "2"));
+                        .withQueryStringParameters(Map.of("minutes", "30"));
 
         when(mockLogsClient.startQuery(any()))
                 .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
@@ -81,5 +81,58 @@ class FetchJourneyTransitionHandlerTest {
         assertEquals("NEW_P2_IDENTITY", transitionCount.toJourney());
         assertEquals("RETURN_TO_RP", transitionCount.to());
         assertEquals(231, transitionCount.count());
+    }
+
+    @Test
+    void handlerShouldThrowWhenFailedQueryResult() {
+        // Arrange
+        APIGatewayProxyRequestEvent request =
+                new APIGatewayProxyRequestEvent()
+                        .withQueryStringParameters(Map.of("minutes", "30", "limit", "2"));
+
+        when(mockLogsClient.startQuery(any()))
+                .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
+        when(mockLogsClient.getQueryResults(
+                        new GetQueryResultsRequest().withQueryId(TEST_QUERY_ID)))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Failed"));
+
+        // Act
+        var response = handler.handleRequest(request, mockContext);
+
+        // Assert
+        assertEquals(500, response.getStatusCode());
+        assertEquals("{\"message\": \"Internal Server Error\"}", response.getBody());
+    }
+
+    @Test
+    void handlerShouldThrowWhenNoQueryResult() {
+        // Arrange
+        APIGatewayProxyRequestEvent request =
+                new APIGatewayProxyRequestEvent()
+                        .withQueryStringParameters(Map.of("minutes", "30", "limit", "2"));
+
+        when(mockLogsClient.startQuery(any()))
+                .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
+        when(mockLogsClient.getQueryResults(
+                        new GetQueryResultsRequest().withQueryId(TEST_QUERY_ID)))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"))
+                .thenReturn(new GetQueryResultsResult().withStatus("Running"));
+
+        // Act
+        var response = handler.handleRequest(request, mockContext);
+
+        // Assert
+        assertEquals(500, response.getStatusCode());
+        assertEquals("{\"message\": \"Internal Server Error\"}", response.getBody());
     }
 }
