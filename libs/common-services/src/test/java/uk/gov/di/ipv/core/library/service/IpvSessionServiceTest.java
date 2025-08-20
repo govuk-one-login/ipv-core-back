@@ -301,6 +301,22 @@ class IpvSessionServiceTest {
     }
 
     @Test
+    void shouldInvalidateSessionItem() {
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        ipvSessionService.invalidateSession(ipvSessionItem);
+
+        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        assertEquals("session_invalidated", ipvSessionItemArgumentCaptor.getValue().getErrorCode());
+        assertEquals(
+                "Account intervention detected",
+                ipvSessionItemArgumentCaptor.getValue().getErrorDescription());
+    }
+
+    @Test
     void shouldSetAuthorizationCodeAndMetadataOnSessionItem() {
         AuthorizationCode testCode = new AuthorizationCode();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();

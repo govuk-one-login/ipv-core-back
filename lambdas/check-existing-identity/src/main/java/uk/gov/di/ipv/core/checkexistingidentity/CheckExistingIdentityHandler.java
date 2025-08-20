@@ -254,8 +254,7 @@ public class CheckExistingIdentityHandler
 
                 if (AccountInterventionEvaluator.shouldInvalidateSession(
                         fetchedAccountInterventionState)) {
-                    ipvSessionItem.invalidateSession();
-                    ipvSessionService.updateIpvSession(ipvSessionItem);
+                    ipvSessionService.invalidateSession(ipvSessionItem);
                     throw new AccountInterventionException();
                 }
                 ipvSessionService.updateIpvSession(ipvSessionItem);

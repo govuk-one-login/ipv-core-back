@@ -114,13 +114,4 @@ public class IpvSessionItem implements PersistenceItem {
         }
         return new JourneyState(stateStack.get(stateStack.size() - 2));
     }
-
-    public void setJourneyContext(String journeyContext) {
-        this.journeyContext = journeyContext;
-    }
-
-    public void invalidateSession() {
-        setErrorCode("session_invalidated");
-        setErrorDescription("Account intervention detected");
-    }
 }
