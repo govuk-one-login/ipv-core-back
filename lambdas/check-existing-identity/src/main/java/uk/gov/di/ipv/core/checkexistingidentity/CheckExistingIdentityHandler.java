@@ -751,7 +751,10 @@ public class CheckExistingIdentityHandler
             boolean correlated = userIdentityService.areVcsCorrelated(credentials);
             var result =
                     votMatcher.findStrongestMatches(
-                            List.of(Vot.P2, Vot.P1), credentials, List.of(), correlated);
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            credentials,
+                            List.of(),
+                            correlated);
             return result.strongestMatch().map(m -> m.vot()).orElse(null);
         } catch (Exception e) {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to compute previous_achieved_vot"), e);

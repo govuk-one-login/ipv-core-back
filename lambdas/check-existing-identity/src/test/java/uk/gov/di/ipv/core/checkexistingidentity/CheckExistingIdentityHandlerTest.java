@@ -990,7 +990,10 @@ class CheckExistingIdentityHandlerTest {
                             List.of(P2), List.of(gpg45Vc), List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
             when(mockVotMatcher.findStrongestMatches(
-                            List.of(P2, P1), List.of(gpg45Vc), List.of(), true))
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(gpg45Vc),
+                            List.of(),
+                            true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
@@ -1034,7 +1037,10 @@ class CheckExistingIdentityHandlerTest {
                             List.of(P2), List.of(gpg45Vc), List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(mockVotMatcher.findStrongestMatches(
-                            List.of(P2, P1), List.of(gpg45Vc), List.of(), true))
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(gpg45Vc),
+                            List.of(),
+                            true))
                     .thenThrow(new RuntimeException("boom"));
 
             var journeyResponse =
@@ -1070,7 +1076,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
-            when(mockVotMatcher.findStrongestMatches(List.of(P2, P1), vcs, List.of(), true))
+            when(mockVotMatcher.findStrongestMatches(
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
