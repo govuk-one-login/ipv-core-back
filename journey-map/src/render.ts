@@ -47,6 +47,7 @@ const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
   const response = await fetch(
     `${config.journeyTransitionsEndpoint}?${query}`,
     {
+      method: "POST",
       headers: {
         "x-api-key": config.analyticsApiKey,
         "Content-Type": "application/json",

@@ -29,6 +29,11 @@ public class FetchJourneyTransitionsHandler
     private static final String LOG_GROUP = "/aws/lambda/process-journey-event-dev";
     private static final int MAX_ATTEMPTS = 10;
     private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
+    private static final Map<String, String> CORS_HEADERS = Map.of(
+            "Access-Control-Allow-Origin", "*",                        // or "http://localhost:3000"
+            "Access-Control-Allow-Methods", "POST,OPTIONS",
+            "Access-Control-Allow-Headers", "Content-Type,x-api-key"
+    );
 
     private final AWSLogs logsClient = getLogsClient();
 
@@ -57,7 +62,7 @@ public class FetchJourneyTransitionsHandler
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
-                    .withHeaders(Map.of("Content-Type", "application/json"))
+                    .withHeaders(mergeHeaders(Map.of("Content-Type", "application/json")))
                     .withBody(OBJECT_MAPPER.writeValueAsString(results));
         } catch (InterruptedException e) {
             LOGGER.warn("Interrupted!", e);
@@ -167,5 +172,11 @@ public class FetchJourneyTransitionsHandler
             LOGGER.warn("Skipping row due to missing/invalid data: {}", fields);
             return null;
         }
+    }
+
+    private Map<String, String> mergeHeaders(Map<String, String> extra) {
+        Map<String, String> merged = new HashMap<>(CORS_HEADERS);
+        merged.putAll(extra);
+        return merged;
     }
 }
