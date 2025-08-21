@@ -253,7 +253,8 @@ public class CheckExistingIdentityHandler
 
                 if (AccountInterventionEvaluator.isInitialAccountInterventionDetected(
                         fetchedAccountInterventionState)) {
-                    ipvSessionService.invalidateSession(ipvSessionItem);
+                    ipvSessionService.invalidateSession(
+                            ipvSessionItem, "Account intervention detected");
                     throw new AccountInterventionException();
                 }
                 ipvSessionService.updateIpvSession(ipvSessionItem);

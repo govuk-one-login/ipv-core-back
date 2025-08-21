@@ -194,9 +194,9 @@ public class IpvSessionService {
         dataStore.update(updatedIpvSessionItem);
     }
 
-    public void invalidateSession(IpvSessionItem ipvSessionItem) {
+    public void invalidateSession(IpvSessionItem ipvSessionItem, String errorDescription) {
         ipvSessionItem.setErrorCode("session_invalidated");
-        ipvSessionItem.setErrorDescription("Account intervention detected");
+        ipvSessionItem.setErrorDescription(errorDescription);
         dataStore.update(ipvSessionItem);
     }
 

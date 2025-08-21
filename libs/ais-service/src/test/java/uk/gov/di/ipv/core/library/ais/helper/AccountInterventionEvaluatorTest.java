@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
-    @ArgumentsSource(InvalidAccountInterventionArgumentsProvider.class)
+    @ArgumentsSource(InvalidInitialAccountInterventionArgumentsProvider.class)
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AccountInterventionState accountInterventionState) {
         assertTrue(
@@ -54,5 +54,15 @@ class AccountInterventionEvaluatorTest {
                                 .isReproveIdentity(false)
                                 .isResetPassword(false)
                                 .build()));
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(InvalidMidJourneyAccountInterventionArgumentsProvider.class)
+    void shouldReturnTrueWhenProvideValidMidJourneyAccountInterventionStates(
+            AccountInterventionState initialAccountIntervention,
+            AccountInterventionState midJourneyAccountInterventionState) {
+        assertTrue(
+                AccountInterventionEvaluator.isMidJourneyAccountInterventionDetected(
+                        initialAccountIntervention, midJourneyAccountInterventionState));
     }
 }

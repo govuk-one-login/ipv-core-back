@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 import java.util.stream.Stream;
 
-final class InvalidAccountInterventionArgumentsProvider implements ArgumentsProvider {
+final class InvalidInitialAccountInterventionArgumentsProvider implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(
             ParameterDeclarations parameters, ExtensionContext context) {
