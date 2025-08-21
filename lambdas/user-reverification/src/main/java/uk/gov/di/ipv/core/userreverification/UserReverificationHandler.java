@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -130,6 +131,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                             new AuditExtensionReverification(
                                     response.success(), response.failureCode()));
             auditService.sendAuditEvent(reverificationEndAuditEvent);
+            EmbeddedMetricHelper.reverifyJourneyComplete();
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
         } catch (ParseException e) {

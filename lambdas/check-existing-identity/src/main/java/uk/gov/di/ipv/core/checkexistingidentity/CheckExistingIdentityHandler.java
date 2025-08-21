@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -570,6 +571,7 @@ public class CheckExistingIdentityHandler
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         sendAuditEvent(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser, deviceInformation);
+        EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
         ipvSessionService.updateIpvSession(ipvSessionItem);
