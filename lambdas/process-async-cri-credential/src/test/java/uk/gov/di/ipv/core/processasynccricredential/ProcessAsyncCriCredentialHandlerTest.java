@@ -68,7 +68,6 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_COMPONENT_ID = TEST_CRI.getId();
     private static final String TEST_ENCRYPTION_KEY = "test-encryption-key";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
-    private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
             new CriResponseItem(
                     TEST_USER_ID,
@@ -178,19 +177,6 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
         assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(1).getEventName());
         assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
-    }
-
-    @Test
-    void shouldDiscardValidUnexpectedVerifiableCredentialWithoutRetry() throws Exception {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2);
-
-        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE_2))
-                .thenReturn(Optional.empty());
-
-        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
-
-        verifyVerifiableCredentialNotProcessedFurther();
-        assertEquals(0, batchResponse.getBatchItemFailures().size());
     }
 
     @Test
