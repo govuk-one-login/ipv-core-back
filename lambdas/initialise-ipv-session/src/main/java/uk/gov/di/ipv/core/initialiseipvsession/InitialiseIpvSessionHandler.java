@@ -194,7 +194,7 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
-                    new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
+                    new AuditExtensionsIpvJourneyStart(isReproveIdentity ? true : null, vtr);
 
             var restrictedDeviceInformation =
                     new AuditRestrictedDeviceInformation(deviceInformation);
