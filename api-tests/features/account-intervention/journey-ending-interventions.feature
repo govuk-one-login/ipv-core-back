@@ -97,7 +97,7 @@ Feature: Journey ending interventions
       | Password reset                      | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET                     |
       | Password reset and reprove identity | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
-  Scenario: <intervention> intervention of update identity journey
+  Scenario: Blocked intervention of update identity journey
     Given I activate the 'accountInterventions' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
