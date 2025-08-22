@@ -302,6 +302,7 @@ const renderSvg = async (
     journeyMaps[selectedJourney],
     nestedJourneys,
     options,
+    journeyMaps,
   );
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);
   diagramElement.innerHTML = svg;
