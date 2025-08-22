@@ -45,7 +45,14 @@ public class AisService {
             LOGGER.error(
                     "Exception while fetching account intervention status. Assuming no intervention.",
                     e);
-            return AccountInterventionStateWithType.createDefault();
+            return new AccountInterventionStateWithType(
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build(),
+                    AisInterventionType.AIS_NO_INTERVENTION);
         }
     }
 
