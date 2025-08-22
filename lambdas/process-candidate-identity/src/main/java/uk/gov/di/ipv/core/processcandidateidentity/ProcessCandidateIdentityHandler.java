@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -649,6 +650,7 @@ public class ProcessCandidateIdentityHandler
                 votMatchingResult.gpg45Scores(),
                 sessionVcs,
                 sharedAuditEventParameters);
+        EmbeddedMetricHelper.profileMatch(profile.get());
 
         return null;
     }

@@ -39,6 +39,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -241,6 +242,7 @@ public class InitialiseIpvSessionHandler
                                 auditEventUser,
                                 restrictedDeviceInformation);
                 auditService.sendAuditEvent(reverificationAuditEvent);
+                EmbeddedMetricHelper.reverifyJourneyStart();
             }
 
             if (Boolean.TRUE.equals(isReproveIdentity)) {
@@ -262,6 +264,10 @@ public class InitialiseIpvSessionHandler
                                     "Successfully generated a new IPV Core session")
                             .with(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
             LOGGER.info(message);
+
+            if (!isListEmpty(vtr)) {
+                EmbeddedMetricHelper.identityJourneyStart(vtr);
+            }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, response);
         } catch (RecoverableJarValidationException e) {
