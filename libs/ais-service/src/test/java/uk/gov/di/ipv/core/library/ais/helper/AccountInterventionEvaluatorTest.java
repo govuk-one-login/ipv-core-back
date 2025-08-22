@@ -18,7 +18,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AccountInterventionState accountInterventionState) {
         assertTrue(
-                AccountInterventionEvaluator.isInitialAccountInterventionDetected(
+                AccountInterventionEvaluator.hasInvalidAccountIntervention(
                         accountInterventionState));
     }
 
@@ -27,7 +27,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnFalseWhenProvideValidAccountIntervention(
             AccountInterventionState accountInterventionState) {
         assertFalse(
-                AccountInterventionEvaluator.isInitialAccountInterventionDetected(
+                AccountInterventionEvaluator.hasInvalidAccountIntervention(
                         accountInterventionState));
     }
 

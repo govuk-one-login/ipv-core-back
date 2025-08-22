@@ -16,7 +16,7 @@ public final class AccountInterventionEvaluator {
         // prevent initialisation
     }
 
-    public static boolean isInitialAccountInterventionDetected(
+    public static boolean hasInvalidAccountIntervention(
             AccountInterventionState initialAccountInterventionState) {
         // if no flags are set then there is no intervention
         if (hasNoInterventionFlag(initialAccountInterventionState)) {
