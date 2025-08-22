@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -96,8 +95,6 @@ public class ProcessMobileAppCallbackHandler
             var callbackRequest = parseCallbackRequest(input);
 
             var response = validateCallback(callbackRequest);
-
-            EmbeddedMetricHelper.criReturn(Cri.DCMAW_ASYNC.getId());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
