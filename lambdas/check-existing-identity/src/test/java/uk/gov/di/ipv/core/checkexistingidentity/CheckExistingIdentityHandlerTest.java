@@ -22,6 +22,8 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.di.ipv.core.library.ais.domain.AccountInterventionStateWithType;
+import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -1438,13 +1440,13 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @ParameterizedTest
-        @MethodSource("getFetchedAccountInterventionStateForReproveJourney")
+        @MethodSource("getFetchedAccountInterventionStateWithTypeForReproveJourney")
         void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent(
-                AccountInterventionState fetchedAccountInterventionState) {
+                AccountInterventionStateWithType accountInterventionStateWithType) {
             // Arrange
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-            when(mockAisService.fetchAccountState(TEST_USER_ID))
-                    .thenReturn(fetchedAccountInterventionState);
+            when(mockAisService.fetchAccountStateWithType(TEST_USER_ID))
+                    .thenReturn(accountInterventionStateWithType);
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1465,30 +1467,36 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
         }
 
-        private static Stream<Arguments> getFetchedAccountInterventionStateForReproveJourney() {
+        private static Stream<Arguments>
+                getFetchedAccountInterventionStateWithTypeForReproveJourney() {
             return Stream.of(
                     Arguments.of(
-                            AccountInterventionState.builder()
-                                    .isBlocked(false)
-                                    .isSuspended(true)
-                                    .isReproveIdentity(true)
-                                    .isResetPassword(false)
-                                    .build()),
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(false)
+                                            .isSuspended(true)
+                                            .isReproveIdentity(true)
+                                            .isResetPassword(false)
+                                            .build(),
+                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY)),
                     Arguments.of(
-                            AccountInterventionState.builder()
-                                    .isBlocked(false)
-                                    .isSuspended(false)
-                                    .isReproveIdentity(true)
-                                    .isResetPassword(false)
-                                    .build()));
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(false)
+                                            .isSuspended(false)
+                                            .isReproveIdentity(true)
+                                            .isResetPassword(false)
+                                            .build(),
+                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY)));
         }
 
         @ParameterizedTest
-        @MethodSource("getFetchedAccountInterventionStateForInvalidJourney")
-        void shouldInvalidSession(AccountInterventionState fetchedAccountInterventionState) {
+        @MethodSource("getFetchedAccountInterventionStateWithTypeForInvalidJourney")
+        void shouldInvalidSession(
+                AccountInterventionStateWithType accountInterventionStateWithType) {
             // Arrange
-            when(mockAisService.fetchAccountState(TEST_USER_ID))
-                    .thenReturn(fetchedAccountInterventionState);
+            when(mockAisService.fetchAccountStateWithType(TEST_USER_ID))
+                    .thenReturn(accountInterventionStateWithType);
 
             // Act
             var journeyResponse =
@@ -1501,29 +1509,36 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_ACCOUNT_INTERVENTION, journeyResponse);
         }
 
-        private static Stream<Arguments> getFetchedAccountInterventionStateForInvalidJourney() {
+        private static Stream<Arguments>
+                getFetchedAccountInterventionStateWithTypeForInvalidJourney() {
             return Stream.of(
                     Arguments.of(
-                            AccountInterventionState.builder()
-                                    .isBlocked(true)
-                                    .isSuspended(false)
-                                    .isReproveIdentity(false)
-                                    .isResetPassword(false)
-                                    .build()),
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(true)
+                                            .isSuspended(false)
+                                            .isReproveIdentity(false)
+                                            .isResetPassword(false)
+                                            .build(),
+                                    AisInterventionType.AIS_ACCOUNT_BLOCKED)),
                     Arguments.of(
-                            AccountInterventionState.builder()
-                                    .isBlocked(false)
-                                    .isSuspended(true)
-                                    .isReproveIdentity(false)
-                                    .isResetPassword(false)
-                                    .build()),
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(false)
+                                            .isSuspended(true)
+                                            .isReproveIdentity(false)
+                                            .isResetPassword(false)
+                                            .build(),
+                                    AisInterventionType.AIS_ACCOUNT_SUSPENDED)),
                     Arguments.of(
-                            AccountInterventionState.builder()
-                                    .isBlocked(false)
-                                    .isSuspended(false)
-                                    .isReproveIdentity(false)
-                                    .isResetPassword(true)
-                                    .build()));
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(false)
+                                            .isSuspended(false)
+                                            .isReproveIdentity(false)
+                                            .isResetPassword(true)
+                                            .build(),
+                                    AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET)));
         }
     }
 

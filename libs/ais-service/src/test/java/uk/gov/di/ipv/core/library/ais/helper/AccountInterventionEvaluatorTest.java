@@ -4,6 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 import java.util.stream.Stream;
@@ -14,46 +15,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
-    @ArgumentsSource(InvalidInitialAccountInterventionArgumentsProvider.class)
+    @MethodSource("getInvalidAccountInterventionState")
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
-            AccountInterventionState accountInterventionState) {
-        assertTrue(
-                AccountInterventionEvaluator.hasInvalidAccountIntervention(
-                        accountInterventionState));
+            AisInterventionType aisInterventionType) {
+        assertTrue(AccountInterventionEvaluator.hasInvalidAccountIntervention(aisInterventionType));
+    }
+
+    private static Stream<Arguments> getInvalidAccountInterventionState() {
+        return Stream.of(
+                Arguments.of(AisInterventionType.AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(AisInterventionType.AIS_ACCOUNT_BLOCKED),
+                Arguments.of(AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(
+                        AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
     }
 
     @ParameterizedTest
     @MethodSource("getValidAccountInterventionState")
     void shouldReturnFalseWhenProvideValidAccountIntervention(
-            AccountInterventionState accountInterventionState) {
+            AisInterventionType aisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.hasInvalidAccountIntervention(
-                        accountInterventionState));
+                AccountInterventionEvaluator.hasInvalidAccountIntervention(aisInterventionType));
     }
 
     private static Stream<Arguments> getValidAccountInterventionState() {
         return Stream.of(
-                Arguments.of(
-                        AccountInterventionState.builder()
-                                .isBlocked(false)
-                                .isSuspended(true)
-                                .isReproveIdentity(true)
-                                .isResetPassword(false)
-                                .build()),
-                Arguments.of(
-                        AccountInterventionState.builder()
-                                .isBlocked(false)
-                                .isSuspended(false)
-                                .isReproveIdentity(true)
-                                .isResetPassword(false)
-                                .build()),
-                Arguments.of(
-                        AccountInterventionState.builder()
-                                .isBlocked(false)
-                                .isSuspended(false)
-                                .isReproveIdentity(false)
-                                .isResetPassword(false)
-                                .build()));
+                Arguments.of(AisInterventionType.AIS_NO_INTERVENTION),
+                Arguments.of(AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(AisInterventionType.AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(AisInterventionType.AIS_ACCOUNT_UNSUSPENDED));
     }
 
     @ParameterizedTest

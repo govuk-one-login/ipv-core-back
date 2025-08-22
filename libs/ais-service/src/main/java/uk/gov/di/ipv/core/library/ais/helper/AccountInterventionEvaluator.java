@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
@@ -16,42 +17,21 @@ public final class AccountInterventionEvaluator {
         // prevent initialisation
     }
 
-    public static boolean hasInvalidAccountIntervention(
-            AccountInterventionState initialAccountInterventionState) {
-        // if no flags are set then there is no intervention
-        if (hasNoInterventionFlag(initialAccountInterventionState)) {
-            return false;
-        }
-
-        // we allow user to proceed to reverify journey
-        if (!initialAccountInterventionState.isBlocked()
-                && !initialAccountInterventionState.isResetPassword()
-                && initialAccountInterventionState.isSuspended()
-                && initialAccountInterventionState.isReproveIdentity()) {
-            return false;
-        }
-
-        if (!initialAccountInterventionState.isBlocked()
-                && !initialAccountInterventionState.isResetPassword()
-                && !initialAccountInterventionState.isSuspended()) {
-            return false;
-        }
-
-        try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Intervention detected at the start of the journey. Initial state: %s"
-                                    .formatted(
-                                            OBJECT_MAPPER.writeValueAsString(
-                                                    initialAccountInterventionState))));
-        } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Error converting account intervention state to string", e));
-            LOGGER.info(LogHelper.buildLogMessage("Initial journey intervention detected."));
-        }
-
-        return true;
+    public static boolean hasInvalidAccountIntervention(AisInterventionType interventionType) {
+        return switch (interventionType) {
+            case AIS_NO_INTERVENTION,
+                    AIS_FORCED_USER_IDENTITY_VERIFY,
+                    AIS_ACCOUNT_UNSUSPENDED,
+                    AIS_ACCOUNT_UNBLOCKED ->
+                    false;
+            default -> {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Intervention detected at the start of the journey. Intervention type: %s"
+                                        .formatted(interventionType)));
+                yield true;
+            }
+        };
     }
 
     public static boolean isMidJourneyAccountInterventionDetected(

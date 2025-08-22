@@ -50,4 +50,22 @@ class AisServiceTest {
         // Assert
         assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
     }
+
+    @Test
+    void fetchAccountStateWithType_whenCalled_returnsCorrectValues() throws AisClientException {
+        // Arrange
+        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
+                .thenReturn(TestData.AIS_NO_INTERVENTION_DTO);
+
+        // Act
+        var result = underTest.fetchAccountStateWithType(TEST_USER_ID);
+
+        var accountInterventionState = result.accountInterventionState();
+        var aisInterventionType = result.aisInterventionType();
+
+        // Assert
+        assertThat(accountInterventionState).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
+        assertThat(aisInterventionType)
+                .isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getIntervention().getDescription());
+    }
 }

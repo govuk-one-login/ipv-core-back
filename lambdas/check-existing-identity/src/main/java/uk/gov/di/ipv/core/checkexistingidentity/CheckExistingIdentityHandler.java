@@ -138,6 +138,9 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
 
+    private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
+            "Account intervention detected";
+
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final CriCheckingService criCheckingService;
@@ -248,13 +251,18 @@ public class CheckExistingIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             if (configService.enabled(AIS_ENABLED)) {
-                var fetchedAccountInterventionState = aisService.fetchAccountState(userId);
+                var accountInterventionStateWithType = aisService.fetchAccountStateWithType(userId);
+                var fetchedAccountInterventionState =
+                        accountInterventionStateWithType.accountInterventionState();
+                var fetchedAisInterventionType =
+                        accountInterventionStateWithType.aisInterventionType();
+
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
 
                 if (AccountInterventionEvaluator.hasInvalidAccountIntervention(
-                        fetchedAccountInterventionState)) {
+                        fetchedAisInterventionType)) {
                     ipvSessionService.invalidateSession(
-                            ipvSessionItem, "Account intervention detected");
+                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
                     throw new AccountInterventionException();
                 }
                 ipvSessionService.updateIpvSession(ipvSessionItem);
