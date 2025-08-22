@@ -327,6 +327,12 @@ Resources:
               awslogs-group: !Ref ECSAccessLogsGroup
               awslogs-region: !Sub ${AWS::Region}
               awslogs-stream-prefix: !Sub journey-map-${Environment}
+          Environment:
+            - Name: JOURNEY_TRANSITIONS_ENDPOINT
+              Value: '{{resolve:ssm:/journeyMap/core/transitionsUrl}}'
+          Secrets:
+            - Name: ANALYTICS_API_KEY
+              ValueFrom: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:analyticsApiKey #pragma: allowlist secret
       Cpu: "256"
       Memory: "512"
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
@@ -346,7 +352,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
         Version: 2012-10-17
       Policies:
-        - PolicyName: PullJourneyMapImage
+        - PolicyName: PullJourneyMapImageAndReadConfig
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -355,8 +361,7 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:GetAuthorizationToken"
-                Resource:
-                  - "*"
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
@@ -364,6 +369,16 @@ Resources:
                 Resource:
                   - !GetAtt "ECSAccessLogsGroup.Arn"
                   - !Sub "${ECSAccessLogsGroup.Arn}:*"
+              - Effect: Allow
+                Action:
+                  - "ssm:GetParameter"
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/journeyMap/core/transitionsUrl
+              - Effect: Allow
+                Action:
+                  - "secretsmanager:GetSecretValue" #pragma: allowlist secret
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:analyticsApiKey* #pragma: allowlist secret
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary

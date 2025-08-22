@@ -297,11 +297,12 @@ const renderSvg = async (
   selectedNestedJourney: string | null,
   options: RenderOptions,
 ): Promise<void> => {
-  const diagram = render(
+  const diagram = await render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
     options,
+    journeyMaps,
   );
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);
   diagramElement.innerHTML = svg;

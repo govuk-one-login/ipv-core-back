@@ -22,18 +22,53 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
+import config from "./config.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
   states: StateNode[];
 }
 
+interface JourneyTransition {
+  fromJourney: string;
+  from: string;
+  toJourney: string;
+  to: string;
+  count: number;
+}
+
+const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
+  const query = new URLSearchParams({
+    minutes: "30",
+    limit: "500",
+    // ipvSessionId: "test-session-1",
+  });
+
+  const response = await fetch(
+    `${config.journeyTransitionsEndpoint}?${query}`,
+    {
+      method: "POST",
+      headers: {
+        "x-api-key": config.analyticsApiKey,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch journey transitions: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
-const getVisibleEdgesAndNodes = (
+const getVisibleEdgesAndNodes = async (
   journeyStates: Record<string, JourneyState>,
   options: RenderOptions,
-): RenderableMap => {
+  journeyMapName: string,
+  journeyMaps: Record<string, JourneyMap>,
+): Promise<RenderableMap> => {
   // Initial states have no response or nested journey
   const initialStates = Object.keys(journeyStates).filter(
     (s) => !journeyStates[s].response && !journeyStates[s].nestedJourney,
@@ -42,6 +77,7 @@ const getVisibleEdgesAndNodes = (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
+  const journeyTransitions: JourneyTransition[] = await getJourneyTransitions();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -90,15 +126,84 @@ const getVisibleEdgesAndNodes = (
       }
     });
 
-    Object.entries(eventsByTarget).forEach(
-      ([targetState, transitionEvents]) => {
-        transitions.push({
-          sourceState,
-          targetState,
-          transitionEvents,
-        });
-      },
-    );
+    for (const [targetState, transitionEvents] of Object.entries(
+      eventsByTarget,
+    )) {
+      const sourceStateDefinition = journeyStates[sourceState];
+      const targetStateDefinition = journeyStates[targetState];
+      const sourceIsNestedJourney =
+        sourceStateDefinition.response?.type === "nestedJourney";
+      const targetIsNestedJourney =
+        targetStateDefinition.response?.type === "nestedJourney";
+
+      let count = 0;
+      for (const transition of journeyTransitions) {
+        // Source condition
+        if (sourceIsNestedJourney) {
+          if (
+            !(
+              transition.fromJourney === journeyMapName &&
+              transition.from.startsWith(sourceState)
+            )
+          ) {
+            continue;
+          }
+        } else if (!sourceStateDefinition.response) {
+          // Entry state, so the source does not matter
+        } else {
+          if (
+            !(
+              transition.fromJourney === journeyMapName &&
+              transition.from === sourceState
+            )
+          ) {
+            continue;
+          }
+        }
+
+        // Target condition
+        if (targetIsNestedJourney) {
+          if (
+            !(
+              transition.toJourney === journeyMapName &&
+              transition.to.startsWith(targetState)
+            )
+          ) {
+            continue;
+          }
+        } else if (targetState.includes("__")) {
+          const [targetJourney, entryState] = targetState.split("__", 2);
+          const actualState =
+            journeyMaps[targetJourney].states[entryState].events?.next
+              .targetState;
+          if (
+            !(
+              transition.toJourney === targetJourney &&
+              transition.to === actualState
+            )
+          ) {
+            continue;
+          }
+        } else {
+          if (
+            !(
+              transition.toJourney === journeyMapName &&
+              transition.to === targetState
+            )
+          ) {
+            continue;
+          }
+        }
+        count += transition.count;
+      }
+
+      transitions.push({
+        sourceState,
+        targetState,
+        transitionCount: count,
+        transitionEvents,
+      });
+    }
   }
 
   return {
@@ -107,12 +212,13 @@ const getVisibleEdgesAndNodes = (
   };
 };
 
-export const render = (
+export const render = async (
   selectedJourney: string,
   journeyMap: JourneyMap,
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
-): string => {
+  journeyMaps: Record<string, JourneyMap>,
+): Promise<string> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
   const direction = TOP_DOWN_JOURNEYS.includes(selectedJourney) ? "TD" : "LR";
 
@@ -134,11 +240,43 @@ export const render = (
 
   const { transitions, states } = options.onlyOrphanStates
     ? { transitions: [], states: findOrphanStates(journeyStates) }
-    : getVisibleEdgesAndNodes(journeyStates, options);
+    : await getVisibleEdgesAndNodes(
+        journeyStates,
+        options,
+        selectedJourney,
+        journeyMaps,
+      );
+
+  const maxCount = Math.max(...transitions.map((t) => t.transitionCount || 0));
+
+  let linkIndex = 0;
+  const transitionStrings: string[] = [];
+  for (const t of transitions) {
+    let colour = "#E5E4E2";
+
+    if (t.transitionCount) {
+      colour = "#000000" + alphaFromCount(t.transitionCount, maxCount);
+    }
+
+    const edge = renderTransition(t);
+    transitionStrings.push(edge);
+    transitionStrings.push(
+      `linkStyle ${linkIndex} stroke:${colour}, stroke-width:2px;`,
+    );
+    linkIndex++;
+  }
 
   return `${getMermaidHeader(direction)}
     ${states.map(renderState).join("\n")}
     ${states.map(renderClickHandler).join("\n")}
-    ${transitions.map(renderTransition).join("\n")}
+    ${transitionStrings.join("\n")}
   `;
 };
+
+function alphaFromCount(count: number, maxCount: number) {
+  if (maxCount === 0) return "00";
+  const ratio = count / maxCount;
+  const logScaled = Math.log10(1 + 9 * ratio);
+  const alpha = Math.round(logScaled * 255);
+  return alpha.toString(16).padStart(2, "0");
+}
