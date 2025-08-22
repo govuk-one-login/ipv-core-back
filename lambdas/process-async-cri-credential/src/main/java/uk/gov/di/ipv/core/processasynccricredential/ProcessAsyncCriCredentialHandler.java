@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
-import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -52,7 +51,6 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -138,19 +136,12 @@ public class ProcessAsyncCriCredentialHandler
         } catch (JsonProcessingException
                 | ParseException
                 | CiPutException
-                | AsyncVerifiableCredentialException
                 | UnrecognisedVotException
                 | CiPostMitigationsException
                 | CredentialParseException
                 | EvcsServiceException
                 | HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
-            if (e instanceof AsyncVerifiableCredentialException asyncVcException
-                    && asyncVcException
-                            .getErrorResponse()
-                            .equals(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL)) {
-                EmbeddedMetricHelper.asyncCriResponseUnexpected(extractQueueName(message));
-            }
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
             LOGGER.error(
@@ -210,7 +201,6 @@ public class ProcessAsyncCriCredentialHandler
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException,
                     CiPutException,
-                    AsyncVerifiableCredentialException,
                     CiPostMitigationsException,
                     VerifiableCredentialException,
                     UnrecognisedVotException,
@@ -223,8 +213,9 @@ public class ProcessAsyncCriCredentialHandler
         var criResponseItem = criResponseService.getCriResponseItemWithState(userId, state);
         if (criResponseItem.isEmpty()) {
             LOGGER.error(
-                    LogHelper.buildLogMessage("No response item found given user id and state"));
-            throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+                    LogHelper.buildLogMessage(
+                            "No pending CRI response item found for given user id and state; discarding message"));
+            return;
         }
 
         var cri = Cri.fromId(criResponseItem.get().getCredentialIssuer());
