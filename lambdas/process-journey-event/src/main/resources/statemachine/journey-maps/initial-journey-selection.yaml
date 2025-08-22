@@ -69,6 +69,9 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       dl-auth-source-check-low:
         targetJourney: NEW_P1_IDENTITY
         targetState: DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK

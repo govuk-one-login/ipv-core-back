@@ -27,12 +27,10 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
-import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -57,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
@@ -81,7 +78,6 @@ public class InitialiseIpvSessionHandler
 
     private final JarValidator jarValidator;
     private final AuditService auditService;
-    private final AisService aisService;
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
@@ -94,7 +90,6 @@ public class InitialiseIpvSessionHandler
                         configService,
                         new OAuthKeyService(configService));
         this.auditService = AuditService.create(configService);
-        this.aisService = new AisService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -103,14 +98,12 @@ public class InitialiseIpvSessionHandler
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             JarValidator jarValidator,
-            AuditService auditService,
-            AisService aisService) {
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
-        this.aisService = aisService;
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
@@ -183,23 +176,6 @@ public class InitialiseIpvSessionHandler
                                     && clientOAuthSessionItem.getReproveIdentity(),
                             false);
 
-            // If this is a reverification journey then we can skip the call to AIS
-            if (configService.enabled(AIS_ENABLED) && !isReverification) {
-                var initialAccountState =
-                        aisService.fetchAccountState(clientOAuthSessionItem.getUserId());
-
-                initialAccountInterventionState =
-                        new AccountInterventionState(
-                                initialAccountState.isBlocked(),
-                                initialAccountState.isSuspended(),
-                                initialAccountState.isReproveIdentity(),
-                                initialAccountState.isResetPassword());
-
-                clientOAuthSessionItem.setReproveIdentity(
-                        initialAccountInterventionState.isReproveIdentity());
-                clientOAuthSessionService.updateClientSessionDetails(clientOAuthSessionItem);
-            }
-
             var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
 
             IpvSessionItem ipvSessionItem =
@@ -218,7 +194,7 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
-                    new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
+                    new AuditExtensionsIpvJourneyStart(isReproveIdentity ? true : null, vtr);
 
             var restrictedDeviceInformation =
                     new AuditRestrictedDeviceInformation(deviceInformation);
@@ -241,15 +217,6 @@ public class InitialiseIpvSessionHandler
                                 auditEventUser,
                                 restrictedDeviceInformation);
                 auditService.sendAuditEvent(reverificationAuditEvent);
-            }
-
-            if (Boolean.TRUE.equals(isReproveIdentity)) {
-                auditService.sendAuditEvent(
-                        AuditEvent.createWithoutDeviceInformation(
-                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser,
-                                AuditExtensionAccountIntervention.newReproveIdentity()));
             }
 
             Map<String, String> response =

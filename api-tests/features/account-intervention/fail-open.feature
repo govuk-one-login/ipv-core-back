@@ -52,7 +52,6 @@ Feature: Fail open scenarios
 
     Examples:
       | intervention           | first_ais_response  | second_ais_response             |
-      | initial blocked        | AIS_ACCOUNT_BLOCKED | ERROR                           |
       | final blocked          | ERROR               | AIS_ACCOUNT_BLOCKED             |
       | final reprove identity | ERROR               | AIS_FORCED_USER_IDENTITY_VERIFY |
 

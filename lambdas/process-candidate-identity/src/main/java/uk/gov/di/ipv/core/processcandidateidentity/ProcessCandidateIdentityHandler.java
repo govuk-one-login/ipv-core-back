@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +10,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
+import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -31,7 +30,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -119,7 +117,6 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UN
 public class ProcessCandidateIdentityHandler
         implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_PROFILE_UNMET =
             new JourneyResponse(JOURNEY_PROFILE_UNMET_PATH);
@@ -269,7 +266,7 @@ public class ProcessCandidateIdentityHandler
                     && !SKIP_AIS_TYPES.contains(processIdentityType)
                     && !StringUtils.isBlank(userId)) {
                 var interventionState = aisService.fetchAccountState(userId);
-                if (midJourneyInterventionDetected(
+                if (AccountInterventionEvaluator.isMidJourneyAccountInterventionDetected(
                         ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
                     throw new AccountInterventionException();
                 }
@@ -293,7 +290,7 @@ public class ProcessCandidateIdentityHandler
                     sessionVcs,
                     auditEventUser);
         } catch (AccountInterventionException e) {
-            updateIpvSessionWithIntervention(ipvSessionItem);
+            ipvSessionService.invalidateSession(ipvSessionItem, "Account intervention detected");
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             var errorMessage = LogHelper.buildErrorMessage("Failed to process identity", e);
@@ -351,76 +348,6 @@ public class ProcessCandidateIdentityHandler
         } finally {
             auditService.awaitAuditEvents();
         }
-    }
-
-    private void updateIpvSessionWithIntervention(IpvSessionItem ipvSessionItem) {
-        ipvSessionItem.setErrorCode("session_invalidated");
-        ipvSessionItem.setErrorDescription("Account intervention detected");
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-    }
-
-    private boolean midJourneyInterventionDetected(
-            AccountInterventionState initialAccountInterventionState,
-            AccountInterventionState currentAccountInterventionState) {
-        // If no intervention flags are set then there can't have been an intervention
-        if (!initialAccountInterventionState.isBlocked()
-                && !initialAccountInterventionState.isSuspended()
-                && !initialAccountInterventionState.isResetPassword()
-                && !initialAccountInterventionState.isReproveIdentity()
-                && !currentAccountInterventionState.isBlocked()
-                && !currentAccountInterventionState.isSuspended()
-                && !currentAccountInterventionState.isResetPassword()
-                && !currentAccountInterventionState.isReproveIdentity()) {
-            return false;
-        }
-
-        // If the user is currently reproving their identity then the suspended and reprove identity
-        // flags may not have been reset yet.
-        if (notBlockedAndNotPasswordReset(
-                        initialAccountInterventionState, currentAccountInterventionState)
-                && initialAccountInterventionState.isSuspended()
-                && currentAccountInterventionState.isSuspended()
-                && initialAccountInterventionState.isReproveIdentity()
-                && currentAccountInterventionState.isReproveIdentity()) {
-            return false;
-        }
-
-        // If the user is currently reproving their identity and it has been detected
-        if (notBlockedAndNotPasswordReset(
-                        initialAccountInterventionState, currentAccountInterventionState)
-                && initialAccountInterventionState.isSuspended()
-                && !currentAccountInterventionState.isSuspended()
-                && initialAccountInterventionState.isReproveIdentity()
-                && !currentAccountInterventionState.isReproveIdentity()) {
-            return false;
-        }
-
-        // Otherwise an intervention flag has been set for some other reason
-        try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Mid journey intervention detected. Initial state: %s Final state: %s"
-                                    .formatted(
-                                            OBJECT_MAPPER.writeValueAsString(
-                                                    initialAccountInterventionState),
-                                            OBJECT_MAPPER.writeValueAsString(
-                                                    currentAccountInterventionState))));
-        } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Error converting account intervention state to string", e));
-            LOGGER.info(LogHelper.buildLogMessage("Mid journey intervention detected."));
-        }
-        return true;
-    }
-
-    private boolean notBlockedAndNotPasswordReset(
-            AccountInterventionState initialAccountInterventionState,
-            AccountInterventionState currentAccountInterventionState) {
-        return !initialAccountInterventionState.isBlocked()
-                && !initialAccountInterventionState.isResetPassword()
-                && !currentAccountInterventionState.isBlocked()
-                && !currentAccountInterventionState.isResetPassword();
     }
 
     private CoiCheckType getCoiCheckType(
@@ -783,9 +710,10 @@ public class ProcessCandidateIdentityHandler
                                         interventionCodeTypes.get(interventionCode)))
                 .anyMatch(
                         interventionState ->
-                                midJourneyInterventionDetected(
-                                        ipvSessionItem.getInitialAccountInterventionState(),
-                                        interventionState));
+                                AccountInterventionEvaluator
+                                        .isMidJourneyAccountInterventionDetected(
+                                                ipvSessionItem.getInitialAccountInterventionState(),
+                                                interventionState));
     }
 
     private void sendProfileMatchedAuditEvent(

@@ -194,6 +194,12 @@ public class IpvSessionService {
         dataStore.update(updatedIpvSessionItem);
     }
 
+    public void invalidateSession(IpvSessionItem ipvSessionItem, String errorDescription) {
+        ipvSessionItem.setErrorCode("session_invalidated");
+        ipvSessionItem.setErrorDescription(errorDescription);
+        dataStore.update(ipvSessionItem);
+    }
+
     private String toExpiryDateTime(long expirySeconds) {
         return Instant.now().plusSeconds(expirySeconds).toString();
     }

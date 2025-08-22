@@ -15,7 +15,8 @@ dependencies {
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:user-identity-service"),
-			project(":libs:evcs-service")
+			project(":libs:evcs-service"),
+			project(":libs:ais-service")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok

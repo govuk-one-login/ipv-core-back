@@ -43,6 +43,8 @@ class IpvSessionServiceTest {
             new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE);
     private static final AccountInterventionState ACCOUNT_INTERVENTION_STATE =
             new AccountInterventionState(false, false, false, false);
+    private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
+            "Account intervention detected";
 
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
@@ -298,6 +300,22 @@ class IpvSessionServiceTest {
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         verify(mockDataStore).update(ipvSessionItem);
+    }
+
+    @Test
+    void shouldInvalidateSessionItem() {
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        ipvSessionService.invalidateSession(ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+
+        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        assertEquals("session_invalidated", ipvSessionItemArgumentCaptor.getValue().getErrorCode());
+        assertEquals(
+                "Account intervention detected",
+                ipvSessionItemArgumentCaptor.getValue().getErrorDescription());
     }
 
     @Test
