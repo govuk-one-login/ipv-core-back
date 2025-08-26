@@ -166,7 +166,8 @@ public class InitialiseIpvSessionHandler
                                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                     claimsSet));
 
-            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            var isReproveIdentity =
+                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
