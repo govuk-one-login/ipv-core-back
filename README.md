@@ -72,7 +72,7 @@ See the [Deployment Documentation](deploy/README.md) for information on deployin
 ### Development environments
 Instantiating core-back to run in a safe environment can be done using:
 - [local-running](local-running/README.md), which exposes core-back on localhost
-- [dev-deploy tool](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md), which deploys to a user environment
+- [dev-deploy tool](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md), which deploys to a user/ perf environment
 - [dev-pipeline](https://github.com/govuk-one-login/ipv-core-back/actions/workflows/secure-post-merge.yml), which deploys to the [shared dev environment](https://orch.stubs.account.gov.uk/?defaultEnvironment=DEV)
 
 ### Testing
