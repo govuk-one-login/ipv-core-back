@@ -8,6 +8,17 @@ info:
 security:
   - apiKey: []
 
+x-amazon-apigateway-cors:
+  allowOrigins:
+    - "*"
+  allowHeaders:
+    - "Content-Type"
+    - "X-Api-Key"
+  allowMethods:
+    - "OPTIONS"
+    - "GET"
+    - "POST"
+
 paths:
   /journey-transitions:
     post:
