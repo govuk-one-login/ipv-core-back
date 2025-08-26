@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
@@ -514,11 +515,11 @@ public class CheckExistingIdentityHandler
         var previousIpvSessionItem =
                 ipvSessionService.getIpvSessionByClientOAuthSessionId(
                         criOAuthSessionItem.getClientOAuthSessionId());
-        sendAuditEventWithPreviousIpvSessionId(
+        sendAuditEventWithExtension(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,
                 auditEventUser,
                 deviceInformation,
-                previousIpvSessionItem.getIpvSessionId());
+                new AuditExtensionPreviousIpvSessionId(previousIpvSessionItem.getIpvSessionId()));
 
         sessionCredentialsService.persistCredentials(
                 credentialBundle.credentials, auditEventUser.getSessionId(), true);
@@ -578,8 +579,12 @@ public class CheckExistingIdentityHandler
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
-        sendAuditEvent(
-                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser, deviceInformation);
+
+        sendAuditEventWithExtension(
+                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                auditEventUser,
+                deviceInformation,
+                new AuditExtensionPreviousAchievedVot(previousAchievedVot));
         EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
@@ -635,28 +640,17 @@ public class CheckExistingIdentityHandler
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
-    private void sendAuditEventWithPreviousIpvSessionId(
+    private void sendAuditEventWithExtension(
             AuditEventTypes auditEventTypes,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            String previousIpvSessionId) {
+            AuditExtensions extension) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionPreviousIpvSessionId(previousIpvSessionId),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
-    }
-
-    private void sendAuditEventWithPreviousAchievedVot(
-            AuditEventUser auditEventUser, String deviceInformation, Vot previousAchievedVot) {
-        auditService.sendAuditEvent(
-                AuditEvent.createWithDeviceInformation(
-                        AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionPreviousAchievedVot(previousAchievedVot),
+                        extension,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
