@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -250,6 +251,21 @@ public class CheckExistingIdentityHandler
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            var isReproveIdentity =
+                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+
+            // if we receive JAR with reprove identity flag from auth
+            // we want to mirror Account Intervention which will also suspend the user
+            var initialAccountInterventionState =
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(isReproveIdentity)
+                            .isReproveIdentity(isReproveIdentity)
+                            .isResetPassword(false)
+                            .build();
+
+            ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
+
             if (configService.enabled(AIS_ENABLED)) {
                 var accountInterventionStateWithType = aisService.fetchAccountStateWithType(userId);
                 var fetchedAccountInterventionState =
@@ -258,6 +274,7 @@ public class CheckExistingIdentityHandler
                         accountInterventionStateWithType.aisInterventionType();
 
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
+                isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
 
                 if (AccountInterventionEvaluator.hasInvalidAccountIntervention(
                         fetchedAisInterventionType)) {
@@ -265,19 +282,17 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
                     throw new AccountInterventionException();
                 }
-                ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                clientOAuthSessionItem.setReproveIdentity(
-                        fetchedAccountInterventionState.isReproveIdentity());
+                clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
                 clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
             }
 
-            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            if (Boolean.TRUE.equals(isReproveIdentity)) {
+            if (isReproveIdentity) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,

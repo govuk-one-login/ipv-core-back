@@ -1439,14 +1439,20 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(clientOAuthSessionItem);
         }
 
-        @ParameterizedTest
-        @MethodSource("getFetchedAccountInterventionStateWithTypeForReproveJourney")
-        void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent(
-                AccountInterventionStateWithType accountInterventionStateWithType) {
+        @Test
+        void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
             // Arrange
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(mockAisService.fetchAccountStateWithType(TEST_USER_ID))
-                    .thenReturn(accountInterventionStateWithType);
+                    .thenReturn(
+                            new AccountInterventionStateWithType(
+                                    AccountInterventionState.builder()
+                                            .isBlocked(false)
+                                            .isSuspended(true)
+                                            .isReproveIdentity(true)
+                                            .isResetPassword(false)
+                                            .build(),
+                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1465,29 +1471,6 @@ class CheckExistingIdentityHandlerTest {
             assertNull(extension.getSuccess());
             assertTrue(clientOAuthSessionItem.getReproveIdentity());
             assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-
-        private static Stream<Arguments>
-                getFetchedAccountInterventionStateWithTypeForReproveJourney() {
-            return Stream.of(
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(false)
-                                            .isSuspended(true)
-                                            .isReproveIdentity(true)
-                                            .isResetPassword(false)
-                                            .build(),
-                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY)),
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(false)
-                                            .isSuspended(false)
-                                            .isReproveIdentity(true)
-                                            .isResetPassword(false)
-                                            .build(),
-                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY)));
         }
 
         @ParameterizedTest

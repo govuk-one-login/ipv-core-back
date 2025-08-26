@@ -158,6 +158,7 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2"));
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
+        clientOAuthSessionItem.setReproveIdentity(false);
     }
 
     @AfterEach

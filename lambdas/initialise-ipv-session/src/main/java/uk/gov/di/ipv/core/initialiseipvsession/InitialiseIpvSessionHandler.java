@@ -166,25 +166,11 @@ public class InitialiseIpvSessionHandler
                                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                     claimsSet));
 
-            // Default the reprove identity value to the value from orchestration so it's consistent
-            // if we turn the feature on during a journey.
-            var initialAccountInterventionState =
-                    new AccountInterventionState(
-                            false,
-                            false,
-                            clientOAuthSessionItem.getReproveIdentity() != null
-                                    && clientOAuthSessionItem.getReproveIdentity(),
-                            false);
-
-            var isReproveIdentity = initialAccountInterventionState.isReproveIdentity();
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            null,
-                            emailAddress,
-                            isReverification,
-                            initialAccountInterventionState);
+                            clientOAuthSessionId, null, emailAddress, isReverification, null);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
