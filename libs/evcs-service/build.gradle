@@ -5,6 +5,10 @@ plugins {
 	id "jacoco"
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation libs.apacheHttpCore,
 			libs.bundles.log4j,
@@ -21,6 +25,10 @@ dependencies {
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
+
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly libs.junitPlatform
 }
@@ -46,6 +54,7 @@ tasks.named('jar') {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 task pactConsumerTests (type: Test) {
