@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -42,8 +41,6 @@ class IpvSessionServiceTest {
     private static final String ERROR_STATE = "ERROR";
     private static final JourneyState INITIAL_START_JOURNEY_STATE =
             new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE);
-    private static final AccountInterventionState ACCOUNT_INTERVENTION_STATE =
-            new AccountInterventionState(false, false, false, false);
     private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
             "Account intervention detected";
 
@@ -197,7 +194,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, false, null, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, false, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -217,7 +214,6 @@ class IpvSessionServiceTest {
                         null,
                         "test@test.com",
                         false,
-                        null,
                         null);
 
         verify(mockDataStore)
@@ -240,7 +236,6 @@ class IpvSessionServiceTest {
                         testErrorObject,
                         null,
                         false,
-                        null,
                         null);
 
         verify(mockDataStore)
@@ -263,7 +258,6 @@ class IpvSessionServiceTest {
                         null,
                         null,
                         false,
-                        ACCOUNT_INTERVENTION_STATE,
                         AIS_NO_INTERVENTION);
 
         verify(mockDataStore)
@@ -274,9 +268,6 @@ class IpvSessionServiceTest {
 
         assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
         assertEquals(INITIAL_START_JOURNEY_STATE, capturedSessionItem.getState());
-        assertEquals(
-                ACCOUNT_INTERVENTION_STATE,
-                capturedSessionItem.getInitialAccountInterventionState());
         assertEquals(AIS_NO_INTERVENTION, capturedSessionItem.getAisInterventionType());
     }
 
@@ -284,7 +275,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItemWithReverificationJourney() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, true, null, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, true, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));

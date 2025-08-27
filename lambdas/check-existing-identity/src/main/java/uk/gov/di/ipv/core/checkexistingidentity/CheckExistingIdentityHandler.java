@@ -261,7 +261,6 @@ public class CheckExistingIdentityHandler
                 var fetchedAisInterventionType =
                         accountInterventionStateWithType.aisInterventionType();
 
-                ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
                 ipvSessionItem.setAisInterventionType(fetchedAisInterventionType);
                 isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
 

@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
 
 @ExtendWith(MockitoExtension.class)
 class AisServiceTest {
@@ -23,32 +24,6 @@ class AisServiceTest {
     @BeforeEach
     void setUp() {
         underTest = new AisService(aisClient);
-    }
-
-    @Test
-    void fetchAccountState_whenCalled_returnsState() throws AisClientException {
-        // Arrange
-        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
-                .thenReturn(TestData.AIS_NO_INTERVENTION_DTO);
-
-        // Act
-        var result = underTest.fetchAccountState(TEST_USER_ID);
-
-        // Assert
-        assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
-    }
-
-    @Test
-    void fetchAccountState_whenClientErrors_returnsNoInterventionState() throws AisClientException {
-        // Arrange
-        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
-                .thenThrow(new AisClientException("test", new Exception()));
-
-        // Act
-        var result = underTest.fetchAccountState(TEST_USER_ID);
-
-        // Assert
-        assertThat(result).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
     }
 
     @Test
@@ -65,8 +40,7 @@ class AisServiceTest {
 
         // Assert
         assertThat(accountInterventionState).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
-        assertThat(aisInterventionType)
-                .isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getIntervention().getDescription());
+        assertThat(aisInterventionType).isEqualTo(AIS_NO_INTERVENTION);
     }
 
     @Test
@@ -84,7 +58,34 @@ class AisServiceTest {
 
         // Assert
         assertThat(accountInterventionState).isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getState());
-        assertThat(aisInterventionType)
-                .isEqualTo(TestData.AIS_NO_INTERVENTION_DTO.getIntervention().getDescription());
+        assertThat(aisInterventionType).isEqualTo(AIS_NO_INTERVENTION);
+    }
+
+    @Test
+    void fetchAisInterventionType_whenCalled_returnsAisInterventionType()
+            throws AisClientException {
+        // Arrange
+        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
+                .thenReturn(TestData.AIS_NO_INTERVENTION_DTO);
+
+        // Act
+        var result = underTest.fetchAisInterventionType(TEST_USER_ID);
+
+        // Assert
+        assertThat(result).isEqualTo(AIS_NO_INTERVENTION);
+    }
+
+    @Test
+    void fetchAisInterventionType_whenClientErrors_returnsNoIntervention()
+            throws AisClientException {
+        // Arrange
+        when(aisClient.getAccountInterventionStatus(TEST_USER_ID))
+                .thenThrow(new AisClientException("test", new Exception()));
+
+        // Act
+        var result = underTest.fetchAisInterventionType(TEST_USER_ID);
+
+        // Assert
+        assertThat(result).isEqualTo(AIS_NO_INTERVENTION);
     }
 }

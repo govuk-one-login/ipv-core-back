@@ -225,13 +225,6 @@ class CheckExistingIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setVot(Vot.P0);
-        ipvSessionItem.setInitialAccountInterventionState(
-                AccountInterventionState.builder()
-                        .isResetPassword(false)
-                        .isSuspended(false)
-                        .isBlocked(false)
-                        .isReproveIdentity(false)
-                        .build());
 
         lenient()
                 .when(mockVotMatcher.findStrongestMatches(any(), any(), any(), anyBoolean()))

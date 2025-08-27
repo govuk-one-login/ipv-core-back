@@ -50,16 +50,6 @@ class AccountInterventionEvaluatorTest {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(InvalidMidJourneyAccountInterventionArgumentsProvider.class)
-    void shouldReturnTrueWhenProvideValidMidJourneyAccountInterventionStates(
-            AccountInterventionState initialAccountIntervention,
-            AccountInterventionState midJourneyAccountInterventionState) {
-        assertTrue(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                        initialAccountIntervention, midJourneyAccountInterventionState));
-    }
-
-    @ParameterizedTest
     @MethodSource("getInvalidMidJourneyAccountInterventionTypes")
     void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionTypes(
             AisInterventionType initialAisInterventionType,
