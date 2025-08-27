@@ -37,8 +37,7 @@ interface JourneyTransition {
 }
 
 const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
-  const query = new URLSearchParams({});
-  const response = await fetch(`/journey-transitions?${query}`);
+  const response = await fetch("/journey-transitions");
   if (!response.ok) {
     console.warn(
       `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
@@ -227,31 +226,19 @@ export const render = async (
 
   const { transitions, states } = options.onlyOrphanStates
     ? { transitions: [], states: findOrphanStates(journeyStates) }
-    : await getVisibleEdgesAndNodes(
-        journeyStates,
-        options,
-        selectedJourney,
-        journeyMaps,
-      );
+    : await getVisibleEdgesAndNodes(journeyStates, options, selectedJourney, journeyMaps);
 
-  const maxCount = Math.max(...transitions.map((t) => t.transitionCount || 0));
+  const maxCount = Math.max(0, ...transitions.map(t => t.transitionCount ?? 0));
+  const transitionStrings = transitions.flatMap((t, i) => {
+    const colour = t.transitionCount
+        ? `#000000${alphaFromCount(t.transitionCount, maxCount)}`
+        : "#E5E4E2";
 
-  let linkIndex = 0;
-  const transitionStrings: string[] = [];
-  for (const t of transitions) {
-    let colour = "#E5E4E2";
-
-    if (t.transitionCount) {
-      colour = "#000000" + alphaFromCount(t.transitionCount, maxCount);
-    }
-
-    const edge = renderTransition(t);
-    transitionStrings.push(edge);
-    transitionStrings.push(
-      `linkStyle ${linkIndex} stroke:${colour}, stroke-width:2px;`,
-    );
-    linkIndex++;
-  }
+    return [
+      renderTransition(t),
+      `linkStyle ${i} stroke:${colour}, stroke-width:2px;`
+    ];
+  });
 
   return `${getMermaidHeader(direction)}
     ${states.map(renderState).join("\n")}

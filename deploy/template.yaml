@@ -3423,7 +3423,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref FetchJourneyTransitionsFunction.Alias
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/POST/journey-transitions"
 
   SessionCredentialsTable:
     Type: AWS::DynamoDB::Table
