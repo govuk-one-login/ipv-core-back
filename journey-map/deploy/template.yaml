@@ -321,7 +321,7 @@ Resources:
             - Name: JOURNEY_TRANSITIONS_ENDPOINT
               Value: '{{resolve:ssm:/journeyMap/FETCH_JOURNEY_TRANSITIONS_ENDPOINT}}'
             - Name: ANALYTICS_API_KEY
-              Value: '{{resolve:ssm:/journeyMap/ANALYTICS_API_KEY}}' #pragma: allowlist secret
+              Value: '{{resolve:ssm:/journeyMap/ANALYTICS_API_KEY}}'
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp

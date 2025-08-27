@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import config from "./config";
+import config from "./config.js";
 
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
@@ -10,8 +10,8 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
     const minutes = req.query?.["minutes"];
     const ipvSessionId = req.query?.["ipv_session_id"];
     const query = new URLSearchParams({
-      minutes: String(minutes ?? "30"),
-      ipvSessionId: ipvSessionId ? String(ipvSessionId) : undefined,
+      minutes: (minutes as string) ?? "30",
+      ipvSessionId: (ipvSessionId as string) ?? undefined,
       limit: "200",
     });
 
@@ -19,9 +19,7 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       `${config.journeyTransitionsEndpoint}?${query.toString()}`,
       {
         method: "POST",
-        headers: {
-          "x-api-key": config.analyticsApiKey,
-        },
+        headers: { "x-api-key": config.analyticsApiKey },
       },
     );
     if (!response.ok) {
