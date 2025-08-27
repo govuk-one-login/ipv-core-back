@@ -28,6 +28,15 @@ Use `npm start` to run the built code.
 
 In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
 
+### Visualising user traffic
+
+Run the map locally, but set the following environment variables, for the deployment of your choice! Check API Gateway for the endpoint and API key info.
+```bash
+export JOURNEY_TRANSITIONS_ENDPOINT=...
+export ANALYTICS_API_KEY=...
+npm run dev
+```
+
 ## Using the map
 
 You should be able to pan and zoom using the mouse and scroll wheel,

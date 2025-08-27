@@ -40,9 +40,10 @@ const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
   const query = new URLSearchParams({});
   const response = await fetch(`/journey-transitions?${query}`);
   if (!response.ok) {
-    throw new Error(
+    console.warn(
       `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
     );
+    return [];
   }
   return response.json();
 };
