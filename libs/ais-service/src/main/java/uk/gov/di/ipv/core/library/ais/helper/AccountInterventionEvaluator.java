@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.ais.helper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
@@ -12,7 +11,6 @@ import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_U
 public final class AccountInterventionEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private AccountInterventionEvaluator() {
         // prevent initialisation
