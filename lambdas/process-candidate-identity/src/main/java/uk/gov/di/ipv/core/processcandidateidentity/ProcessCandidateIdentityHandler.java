@@ -267,6 +267,8 @@ public class ProcessCandidateIdentityHandler
                     && !StringUtils.isBlank(userId)) {
                 var interventionStateWithType = aisService.fetchAccountStateWithType(userId);
 
+                // some of the code here will be cleaned up in following PR
+                // currently we need to support state and type to not break inflight journeys
                 var initialInterventionState = ipvSessionItem.getInitialAccountInterventionState();
                 var currentInterventionState = interventionStateWithType.accountInterventionState();
 
@@ -274,13 +276,13 @@ public class ProcessCandidateIdentityHandler
                 var currentInterventionType = interventionStateWithType.aisInterventionType();
 
                 if (Objects.isNull(initialInterventionType)) {
-                    if (AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                    if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                             initialInterventionState, currentInterventionState)) {
                         throw new AccountInterventionException();
                     }
                     ipvSessionItem.setInitialAccountInterventionState(currentInterventionState);
                 } else {
-                    if (AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                    if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                             initialInterventionType, currentInterventionType)) {
                         throw new AccountInterventionException();
                     }
@@ -728,7 +730,7 @@ public class ProcessCandidateIdentityHandler
                                         interventionCodeTypes.get(interventionCode)))
                 .anyMatch(
                         interventionState ->
-                                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                                         ipvSessionItem.getInitialAccountInterventionState(),
                                         interventionState));
     }
@@ -749,7 +751,7 @@ public class ProcessCandidateIdentityHandler
                 .map(interventionCodeTypes::get)
                 .anyMatch(
                         aisInterventionType ->
-                                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                                         ipvSessionItem.getAisInterventionType(),
                                         aisInterventionType));
     }

@@ -264,7 +264,7 @@ public class CheckExistingIdentityHandler
                 ipvSessionItem.setAisInterventionType(fetchedAisInterventionType);
                 isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
 
-                if (AccountInterventionEvaluator.hasInvalidAccountIntervention(
+                if (AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
                         fetchedAisInterventionType)) {
                     ipvSessionService.invalidateSession(
                             ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);

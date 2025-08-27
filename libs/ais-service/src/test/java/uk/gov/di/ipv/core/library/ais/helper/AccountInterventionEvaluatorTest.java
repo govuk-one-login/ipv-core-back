@@ -19,7 +19,9 @@ class AccountInterventionEvaluatorTest {
     @MethodSource("getInvalidAccountInterventionState")
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AisInterventionType aisInterventionType) {
-        assertTrue(AccountInterventionEvaluator.hasInvalidAccountIntervention(aisInterventionType));
+        assertTrue(
+                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
+                        aisInterventionType));
     }
 
     private static Stream<Arguments> getInvalidAccountInterventionState() {
@@ -35,7 +37,8 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnFalseWhenProvideValidAccountIntervention(
             AisInterventionType aisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.hasInvalidAccountIntervention(aisInterventionType));
+                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
+                        aisInterventionType));
     }
 
     private static Stream<Arguments> getValidAccountInterventionState() {
@@ -52,7 +55,7 @@ class AccountInterventionEvaluatorTest {
             AccountInterventionState initialAccountIntervention,
             AccountInterventionState midJourneyAccountInterventionState) {
         assertTrue(
-                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                         initialAccountIntervention, midJourneyAccountInterventionState));
     }
 
@@ -62,7 +65,7 @@ class AccountInterventionEvaluatorTest {
             AisInterventionType initialAisInterventionType,
             AisInterventionType finalAisInterventionType) {
         assertTrue(
-                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                         initialAisInterventionType, finalAisInterventionType));
     }
 
@@ -101,7 +104,7 @@ class AccountInterventionEvaluatorTest {
             AisInterventionType initialAisInterventionType,
             AisInterventionType finalAisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
                         initialAisInterventionType, finalAisInterventionType));
     }
 

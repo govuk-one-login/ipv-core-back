@@ -20,51 +20,47 @@ public final class AccountInterventionEvaluator {
         // prevent initialisation
     }
 
-    public static boolean hasInvalidAccountIntervention(AisInterventionType interventionType) {
-        return switch (interventionType) {
-            case AIS_NO_INTERVENTION,
-                    AIS_FORCED_USER_IDENTITY_VERIFY,
-                    AIS_ACCOUNT_UNSUSPENDED,
-                    AIS_ACCOUNT_UNBLOCKED ->
-                    false;
-            default -> {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "Intervention detected at the start of the journey. Intervention type: %s"
-                                        .formatted(interventionType)));
-                yield true;
-            }
-        };
+    public static boolean isStartOfJourneyInterventionDetected(
+            AisInterventionType interventionType) {
+        if (isValidIntervention(interventionType)
+                || AIS_FORCED_USER_IDENTITY_VERIFY.equals(interventionType)) {
+            return false;
+        }
+
+        LogHelper.buildLogMessage(
+                "Intervention detected at the start of the journey. Intervention type: %s"
+                        .formatted(interventionType));
+
+        return true;
     }
 
-    public static boolean isMidJourneyInterventionDetected(
-            AisInterventionType initialAisInterventionType,
-            AisInterventionType currentAisInterventionType) {
-        // No interventions
-        if (isValidIntervention(initialAisInterventionType)
-                && isValidIntervention(currentAisInterventionType)) {
+    public static boolean isMidOfJourneyInterventionDetected(
+            AisInterventionType initial, AisInterventionType current) {
+
+        boolean bothValid = isValidIntervention(initial) && isValidIntervention(current);
+        boolean bothReprove = isBothIdentityVerify(initial, current);
+        boolean reproveToValid = isIdentityVerifyToValid(initial, current);
+
+        if (bothValid || bothReprove || reproveToValid) {
             return false;
         }
 
-        // Reprove journey and status didn't change yet
-        if (AIS_FORCED_USER_IDENTITY_VERIFY.equals(initialAisInterventionType)
-                && AIS_FORCED_USER_IDENTITY_VERIFY.equals(currentAisInterventionType)) {
-            return false;
-        }
-
-        // Reprove journey and status has been changed to valid
-        if (AIS_FORCED_USER_IDENTITY_VERIFY.equals(initialAisInterventionType)
-                && isValidIntervention(currentAisInterventionType)) {
-            return false;
-        }
-
-        // Otherwise interventions are invalid
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         "Mid journey intervention detected. Initial intervention: %s Final intervention: %s"
-                                .formatted(
-                                        initialAisInterventionType, currentAisInterventionType)));
+                                .formatted(initial, current)));
         return true;
+    }
+
+    private static boolean isBothIdentityVerify(
+            AisInterventionType initial, AisInterventionType current) {
+        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial)
+                && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);
+    }
+
+    private static boolean isIdentityVerifyToValid(
+            AisInterventionType initial, AisInterventionType current) {
+        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial) && isValidIntervention(current);
     }
 
     private static boolean isValidIntervention(AisInterventionType aisInterventionType) {
@@ -73,7 +69,7 @@ public final class AccountInterventionEvaluator {
                 || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
     }
 
-    public static boolean isMidJourneyInterventionDetected(
+    public static boolean isMidOfJourneyInterventionDetected(
             AccountInterventionState initialAccountInterventionState,
             AccountInterventionState currentAccountInterventionState) {
         // If no intervention flags are set then there can't have been an intervention
