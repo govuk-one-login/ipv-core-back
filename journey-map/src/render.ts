@@ -226,17 +226,25 @@ export const render = async (
 
   const { transitions, states } = options.onlyOrphanStates
     ? { transitions: [], states: findOrphanStates(journeyStates) }
-    : await getVisibleEdgesAndNodes(journeyStates, options, selectedJourney, journeyMaps);
+    : await getVisibleEdgesAndNodes(
+        journeyStates,
+        options,
+        selectedJourney,
+        journeyMaps,
+      );
 
-  const maxCount = Math.max(0, ...transitions.map(t => t.transitionCount ?? 0));
+  const maxCount = Math.max(
+    0,
+    ...transitions.map((t) => t.transitionCount ?? 0),
+  );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-        ? `#000000${alphaFromCount(t.transitionCount, maxCount)}`
-        : "#E5E4E2";
+      ? `#000000${alphaFromCount(t.transitionCount, maxCount)}`
+      : "#E5E4E2";
 
     return [
       renderTransition(t),
-      `linkStyle ${i} stroke:${colour}, stroke-width:2px;`
+      `linkStyle ${i} stroke:${colour}, stroke-width:2px;`,
     ];
   });
 
