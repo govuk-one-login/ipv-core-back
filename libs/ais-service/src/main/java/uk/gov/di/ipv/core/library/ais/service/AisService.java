@@ -12,6 +12,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 public class AisService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final AisClient aisClient;
+    private static final String AIS_FAIL_OPEN_ERROR_DESCRIPTION =
+            "Exception while fetching account intervention status. Assuming no intervention.";
 
     @ExcludeFromGeneratedCoverageReport
     public AisService(ConfigService configService) {
@@ -28,22 +30,8 @@ public class AisService {
             var interventionDetails = aisClient.getAccountInterventionStatus(userId);
             return interventionDetails.getState();
         } catch (Exception e) {
-            LOGGER.error(
-                    "Exception while fetching account intervention status. Assuming no intervention.",
-                    e);
+            LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
             return getStateByIntervention(AisInterventionType.AIS_NO_INTERVENTION);
-        }
-    }
-
-    public AisInterventionType fetchAccountInterventionType(String userId) {
-        try {
-            var interventionDetails = aisClient.getAccountInterventionStatus(userId);
-            return interventionDetails.getIntervention().getDescription();
-        } catch (Exception e) {
-            LOGGER.error(
-                    "Exception while fetching account intervention status. Assuming no intervention.",
-                    e);
-            return AisInterventionType.AIS_NO_INTERVENTION;
         }
     }
 
@@ -54,9 +42,7 @@ public class AisService {
                     interventionDetails.getState(),
                     interventionDetails.getIntervention().getDescription());
         } catch (Exception e) {
-            LOGGER.error(
-                    "Exception while fetching account intervention status. Assuming no intervention.",
-                    e);
+            LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
             return new AccountInterventionStateWithType(
                     AccountInterventionState.builder()
                             .isBlocked(false)
