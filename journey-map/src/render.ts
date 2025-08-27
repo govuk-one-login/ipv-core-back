@@ -22,7 +22,6 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
-import config from "./config.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -38,26 +37,13 @@ interface JourneyTransition {
 }
 
 const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
-  const query = new URLSearchParams({
-    minutes: "30",
-    limit: "500",
-    // ipvSessionId: "test-session-1",
-  });
-
-  const response = await fetch(
-    `${config.journeyTransitionsEndpoint}?${query}`,
-    {
-      method: "POST",
-      headers: {
-        "x-api-key": config.analyticsApiKey,
-        "Content-Type": "application/json",
-      },
-    },
-  );
+  const query = new URLSearchParams({});
+  const response = await fetch(`/journey-transitions?${query}`);
   if (!response.ok) {
-    throw new Error(`Failed to fetch journey transitions: ${response.status}`);
+    throw new Error(
+      `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
+    );
   }
-
   return response.json();
 };
 

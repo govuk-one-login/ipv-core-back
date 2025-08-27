@@ -350,7 +350,7 @@ Resources:
               Service: ecs-tasks.amazonaws.com
         Version: 2012-10-17
       Policies:
-        - PolicyName: PullJourneyMapImageAndReadConfig
+        - PolicyName: PullJourneyMapImage
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -359,7 +359,8 @@ Resources:
                   - "ecr:BatchGetImage"
                   - "ecr:GetDownloadUrlForLayer"
                   - "ecr:GetAuthorizationToken"
-                Resource: "*"
+                Resource:
+                  - "*"
               - Effect: Allow
                 Action:
                   - "logs:CreateLogStream"
