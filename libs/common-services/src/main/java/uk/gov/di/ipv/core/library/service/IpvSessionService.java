@@ -7,6 +7,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
@@ -130,12 +131,14 @@ public class IpvSessionService {
             ErrorObject errorObject,
             String emailAddress,
             boolean isReverification,
-            AccountInterventionState initialAccountInterventionState) {
+            AccountInterventionState initialAccountInterventionState,
+            AisInterventionType aisInterventionType) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
         ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
+        ipvSessionItem.setAisInterventionType(aisInterventionType);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());

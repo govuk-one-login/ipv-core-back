@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
 
 public final class AccountInterventionEvaluator {
 
@@ -34,7 +37,43 @@ public final class AccountInterventionEvaluator {
         };
     }
 
-    public static boolean isMidJourneyAccountInterventionDetected(
+    public static boolean isMidJourneyInterventionDetected(
+            AisInterventionType initialAisInterventionType,
+            AisInterventionType currentAisInterventionType) {
+        // No interventions
+        if (isValidIntervention(initialAisInterventionType)
+                && isValidIntervention(currentAisInterventionType)) {
+            return false;
+        }
+
+        // Reprove journey and status didn't change yet
+        if (AIS_FORCED_USER_IDENTITY_VERIFY.equals(initialAisInterventionType)
+                && AIS_FORCED_USER_IDENTITY_VERIFY.equals(currentAisInterventionType)) {
+            return false;
+        }
+
+        // Reprove journey and status has been changed to valid
+        if (AIS_FORCED_USER_IDENTITY_VERIFY.equals(initialAisInterventionType)
+                && isValidIntervention(currentAisInterventionType)) {
+            return false;
+        }
+
+        // Otherwise interventions are invalid
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Mid journey intervention detected. Initial intervention: %s Final intervention: %s"
+                                .formatted(
+                                        initialAisInterventionType, currentAisInterventionType)));
+        return true;
+    }
+
+    private static boolean isValidIntervention(AisInterventionType aisInterventionType) {
+        return AIS_NO_INTERVENTION.equals(aisInterventionType)
+                || AIS_ACCOUNT_UNBLOCKED.equals(aisInterventionType)
+                || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
+    }
+
+    public static boolean isMidJourneyInterventionDetected(
             AccountInterventionState initialAccountInterventionState,
             AccountInterventionState currentAccountInterventionState) {
         // If no intervention flags are set then there can't have been an intervention

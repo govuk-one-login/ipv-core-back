@@ -31,6 +31,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -196,7 +197,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, false, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, false, null, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -216,6 +217,7 @@ class IpvSessionServiceTest {
                         null,
                         "test@test.com",
                         false,
+                        null,
                         null);
 
         verify(mockDataStore)
@@ -238,6 +240,7 @@ class IpvSessionServiceTest {
                         testErrorObject,
                         null,
                         false,
+                        null,
                         null);
 
         verify(mockDataStore)
@@ -260,7 +263,8 @@ class IpvSessionServiceTest {
                         null,
                         null,
                         false,
-                        ACCOUNT_INTERVENTION_STATE);
+                        ACCOUNT_INTERVENTION_STATE,
+                        AIS_NO_INTERVENTION);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -273,13 +277,14 @@ class IpvSessionServiceTest {
         assertEquals(
                 ACCOUNT_INTERVENTION_STATE,
                 capturedSessionItem.getInitialAccountInterventionState());
+        assertEquals(AIS_NO_INTERVENTION, capturedSessionItem.getAisInterventionType());
     }
 
     @Test
     void shouldCreateSessionItemWithReverificationJourney() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, true, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, true, null, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));

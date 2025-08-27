@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
 import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
@@ -24,6 +23,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -81,17 +81,17 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_BLOCKED;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_ACCOUNT_UNSUSPENDED;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
-import static uk.gov.di.ipv.core.library.ais.enums.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -265,12 +265,28 @@ public class ProcessCandidateIdentityHandler
             if (configService.enabled(AIS_ENABLED)
                     && !SKIP_AIS_TYPES.contains(processIdentityType)
                     && !StringUtils.isBlank(userId)) {
-                var interventionState = aisService.fetchAccountState(userId);
-                if (AccountInterventionEvaluator.isMidJourneyAccountInterventionDetected(
-                        ipvSessionItem.getInitialAccountInterventionState(), interventionState)) {
-                    throw new AccountInterventionException();
+                var interventionStateWithType = aisService.fetchAccountStateWithType(userId);
+
+                var initialInterventionState = ipvSessionItem.getInitialAccountInterventionState();
+                var currentInterventionState = interventionStateWithType.accountInterventionState();
+
+                var initialInterventionType = ipvSessionItem.getAisInterventionType();
+                var currentInterventionType = interventionStateWithType.aisInterventionType();
+
+                if (Objects.isNull(initialInterventionType)) {
+                    if (AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                            initialInterventionState, currentInterventionState)) {
+                        throw new AccountInterventionException();
+                    }
+                    ipvSessionItem.setInitialAccountInterventionState(currentInterventionState);
+                } else {
+                    if (AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                            initialInterventionType, currentInterventionType)) {
+                        throw new AccountInterventionException();
+                    }
+                    ipvSessionItem.setAisInterventionType(currentInterventionType);
                 }
-                ipvSessionItem.setInitialAccountInterventionState(interventionState);
+
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
@@ -633,7 +649,9 @@ public class ProcessCandidateIdentityHandler
                     sharedAuditEventParameters.auditEventUser());
 
             if (configService.enabled(AIS_ENABLED)
-                    && checkHasRelevantIntervention(ipvSessionItem, ticfVcs)) {
+                    && (Objects.isNull(ipvSessionItem.getAisInterventionType())
+                            ? checkHasRelevantIntervention(ipvSessionItem, ticfVcs)
+                            : checkHasRelevantInterventionWithType(ipvSessionItem, ticfVcs))) {
                 throw new AccountInterventionException();
             }
 
@@ -710,10 +728,30 @@ public class ProcessCandidateIdentityHandler
                                         interventionCodeTypes.get(interventionCode)))
                 .anyMatch(
                         interventionState ->
-                                AccountInterventionEvaluator
-                                        .isMidJourneyAccountInterventionDetected(
-                                                ipvSessionItem.getInitialAccountInterventionState(),
-                                                interventionState));
+                                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                                        ipvSessionItem.getInitialAccountInterventionState(),
+                                        interventionState));
+    }
+
+    private boolean checkHasRelevantInterventionWithType(
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
+
+        return ticfVcs.stream()
+                .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
+                .flatMap(
+                        vc ->
+                                ((RiskAssessmentCredential) vc.getCredential())
+                                        .getEvidence().stream())
+                .map(RiskAssessment::getIntervention)
+                .filter(Objects::nonNull)
+                .map(Intervention::getInterventionCode)
+                .filter(Objects::nonNull)
+                .map(interventionCodeTypes::get)
+                .anyMatch(
+                        aisInterventionType ->
+                                AccountInterventionEvaluator.isMidJourneyInterventionDetected(
+                                        ipvSessionItem.getAisInterventionType(),
+                                        aisInterventionType));
     }
 
     private void sendProfileMatchedAuditEvent(

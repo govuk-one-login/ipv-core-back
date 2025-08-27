@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.ais.client.AisClient;
 import uk.gov.di.ipv.core.library.ais.domain.AccountInterventionStateWithType;
-import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -32,6 +32,18 @@ public class AisService {
                     "Exception while fetching account intervention status. Assuming no intervention.",
                     e);
             return getStateByIntervention(AisInterventionType.AIS_NO_INTERVENTION);
+        }
+    }
+
+    public AisInterventionType fetchAccountInterventionType(String userId) {
+        try {
+            var interventionDetails = aisClient.getAccountInterventionStatus(userId);
+            return interventionDetails.getIntervention().getDescription();
+        } catch (Exception e) {
+            LOGGER.error(
+                    "Exception while fetching account intervention status. Assuming no intervention.",
+                    e);
+            return AisInterventionType.AIS_NO_INTERVENTION;
         }
     }
 

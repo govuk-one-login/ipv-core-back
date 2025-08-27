@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -254,18 +253,6 @@ public class CheckExistingIdentityHandler
             var isReproveIdentity =
                     Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-            // if we receive JAR with reprove identity flag from auth
-            // we want to mirror Account Intervention which will also suspend the user
-            var initialAccountInterventionState =
-                    AccountInterventionState.builder()
-                            .isBlocked(false)
-                            .isSuspended(isReproveIdentity)
-                            .isReproveIdentity(isReproveIdentity)
-                            .isResetPassword(false)
-                            .build();
-
-            ipvSessionItem.setInitialAccountInterventionState(initialAccountInterventionState);
-
             if (configService.enabled(AIS_ENABLED)) {
                 var accountInterventionStateWithType = aisService.fetchAccountStateWithType(userId);
                 var fetchedAccountInterventionState =
@@ -274,6 +261,7 @@ public class CheckExistingIdentityHandler
                         accountInterventionStateWithType.aisInterventionType();
 
                 ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
+                ipvSessionItem.setAisInterventionType(fetchedAisInterventionType);
                 isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
 
                 if (AccountInterventionEvaluator.hasInvalidAccountIntervention(
