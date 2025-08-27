@@ -37,9 +37,9 @@ public final class AccountInterventionEvaluator {
     public static boolean isMidOfJourneyInterventionDetected(
             AisInterventionType initial, AisInterventionType current) {
 
-        boolean bothValid = isValidIntervention(initial) && isValidIntervention(current);
-        boolean bothReprove = isBothIdentityVerify(initial, current);
-        boolean reproveToValid = isIdentityVerifyToValid(initial, current);
+        var bothValid = isValidIntervention(initial) && isValidIntervention(current);
+        var bothReprove = isBothIdentityVerify(initial, current);
+        var reproveToValid = isIdentityVerifyToValid(initial, current);
 
         if (bothValid || bothReprove || reproveToValid) {
             return false;
