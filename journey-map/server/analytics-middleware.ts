@@ -7,11 +7,8 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const minutes = req.query?.["minutes"];
-    const ipvSessionId = req.query?.["ipv_session_id"];
     const query = new URLSearchParams({
-      minutes: (minutes as string) ?? "30",
-      ipvSessionId: (ipvSessionId as string) ?? undefined,
+      minutes: "30",
       limit: "200",
     });
 
