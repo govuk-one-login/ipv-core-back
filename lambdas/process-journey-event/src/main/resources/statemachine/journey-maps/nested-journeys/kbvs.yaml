@@ -25,6 +25,18 @@ nestedJourneyStates:
           - IPV_DWP_KBV_CRI_THIN_FILE_ENCOUNTERED
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
+      not-found:
+        targetState: PRE_EXPERIAN_PAGE
+      fail-with-no-ci:
+        targetState: PRE_EXPERIAN_PAGE
+      vcs-not-correlated:
+        targetState: PRE_EXPERIAN_PAGE
+      error:
+        targetState: PRE_EXPERIAN_PAGE
+      temporarily-unavailable:
+        targetState: PRE_EXPERIAN_PAGE
+      dl-auth-source-check:
+        targetState: PRE_EXPERIAN_PAGE
       fail-with-ci:
         exitEventToEmit: fail-with-ci
   EXPERIAN_KBV_CRI:
