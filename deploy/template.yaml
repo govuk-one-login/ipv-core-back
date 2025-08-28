@@ -3748,6 +3748,7 @@ Resources:
                   Value: dwpKbv
             Period: 300
             Stat: Sum
+          ReturnData: false
         - Id: returned
           MetricStat:
             Metric:
@@ -3758,6 +3759,7 @@ Resources:
                   Value: dwpKbv
             Period: 300
             Stat: Sum
+          ReturnData: false
         - Id: returnRate
           Expression: "returned / redirect"
           Label: "DWP KBV CRI Return Rate"
