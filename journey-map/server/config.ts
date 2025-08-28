@@ -1,7 +1,3 @@
-import dotenv from "dotenv";
-
-dotenv.config();
-
 export default {
   journeyTransitionsEndpoint:
     process.env.JOURNEY_TRANSITIONS_ENDPOINT ??
