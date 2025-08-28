@@ -402,9 +402,35 @@ Feature: P2 Web document journey
         | drivingLicence | kenneth-driving-permit-valid | access_denied           |
         | ukPassport     | kenneth-passport-valid       | access_denied           |
         | ukPassport     | kenneth-passport-valid       | server_error            |
-        | ukPassport     | kenneth-passport-valid       | temporarily_unavailable |
-        | ukPassport     | kenneth-passport-valid       | invalid_scope           |
-        | ukPassport     | kenneth-passport-valid       | unauthorized_client     |
+
+    Scenario Outline: User drops out of DWP KBV due to a <error> error
+      When I submit a 'ukPassport' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+      When I call the CRI stub with attributes and get an '<error>' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'pyi-technical' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
+      Examples:
+        | error                     |
+        | server_error              |
+        | temporarily_unavailable   |
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks
     Background: Navigate to KBV CRI
