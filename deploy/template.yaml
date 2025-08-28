@@ -3741,7 +3741,7 @@ Resources:
         - Id: redirect
           MetricStat:
             Metric:
-              Namespace: CoreBackEmbeddedMetrics-build
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
               MetricName: criRedirect
               Dimensions:
                 - Name: cri
@@ -3751,7 +3751,7 @@ Resources:
         - Id: returned
           MetricStat:
             Metric:
-              Namespace: CoreBackEmbeddedMetrics-build
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
               MetricName: criReturn
               Dimensions:
                 - Name: cri
