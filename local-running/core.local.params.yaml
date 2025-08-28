@@ -368,6 +368,7 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: true
+    sisVerificationEnabled: false
     accountInterventionsEnabled: true
 
   features:
@@ -380,6 +381,9 @@ core:
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
+    sisVerification:
+      featureFlags:
+        sisVerificationEnabled: true
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
