@@ -292,12 +292,9 @@ public class CheckExistingIdentityHandler
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
             }
 
-            // PYIC-8393 Make use of existingStoredIdentity
-            EvcsGetStoredIdentityResult existingStoredIdentity =
-                    new EvcsGetStoredIdentityResult(false, false, null);
             if (configService.enabled(SIS_VERIFICATION)) {
-                existingStoredIdentity =
-                        evcsService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
+                // PYIC-8393 Make use of the results of this call
+                evcsService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
