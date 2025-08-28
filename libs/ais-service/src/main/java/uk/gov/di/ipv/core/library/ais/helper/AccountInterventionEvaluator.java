@@ -30,11 +30,12 @@ public final class AccountInterventionEvaluator {
     }
 
     public static boolean hasMidJourneyIntervention(
-            boolean isReproveIdentity, AisInterventionType current) {
+            boolean isReproveIdentity, AisInterventionType aisInterventionType) {
 
-        var bothReprove = isReproveIdentity && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);
-        var reproveToValid = isReproveIdentity && isValidIntervention(current);
-        var isValid = isValidIntervention(current);
+        var bothReprove =
+                isReproveIdentity && AIS_FORCED_USER_IDENTITY_VERIFY.equals(aisInterventionType);
+        var reproveToValid = isReproveIdentity && isValidIntervention(aisInterventionType);
+        var isValid = isValidIntervention(aisInterventionType);
 
         if (bothReprove || reproveToValid || isValid) {
             return false;
@@ -42,8 +43,8 @@ public final class AccountInterventionEvaluator {
 
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        "Mid journey intervention detected. Initial intervention: %s Final intervention: %s"
-                                .formatted(isReproveIdentity, current)));
+                        "Mid journey intervention detected. Intervention type: %s"
+                                .formatted(aisInterventionType)));
         return true;
     }
 
