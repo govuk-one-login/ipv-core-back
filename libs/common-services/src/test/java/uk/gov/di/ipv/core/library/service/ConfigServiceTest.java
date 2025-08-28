@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.testdata.CommonData;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ConfigServiceTest {
 
     @Test
-    void generateConfigurationCreatesValidConfig() throws IOException {
+    void generateConfigurationCreatesValidConfig() throws IOException, URISyntaxException {
         // Arrange
         String yamlContent =
                 new String(
@@ -25,7 +27,8 @@ class ConfigServiceTest {
 
         // Assert
         assertEquals(
-                "https://identity.local.account.gov.uk", configuration.getSelf().getComponentId());
+                new URI("https://identity.local.account.gov.uk"),
+                configuration.getSelf().getComponentId());
     }
 
     @Test
