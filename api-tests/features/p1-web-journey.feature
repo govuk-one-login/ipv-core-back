@@ -282,11 +282,7 @@ Feature: P1 Web Journeys
       When I call the CRI stub with attributes and get an '<error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-      Then I get a 'pyi-technical' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I get a 'page-pre-experian-kbv-transition' page response
 
       Examples:
         | error                     |
