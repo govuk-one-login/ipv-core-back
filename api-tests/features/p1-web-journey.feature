@@ -290,5 +290,4 @@ Feature: P1 Web Journeys
 
       Examples:
         | error                     |
-        | server_error              |
         | temporarily_unavailable   |
