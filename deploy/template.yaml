@@ -2426,6 +2426,8 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*

@@ -31,6 +31,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -43,6 +44,8 @@ class IpvSessionServiceTest {
             new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE);
     private static final AccountInterventionState ACCOUNT_INTERVENTION_STATE =
             new AccountInterventionState(false, false, false, false);
+    private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
+            "Account intervention detected";
 
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
@@ -194,7 +197,7 @@ class IpvSessionServiceTest {
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, false, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, false, null, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -214,6 +217,7 @@ class IpvSessionServiceTest {
                         null,
                         "test@test.com",
                         false,
+                        null,
                         null);
 
         verify(mockDataStore)
@@ -236,6 +240,7 @@ class IpvSessionServiceTest {
                         testErrorObject,
                         null,
                         false,
+                        null,
                         null);
 
         verify(mockDataStore)
@@ -258,7 +263,8 @@ class IpvSessionServiceTest {
                         null,
                         null,
                         false,
-                        ACCOUNT_INTERVENTION_STATE);
+                        ACCOUNT_INTERVENTION_STATE,
+                        AIS_NO_INTERVENTION);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -271,13 +277,14 @@ class IpvSessionServiceTest {
         assertEquals(
                 ACCOUNT_INTERVENTION_STATE,
                 capturedSessionItem.getInitialAccountInterventionState());
+        assertEquals(AIS_NO_INTERVENTION, capturedSessionItem.getAisInterventionType());
     }
 
     @Test
     void shouldCreateSessionItemWithReverificationJourney() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(), null, null, true, null);
+                        SecureTokenHelper.getInstance().generate(), null, null, true, null, null);
 
         verify(mockDataStore)
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
@@ -298,6 +305,22 @@ class IpvSessionServiceTest {
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         verify(mockDataStore).update(ipvSessionItem);
+    }
+
+    @Test
+    void shouldInvalidateSessionItem() {
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        ipvSessionService.invalidateSession(ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+
+        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        assertEquals("session_invalidated", ipvSessionItemArgumentCaptor.getValue().getErrorCode());
+        assertEquals(
+                "Account intervention detected",
+                ipvSessionItemArgumentCaptor.getValue().getErrorDescription());
     }
 
     @Test

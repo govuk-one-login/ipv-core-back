@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ais.enums;
+package uk.gov.di.ipv.core.library.domain;
 
 public enum AisInterventionType {
     AIS_NO_INTERVENTION,

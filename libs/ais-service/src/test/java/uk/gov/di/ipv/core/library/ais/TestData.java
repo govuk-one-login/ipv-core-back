@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.ais;
 
 import uk.gov.di.ipv.core.library.ais.dto.AccountInterventionStatusDto;
 import uk.gov.di.ipv.core.library.ais.enums.AisAuditLevel;
-import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 public class TestData {
