@@ -5,9 +5,11 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
+import java.net.URI;
+
 @Data
 @Builder
 @Jacksonized
 public class StoredIdentityServiceConfig {
-    @NonNull final String componentId;
+    @NonNull final URI componentId;
 }

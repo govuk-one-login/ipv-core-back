@@ -6,25 +6,27 @@ import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Builder
 @Jacksonized
 public class InternalOperationsConfig {
     final String configFormat;
-    @NonNull final String componentId;
-    @NonNull final String signingKeyId;
-    @NonNull final String sisSigningKeyId;
-    @NonNull final String audienceForClients;
+    @NonNull final URI componentId;
+    @NonNull final UUID signingKeyId;
+    @NonNull final UUID sisSigningKeyId;
+    @NonNull final URI audienceForClients;
     @NonNull final Integer jwtTtlSeconds;
     @NonNull final Integer maxAllowedAuthClientTtl;
     @NonNull final Integer fraudCheckExpiryPeriodHours;
     @NonNull final Integer dcmawAsyncVcPendingReturnTtl;
     @NonNull final String clientJarKmsEncryptionKeyAliasPrimary;
     @NonNull final String clientJarKmsEncryptionKeyAliasSecondary;
-    @NonNull final String coreVtmClaim;
+    @NonNull final URI coreVtmClaim;
     @NonNull final Integer backendSessionTimeout;
     @NonNull final Integer backendSessionTtl;
     @NonNull final Integer bearerTokenTtl;

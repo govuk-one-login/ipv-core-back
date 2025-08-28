@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +13,8 @@ import java.util.Map;
 @Builder
 @Jacksonized
 public class CimitConfig {
-    @NonNull final String componentId;
+    @NonNull final URI componentId;
     @NonNull final String signingKey;
     @NonNull final Map<String, @NonNull List<@NonNull CiRoutingConfig>> config;
-    @NonNull final String apiBaseUrl;
+    @NonNull final URI apiBaseUrl;
 }
