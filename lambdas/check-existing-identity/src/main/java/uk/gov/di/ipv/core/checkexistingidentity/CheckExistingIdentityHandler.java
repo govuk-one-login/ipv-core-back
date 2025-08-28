@@ -262,7 +262,7 @@ public class CheckExistingIdentityHandler
                         AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
                                 fetchedAisInterventionType);
 
-                if (AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
+                if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
                         fetchedAisInterventionType)) {
                     ipvSessionService.invalidateSession(
                             ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);

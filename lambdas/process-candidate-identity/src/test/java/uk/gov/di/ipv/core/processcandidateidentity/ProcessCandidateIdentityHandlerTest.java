@@ -942,7 +942,6 @@ class ProcessCandidateIdentityHandlerTest {
                     Arguments.of(AIS_ACCOUNT_BLOCKED),
                     // Finally just suspended
                     Arguments.of(AIS_ACCOUNT_SUSPENDED),
-
                     // Finally reset password
                     Arguments.of(AIS_FORCED_USER_PASSWORD_RESET),
                     // Reprove identity that has been triggered during the journey
@@ -957,9 +956,7 @@ class ProcessCandidateIdentityHandlerTest {
         @ParameterizedTest
         @MethodSource("createRelevantTicfInterventionStates")
         void shouldInterruptProcessingIfRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
-                AisInterventionType midAisInterventionType,
-                String ticfAccountInterventionCode,
-                AisInterventionType ticfAccountInterventionType)
+                AisInterventionType midAisInterventionType, String ticfAccountInterventionCode)
                 throws Exception {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(midAisInterventionType);
@@ -1010,23 +1007,23 @@ class ProcessCandidateIdentityHandlerTest {
             return Stream.of(
                     // AIS: No interventions, TICF:
                     // Blocked
-                    Arguments.of(AIS_NO_INTERVENTION, "03", AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(AIS_NO_INTERVENTION, "01", AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(AIS_NO_INTERVENTION, "05", AIS_FORCED_USER_IDENTITY_VERIFY),
+                    Arguments.of(AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(AIS_NO_INTERVENTION, "04", AIS_FORCED_USER_PASSWORD_RESET),
+                    Arguments.of(AIS_NO_INTERVENTION, "04"),
 
                     // AIS: Reprove identity cleared after reproved, TICF:
                     // Blocked
-                    Arguments.of(AIS_NO_INTERVENTION, "03", AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(AIS_NO_INTERVENTION, "01", AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(AIS_NO_INTERVENTION, "05", AIS_FORCED_USER_IDENTITY_VERIFY),
+                    Arguments.of(AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(AIS_NO_INTERVENTION, "04", AIS_FORCED_USER_PASSWORD_RESET));
+                    Arguments.of(AIS_NO_INTERVENTION, "04"));
         }
 
         @ParameterizedTest
@@ -1034,8 +1031,7 @@ class ProcessCandidateIdentityHandlerTest {
         void
                 shouldInterruptProcessingIfReproveJourneyHasRelevantMidAccountInterventionReceivedFromTicf(
                         AisInterventionType midAisInterventionType,
-                        String ticfAccountInterventionCode,
-                        AisInterventionType ticfAccountInterventionType)
+                        String ticfAccountInterventionCode)
                         throws Exception {
             // Arrange
             clientOAuthSessionItem.setReproveIdentity(true);
@@ -1087,9 +1083,9 @@ class ProcessCandidateIdentityHandlerTest {
             return Stream.of(
                     // AIS: Reprove identity not cleared after reproved, TICF:
                     // Re-suspended
-                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "01", AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "01"),
                     // Blocked
-                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "03", AIS_ACCOUNT_BLOCKED));
+                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "03"));
         }
 
         @Test

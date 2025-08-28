@@ -269,7 +269,7 @@ public class ProcessCandidateIdentityHandler
                 var currentInterventionType = aisService.fetchAisInterventionType(userId);
                 var isReproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-                if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                if (AccountInterventionEvaluator.hasMidJourneyIntervention(
                         isReproveIdentity, currentInterventionType)) {
                     throw new AccountInterventionException();
                 }
@@ -710,7 +710,7 @@ public class ProcessCandidateIdentityHandler
                 .map(interventionCodeTypes::get)
                 .anyMatch(
                         aisInterventionType ->
-                                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                                AccountInterventionEvaluator.hasMidJourneyIntervention(
                                         TRUE.equals(clientOAuthSessionItem.getReproveIdentity()),
                                         aisInterventionType));
     }

@@ -16,8 +16,7 @@ public final class AccountInterventionEvaluator {
         // prevent initialisation
     }
 
-    public static boolean isStartOfJourneyInterventionDetected(
-            AisInterventionType interventionType) {
+    public static boolean hasStartOfJourneyIntervention(AisInterventionType interventionType) {
         if (isValidIntervention(interventionType)
                 || AIS_FORCED_USER_IDENTITY_VERIFY.equals(interventionType)) {
             return false;
@@ -30,7 +29,7 @@ public final class AccountInterventionEvaluator {
         return true;
     }
 
-    public static boolean isMidOfJourneyInterventionDetected(
+    public static boolean hasMidJourneyIntervention(
             boolean isReproveIdentity, AisInterventionType current) {
 
         var bothReprove = isReproveIdentity && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);

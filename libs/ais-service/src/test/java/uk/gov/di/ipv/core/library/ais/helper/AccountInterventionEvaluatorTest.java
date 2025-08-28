@@ -17,9 +17,7 @@ class AccountInterventionEvaluatorTest {
     @MethodSource("getInvalidAccountInterventionState")
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AisInterventionType aisInterventionType) {
-        assertTrue(
-                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
-                        aisInterventionType));
+        assertTrue(AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisInterventionType));
     }
 
     private static Stream<Arguments> getInvalidAccountInterventionState() {
@@ -35,8 +33,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnFalseWhenProvideValidAccountIntervention(
             AisInterventionType aisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
-                        aisInterventionType));
+                AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisInterventionType));
     }
 
     private static Stream<Arguments> getValidAccountInterventionState() {
@@ -52,7 +49,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionTypes(
             boolean isReproveJourney, AisInterventionType finalAisInterventionType) {
         assertTrue(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                AccountInterventionEvaluator.hasMidJourneyIntervention(
                         isReproveJourney, finalAisInterventionType));
     }
 
@@ -84,7 +81,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
             boolean isReproveIdentity, AisInterventionType finalAisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                AccountInterventionEvaluator.hasMidJourneyIntervention(
                         isReproveIdentity, finalAisInterventionType));
     }
 
