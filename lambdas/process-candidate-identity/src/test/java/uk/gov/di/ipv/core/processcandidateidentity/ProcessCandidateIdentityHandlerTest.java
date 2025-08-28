@@ -654,6 +654,7 @@ class ProcessCandidateIdentityHandlerTest {
         @ParameterizedTest
         @MethodSource("createNonRelevantInterventionStates")
         void shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromAis(
+                boolean isReproveIdentity,
                 String finalAccountInterventionCode,
                 AisInterventionType finalAccountInterventionType,
                 AisInterventionType finalFetchedAccountInterventionType)
@@ -663,11 +664,14 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(finalFetchedAccountInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
+
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -717,6 +721,7 @@ class ProcessCandidateIdentityHandlerTest {
         @MethodSource("createNonRelevantInterventionStates")
         void
                 shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
+                        boolean isReproveIdentity,
                         String finalAccountInterventionCode,
                         AisInterventionType finalAccountInterventionType)
                         throws Exception {
@@ -724,6 +729,9 @@ class ProcessCandidateIdentityHandlerTest {
             when(aisService.fetchAisInterventionType(USER_ID))
                     .thenReturn(finalAccountInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
 
             var vcTicfWithIntervention =
                     generateTicfVcWithIntervention(
@@ -734,7 +742,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -783,131 +791,15 @@ class ProcessCandidateIdentityHandlerTest {
         private static Stream<Arguments> createNonRelevantInterventionStates() {
             return Stream.of(
                     // No interventions
-                    Arguments.of("00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
+                    Arguments.of(false, "00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
                     // Reprove identity cleared after reproved
-                    Arguments.of("00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION));
-        }
-
-        @Test
-        void shouldNotInterruptProcessingIfReproveJourneyHasAccountInterventionReproveIdentity()
-                throws Exception {
-            // Arrange
-            clientOAuthSessionItem.setReproveIdentity(true);
-            when(aisService.fetchAisInterventionType(USER_ID))
-                    .thenReturn(AIS_FORCED_USER_IDENTITY_VERIFY);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
-
-            var ticfVcs = List.of(vcTicf());
-            when(checkCoiService.isCoiCheckSuccessful(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
-                            eq(ACCOUNT_INTERVENTION),
-                            eq(List.of()),
-                            any(),
-                            any()))
-                    .thenReturn(true);
-            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
-            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
-                    .thenReturn(ticfVcs);
-            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
-            when(evcsService.getUserVCs(
-                            USER_ID,
-                            EVCS_ACCESS_TOKEN,
-                            EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN))
-                    .thenReturn(List.of());
-
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            PROCESS_IDENTITY_TYPE,
-                                            CandidateIdentityType.UPDATE.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
-
-            verify(storeIdentityService, times(1))
-                    .storeIdentity(
-                            eq(USER_ID),
-                            eq(List.of()),
-                            eq(List.of()),
-                            eq(P2),
-                            eq(STRONGEST_MATCHED_VOT),
-                            eq(CandidateIdentityType.UPDATE),
-                            any());
-        }
-
-        @Test
-        void
-                shouldNotInterruptProcessingIfReproveJourneyHasMidJourneyAccountInterventionReproveIdentityReceivedFromTicf()
-                        throws Exception {
-            // Arrange
-            clientOAuthSessionItem.setReproveIdentity(true);
-            when(aisService.fetchAisInterventionType(USER_ID))
-                    .thenReturn(AIS_FORCED_USER_IDENTITY_VERIFY);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
-
-            var vcTicfWithIntervention =
-                    generateTicfVcWithIntervention(
-                            Intervention.builder().withInterventionCode("05").build());
-            var ticfVcs = List.of(vcTicfWithIntervention);
-            when(checkCoiService.isCoiCheckSuccessful(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
-                            eq(ACCOUNT_INTERVENTION),
-                            eq(List.of()),
-                            any(),
-                            any()))
-                    .thenReturn(true);
-            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
-            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
-                    .thenReturn(ticfVcs);
-            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
-            when(evcsService.getUserVCs(
-                            USER_ID,
-                            EVCS_ACCESS_TOKEN,
-                            EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN))
-                    .thenReturn(List.of());
-
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            PROCESS_IDENTITY_TYPE,
-                                            CandidateIdentityType.UPDATE.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
-
-            verify(storeIdentityService, times(1))
-                    .storeIdentity(
-                            eq(USER_ID),
-                            eq(List.of()),
-                            eq(List.of()),
-                            eq(P2),
-                            eq(STRONGEST_MATCHED_VOT),
-                            eq(CandidateIdentityType.UPDATE),
-                            any());
+                    Arguments.of(true, "00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
+                    // Reprove identity not cleared yet
+                    Arguments.of(
+                            true,
+                            "05",
+                            AIS_FORCED_USER_IDENTITY_VERIFY,
+                            AIS_FORCED_USER_IDENTITY_VERIFY));
         }
 
         @ParameterizedTest
@@ -938,29 +830,26 @@ class ProcessCandidateIdentityHandlerTest {
 
         private static Stream<Arguments> createRelevantAisInterventionStates() {
             return Stream.of(
-                    // Finally blocked
                     Arguments.of(AIS_ACCOUNT_BLOCKED),
-                    // Finally just suspended
                     Arguments.of(AIS_ACCOUNT_SUSPENDED),
-                    // Finally reset password
                     Arguments.of(AIS_FORCED_USER_PASSWORD_RESET),
-                    // Reprove identity that has been triggered during the journey
-                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY),
-                    // Reprove identity that cleared during the journey but got re-suspended
-                    Arguments.of(AIS_ACCOUNT_SUSPENDED),
-                    // Reprove identity that cleared during the journey but got blocked during the
-                    // journey
-                    Arguments.of(AIS_ACCOUNT_BLOCKED));
+                    // Reprove identity that has been triggered during the non reprove journey
+                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY));
         }
 
         @ParameterizedTest
         @MethodSource("createRelevantTicfInterventionStates")
         void shouldInterruptProcessingIfRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
-                AisInterventionType midAisInterventionType, String ticfAccountInterventionCode)
+                boolean isReproveIdentity,
+                AisInterventionType midAisInterventionType,
+                String ticfAccountInterventionCode)
                 throws Exception {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(midAisInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
 
             var vcTicfWithIntervention =
                     generateTicfVcWithIntervention(
@@ -971,7 +860,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -1005,87 +894,31 @@ class ProcessCandidateIdentityHandlerTest {
 
         private static Stream<Arguments> createRelevantTicfInterventionStates() {
             return Stream.of(
-                    // AIS: No interventions, TICF:
+                    // AIS: Not reprove journey, no interventions, TICF:
                     // Blocked
-                    Arguments.of(AIS_NO_INTERVENTION, "03"),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(AIS_NO_INTERVENTION, "01"),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(AIS_NO_INTERVENTION, "05"),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(AIS_NO_INTERVENTION, "04"),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "04"),
 
                     // AIS: Reprove identity cleared after reproved, TICF:
                     // Blocked
-                    Arguments.of(AIS_NO_INTERVENTION, "03"),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(AIS_NO_INTERVENTION, "01"),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(AIS_NO_INTERVENTION, "05"),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(AIS_NO_INTERVENTION, "04"));
-        }
+                    Arguments.of(true, AIS_NO_INTERVENTION, "04"),
 
-        @ParameterizedTest
-        @MethodSource("createRelevantTicfInterventionStatesForReproveJourneys")
-        void
-                shouldInterruptProcessingIfReproveJourneyHasRelevantMidAccountInterventionReceivedFromTicf(
-                        AisInterventionType midAisInterventionType,
-                        String ticfAccountInterventionCode)
-                        throws Exception {
-            // Arrange
-            clientOAuthSessionItem.setReproveIdentity(true);
-            when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(midAisInterventionType);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
-
-            var vcTicfWithIntervention =
-                    generateTicfVcWithIntervention(
-                            Intervention.builder()
-                                    .withInterventionCode(ticfAccountInterventionCode)
-                                    .build());
-            var ticfVcs = List.of(vcTicfWithIntervention);
-            when(checkCoiService.isCoiCheckSuccessful(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
-                            eq(ACCOUNT_INTERVENTION),
-                            eq(List.of()),
-                            any(),
-                            any()))
-                    .thenReturn(true);
-            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
-                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
-            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
-                    .thenReturn(ticfVcs);
-            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            PROCESS_IDENTITY_TYPE,
-                                            CandidateIdentityType.UPDATE.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ACCOUNT_INTERVENTION.getJourney(), response.get("journey"));
-
-            verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), any(), any(), any());
-        }
-
-        private static Stream<Arguments> createRelevantTicfInterventionStatesForReproveJourneys() {
-            return Stream.of(
                     // AIS: Reprove identity not cleared after reproved, TICF:
                     // Re-suspended
-                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "01"),
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY, "01"),
                     // Blocked
-                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, "03"));
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY, "03"));
         }
 
         @Test
