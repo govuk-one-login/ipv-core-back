@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.evcs.client.EvcsGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
@@ -70,6 +71,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -288,6 +290,14 @@ public class CheckExistingIdentityHandler
                                 configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
+
+            // PYIC-8393 Make use of existingStoredIdentity
+            EvcsGetStoredIdentityResult existingStoredIdentity =
+                    new EvcsGetStoredIdentityResult(false, false, null);
+            if (configService.enabled(SIS_VERIFICATION)) {
+                existingStoredIdentity =
+                        evcsService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
