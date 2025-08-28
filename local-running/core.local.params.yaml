@@ -367,7 +367,7 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
-    storedIdentityServiceEnabled: true
+    storedIdentityServiceEnabled: false
     sisVerificationEnabled: false
     accountInterventionsEnabled: true
 
