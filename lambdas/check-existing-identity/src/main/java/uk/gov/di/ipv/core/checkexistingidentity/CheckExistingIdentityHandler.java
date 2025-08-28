@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -255,14 +256,11 @@ public class CheckExistingIdentityHandler
                     Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
             if (configService.enabled(AIS_ENABLED)) {
-                var accountInterventionStateWithType = aisService.fetchAccountStateWithType(userId);
-                var fetchedAccountInterventionState =
-                        accountInterventionStateWithType.accountInterventionState();
-                var fetchedAisInterventionType =
-                        accountInterventionStateWithType.aisInterventionType();
+                var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
 
-                ipvSessionItem.setAisInterventionType(fetchedAisInterventionType);
-                isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
+                isReproveIdentity =
+                        AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
+                                fetchedAisInterventionType);
 
                 if (AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
                         fetchedAisInterventionType)) {

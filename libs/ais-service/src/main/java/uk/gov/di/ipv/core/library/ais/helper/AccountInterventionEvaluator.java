@@ -31,32 +31,21 @@ public final class AccountInterventionEvaluator {
     }
 
     public static boolean isMidOfJourneyInterventionDetected(
-            AisInterventionType initial, AisInterventionType current) {
+            boolean isReproveIdentity, AisInterventionType current) {
 
-        var bothValid = isValidIntervention(initial) && isValidIntervention(current);
-        var bothReprove = isBothIdentityVerify(initial, current);
-        var reproveToValid = isIdentityVerifyToValid(initial, current);
+        var bothReprove = isReproveIdentity && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);
+        var reproveToValid = isReproveIdentity && isValidIntervention(current);
+        var isValid = isValidIntervention(current);
 
-        if (bothValid || bothReprove || reproveToValid) {
+        if (bothReprove || reproveToValid || isValid) {
             return false;
         }
 
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         "Mid journey intervention detected. Initial intervention: %s Final intervention: %s"
-                                .formatted(initial, current)));
+                                .formatted(isReproveIdentity, current)));
         return true;
-    }
-
-    private static boolean isBothIdentityVerify(
-            AisInterventionType initial, AisInterventionType current) {
-        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial)
-                && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);
-    }
-
-    private static boolean isIdentityVerifyToValid(
-            AisInterventionType initial, AisInterventionType current) {
-        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial) && isValidIntervention(current);
     }
 
     private static boolean isValidIntervention(AisInterventionType aisInterventionType) {

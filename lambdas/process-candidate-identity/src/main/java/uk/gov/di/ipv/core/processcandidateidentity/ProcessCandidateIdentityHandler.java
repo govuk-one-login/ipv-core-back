@@ -266,14 +266,13 @@ public class ProcessCandidateIdentityHandler
             if (configService.enabled(AIS_ENABLED)
                     && !SKIP_AIS_TYPES.contains(processIdentityType)
                     && !StringUtils.isBlank(userId)) {
-                var initialInterventionType = ipvSessionItem.getAisInterventionType();
                 var currentInterventionType = aisService.fetchAisInterventionType(userId);
+                var isReproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
                 if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                        initialInterventionType, currentInterventionType)) {
+                        isReproveIdentity, currentInterventionType)) {
                     throw new AccountInterventionException();
                 }
-                ipvSessionItem.setAisInterventionType(currentInterventionType);
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
@@ -637,7 +636,7 @@ public class ProcessCandidateIdentityHandler
                     sharedAuditEventParameters.auditEventUser());
 
             if (configService.enabled(AIS_ENABLED)
-                    && checkHasRelevantIntervention(ipvSessionItem, ticfVcs)) {
+                    && checkHasRelevantIntervention(clientOAuthSessionItem, ticfVcs)) {
                 throw new AccountInterventionException();
             }
 
@@ -696,7 +695,7 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean checkHasRelevantIntervention(
-            IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
+            ClientOAuthSessionItem clientOAuthSessionItem, List<VerifiableCredential> ticfVcs) {
 
         return ticfVcs.stream()
                 .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
@@ -712,7 +711,7 @@ public class ProcessCandidateIdentityHandler
                 .anyMatch(
                         aisInterventionType ->
                                 AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                                        ipvSessionItem.getAisInterventionType(),
+                                        TRUE.equals(clientOAuthSessionItem.getReproveIdentity()),
                                         aisInterventionType));
     }
 

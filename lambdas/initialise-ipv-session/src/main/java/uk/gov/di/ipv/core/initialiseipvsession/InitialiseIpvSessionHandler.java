@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
@@ -170,18 +169,9 @@ public class InitialiseIpvSessionHandler
             var isReproveIdentity =
                     Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-            var aisInterventionType =
-                    isReproveIdentity
-                            ? AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY
-                            : AisInterventionType.AIS_NO_INTERVENTION;
-
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            null,
-                            emailAddress,
-                            isReverification,
-                            aisInterventionType);
+                            clientOAuthSessionId, null, emailAddress, isReverification);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -243,11 +233,7 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            e.getErrorObject(),
-                            null,
-                            false,
-                            AisInterventionType.AIS_NO_INTERVENTION);
+                            clientOAuthSessionId, e.getErrorObject(), null, false);
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),
