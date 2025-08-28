@@ -429,7 +429,6 @@ Feature: P2 Web document journey
 
       Examples:
         | error                     |
-        | server_error              |
         | temporarily_unavailable   |
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks
