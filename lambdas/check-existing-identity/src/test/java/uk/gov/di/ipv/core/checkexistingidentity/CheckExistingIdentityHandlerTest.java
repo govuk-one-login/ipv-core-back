@@ -103,6 +103,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -236,6 +237,8 @@ class CheckExistingIdentityHandlerTest {
         lenient()
                 .when(mockVotMatcher.findStrongestMatches(any(), any(), any(), anyBoolean()))
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
+
+        lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()

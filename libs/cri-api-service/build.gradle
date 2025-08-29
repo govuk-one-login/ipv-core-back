@@ -4,6 +4,10 @@ plugins {
 	id "jacoco"
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation libs.bundles.log4j,
 			libs.jacksonDatabind,
@@ -16,6 +20,10 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(path: ':libs:common-services', configuration: 'tests')
+
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly libs.junitPlatform
 }
@@ -41,6 +49,7 @@ tasks.named('jar') {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {

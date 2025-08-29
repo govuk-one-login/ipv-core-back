@@ -7,6 +7,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +18,7 @@ import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -54,6 +56,7 @@ public class EvcsClient {
     public static final String AFTER_KEY_PARAM = "afterKey";
     private static final String VCS_SUB_PATH = "vcs";
     private static final String IDENTITY_SUB_PATH = "identity";
+    private static final String USER_IDENTITY_SUB_PATH = "user-identity";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(401, 429);
@@ -145,7 +148,7 @@ public class EvcsClient {
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
 
             EvcsGetUserVCsDto evcsGetUserVCs =
-                    evcsHttpResponse.statusCode() != 404
+                    evcsHttpResponse.statusCode() != HttpStatus.SC_NOT_FOUND
                             ? OBJECT_MAPPER.readValue(
                                     evcsHttpResponse.body(), new TypeReference<>() {})
                             : new EvcsGetUserVCsDto(Collections.emptyList(), null);
@@ -317,7 +320,7 @@ public class EvcsClient {
         var statusCode = evcsHttpResponse.statusCode();
 
         // 404 is valid and indicates the user has no VCs
-        if (statusCode > 299 && statusCode != 404) {
+        if (statusCode >= HttpStatus.SC_MULTIPLE_CHOICES && statusCode != HttpStatus.SC_NOT_FOUND) {
             String responseMessage;
             try {
                 Map<String, String> responseBody =
@@ -390,6 +393,60 @@ public class EvcsClient {
                             ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
+        }
+    }
+
+    public EvcsGetStoredIdentityResult getStoredIdentityFromEvcs(String evcsAccessToken) {
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Retrieving existing stored identity from Evcs."));
+
+            var apiKey = configService.getSecret(ConfigurationVariable.EVCS_API_KEY);
+
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getUri(USER_IDENTITY_SUB_PATH, null, null)) // qq:DCC overload?
+                            .GET()
+                            .header(X_API_KEY_HEADER, apiKey)
+                            .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
+
+            var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
+
+            if (evcsHttpResponse.statusCode() == HttpStatus.SC_NOT_FOUND) {
+                LOGGER.info(LogHelper.buildLogMessage("Stored identity not found in EVCS."));
+                return new EvcsGetStoredIdentityResult(true, false, null);
+            }
+
+            if (evcsHttpResponse.statusCode() != HttpStatus.SC_OK) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Error response received from EVCS: "
+                                        + evcsHttpResponse.statusCode()));
+                return new EvcsGetStoredIdentityResult(false, false, null);
+            }
+
+            EvcsStoredIdentityCheckDto identity = parseIdentity(evcsHttpResponse.body());
+            if (identity == null) {
+                return new EvcsGetStoredIdentityResult(false, false, null);
+            }
+
+            return new EvcsGetStoredIdentityResult(true, true, identity);
+        } catch (Exception e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Exception caught whilst getting identity from EVCS", e));
+            return new EvcsGetStoredIdentityResult(false, false, null);
+        }
+    }
+
+    private EvcsStoredIdentityCheckDto parseIdentity(String json) {
+        try {
+            return OBJECT_MAPPER.readValue(json, EvcsStoredIdentityCheckDto.class);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Exception caught processing JSON from EVCS: " + json, e));
+            return null;
         }
     }
 }

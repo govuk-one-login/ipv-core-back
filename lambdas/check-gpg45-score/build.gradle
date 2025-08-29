@@ -5,6 +5,10 @@ plugins {
 	alias libs.plugins.postCompileWeaving
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
@@ -20,6 +24,10 @@ dependencies {
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
+
 	testRuntimeOnly(libs.junitPlatform)
 }
 
@@ -31,6 +39,7 @@ java {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {

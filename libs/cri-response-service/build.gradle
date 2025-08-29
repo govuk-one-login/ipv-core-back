@@ -5,6 +5,10 @@ plugins {
 	id "jacoco"
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.bundles.awsLambda,
@@ -19,6 +23,10 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(":libs:common-services").sourceSets.test.output
+
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly libs.junitPlatform
 }
@@ -44,6 +52,7 @@ tasks.named('jar') {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {

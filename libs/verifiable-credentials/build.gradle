@@ -5,6 +5,10 @@ plugins {
 	id "jacoco"
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
@@ -20,6 +24,10 @@ dependencies {
 			libs.mockitoJunit,
 			project(":libs:common-services").sourceSets.test.output,
 			project(path: ':libs:test-helpers')
+
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly libs.junitPlatform
 }
@@ -45,6 +53,7 @@ tasks.named('jar') {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {

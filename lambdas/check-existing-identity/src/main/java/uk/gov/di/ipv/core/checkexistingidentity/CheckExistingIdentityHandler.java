@@ -70,6 +70,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -288,6 +289,11 @@ public class CheckExistingIdentityHandler
                                 configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
+
+            if (configService.enabled(SIS_VERIFICATION)) {
+                // PYIC-8393 Make use of the results of this call
+                evcsService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
