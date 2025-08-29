@@ -13,10 +13,9 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.fetchsystemsettings.domain.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.fetchsystemsettings.domain.FeatureSet;
 import uk.gov.di.ipv.core.library.service.AppConfigService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -25,10 +24,16 @@ public class FetchSystemSettingsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private final static Pattern FEATURE_FLAG_REGEX = Pattern.compile("^([a-zA-Z0-9]*)/featureFlags/([a-zA-Z0-9]*)$");
-    private final static Pattern CRI_TOGGLE_REGEX = Pattern.compile("^([a-zA-Z0-9]*)/credentialIssuers/([a-zA-Z0-9]*)/enabled$");
+    private static final Pattern FEATURE_FLAG_REGEX =
+            Pattern.compile("^([a-zA-Z0-9]*)/featureFlags/([a-zA-Z0-9]*)$");
+    private static final Pattern CRI_TOGGLE_REGEX =
+            Pattern.compile("^([a-zA-Z0-9]*)/credentialIssuers/([a-zA-Z0-9]*)/enabled$");
 
-    final AppConfigService configService = new AppConfigService();
+    final ConfigService configService = getConfigService();
+
+    protected ConfigService getConfigService() {
+        return new AppConfigService();
+    }
 
     @Override
     @Logging(clearState = true)
@@ -36,53 +41,78 @@ public class FetchSystemSettingsHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
         // Fetch current feature flag statuses
-        Map<String, Boolean> featureFlagStatuses = configService
-                .getParametersByPrefix("featureFlags")
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> Boolean.parseBoolean(entry.getValue())));
+        Map<String, Boolean> featureFlagStatuses =
+                configService.getParametersByPrefix("featureFlags").entrySet().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry -> Boolean.parseBoolean(entry.getValue())));
 
         // Fetch current CRI statuses
-        Map<String, Boolean> criStatuses = configService
-                .getParametersByPrefix("credentialIssuers")
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(entry -> entry.getValue().split("/")[0], entry -> Boolean.parseBoolean(entry.getValue())));
+        Map<String, Boolean> criStatuses =
+                configService.getParametersByPrefix("credentialIssuers").entrySet().stream()
+                        .filter(entry -> entry.getKey().matches("([a-zA-Z0-9]*)/enabled"))
+                        .collect(
+                                Collectors.toMap(
+                                        entry -> entry.getKey().split("/")[0],
+                                        entry -> Boolean.parseBoolean(entry.getValue())));
 
         // Fetch feature sets
         Map<String, FeatureSet> featureSets = new HashMap<>();
-        configService.getParametersByPrefix("features").forEach((key, value) -> {
-            var featureFlagMatcher = FEATURE_FLAG_REGEX.matcher(key);
-            var criToggleMatcher = CRI_TOGGLE_REGEX.matcher(key);
+        configService
+                .getParametersByPrefix("features")
+                .forEach(
+                        (key, value) -> {
+                            var featureFlagMatcher = FEATURE_FLAG_REGEX.matcher(key);
+                            var criToggleMatcher = CRI_TOGGLE_REGEX.matcher(key);
 
-            // Get feature set
-            var featureSetName = featureFlagMatcher.group(1) != null ? featureFlagMatcher.group(1) : criToggleMatcher.group(1);
-            if (!featureSets.containsKey(featureSetName)) {
-                featureSets.put(featureSetName, new FeatureSet(Map.of(), Map.of()));
-            }
-            var featureSet = featureSets.get(featureSetName);
+                            // Get feature set
+                            var featureSetName =
+                                    featureFlagMatcher.matches()
+                                            ? featureFlagMatcher.group(1)
+                                            : criToggleMatcher.matches()
+                                                    ? criToggleMatcher.group(1)
+                                                    : null;
+                            if (featureSetName != null
+                                    && !featureSets.containsKey(featureSetName)) {
+                                featureSets.put(
+                                        featureSetName,
+                                        new FeatureSet(new HashMap<>(), new HashMap<>()));
+                            }
+                            var featureSet = featureSets.get(featureSetName);
 
-            // Feature flags
-            if (featureFlagMatcher.matches()) {
-                var featureFlagName = featureFlagMatcher.group(2);
-                featureSet.featureFlags().put(featureFlagName, Boolean.parseBoolean(value));
-            }
+                            // Feature flags
+                            if (featureFlagMatcher.matches()) {
+                                var featureFlagName = featureFlagMatcher.group(2);
+                                featureSet
+                                        .featureFlags()
+                                        .put(featureFlagName, Boolean.parseBoolean(value));
+                            }
 
-            // CRI status
-            if (criToggleMatcher.matches()) {
-                var criName = criToggleMatcher.group(2);
-                featureSet.credentialIssuers().put(criName, new CredentialIssuerConfig(Boolean.parseBoolean(value)));
-            }
-        });
+                            // CRI status
+                            if (criToggleMatcher.matches()) {
+                                var criName = criToggleMatcher.group(2);
+                                LOGGER.warn(
+                                        String.format(
+                                                "HELLO %s %s",
+                                                criName, featureSet.credentialIssuers()));
+                                featureSet
+                                        .credentialIssuers()
+                                        .put(
+                                                criName,
+                                                new CredentialIssuerConfig(
+                                                        Boolean.parseBoolean(value)));
+                            }
+                        });
 
-        var results = Map.of(
-                "featureFlagStatuses",
-                featureFlagStatuses,
-                "criStatuses",
-                criStatuses,
-                "availableFeatureSets",
-                featureSets
-        );
+        var results =
+                Map.of(
+                        "featureFlagStatuses",
+                        featureFlagStatuses,
+                        "criStatuses",
+                        criStatuses,
+                        "availableFeatureSets",
+                        featureSets);
 
         try {
             return new APIGatewayProxyResponseEvent()
