@@ -61,3 +61,5 @@ dependencyResolutionManagement {
 		}
 	}
 }
+
+include 'lambdas:fetch-system-settings'
