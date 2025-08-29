@@ -16,6 +16,7 @@ public class Config {
     @NonNull final AisConfig ais;
     @NonNull final CimitConfig cimit;
     @NonNull final EvcsConfig evcs;
+    final SisConfig sis;
     @NonNull final StoredIdentityServiceConfig storedIdentityService;
     @NonNull final CredentialIssuersConfig credentialIssuers;
     final Map<String, Map<String, String>> local;
