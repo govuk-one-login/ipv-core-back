@@ -34,9 +34,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -171,29 +169,9 @@ public class InitialiseIpvSessionHandler
             var isReproveIdentity =
                     Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-            // if we receive JAR with reprove identity flag from auth
-            // we want to mirror Account Intervention which will also suspend the user
-            var initialAccountInterventionState =
-                    AccountInterventionState.builder()
-                            .isBlocked(false)
-                            .isSuspended(isReproveIdentity)
-                            .isReproveIdentity(isReproveIdentity)
-                            .isResetPassword(false)
-                            .build();
-
-            var aisInterventionType =
-                    isReproveIdentity
-                            ? AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY
-                            : AisInterventionType.AIS_NO_INTERVENTION;
-
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            null,
-                            emailAddress,
-                            isReverification,
-                            initialAccountInterventionState,
-                            aisInterventionType);
+                            clientOAuthSessionId, null, emailAddress, isReverification);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -255,12 +233,7 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            e.getErrorObject(),
-                            null,
-                            false,
-                            new AccountInterventionState(false, false, false, false),
-                            AisInterventionType.AIS_NO_INTERVENTION);
+                            clientOAuthSessionId, e.getErrorObject(), null, false);
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),

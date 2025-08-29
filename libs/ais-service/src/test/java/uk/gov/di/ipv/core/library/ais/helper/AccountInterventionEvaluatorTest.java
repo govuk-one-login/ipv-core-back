@@ -2,10 +2,8 @@ package uk.gov.di.ipv.core.library.ais.helper;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 import java.util.stream.Stream;
 
@@ -19,9 +17,7 @@ class AccountInterventionEvaluatorTest {
     @MethodSource("getInvalidAccountInterventionState")
     void shouldReturnTrueWhenProvideInvalidAccountIntervention(
             AisInterventionType aisInterventionType) {
-        assertTrue(
-                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
-                        aisInterventionType));
+        assertTrue(AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisInterventionType));
     }
 
     private static Stream<Arguments> getInvalidAccountInterventionState() {
@@ -37,8 +33,7 @@ class AccountInterventionEvaluatorTest {
     void shouldReturnFalseWhenProvideValidAccountIntervention(
             AisInterventionType aisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
-                        aisInterventionType));
+                AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisInterventionType));
     }
 
     private static Stream<Arguments> getValidAccountInterventionState() {
@@ -50,78 +45,43 @@ class AccountInterventionEvaluatorTest {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(InvalidMidJourneyAccountInterventionArgumentsProvider.class)
-    void shouldReturnTrueWhenProvideValidMidJourneyAccountInterventionStates(
-            AccountInterventionState initialAccountIntervention,
-            AccountInterventionState midJourneyAccountInterventionState) {
-        assertTrue(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                        initialAccountIntervention, midJourneyAccountInterventionState));
-    }
-
-    @ParameterizedTest
     @MethodSource("getInvalidMidJourneyAccountInterventionTypes")
     void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionTypes(
-            AisInterventionType initialAisInterventionType,
-            AisInterventionType finalAisInterventionType) {
+            boolean isReproveJourney, AisInterventionType finalAisInterventionType) {
         assertTrue(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                        initialAisInterventionType, finalAisInterventionType));
+                AccountInterventionEvaluator.hasMidJourneyIntervention(
+                        isReproveJourney, finalAisInterventionType));
     }
 
     private static Stream<Arguments> getInvalidMidJourneyAccountInterventionTypes() {
         return Stream.of(
-                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_BLOCKED),
-                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_NO_INTERVENTION, AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(AIS_NO_INTERVENTION, AIS_FORCED_USER_IDENTITY_VERIFY),
-                Arguments.of(
-                        AIS_NO_INTERVENTION, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_BLOCKED),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_IDENTITY_VERIFY),
-                Arguments.of(
-                        AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_BLOCKED),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_FORCED_USER_IDENTITY_VERIFY),
-                Arguments.of(
-                        AIS_ACCOUNT_UNSUSPENDED,
-                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_BLOCKED),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(
-                        AIS_FORCED_USER_IDENTITY_VERIFY,
-                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
+                Arguments.of(false, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(false, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(false, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(false, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(false, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
+                Arguments.of(true, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(true, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(true, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(true, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
     }
 
     @ParameterizedTest
     @MethodSource("getValidMidJourneyAccountInterventionTypes")
     void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
-            AisInterventionType initialAisInterventionType,
-            AisInterventionType finalAisInterventionType) {
+            boolean isReproveIdentity, AisInterventionType finalAisInterventionType) {
         assertFalse(
-                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
-                        initialAisInterventionType, finalAisInterventionType));
+                AccountInterventionEvaluator.hasMidJourneyIntervention(
+                        isReproveIdentity, finalAisInterventionType));
     }
 
     private static Stream<Arguments> getValidMidJourneyAccountInterventionTypes() {
         return Stream.of(
-                Arguments.of(AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
-                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_NO_INTERVENTION),
-                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_NO_INTERVENTION),
-                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_FORCED_USER_IDENTITY_VERIFY),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_NO_INTERVENTION));
+                Arguments.of(false, AIS_NO_INTERVENTION),
+                Arguments.of(false, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(true, AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(true, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(true, AIS_NO_INTERVENTION));
     }
 }
