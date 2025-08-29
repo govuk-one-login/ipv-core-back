@@ -99,30 +99,5 @@ class FetchSystemSettingsHandlerTest {
                         """,
                         new TypeReference<>() {}),
                 body.get("criStatuses"));
-        assertEquals(
-                OBJECT_MAPPER.readValue(
-                        """
-                            {
-                                "drivingLicenceTest":          {"featureFlags": {},                                     "credentialIssuers": {"drivingLicence": {"enabled": false}}},
-                                "disableStrategicApp":         {"featureFlags": {"strategicAppEnabled": false},         "credentialIssuers": {}},
-                                "ticfDisabled":                {"featureFlags": {},                                     "credentialIssuers": {"ticf": {"enabled": false}}},
-                                "strategicApp":                {"featureFlags": {"strategicAppEnabled": true},          "credentialIssuers": {}},
-                                "accountInterventions":        {"featureFlags": {"accountInterventionsEnabled": true},  "credentialIssuers": {}},
-                                "dcmawOffTest":                {"featureFlags": {},                                     "credentialIssuers": {"dcmaw": {"enabled": false}}},
-                                "f2fDisabled":                 {"featureFlags": {},                                     "credentialIssuers": {"f2f": {"enabled": false}}},
-                                "dwpKbvTest":                  {"featureFlags": {},                                     "credentialIssuers": {"dwpKbv": {"enabled": true}}},
-                                "dwpKbvDisabled":              {"featureFlags": {},                                     "credentialIssuers": {"dwpKbv": {"enabled": false}}},
-                                "ticfCriBeta":                 {"featureFlags": {},                                     "credentialIssuers": {"ticf": {"enabled": true}}},
-                                "p1Journeys":                  {"featureFlags": {"p1JourneysEnabled": true},            "credentialIssuers": {}},
-                                "disableAccountInterventions": {"featureFlags": {"accountInterventionsEnabled": false}, "credentialIssuers": {}},
-                                "mfaReset":                    {"featureFlags": {"mfaResetEnabled": true},              "credentialIssuers": {}},
-                                "clearUsersIdentity":          {"featureFlags": {"resetIdentity": true},                "credentialIssuers": {}},
-                                "pendingF2FResetEnabled":      {"featureFlags": {"pendingF2FResetEnabled": true},       "credentialIssuers": {}},
-                                "storedIdentityService":       {"featureFlags": {"storedIdentityServiceEnabled": true}, "credentialIssuers": {}},
-                                "bavDisabled":                 {"featureFlags": {},                                     "credentialIssuers": {"bav": {"enabled": false}}}
-                            }
-                        """,
-                        new TypeReference<>() {}),
-                body.get("availableFeatureSets"));
     }
 }

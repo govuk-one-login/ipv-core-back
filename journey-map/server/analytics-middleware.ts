@@ -31,3 +31,26 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
     next(err);
   }
 };
+
+export const fetchSystemSettingsHandler: RequestHandler = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const response = await fetch(config.systemSettingsEndpoint, {
+      method: "POST",
+      headers: { "x-api-key": config.analyticsApiKey },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch system settings from analytics API: ${response.statusText}`,
+      );
+    }
+
+    res.json(await response.json());
+    next();
+  } catch (err) {
+    next(err);
+  }
+};

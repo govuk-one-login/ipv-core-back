@@ -59,6 +59,26 @@ paths:
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchJourneyTransitionsFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
+  /system-settings:
+    post:
+      description: "Endpoint for fetching feature flags, sets and cri statuses"
+      responses:
+        200:
+          description: "System settings response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/systemSettingsResponse"
+        401:
+          description: "Unauthorized - Invalid or missing API key"
+      security:
+        - apiKey: []
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchJourneyTransitionsFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
 
 components:
   securitySchemes:
@@ -91,3 +111,12 @@ components:
           - to
           - count
         additionalProperties: false
+    systemSettingsResponse:
+      type: object
+      properties:
+        featureFlagStatuses:
+          type: object
+          additionalProperties: true
+        criStatuses:
+          type: object
+          additionalProperties: true
