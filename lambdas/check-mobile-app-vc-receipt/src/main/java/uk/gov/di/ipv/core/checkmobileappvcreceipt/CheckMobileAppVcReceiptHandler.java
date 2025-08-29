@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -234,6 +235,8 @@ public class CheckMobileAppVcReceiptHandler
         var newVcs = List.of(dcmawAsyncVc.get());
         sessionCredentialsService.persistCredentials(
                 newVcs, ipvSessionItem.getIpvSessionId(), true);
+
+        EmbeddedMetricHelper.criReturn(DCMAW_ASYNC.getId());
 
         var forcedJourney =
                 criCheckingService.checkVcResponse(

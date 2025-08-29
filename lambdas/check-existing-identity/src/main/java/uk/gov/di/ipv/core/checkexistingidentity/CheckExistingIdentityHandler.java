@@ -8,10 +8,14 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
+import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
+import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -37,6 +41,7 @@ import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -61,8 +66,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
-import static java.lang.Boolean.TRUE;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
@@ -73,6 +78,7 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCOUNT_INTERVENTION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH;
@@ -130,6 +136,11 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH);
     private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE =
             new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH);
+    private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
+            new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
+
+    private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
+            "Account intervention detected";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -143,6 +154,7 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final AisService aisService;
     private final VotMatcher votMatcher;
 
     @SuppressWarnings({
@@ -162,6 +174,7 @@ public class CheckExistingIdentityHandler
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService,
+            AisService aisService,
             VotMatcher votMatcher) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -176,6 +189,7 @@ public class CheckExistingIdentityHandler
         this.evcsService = evcsService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.votMatcher = votMatcher;
+        this.aisService = aisService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -206,6 +220,7 @@ public class CheckExistingIdentityHandler
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.aisService = new AisService(configService);
         this.votMatcher =
                 new VotMatcher(
                         userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
@@ -223,25 +238,73 @@ public class CheckExistingIdentityHandler
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = getIpvSessionId(event);
-            String ipAddress = getIpAddress(event);
-            String deviceInformation = event.getDeviceInformation();
+            var ipvSessionId = getIpvSessionId(event);
+            var ipAddress = getIpAddress(event);
+            var deviceInformation = event.getDeviceInformation();
             configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
-            ClientOAuthSessionItem clientOAuthSessionItem =
+            var ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
+            var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
+            var userId = clientOAuthSessionItem.getUserId();
+            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            var isReproveIdentity =
+                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+
+            if (configService.enabled(AIS_ENABLED)) {
+                var accountInterventionStateWithType = aisService.fetchAccountStateWithType(userId);
+                var fetchedAccountInterventionState =
+                        accountInterventionStateWithType.accountInterventionState();
+                var fetchedAisInterventionType =
+                        accountInterventionStateWithType.aisInterventionType();
+
+                ipvSessionItem.setInitialAccountInterventionState(fetchedAccountInterventionState);
+                ipvSessionItem.setAisInterventionType(fetchedAisInterventionType);
+                isReproveIdentity = fetchedAccountInterventionState.isReproveIdentity();
+
+                if (AccountInterventionEvaluator.isStartOfJourneyInterventionDetected(
+                        fetchedAisInterventionType)) {
+                    ipvSessionService.invalidateSession(
+                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+                    throw new AccountInterventionException();
+                }
+
+                clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+                clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
+            }
+
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            var auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
+            if (isReproveIdentity) {
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithoutDeviceInformation(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser,
+                                AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
                 evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
             }
 
             return getJourneyResponse(
-                            ipvSessionItem, clientOAuthSessionItem, ipAddress, deviceInformation)
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            ipAddress,
+                            deviceInformation,
+                            userId,
+                            govukSigninJourneyId,
+                            auditEventUser)
                     .toObjectMap();
+        } catch (AccountInterventionException e) {
+            return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
@@ -272,15 +335,11 @@ public class CheckExistingIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
-            String deviceInformation) {
+            String deviceInformation,
+            String userId,
+            String govukSigninJourneyId,
+            AuditEventUser auditEventUser) {
         try {
-            var ipvSessionId = ipvSessionItem.getIpvSessionId();
-            var userId = clientOAuthSessionItem.getUserId();
-            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-
-            var auditEventUser =
-                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
-
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
@@ -300,10 +359,12 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
+
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+            if (Boolean.TRUE.equals(isReproveIdentity)
+                            && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
@@ -570,6 +631,7 @@ public class CheckExistingIdentityHandler
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
         sendAuditEvent(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE, auditEventUser, deviceInformation);
+        EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
         ipvSessionService.updateIpvSession(ipvSessionItem);

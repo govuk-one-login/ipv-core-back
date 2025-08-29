@@ -60,7 +60,6 @@ public enum ErrorResponse {
     FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri"),
     FAILED_TO_PARSE_JSON_MESSAGE(1048, "Failed to parse JSON message"),
     FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception"),
-    UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential"),
     PENDING_VERIFICATION_EXCEPTION(1051, "Pending face to face verification exception"),
     FAILED_TO_FIND_VISITED_CRI(1052, "Failed to find a visited CRI"),
     FAILED_TO_PARSE_CIMIT_SIGNING_KEY(1053, "Failed to parse CIMIT signing key"),

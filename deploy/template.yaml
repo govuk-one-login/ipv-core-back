@@ -2580,6 +2580,8 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
@@ -2921,6 +2923,68 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
+
+  ValidateAppConfigFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - ValidateAppConfigFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "validate-appconfig-${Environment}"
+      Handler: uk.gov.di.ipv.core.validateappconfig.ValidateAppConfigHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/validate-appconfig
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub validate-appconfig-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+          - Sid: EnforceStayinSpecificVpc
+            Effect: Allow
+            Action:
+              - 'lambda:CreateFunction'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource:
+              - "*"
+            Condition:
+              StringEquals:
+                "lambda:VpcIds":
+                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      AutoPublishAlias: live
+
+  ValidateAppConfigFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/validate-appconfig-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  ValidateAppConfigFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ValidateAppConfigFunctionLogGroup
+
+  ValidateAppConfigInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref ValidateAppConfigFunction
+      Principal: "appconfig.amazonaws.com"
+      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
@@ -3882,6 +3946,46 @@ Resources:
             Period: 60
             Stat: Sum
 
+  DwpKbvCriReturnRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}-DwpKbvCriReturnRateAlarm
+      AlarmDescription: "Alarm if DWP KBV CRI return rate is 0 for 3 consecutive 5-minute windows"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      EvaluationPeriods: 3
+      Threshold: 0
+      ComparisonOperator: LessThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: redirect
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: criRedirect
+              Dimensions:
+                - Name: cri
+                  Value: dwpKbv
+            Period: 300
+            Stat: Sum
+          ReturnData: false
+        - Id: returned
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: criReturn
+              Dimensions:
+                - Name: cri
+                  Value: dwpKbv
+            Period: 300
+            Stat: Sum
+          ReturnData: false
+        - Id: returnRate
+          Expression: "returned / redirect"
+          Label: "DWP KBV CRI Return Rate"
+          ReturnData: true
+
   IssueClientAccessTokenFunctionIOExceptionMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
@@ -4745,6 +4849,9 @@ Resources:
       Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
       LocationUri: "hosted"
+      Validators:
+        - Type: LAMBDA
+          Content: !GetAtt ValidateAppConfigFunction.Arn
 
   AppConfigDeploymentStrategy:
     Type: AWS::AppConfig::DeploymentStrategy

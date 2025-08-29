@@ -3,7 +3,6 @@
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "reprove_identity": false,
       "vtr": ["P1"]
     },
     "restricted": {

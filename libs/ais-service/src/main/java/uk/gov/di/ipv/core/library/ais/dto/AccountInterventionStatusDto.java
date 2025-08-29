@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.ais.enums.AisAuditLevel;
-import uk.gov.di.ipv.core.library.ais.enums.AisInterventionType;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 
 @ExcludeFromGeneratedCoverageReport

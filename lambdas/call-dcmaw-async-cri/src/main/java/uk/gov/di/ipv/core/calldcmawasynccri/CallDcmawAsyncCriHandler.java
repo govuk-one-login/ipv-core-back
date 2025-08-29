@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -134,6 +135,7 @@ public class CallDcmawAsyncCriHandler
                     request, DCMAW_ASYNC, oauthState, clientOAuthSessionItem, featureSets);
 
             dcmawAsyncCriService.sendAuditEventForAppHandoff(request, clientOAuthSessionItem);
+            EmbeddedMetricHelper.criRedirect(DCMAW_ASYNC.getId());
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

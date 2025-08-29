@@ -405,7 +405,8 @@ class EvcsServiceTest {
                                 new EvcsGetUserVCDto(
                                         vcExperianFraudM1a().getVcString(),
                                         EvcsVCState.PENDING_RETURN,
-                                        Map.of("reason", "testing"))));
+                                        Map.of("reason", "testing"))),
+                        null);
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN)))
                 .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
@@ -452,7 +453,8 @@ class EvcsServiceTest {
                                         new EvcsGetUserVCDto(
                                                 vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
-                                                null))));
+                                                null)),
+                                null));
 
         // Act
         var vcs =
@@ -484,7 +486,8 @@ class EvcsServiceTest {
                                         new EvcsGetUserVCDto(
                                                 vcWebPassportSuccessful().getVcString(),
                                                 EvcsVCState.CURRENT,
-                                                null))));
+                                                null)),
+                                null));
         when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 

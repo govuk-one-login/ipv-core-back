@@ -382,7 +382,7 @@ Feature: P2 Web document journey
       Then I get a 'page-pre-dwp-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'dwpKbv' CRI response
-      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+      When I call the CRI stub with attributes and get an '<oauth_error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
@@ -398,9 +398,10 @@ Feature: P2 Web document journey
       Then I get a 'P2' identity
 
       Examples:
-        | cri            | details                      |
-        | drivingLicence | kenneth-driving-permit-valid |
-        | ukPassport     | kenneth-passport-valid       |
+        | cri            | details                      | oauth_error             |
+        | drivingLicence | kenneth-driving-permit-valid | access_denied           |
+        | ukPassport     | kenneth-passport-valid       | access_denied           |
+        | ukPassport     | kenneth-passport-valid       | server_error            |
 
     Scenario Outline: User drops out of DWP KBV due to a <error> error
       When I submit a 'ukPassport' event
@@ -428,7 +429,6 @@ Feature: P2 Web document journey
 
       Examples:
         | error                     |
-        | server_error              |
         | temporarily_unavailable   |
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks

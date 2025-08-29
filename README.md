@@ -69,11 +69,25 @@ See the [Deployment Documentation](deploy/README.md) for information on building
 ### Deployment
 See the [Deployment Documentation](deploy/README.md) for information on deploying the di-ipv-core-back project.
 
+### Development environments
+Instantiating core-back to run in a safe environment can be done using:
+- [local-running](local-running/README.md), which exposes core-back on localhost
+- [dev-deploy tool](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md), which deploys to a user/ perf environment
+- [dev-pipeline](https://github.com/govuk-one-login/ipv-core-back/actions/workflows/secure-post-merge.yml), which deploys to the [shared dev environment](https://orch.stubs.account.gov.uk/?defaultEnvironment=DEV)
+
 ### Testing
 The di-ipv-core-back has a number of different tests:
 * Unit Tests - Each lambda contains unit tests which test a classes functionality in isolation. These tests can be found within the `lambda\*\src\test` folder.
+* [API Tests](api-tests/README.md) - Test core functionality and user routing without having to use the frontend.
 * Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
 * Pact tests - Contract tests that ensure that we're providing and consuming the correct JSON in our integrations with other services
+
+#### Running API tests locally
+di-ipv-core-back can be run [locally](local-running/README.md), allowing [API Tests](api-tests/README.md) to be run against it:
+```
+cd api-tests
+npm run test:local
+```
 
 #### Running provider pact tests locally
 To run provider pact tests locally you will need to have a local copy of the pact file. You will need an account with the pact broker - ask in the #introduce-contract-testing Slack channel for help with this.

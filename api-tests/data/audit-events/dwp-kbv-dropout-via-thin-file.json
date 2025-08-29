@@ -2,7 +2,6 @@
   {
     "event_name": "IPV_JOURNEY_START",
     "extensions": {
-      "reprove_identity": false,
       "vtr": ["P2"]
     },
     "restricted": {
