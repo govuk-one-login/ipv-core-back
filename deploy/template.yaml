@@ -3725,6 +3725,46 @@ Resources:
             Period: 60
             Stat: Sum
 
+  DwpKbvCriReturnRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}-DwpKbvCriReturnRateAlarm
+      AlarmDescription: "Alarm if DWP KBV CRI return rate is 0 for 3 consecutive 5-minute windows"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      EvaluationPeriods: 3
+      Threshold: 0
+      ComparisonOperator: LessThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: redirect
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: criRedirect
+              Dimensions:
+                - Name: cri
+                  Value: dwpKbv
+            Period: 300
+            Stat: Sum
+          ReturnData: false
+        - Id: returned
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: criReturn
+              Dimensions:
+                - Name: cri
+                  Value: dwpKbv
+            Period: 300
+            Stat: Sum
+          ReturnData: false
+        - Id: returnRate
+          Expression: "returned / redirect"
+          Label: "DWP KBV CRI Return Rate"
+          ReturnData: true
+
   IssueClientAccessTokenFunctionIOExceptionMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
