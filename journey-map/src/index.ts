@@ -462,8 +462,17 @@ const initialize = async (): Promise<void> => {
   );
 
   const systemSettings = await getSystemSettings();
-  setupOptions("disabledCri", systemSettings?.criStatuses ?? {}, disabledInput, CRI_NAMES);
-  setupOptions("featureFlag", systemSettings?.featureFlagStatuses ?? {}, featureFlagInput);
+  setupOptions(
+    "disabledCri",
+    systemSettings?.criStatuses ?? {},
+    disabledInput,
+    CRI_NAMES,
+  );
+  setupOptions(
+    "featureFlag",
+    systemSettings?.featureFlagStatuses ?? {},
+    featureFlagInput,
+  );
 
   setupOtherOptions();
   setupMermaidClickHandlers();
