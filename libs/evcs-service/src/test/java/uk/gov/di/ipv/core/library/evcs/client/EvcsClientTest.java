@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -25,7 +23,6 @@ import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
-import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
@@ -43,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -654,103 +650,5 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
-    }
-
-    @Test
-    void getStoredIdentityFromEvcs_sendsCorrectRequest() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
-
-        // Act
-        evcsClient.getStoredIdentityFromEvcs("dummy_access_token");
-
-        // Assert
-        verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-        HttpRequest httpRequest = httpRequestCaptor.getValue();
-        assertEquals("GET", httpRequest.method());
-        assertEquals("/v1/user-identity", httpRequest.uri().getPath());
-        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
-        assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-        assertEquals(
-                List.of("Bearer dummy_access_token"),
-                httpRequest.headers().map().get(AUTHORIZATION));
-        assertEquals(List.of(EVCS_API_KEY), httpRequest.headers().map().get(X_API_KEY_HEADER));
-    }
-
-    @ParameterizedTest
-    @MethodSource("getStoredIdentityTestData")
-    void getStoredIdentityFromEvcs_shouldParseResponseCorrectly(
-            String responseJson, EvcsGetStoredIdentityResult expectedResult) throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
-        when(mockHttpResponse.body()).thenReturn(responseJson);
-
-        // Act
-        var result = evcsClient.getStoredIdentityFromEvcs("dummy_access_token");
-
-        // Assert
-        assertEquals(expectedResult, result);
-    }
-
-    private static Stream<Arguments> getStoredIdentityTestData() {
-        return Stream.of(
-                Arguments.of(
-                        """
-                        { "content": "dummy_JWT", "isValid": true, "expired": false, "vot": "P2" }
-                        """,
-                        new EvcsGetStoredIdentityResult(
-                                true,
-                                true,
-                                new EvcsStoredIdentityCheckDto("dummy_JWT", true, false, Vot.P2))),
-                Arguments.of(
-                        """
-                        { "content": "dummy_JWT", "isValid": false, "expired": true, "vot": "P1" }
-                        """,
-                        new EvcsGetStoredIdentityResult(
-                                true,
-                                true,
-                                new EvcsStoredIdentityCheckDto("dummy_JWT", false, true, Vot.P1))));
-    }
-
-    @Test
-    void getStoredIdentityFromEvcs_returnsFailure_whenJsonIsInvalid() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
-        when(mockHttpResponse.body()).thenReturn("not valid json");
-
-        // Act
-        var result = evcsClient.getStoredIdentityFromEvcs("dummy_access_token");
-
-        // Assert
-        assertEquals(new EvcsGetStoredIdentityResult(false, false, null), result);
-    }
-
-    @Test
-    void getStoredIdentityFromEvcs_returnsFailure_whenHttpErrorReceived() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
-
-        // Act
-        var result = evcsClient.getStoredIdentityFromEvcs("dummy_access_token");
-
-        // Assert
-        assertEquals(new EvcsGetStoredIdentityResult(false, false, null), result);
-    }
-
-    @Test
-    void getStoredIdentityFromEvcs_returnsNotFound_when404Received() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
-
-        // Act
-        var result = evcsClient.getStoredIdentityFromEvcs("dummy_access_token");
-
-        // Assert
-        assertEquals(new EvcsGetStoredIdentityResult(true, false, null), result);
     }
 }

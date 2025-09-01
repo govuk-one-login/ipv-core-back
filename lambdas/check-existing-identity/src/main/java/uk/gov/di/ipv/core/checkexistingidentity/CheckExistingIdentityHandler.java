@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.sis.service.SisService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -155,6 +156,7 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final SisService sisService;
     private final AisService aisService;
     private final VotMatcher votMatcher;
 
@@ -175,6 +177,7 @@ public class CheckExistingIdentityHandler
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService,
+            SisService sisService,
             AisService aisService,
             VotMatcher votMatcher) {
         this.configService = configService;
@@ -188,6 +191,7 @@ public class CheckExistingIdentityHandler
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
+        this.sisService = sisService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.votMatcher = votMatcher;
         this.aisService = aisService;
@@ -220,6 +224,7 @@ public class CheckExistingIdentityHandler
                         ipvSessionService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
+        this.sisService = new SisService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.aisService = new AisService(configService);
         this.votMatcher =
@@ -293,7 +298,7 @@ public class CheckExistingIdentityHandler
 
             if (configService.enabled(SIS_VERIFICATION)) {
                 // PYIC-8393 Make use of the results of this call
-                evcsService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
+                sisService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {

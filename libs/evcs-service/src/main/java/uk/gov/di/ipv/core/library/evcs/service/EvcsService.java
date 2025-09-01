@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
-import uk.gov.di.ipv.core.library.evcs.client.EvcsGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
@@ -89,10 +88,6 @@ public class EvcsService {
                 .stream()
                 .flatMap(List::stream)
                 .toList();
-    }
-
-    public EvcsGetStoredIdentityResult getStoredIdentity(String evcsAccessToken) {
-        return evcsClient.getStoredIdentityFromEvcs(evcsAccessToken);
     }
 
     public Map<EvcsVCState, List<VerifiableCredential>> fetchEvcsVerifiableCredentialsByState(

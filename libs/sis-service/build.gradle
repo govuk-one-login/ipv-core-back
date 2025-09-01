@@ -1,8 +1,8 @@
 plugins {
-	id "java"
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
 	id "idea"
 	id "jacoco"
-	alias libs.plugins.postCompileWeaving
 }
 
 configurations {
@@ -10,26 +10,19 @@ configurations {
 }
 
 dependencies {
-	implementation libs.bundles.awsLambda,
+	implementation libs.apacheHttpCore,
+			libs.bundles.log4j,
+			libs.jacksonDatabind,
 			project(":libs:common-services"),
-			project(":libs:cimit-service"),
-			project(":libs:cri-checking-service"),
-			project(":libs:cri-response-service"),
-			project(":libs:audit-service"),
-			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service"),
-			project(":libs:evcs-service"),
-			project(":libs:sis-service"),
-			project(":libs:ais-service")
+			project(":libs:user-identity-service")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.hamcrest,
-			libs.jacksonDatabind,
-			libs.junitJupiter,
+	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
+			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
@@ -37,12 +30,25 @@ dependencies {
 		transitive = false
 	}
 
-	testRuntimeOnly(libs.junitPlatform)
+	testRuntimeOnly libs.junitPlatform
 }
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
 }
 
 test {
