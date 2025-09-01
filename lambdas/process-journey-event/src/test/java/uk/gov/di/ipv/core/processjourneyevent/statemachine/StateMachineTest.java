@@ -368,7 +368,6 @@ class StateMachineTest {
                                         null,
                                         null,
                                         null,
-                                        null,
                                         null)));
 
         var mockStateMachineInitializer = mock(StateMachineInitializer.class);

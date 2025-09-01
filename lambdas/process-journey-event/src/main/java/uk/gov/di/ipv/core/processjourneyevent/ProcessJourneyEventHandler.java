@@ -346,8 +346,6 @@ public class ProcessJourneyEventHandler
             }
         }
 
-        // PYIC-7902 This needs some unit tests. It seems that the existing tests just use the real
-        // journey maps so it's not immediately obvious how to test journey contexts fully
         if (!isNullOrEmpty(result.journeyContextsToSet())) {
             result.journeyContextsToSet().forEach(ipvSessionItem::setJourneyContext);
         }

@@ -1119,6 +1119,148 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
+    void shouldSetJourneyContextIfProvided() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithSetJourneyContext")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-another-page-state", output.get("page"));
+        verify(spyIpvSessionItem, times(1)).setJourneyContext("someContext");
+        verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+    }
+
+    @Test
+    void shouldUnsetJourneyContextIfProvided() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithUnsetJourneyContext")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-another-page-state", output.get("page"));
+        verify(spyIpvSessionItem, times(1)).unsetJourneyContext("someContext");
+        verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+    }
+
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    @Test
+    void shouldRouteToStateDependingOnJourneyContext() throws Exception {
+        // The initial input sets the journey context and takes user to ANOTHER_PAGE_STATE state
+        var initialInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithSetJourneyContext")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        // Second input to test the journeyContext handling when on the ANOTHER_PAGE_STATE state
+        var secondTransitionInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("next")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
+
+        // Act/Assert
+        // Initial transition
+        var initialOutput = processJourneyEventHandler.handleRequest(initialInput, mockContext);
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
+        inOrder.verify(spyIpvSessionItem, times(1)).setJourneyContext("someContext");
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"));
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        assertEquals("page-id-for-another-page-state", initialOutput.get("page"));
+
+        // Second transition
+        var secondOutput =
+                processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        assertEquals("/journey/cri/build-oauth-request/aCriId", secondOutput.get("journey"));
+    }
+
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    @Test
+    void shouldRouteToCorrectStateIfJourneyContextIsUnset() throws Exception {
+        IpvSessionItem spyIpvSessionItem = spy(IpvSessionItem.class);
+        spyIpvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
+        spyIpvSessionItem.setCreationDateTime(Instant.now().toString());
+        spyIpvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
+        spyIpvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
+        spyIpvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
+        spyIpvSessionItem.setJourneyContext("someContext");
+
+        mockIpvSessionItemAndClientSessionItem(spyIpvSessionItem);
+
+        // The initial input sets the journey context and takes user to ANOTHER_PAGE_STATE state
+        var initialInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithUnsetJourneyContext")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        // Second input to test the journeyContext handling when on the ANOTHER_PAGE_STATE state
+        var secondTransitionInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("next")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        InOrder inOrder = inOrder(spyIpvSessionItem, mockIpvSessionService);
+
+        // Act/Assert
+        // Initial transition
+        var initialOutput = processJourneyEventHandler.handleRequest(initialInput, mockContext);
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
+        inOrder.verify(spyIpvSessionItem, times(1)).unsetJourneyContext("someContext");
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"));
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        assertEquals("page-id-for-another-page-state", initialOutput.get("page"));
+
+        // Second transition
+        var secondOutput =
+                processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
+        inOrder.verify(spyIpvSessionItem)
+                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PROCESS_STATE"));
+        inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+        assertEquals("/journey/a-lambda-to-invoke", secondOutput.get("journey"));
+    }
+
+    @Test
     void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession(anyString()))
@@ -1157,7 +1299,7 @@ class ProcessJourneyEventHandlerTest {
         assertThat(logMessage, containsString("Test error"));
     }
 
-    private void mockIpvSessionItemAndTimeout(String userState) throws Exception {
+    private IpvSessionItem mockIpvSessionItemAndTimeout(String userState) throws Exception {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
@@ -1165,6 +1307,13 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
+        mockIpvSessionItemAndClientSessionItem(ipvSessionItem);
+
+        return ipvSessionItem;
+    }
+
+    private void mockIpvSessionItemAndClientSessionItem(IpvSessionItem ipvSessionItem)
+            throws Exception {
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
         when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
