@@ -14,9 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -73,9 +73,11 @@ class SisClientTest {
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
 
         when(mockHttpResponse.body())
-                .thenReturn((String)getStoredIdentityTestData().findFirst().get().get()[0]);
+                .thenReturn((String) getStoredIdentityTestData().findFirst().get().get()[0]);
 
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.THROTTLING, HttpStatusCode.THROTTLING, HttpStatusCode.OK);
+        when(mockHttpResponse.statusCode())
+                .thenReturn(
+                        HttpStatusCode.THROTTLING, HttpStatusCode.THROTTLING, HttpStatusCode.OK);
 
         // Act
         sisClient.getStoredIdentity("dummy_access_token");
@@ -155,7 +157,8 @@ class SisClientTest {
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
-                                new SisStoredIdentityCheckDto("dummy_JWT", true, false, Vot.P2, true, false))),
+                                new SisStoredIdentityCheckDto(
+                                        "dummy_JWT", true, false, Vot.P2, true, false))),
                 Arguments.of(
                         """
                         { "content": "dummy_JWT", "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
@@ -163,7 +166,8 @@ class SisClientTest {
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
-                                new SisStoredIdentityCheckDto("dummy_JWT", false, true, Vot.P1, false, true))));
+                                new SisStoredIdentityCheckDto(
+                                        "dummy_JWT", false, true, Vot.P1, false, true))));
     }
 
     @Test

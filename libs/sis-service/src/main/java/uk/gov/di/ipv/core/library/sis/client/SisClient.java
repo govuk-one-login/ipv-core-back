@@ -61,13 +61,12 @@ public class SisClient {
 
     public SisGetStoredIdentityResult getStoredIdentity(String accessToken) {
         try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Retrieving existing stored identity from SIS."));
+            LOGGER.info(LogHelper.buildLogMessage("Retrieving existing stored identity from SIS."));
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(getUri(USER_IDENTITY_SUB_PATH))
-                            .GET() //qq:DCC post
+                            .GET() // qq:DCC post
                             .header(AUTHORIZATION, "Bearer " + accessToken);
 
             var httpResponse = sendHttpRequest(httpRequestBuilder.build());
@@ -80,8 +79,7 @@ public class SisClient {
             if (httpResponse.statusCode() != HttpStatus.SC_OK) {
                 LOGGER.error(
                         LogHelper.buildLogMessage(
-                                "Error response received from SIS: "
-                                        + httpResponse.statusCode()));
+                                "Error response received from SIS: " + httpResponse.statusCode()));
                 return new SisGetStoredIdentityResult(false, false, null);
             }
 
@@ -110,8 +108,7 @@ public class SisClient {
         }
     }
 
-    private URI getUri(String subPath)
-            throws URISyntaxException {
+    private URI getUri(String subPath) throws URISyntaxException {
         var baseUri = "%s/%s".formatted(configService.getParameter(SIS_APPLICATION_URL), subPath);
 
         var uriBuilder = new URIBuilder(baseUri);
@@ -150,12 +147,11 @@ public class SisClient {
                 Thread.currentThread().interrupt();
             } else if (e.getCause() instanceof SisServiceException sisException) {
                 LOGGER.error(
-                        LogHelper.buildErrorMessage("Failed sending HTTP request to SIS",
-                                sisException));
+                        LogHelper.buildErrorMessage(
+                                "Failed sending HTTP request to SIS", sisException));
                 throw sisException;
             }
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed sending HTTP request to SIS", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed sending HTTP request to SIS", e));
             throw new SisServiceException("Failed sending HTTP request to SIS");
         }
     }
