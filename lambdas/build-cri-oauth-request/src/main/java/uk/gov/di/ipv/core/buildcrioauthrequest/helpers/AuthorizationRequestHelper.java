@@ -30,7 +30,6 @@ import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
 public class AuthorizationRequestHelper {
@@ -89,8 +88,7 @@ public class AuthorizationRequestHelper {
         }
 
         try {
-            return createSignedJwt(
-                    claimsSetBuilder.build(), signer, configService.enabled(KID_JAR_HEADER));
+            return createSignedJwt(claimsSetBuilder.build(), signer);
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to sign shared attributes", e));
             throw new HttpResponseExceptionWithErrorBody(

@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -97,6 +98,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
@@ -152,6 +155,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                                     "Successfully generated user identity response.")
                             .with(LOG_VOT.getFieldName(), ipvSessionItem.getVot());
             LOGGER.info(message);
+
+            EmbeddedMetricHelper.identityIssued(achievedVot);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {

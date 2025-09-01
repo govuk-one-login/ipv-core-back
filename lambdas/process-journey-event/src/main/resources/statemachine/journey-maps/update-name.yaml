@@ -229,6 +229,9 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
             targetEntryEvent: appTriage
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -292,10 +295,7 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD
-        checkFeatureFlag:
-          internationalAddressEnabled:
-            targetState: ADDRESS_AND_FRAUD
-            targetEntryEvent: internationalUser
+        targetEntryEvent: internationalUser
 
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -320,6 +320,9 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: true
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

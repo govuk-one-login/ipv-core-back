@@ -3,7 +3,6 @@
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "reprove_identity": false,
       "vtr": ["P2"]
     },
     "restricted": {
@@ -13,6 +12,9 @@
   {
     "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
     "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "previous_achieved_vot": "P2"
+    },
     "restricted": {
       "device_information": {}
     }

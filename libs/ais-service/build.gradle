@@ -1,0 +1,61 @@
+plugins {
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+dependencies {
+	implementation libs.apacheHttpCore,
+			libs.bundles.log4j,
+			libs.jacksonDatabind,
+			project(":libs:common-services")
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation libs.junitJupiter,
+			libs.assertJ,
+			libs.mockitoJunit,
+			libs.pactConsumerJunit,
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+task pactConsumerTests (type: Test) {
+	useJUnitPlatform()
+	include 'uk/gov/di/ipv/core/library/ais/pact/**'
+	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

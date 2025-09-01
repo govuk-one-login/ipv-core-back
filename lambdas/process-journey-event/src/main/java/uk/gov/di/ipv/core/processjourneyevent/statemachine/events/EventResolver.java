@@ -151,7 +151,9 @@ public class EventResolver {
 
     private Optional<String> getMitigationEvent(
             BasicEvent event, EventResolveParameters resolveParameters)
-            throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
+            throws MissingSecurityCheckCredential,
+                    CiExtractionException,
+                    CredentialParseException,
                     ConfigException {
         var ipvSessionItem = resolveParameters.ipvSessionItem();
         var clientOAuthSessionItem = resolveParameters.clientOAuthSessionItem();

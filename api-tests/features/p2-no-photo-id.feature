@@ -12,9 +12,9 @@ Feature: P2 no photo id journey
       When I submit an 'end' event
       Then I get a 'prove-identity-no-photo-id' page response
       When I submit an 'next' event
+      Then I get a 'claimedIdentity' CRI response
 
     Scenario: P2 no photo id journey - Experian - Happy path
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -27,10 +27,12 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
@@ -41,7 +43,6 @@ Feature: P2 no photo id journey
       Then I get a 'P2' identity
 
     Scenario: P2 no photo id journey - Experian - BAV dropout:
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -50,7 +51,6 @@ Feature: P2 no photo id journey
       Then I get a 'no-photo-id-abandon-find-another-way' page response
 
     Scenario: P2 no photo id journey - Experian - Breaching BAV CI
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -59,7 +59,6 @@ Feature: P2 no photo id journey
       Then I get a 'pyi-no-match' page response with context 'bankAccount'
 
     Scenario: P2 no photo id journey - Experian - NINO dropout:
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -72,7 +71,6 @@ Feature: P2 no photo id journey
       Then I get a 'no-photo-id-abandon-find-another-way' page response
 
     Scenario: P2 no photo id journey - Experian - Breaching NINO CI
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -85,7 +83,6 @@ Feature: P2 no photo id journey
       Then I get a 'pyi-no-match' page response with context 'nino'
 
     Scenario: P2 no photo id journey - Experian - Drops out via thin file or failed checks
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -98,17 +95,18 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
 
     Scenario: P2 no photo id journey - Experian - Breaching KBV CI
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -121,17 +119,18 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'pyi-no-match' page response
 
     Scenario: P2 no photo id journey - Experian - KBV CI mitigation:
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -144,17 +143,18 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response
 
     Scenario: P2 no photo id journey - Experian - Breaching BAV CI
-      Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
@@ -186,9 +186,15 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'no-photo-id-abandon-find-another-way' page response
 
-    Scenario: P2 no photo id journey - Abandon - Strategic app
+    Scenario: P2 no photo id journey - Abandon - DCMAW
+      Given I activate the 'disableStrategicApp' feature set
       When I submit an 'mobileApp' event
       Then I get a 'dcmaw' CRI response
+
+    Scenario: P2 no photo id journey - Abandon - Strategic app
+      Given I activate the 'strategicApp' feature set
+      When I submit an 'mobileApp' event
+      Then I get a 'identify-device' page response
 
     Scenario: P2 no photo id journey - Abandon - Passport
       When I submit an 'passport' event
@@ -205,7 +211,9 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
 
     Scenario: P2 no photo id journey - Abandon - Return to RP
@@ -263,18 +271,26 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response
 
-    Scenario: P2 no photo id journey - KBV mitigation - Strategic app
+    Scenario: P2 no photo id journey - KBV mitigation - DCMAW
+      Given I activate the 'disableStrategicApp' feature set
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
+
+    Scenario: P2 no photo id journey - KBV mitigation - Strategic app
+      Given I activate the 'strategicApp' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'identify-device' page response
 
     Scenario: P2 no photo id journey - KBV mitigation - F2F
       When I submit an 'f2f' event
@@ -305,18 +321,26 @@ Feature: P2 no photo id journey
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
 
-    Scenario: P2 no photo id journey - KBV dropout - Strategic app
+    Scenario: P2 no photo id journey - KBV dropout - DCMAW
+      Given I activate the 'disableStrategicApp' feature set
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
+
+    Scenario: P2 no photo id journey - KBV dropout - Strategic app
+      Given I activate the 'strategicApp' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'identify-device' page response
 
     Scenario: P2 no photo id journey - KBV dropout - F2F
       When I submit an 'f2f' event

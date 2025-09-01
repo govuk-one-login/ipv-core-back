@@ -1,8 +1,8 @@
-FROM openjdk:17-jdk-slim AS build
+FROM amazoncorretto:21.0.7@sha256:d51610ff3c790833e308318d25424361a69680a4b7968329b73012ad502ab936 AS build
 
 WORKDIR /core-back
 
-RUN apt-get update && apt-get install -y findutils
+RUN yum update -y && yum install -y findutils tar
 
 COPY gradle ./gradle
 COPY gradlew ./
@@ -17,7 +17,7 @@ COPY local-running ./local-running
 RUN --mount=type=cache,target=/root/.gradle ./gradlew :local-running:build --no-daemon
 RUN mkdir untarred && tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
 
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:21.0.7@sha256:d51610ff3c790833e308318d25424361a69680a4b7968329b73012ad502ab936
 
 WORKDIR /core-back
 

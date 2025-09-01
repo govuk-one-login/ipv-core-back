@@ -55,7 +55,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -71,7 +70,7 @@ class AuthorizationRequestHelperTest {
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
     private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
-            new EvidenceRequest("gpg45", 2, null);
+            new EvidenceRequest("gpg45", 2, null, null);
     private static final Long IPV_TOKEN_TTL = 900L;
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -99,7 +98,9 @@ class AuthorizationRequestHelperTest {
 
     @BeforeEach
     void setUp()
-            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
+            throws InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
                     ParseException {
         signer = new LocalECDSASigner(getPrivateKey());
         rsaEncrypter = new RSAEncrypter((RSAPublicKey) getEncryptionPublicKey());
@@ -110,7 +111,6 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(configService.enabled(KID_JAR_HEADER)).thenReturn(true);
         when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
         when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
@@ -213,7 +213,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest("gpg45", 2, null),
+                        new EvidenceRequest("gpg45", 2, null, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
@@ -238,7 +238,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest(null, 2, null),
+                        new EvidenceRequest(null, 2, null, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
@@ -291,7 +291,10 @@ class AuthorizationRequestHelperTest {
 
     @Test
     void shouldCreateJWEObject()
-            throws ParseException, JOSEException, NoSuchAlgorithmException, InvalidKeySpecException,
+            throws ParseException,
+                    JOSEException,
+                    NoSuchAlgorithmException,
+                    InvalidKeySpecException,
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(

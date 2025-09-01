@@ -22,11 +22,11 @@ import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.AddressAssertion;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -772,13 +772,13 @@ class UserIdentityServiceTest {
     @Test
     void shouldGetCorrectVot() throws Exception {
         // Arrange
-        var vc = vcHmrcMigrationPCL250();
+        var vc = vcP2Vot();
 
         // Act
         var vot = userIdentityService.getVot(vc);
 
         // Assert
-        assertEquals(Vot.PCL250, vot);
+        assertEquals(Vot.P2, vot);
     }
 
     @Test
@@ -1618,51 +1618,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialsFromDataStoreForOperationalProfile() throws Exception {
-        var hmrcVc = vcHmrcMigrationPCL200();
-        var vcs = List.of(hmrcVc);
-
-        var credentials =
-                userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.PCL200, Vot.PCL200, emptyContraIndicators);
-
-        assertEquals(1, credentials.getVcs().size());
-        assertEquals(hmrcVc.getVcString(), credentials.getVcs().get(0));
-        assertEquals("test-sub", credentials.getSub());
-
-        IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals(GIVEN_NAME, identityClaim.getName().get(0).getNameParts().get(0).getType());
-        assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
-        assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
-    }
-
-    @Test
-    void areVCsCorrelatedReturnsTrueWhenVcAreCorrelatedJustForGPG45Profile() throws Exception {
-        // Arrange
-        var vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                ADDRESS,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                PASSPORT,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                BAV,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        vcHmrcMigrationPCL200());
-
-        // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
-    }
-
-    @Test
     void findIdentityReturnsIdentityClaimWhenEvidenceCheckIsFalse() throws Exception {
         var vcs = List.of(vcExperianFraudScoreTwo());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs, false);
@@ -1672,7 +1627,7 @@ class UserIdentityServiceTest {
 
     @Test
     void findIdentityDoesNotReturnsIdentityClaimWhenEvidenceCheckIsTrue()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         var vcs = List.of(vcExperianFraudScoreOne());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs, true);
         assertTrue(result.isEmpty());
@@ -1687,17 +1642,60 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void findIdentityReturnsIdentityClaimForOperationalVC() throws Exception {
-        var vcs = List.of(vcHmrcMigrationPCL200());
+    void findIdentityReturnsIdentityClaim() throws Exception {
+        var vcs = List.of(vcDcmawPassport());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs);
-        assertFalse(result.isEmpty());
+        assertTrue(result.isPresent());
     }
 
     @Test
-    void findIdentityReturnsIdentityClaimForOperationalVcWithNoEvidence() throws Exception {
-        var vcs = List.of(vcHmrcMigrationPCL250NoEvidence());
-        Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs);
-        assertFalse(result.isEmpty());
+    void getUserClaimsShouldReturnListOfUserClaims() throws Exception {
+        // Arrange
+        var drivingPermitVc = vcWebDrivingPermitDvlaValid();
+        var testVcs =
+                List.of(
+                        vcWebPassportSuccessful(),
+                        vcWebDrivingPermitDvlaValid(),
+                        vcNinoIdentityCheckSuccessful(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressOne());
+
+        // Act
+        var result = userIdentityService.getUserClaims(testVcs);
+
+        // Assert
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getName(),
+                result.getIdentityClaim().getName());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getBirthDate(),
+                result.getIdentityClaim().getBirthDate());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcWebPassportSuccessful().getCredential().getCredentialSubject())
+                        .getPassport(),
+                result.getPassportClaim());
+        assertEquals(
+                ((IdentityCheckSubject) drivingPermitVc.getCredential().getCredentialSubject())
+                        .getDrivingPermit()
+                        .get(0)
+                        .getPersonalNumber(),
+                result.getDrivingPermitClaim().get(0).getPersonalNumber());
+        assertEquals(
+                ((IdentityCheckSubject)
+                                vcNinoIdentityCheckSuccessful()
+                                        .getCredential()
+                                        .getCredentialSubject())
+                        .getSocialSecurityRecord(),
+                result.getNinoClaim());
+        assertEquals(
+                ((AddressAssertion) vcAddressOne().getCredential().getCredentialSubject())
+                        .getAddress(),
+                result.getAddressClaim());
     }
 
     @Nested
@@ -1727,8 +1725,7 @@ class UserIdentityServiceTest {
                                     USER_ID_1,
                                     BAV,
                                     createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            vcHmrcMigrationPCL200());
+                                            "Jimbo", "Jones", "1000-01-01")));
 
             // Act & Assert
             assertTrue(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));

@@ -217,6 +217,9 @@ states:
     events:
       next:
         targetState: IPV_SUCCESS_PAGE_RFC
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

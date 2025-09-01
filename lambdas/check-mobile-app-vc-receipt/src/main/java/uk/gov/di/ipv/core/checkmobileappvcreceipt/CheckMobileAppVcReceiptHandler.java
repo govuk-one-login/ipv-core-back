@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAp
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -32,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -41,7 +43,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -49,10 +50,13 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CheckMobileAppVcReceiptHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -101,6 +105,9 @@ public class CheckMobileAppVcReceiptHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
+
         try {
             var request = parseRequest(input);
 
@@ -172,10 +179,16 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    InvalidCriResponseException, CredentialParseException,
-                    VerifiableCredentialException, ConfigException, CiRetrievalException,
-                    EvcsServiceException, CiExtractionException, MissingSecurityCheckCredential {
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    InvalidCriResponseException,
+                    CredentialParseException,
+                    VerifiableCredentialException,
+                    ConfigException,
+                    CiRetrievalException,
+                    EvcsServiceException,
+                    CiExtractionException,
+                    MissingSecurityCheckCredential {
         // Validate callback sessions
         validateSessionId(request);
 
@@ -192,7 +205,6 @@ public class CheckMobileAppVcReceiptHandler
                 clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(request.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
-        LogHelper.attachComponentId(configService);
 
         // Retrieve and validate cri response and vc
         var criResponseItem = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);
@@ -220,15 +232,24 @@ public class CheckMobileAppVcReceiptHandler
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }
 
+        var newVcs = List.of(dcmawAsyncVc.get());
         sessionCredentialsService.persistCredentials(
-                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
+                newVcs, ipvSessionItem.getIpvSessionId(), true);
 
-        return criCheckingService.checkVcResponse(
-                List.of(dcmawAsyncVc.get()),
-                request.getIpAddress(),
-                clientOAuthSessionItem,
-                ipvSessionItem,
-                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId));
+        EmbeddedMetricHelper.criReturn(DCMAW_ASYNC.getId());
+
+        var forcedJourney =
+                criCheckingService.checkVcResponse(
+                        newVcs,
+                        request.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        sessionCredentialsService.getCredentials(
+                                ipvSessionItem.getIpvSessionId(), userId));
+        if (forcedJourney != null) {
+            return forcedJourney;
+        }
+        return JOURNEY_NEXT;
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)

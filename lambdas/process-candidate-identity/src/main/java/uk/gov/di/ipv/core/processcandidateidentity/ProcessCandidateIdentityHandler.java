@@ -8,6 +8,9 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
+import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
+import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
+import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -20,12 +23,12 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
@@ -44,6 +47,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
@@ -59,20 +63,36 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
+import uk.gov.di.model.Intervention;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.io.UncheckedIOException;
-import java.text.ParseException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -88,6 +108,7 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCOUNT_INTERVENTION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -102,10 +123,22 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_PROFILE_UNMET_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
-    private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
-            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_COI_CHECK_FAILED =
+            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+    private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
+            new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
+    private static final Map<String, AisInterventionType> interventionCodeTypes =
+            Map.of(
+                    "00", AIS_NO_INTERVENTION,
+                    "01", AIS_ACCOUNT_SUSPENDED,
+                    "02", AIS_ACCOUNT_UNSUSPENDED,
+                    "03", AIS_ACCOUNT_BLOCKED,
+                    "04", AIS_FORCED_USER_PASSWORD_RESET,
+                    "05", AIS_FORCED_USER_IDENTITY_VERIFY,
+                    "06", AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+                    "07", AIS_ACCOUNT_UNBLOCKED);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -121,6 +154,7 @@ public class ProcessCandidateIdentityHandler
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
     private final EvcsService evcsService;
+    private final AisService aisService;
 
     // Candidate identities that should be subject to a COI check
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
@@ -133,6 +167,9 @@ public class ProcessCandidateIdentityHandler
     // Candidate identities that should match a profile
     private static final Set<CandidateIdentityType> PROFILE_MATCHING_TYPES =
             EnumSet.of(NEW, UPDATE, EXISTING);
+
+    // Candidate identities that should not be checked against AIS
+    private static final Set<CandidateIdentityType> SKIP_AIS_TYPES = EnumSet.of(REVERIFICATION);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -159,6 +196,7 @@ public class ProcessCandidateIdentityHandler
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
         this.evcsService = new EvcsService(configService);
+        this.aisService = new AisService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -177,7 +215,8 @@ public class ProcessCandidateIdentityHandler
             VotMatcher votMatcher,
             CimitUtilityService cimitUtilityService,
             TicfCriService ticfCriService,
-            EvcsService evcsService) {
+            EvcsService evcsService,
+            AisService aisService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
@@ -192,16 +231,20 @@ public class ProcessCandidateIdentityHandler
         this.ticfCriService = ticfCriService;
         this.cimitUtilityService = cimitUtilityService;
         this.evcsService = evcsService;
+        this.aisService = aisService;
     }
 
     @Override
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
+    @SuppressWarnings("java:S3776")
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
 
         IpvSessionItem ipvSessionItem = null;
+
         try {
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipAddress = request.getIpAddress();
@@ -217,6 +260,39 @@ public class ProcessCandidateIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String userId = clientOAuthSessionItem.getUserId();
+
+            // We skip AIS checks for reverification journeys or if we don't have a user ID to check
+            // against (in some error cases)
+            if (configService.enabled(AIS_ENABLED)
+                    && !SKIP_AIS_TYPES.contains(processIdentityType)
+                    && !StringUtils.isBlank(userId)) {
+                var interventionStateWithType = aisService.fetchAccountStateWithType(userId);
+
+                // some of the code here will be cleaned up in following PR
+                // currently we need to support state and type to not break inflight journeys
+                var initialInterventionState = ipvSessionItem.getInitialAccountInterventionState();
+                var currentInterventionState = interventionStateWithType.accountInterventionState();
+
+                var initialInterventionType = ipvSessionItem.getAisInterventionType();
+                var currentInterventionType = interventionStateWithType.aisInterventionType();
+
+                if (Objects.isNull(initialInterventionType)) {
+                    if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                            initialInterventionState, currentInterventionState)) {
+                        throw new AccountInterventionException();
+                    }
+                    ipvSessionItem.setInitialAccountInterventionState(currentInterventionState);
+                } else {
+                    if (AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                            initialInterventionType, currentInterventionType)) {
+                        throw new AccountInterventionException();
+                    }
+                    ipvSessionItem.setAisInterventionType(currentInterventionType);
+                }
+
+                ipvSessionService.updateIpvSession(ipvSessionItem);
+            }
+
             var sessionVcs =
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
@@ -232,7 +308,9 @@ public class ProcessCandidateIdentityHandler
                     ipAddress,
                     sessionVcs,
                     auditEventUser);
-
+        } catch (AccountInterventionException e) {
+            ipvSessionService.invalidateSession(ipvSessionItem, "Account intervention detected");
+            return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             var errorMessage = LogHelper.buildErrorMessage("Failed to process identity", e);
             if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
@@ -263,14 +341,7 @@ public class ProcessCandidateIdentityHandler
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
-        } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
@@ -319,16 +390,19 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws EvcsServiceException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, ParseException, CiExtractionException {
+            throws EvcsServiceException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    CiExtractionException,
+                    AccountInterventionException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
+        var auditEventParameters =
+                new SharedAuditEventParameters(auditEventUser, deviceInformation);
 
         // These identity types require the VCs from EVCS. To save multiple calls,
         // we call for them once here.
-        if (COI_CHECK_TYPES.contains(processIdentityType)
-                || STORE_IDENTITY_TYPES.contains(processIdentityType)
-                || PENDING.equals(processIdentityType)) {
+        if (requiresExistingVcsFromEvcs(processIdentityType)) {
             evcsUserVcs =
                     evcsService.getUserVCs(
                             userId,
@@ -348,14 +422,22 @@ public class ProcessCandidateIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             coiCheckType,
-                            deviceInformation,
                             sessionVcs,
-                            auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs,
+                            auditEventParameters);
 
             if (!isCoiCheckSuccessful) {
-                return JOURNEY_COI_CHECK_FAILED;
+                return JOURNEY_COI_CHECK_FAILED.toObjectMap();
             }
+        }
+
+        boolean areVcsCorrelated = false;
+        VotMatchingResult votMatchingResult = null;
+        if (requiresVotMatchingResult(processIdentityType)) {
+            areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+            votMatchingResult =
+                    getVotMatchingResult(
+                            ipvSessionItem, clientOAuthSessionItem, sessionVcs, areVcsCorrelated);
         }
 
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
@@ -363,10 +445,10 @@ public class ProcessCandidateIdentityHandler
             var journey =
                     getJourneyResponseForProfileMatching(
                             ipvSessionItem,
-                            clientOAuthSessionItem,
-                            deviceInformation,
                             sessionVcs,
-                            auditEventUser);
+                            areVcsCorrelated,
+                            votMatchingResult,
+                            auditEventParameters);
 
             if (journey != null) {
                 return journey.toObjectMap();
@@ -379,77 +461,123 @@ public class ProcessCandidateIdentityHandler
                     getJourneyResponseFromTicfCall(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            deviceInformation,
                             ipAddress,
-                            auditEventUser);
+                            auditEventParameters);
 
             if (journey != null) {
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
                     LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-                    storeIdentityService.storeIdentity(
-                            ipvSessionItem,
+                    storeCandidateIdentity(
                             userId,
-                            processIdentityType,
-                            deviceInformation,
+                            ipvSessionItem,
+                            null,
                             sessionVcs,
-                            auditEventUser,
-                            evcsUserVcs);
+                            evcsUserVcs,
+                            processIdentityType,
+                            auditEventParameters);
                 }
                 return journey.toObjectMap();
             }
             ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
-        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+        if (shouldStoreIdentity(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
-            storeIdentityService.storeIdentity(
-                    ipvSessionItem,
+            storeCandidateIdentity(
                     userId,
-                    processIdentityType,
-                    deviceInformation,
+                    ipvSessionItem,
+                    votMatchingResult,
                     sessionVcs,
-                    auditEventUser,
-                    evcsUserVcs);
+                    evcsUserVcs,
+                    processIdentityType,
+                    auditEventParameters);
         }
 
         return JOURNEY_NEXT.toObjectMap();
     }
 
-    private JourneyResponse getJourneyResponseForProfileMatching(
+    private void storeCandidateIdentity(
+            String userId,
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            String deviceInformation,
+            VotMatchingResult votMatchingResult,
             List<VerifiableCredential> sessionVcs,
-            AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
-                    CiExtractionException {
-        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    MISSING_SECURITY_CHECK_CREDENTIAL);
+            List<EvcsGetUserVCDto> evcsUserVcs,
+            CandidateIdentityType processIdentityType,
+            SharedAuditEventParameters auditEventParameters)
+            throws EvcsServiceException {
+        var achievedVot = ipvSessionItem.getVot();
+        VotMatchingResult.VotAndProfile strongestMatchedVot =
+                Objects.isNull(votMatchingResult)
+                        ? null
+                        : votMatchingResult.strongestMatch().orElse(null);
+
+        var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+
+        if (StringUtils.isNotBlank(securityCheckCredential)
+                && configService.enabled(STORED_IDENTITY_SERVICE)) {
+            try {
+                var parsedSecurityCheckVc =
+                        cimitUtilityService.getParsedSecurityCheckCredential(
+                                securityCheckCredential, userId);
+                sessionVcs.add(parsedSecurityCheckVc);
+            } catch (CredentialParseException e) {
+                LOGGER.warn(
+                        "Failed to parse security check credential, skipping storage of CIMIT VC");
+            }
         }
 
-        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+        storeIdentityService.storeIdentity(
+                userId,
+                sessionVcs,
+                evcsUserVcs,
+                achievedVot,
+                strongestMatchedVot,
+                processIdentityType,
+                auditEventParameters);
+    }
+
+    private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
+        if (shouldStoreExistingIdentity(processIdentityType)) {
+            return true;
+        }
+
+        var typesRequiringVotMatchingResult =
+                Stream.concat(PROFILE_MATCHING_TYPES.stream(), STORE_IDENTITY_TYPES.stream())
+                        .filter(identityType -> !identityType.equals(PENDING))
+                        .distinct()
+                        .toList();
+
+        return typesRequiringVotMatchingResult.contains(processIdentityType);
+    }
+
+    private boolean requiresExistingVcsFromEvcs(CandidateIdentityType processIdentityType) {
+        return COI_CHECK_TYPES.contains(processIdentityType)
+                || shouldStoreIdentity(processIdentityType);
+    }
+
+    private boolean shouldStoreIdentity(CandidateIdentityType identityType) {
+        return STORE_IDENTITY_TYPES.contains(identityType)
+                || shouldStoreExistingIdentity(identityType);
+    }
+
+    private boolean shouldStoreExistingIdentity(CandidateIdentityType identityType) {
+        return configService.enabled(STORED_IDENTITY_SERVICE) && EXISTING.equals(identityType);
+    }
+
+    private JourneyResponse getJourneyResponseForProfileMatching(
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            boolean areVcsCorrelated,
+            VotMatchingResult votMatchingResult,
+            SharedAuditEventParameters sharedAuditEventParameters) {
 
         if (!areVcsCorrelated) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        var contraIndicators =
-                cimitUtilityService.getContraIndicatorsFromVc(
-                        ipvSessionItem.getSecurityCheckCredential(),
-                        clientOAuthSessionItem.getUserId());
+        var strongestRequestedMatch = votMatchingResult.strongestRequestedMatch();
 
-        var votMatches =
-                votMatcher.findStrongestMatches(
-                        clientOAuthSessionItem.getVtrAsVots(),
-                        sessionVcs,
-                        contraIndicators,
-                        areVcsCorrelated);
-
-        var strongestRequestedMatch = votMatches.strongestRequestedMatch();
         if (strongestRequestedMatch.isEmpty()) {
             return JOURNEY_PROFILE_UNMET;
         }
@@ -458,19 +586,16 @@ public class ProcessCandidateIdentityHandler
         ipvSessionItem.setVot(matchedVot.vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (matchedVot.vot().getProfileType() == ProfileType.GPG45) {
-            var profile = matchedVot.profile();
-            if (profile.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Matched GPG45 vot result does not have a profile");
-            }
-            sendProfileMatchedAuditEvent(
-                    profile.get(),
-                    votMatches.gpg45Scores(),
-                    VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
-                    auditEventUser,
-                    deviceInformation);
+        var profile = matchedVot.profile();
+        if (profile.isEmpty()) {
+            throw new IllegalArgumentException("Matched GPG45 vot result does not have a profile");
         }
+        sendProfileMatchedAuditEvent(
+                profile.get(),
+                votMatchingResult.gpg45Scores(),
+                sessionVcs,
+                sharedAuditEventParameters);
+        EmbeddedMetricHelper.profileMatch(profile.get());
 
         return null;
     }
@@ -478,9 +603,9 @@ public class ProcessCandidateIdentityHandler
     public JourneyResponse getJourneyResponseFromTicfCall(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String deviceInformation,
             String ipAddress,
-            AuditEventUser auditEventUser) {
+            SharedAuditEventParameters sharedAuditEventParameters)
+            throws AccountInterventionException {
         try {
             // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
             // validation), we cannot make a request to TICF as we will have missing required
@@ -520,12 +645,19 @@ public class ProcessCandidateIdentityHandler
             criStoringService.storeVcs(
                     TICF,
                     ipAddress,
-                    deviceInformation,
+                    sharedAuditEventParameters.deviceInformation(),
                     ticfVcs,
                     clientOAuthSessionItem,
                     ipvSessionItem,
                     List.of(),
-                    auditEventUser);
+                    sharedAuditEventParameters.auditEventUser());
+
+            if (configService.enabled(AIS_ENABLED)
+                    && (Objects.isNull(ipvSessionItem.getAisInterventionType())
+                            ? checkHasRelevantIntervention(ipvSessionItem, ticfVcs)
+                            : checkHasRelevantInterventionWithType(ipvSessionItem, ticfVcs))) {
+                throw new AccountInterventionException();
+            }
 
             if (!clientOAuthSessionItem.isReverification()) {
                 // Get mitigations from old CIMIT VC to compare against the mitigations on the new
@@ -571,8 +703,8 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
-                | UnrecognisedVotException
-                | CredentialParseException e) {
+                | CredentialParseException
+                | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
@@ -581,22 +713,92 @@ public class ProcessCandidateIdentityHandler
         }
     }
 
+    private boolean checkHasRelevantIntervention(
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
+
+        return ticfVcs.stream()
+                .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
+                .flatMap(
+                        vc ->
+                                ((RiskAssessmentCredential) vc.getCredential())
+                                        .getEvidence().stream())
+                .map(RiskAssessment::getIntervention)
+                .filter(Objects::nonNull)
+                .map(Intervention::getInterventionCode)
+                .filter(Objects::nonNull)
+                .map(
+                        interventionCode ->
+                                aisService.getStateByIntervention(
+                                        interventionCodeTypes.get(interventionCode)))
+                .anyMatch(
+                        interventionState ->
+                                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                                        ipvSessionItem.getInitialAccountInterventionState(),
+                                        interventionState));
+    }
+
+    private boolean checkHasRelevantInterventionWithType(
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> ticfVcs) {
+
+        return ticfVcs.stream()
+                .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
+                .flatMap(
+                        vc ->
+                                ((RiskAssessmentCredential) vc.getCredential())
+                                        .getEvidence().stream())
+                .map(RiskAssessment::getIntervention)
+                .filter(Objects::nonNull)
+                .map(Intervention::getInterventionCode)
+                .filter(Objects::nonNull)
+                .map(interventionCodeTypes::get)
+                .anyMatch(
+                        aisInterventionType ->
+                                AccountInterventionEvaluator.isMidOfJourneyInterventionDetected(
+                                        ipvSessionItem.getAisInterventionType(),
+                                        aisInterventionType));
+    }
+
     private void sendProfileMatchedAuditEvent(
             Gpg45Profile matchedProfile,
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation) {
+            SharedAuditEventParameters sharedAuditEventParameters) {
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
+                        sharedAuditEventParameters.auditEventUser(),
                         new AuditExtensionGpg45ProfileMatched(
                                 matchedProfile,
                                 gpg45Scores,
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
-                        new AuditRestrictedDeviceInformation(deviceInformation));
+                        new AuditRestrictedDeviceInformation(
+                                sharedAuditEventParameters.deviceInformation()));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private VotMatchingResult getVotMatchingResult(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            boolean areVcsCorrelated)
+            throws CiExtractionException,
+                    CredentialParseException,
+                    HttpResponseExceptionWithErrorBody {
+        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, MISSING_SECURITY_CHECK_CREDENTIAL);
+        }
+
+        var contraIndicators =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        ipvSessionItem.getSecurityCheckCredential(),
+                        clientOAuthSessionItem.getUserId());
+
+        return votMatcher.findStrongestMatches(
+                clientOAuthSessionItem.getVtrAsVots(),
+                sessionVcs,
+                contraIndicators,
+                areVcsCorrelated);
     }
 }

@@ -60,7 +60,6 @@ public enum ErrorResponse {
     FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri"),
     FAILED_TO_PARSE_JSON_MESSAGE(1048, "Failed to parse JSON message"),
     FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception"),
-    UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential"),
     PENDING_VERIFICATION_EXCEPTION(1051, "Pending face to face verification exception"),
     FAILED_TO_FIND_VISITED_CRI(1052, "Failed to find a visited CRI"),
     FAILED_TO_PARSE_CIMIT_SIGNING_KEY(1053, "Failed to parse CIMIT signing key"),
@@ -119,7 +118,9 @@ public enum ErrorResponse {
     UNEXPECTED_PROCESS_IDENTITY_TYPE(1104, "Unexpected process identity type"),
     FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC(1105, "Failed to get credential issuer for VC"),
     FAILED_TO_EXTRACT_CIS_FROM_VC(1106, "Failed to extract contra-indicators from VC"),
-    MISSING_SECURITY_CHECK_CREDENTIAL(1107, "Missing security check credential");
+    MISSING_SECURITY_CHECK_CREDENTIAL(1107, "Missing security check credential"),
+    FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS(1108, "Failed to create stored identity for EVCS"),
+    ERROR_CALLING_AIS_API(1109, "Error when calling AIS API");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

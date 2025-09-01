@@ -1,18 +1,19 @@
 @Build
 Feature: Identity reuse update details
-
     Background:
         Given the subject already has the following credentials
-            | CRI     | scenario                     |
-            | dcmaw   | kenneth-driving-permit-valid |
-            | address | kenneth-current              |
-            | fraud   | kenneth-score-2              |
+            | CRI         | scenario               |
+            | ukPassport  | kenneth-passport-valid |
+            | address     | kenneth-current        |
+            | fraud       | kenneth-score-2        |
+            | experianKbv | kenneth-score-2        |
+        And I activate the 'disableStrategicApp' feature set
+
+    Scenario Outline: Successful name change - <selected-name-change> name change but user updates <actual-name-change> name instead
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
-
-    Scenario Outline: Successful name change - <selected-name-change> name change but user updates <actual-name-change> name instead
         When I submit a '<selected-name-change>' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
@@ -25,7 +26,9 @@ Feature: Identity reuse update details
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
-        When I submit '<fraud-details>' details to the CRI stub
+        When I submit '<fraud-details>' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -40,13 +43,19 @@ Feature: Identity reuse update details
         | family-name-only     | given              | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-score-2  | Ken                 | Decerqueira          |
 
     Scenario: Address Change
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
         When I submit a 'address-only' event
         Then I get a 'address' CRI response
         When I submit 'kenneth-changed' details with attributes to the CRI stub
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-score-2' details to the CRI stub
+        When I submit 'kenneth-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -55,6 +64,10 @@ Feature: Identity reuse update details
         And my address 'buildingNumber' is '28'
 
     Scenario: Address and Family Name Change
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
         When I submit a 'family-name-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
@@ -71,7 +84,9 @@ Feature: Identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+        When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -81,6 +96,10 @@ Feature: Identity reuse update details
         And my address 'addressLocality' is 'Bristol'
 
     Scenario: Address and Given Name Change
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
         When I submit a 'given-names-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
@@ -93,6 +112,10 @@ Feature: Identity reuse update details
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
 
     Scenario: Unsupported Changes
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
         When I submit a 'dob' event
         Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
@@ -135,7 +158,33 @@ Feature: Identity reuse update details
         Then I get a 'delete-handover' page response
 
     Scenario: Account deletion update aborted
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
         When I submit a 'dob' event
         Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'continue' event
         Then I get an OAuth response
+
+    Scenario: Initial P2 credentials followed by high-medium confidence reuse journey - P3 met
+        When I start a new 'high-medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
+        When I submit a 'given-names-only' event
+        Then I get a 'page-update-name' page response
+        When I submit a 'update-name' event
+        Then I get a 'dcmaw' CRI response
+        When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+        When I submit a 'next' event
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":1} |
+        Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P3' identity

@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PostalAddress;
 
@@ -58,6 +59,7 @@ class CheckCoiServiceTest {
     private static final String REVERIFICATION_SCOPE = "reverification";
     private static final VerifiableCredential ADDRESS_VC = vcAddressM1a();
     private AuditEventUser testAuditEventUser;
+    private SharedAuditEventParameters sharedAuditEventParameters;
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
@@ -72,6 +74,8 @@ class CheckCoiServiceTest {
     void setup() throws Exception {
         testAuditEventUser =
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
+        sharedAuditEventParameters =
+                new SharedAuditEventParameters(testAuditEventUser, "device-info");
         when(mockEvcsService.getVerifiableCredentials(USER_ID, List.of(), EvcsVCState.CURRENT))
                 .thenReturn(List.of(ADDRESS_VC));
         when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
@@ -108,10 +112,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         STANDARD,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertTrue(res);
@@ -162,10 +165,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertTrue(res);
@@ -194,10 +196,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         STANDARD,
-                        "device-information",
                         List.of(fraudVc),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertTrue(res);
@@ -225,10 +226,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertTrue(res);
@@ -259,10 +259,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         STANDARD,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertTrue(res);
@@ -314,10 +313,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         STANDARD,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertFalse(res);
@@ -369,10 +367,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertFalse(res);
@@ -410,10 +407,9 @@ class CheckCoiServiceTest {
                         ipvSessionItem,
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
-                        "device-information",
                         List.of(),
-                        testAuditEventUser,
-                        List.of());
+                        List.of(),
+                        sharedAuditEventParameters);
 
         // Assert
         assertFalse(res);

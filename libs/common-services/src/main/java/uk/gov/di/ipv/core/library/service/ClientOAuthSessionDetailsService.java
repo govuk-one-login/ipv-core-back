@@ -68,6 +68,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
         clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
+
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
         return clientOAuthSessionItem;
@@ -93,6 +94,10 @@ public class ClientOAuthSessionDetailsService {
         dataStore.create(clientOAuthSessionErrorItem, BACKEND_SESSION_TTL);
 
         return clientOAuthSessionErrorItem;
+    }
+
+    public void updateClientSessionDetails(ClientOAuthSessionItem clientOAuthSessionItem) {
+        dataStore.update(clientOAuthSessionItem);
     }
 
     private List<String> getEnabledVtr(List<String> vtr) {

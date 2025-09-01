@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
@@ -52,14 +52,8 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Set up esbuild
-        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
-
-      - name: Add esbuild to path
-        run: echo "${GITHUB_WORKSPACE}" >> $GITHUB_PATH
-
       - name: Deploy SAM app to ECR
-        uses: govuk-one-login/devplatform-upload-action-ecr@v1.3.0
+        uses: govuk-one-login/devplatform-upload-action-ecr@v1.4.0
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_JOURNEY_MAP }}
           container-sign-kms-key-arn: ${{ secrets.CONTAINER_SIGN_KMS_KEY_JOURNEY_MAP }}

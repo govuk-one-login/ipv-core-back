@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.helpers;
 
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -29,7 +28,6 @@ public class VotHelper {
         var gpg45Vots =
                 Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                         .filter(vtrVots::contains)
-                        .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                         .toList();
 
         return gpg45Vots.get(gpg45Vots.size() - 1);

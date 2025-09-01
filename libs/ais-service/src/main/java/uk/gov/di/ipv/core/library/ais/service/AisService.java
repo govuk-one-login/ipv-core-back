@@ -1,0 +1,104 @@
+package uk.gov.di.ipv.core.library.ais.service;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.ais.client.AisClient;
+import uk.gov.di.ipv.core.library.ais.domain.AccountInterventionStateWithType;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+
+public class AisService {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final AisClient aisClient;
+    private static final String AIS_FAIL_OPEN_ERROR_DESCRIPTION =
+            "Exception while fetching account intervention status. Assuming no intervention.";
+
+    @ExcludeFromGeneratedCoverageReport
+    public AisService(ConfigService configService) {
+        this.aisClient = new AisClient(configService);
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public AisService(AisClient aisClient) {
+        this.aisClient = aisClient;
+    }
+
+    public AccountInterventionState fetchAccountState(String userId) {
+        try {
+            var interventionDetails = aisClient.getAccountInterventionStatus(userId);
+            return interventionDetails.getState();
+        } catch (Exception e) {
+            LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
+            return getStateByIntervention(AisInterventionType.AIS_NO_INTERVENTION);
+        }
+    }
+
+    public AccountInterventionStateWithType fetchAccountStateWithType(String userId) {
+        try {
+            var interventionDetails = aisClient.getAccountInterventionStatus(userId);
+            return new AccountInterventionStateWithType(
+                    interventionDetails.getState(),
+                    interventionDetails.getIntervention().getDescription());
+        } catch (Exception e) {
+            LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
+            return new AccountInterventionStateWithType(
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build(),
+                    AisInterventionType.AIS_NO_INTERVENTION);
+        }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public AccountInterventionState getStateByIntervention(AisInterventionType interventionType) {
+        return switch (interventionType) {
+            case AIS_ACCOUNT_SUSPENDED ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_ACCOUNT_BLOCKED ->
+                    AccountInterventionState.builder()
+                            .isBlocked(true)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_FORCED_USER_PASSWORD_RESET ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(false)
+                            .isResetPassword(true)
+                            .build();
+            case AIS_FORCED_USER_IDENTITY_VERIFY ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(true)
+                            .isResetPassword(false)
+                            .build();
+            case AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(true)
+                            .isReproveIdentity(true)
+                            .isResetPassword(true)
+                            .build();
+            default ->
+                    AccountInterventionState.builder()
+                            .isBlocked(false)
+                            .isSuspended(false)
+                            .isReproveIdentity(false)
+                            .isResetPassword(false)
+                            .build();
+        };
+    }
+}

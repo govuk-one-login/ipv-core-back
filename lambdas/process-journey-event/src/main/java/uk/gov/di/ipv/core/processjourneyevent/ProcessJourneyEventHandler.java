@@ -138,6 +138,7 @@ public class ProcessJourneyEventHandler
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
+        LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
 
         try {
@@ -303,7 +304,9 @@ public class ProcessJourneyEventHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             ClientOAuthSessionItem clientOAuthSessionItem)
-            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException,
+            throws StateMachineNotFoundException,
+                    UnknownEventException,
+                    UnknownStateException,
                     JourneyEngineException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
@@ -460,15 +463,17 @@ public class ProcessJourneyEventHandler
     private AuditExtensions getAuditExtensions(
             AuditEventTypes auditEventType, Map<String, String> auditContext) {
         return switch (auditEventType) {
-            case IPV_MITIGATION_START -> new AuditExtensionMitigationType(
-                    auditContext.get("mitigationType"));
-            case IPV_USER_DETAILS_UPDATE_SELECTED -> new AuditExtensionUserDetailsUpdateSelected(
-                    Arrays.stream(auditContext.get("updateFields").split(","))
-                            .map(String::trim)
-                            .toList(),
-                    Boolean.parseBoolean(auditContext.get("updateSupported")));
-            case IPV_USER_DETAILS_UPDATE_END -> new AuditExtensionSuccessful(
-                    Boolean.parseBoolean(auditContext.get("successful")));
+            case IPV_MITIGATION_START ->
+                    new AuditExtensionMitigationType(auditContext.get("mitigationType"));
+            case IPV_USER_DETAILS_UPDATE_SELECTED ->
+                    new AuditExtensionUserDetailsUpdateSelected(
+                            Arrays.stream(auditContext.get("updateFields").split(","))
+                                    .map(String::trim)
+                                    .toList(),
+                            Boolean.parseBoolean(auditContext.get("updateSupported")));
+            case IPV_USER_DETAILS_UPDATE_END ->
+                    new AuditExtensionSuccessful(
+                            Boolean.parseBoolean(auditContext.get("successful")));
             default -> null;
         };
     }

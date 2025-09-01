@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -41,13 +40,10 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotE
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcP2Vot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportInvalidBirthDate;
@@ -70,9 +66,7 @@ class VcHelperTest {
                 Arguments.of("Verification VC", vcExperianKbvM1a()),
                 Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),
                 Arguments.of("Verification F2F VC", vcF2fPassportPhotoM1a()),
-                Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()),
-                Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
-                Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));
+                Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()));
     }
 
     @ParameterizedTest
@@ -88,42 +82,8 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldFilterVCsBasedOnProfileType_GPG45() {
-        var vcs =
-                List.of(
-                        vcWebPassportSuccessful(),
-                        vcExperianFraudScoreOne(),
-                        vcTicf(),
-                        vcHmrcMigrationPCL200());
-        assertEquals(3, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45).size());
-    }
-
-    @Test
-    void shouldFilterVCsBasedOnProfileType_operational() {
-        var vcs =
-                List.of(
-                        vcWebPassportSuccessful(),
-                        vcExperianFraudScoreOne(),
-                        vcHmrcMigrationPCL200());
-        assertEquals(
-                1, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
-    }
-
-    @Test
-    void shouldExtractTxIdFromIdentityCheckCredentials() {
+    void shouldExtractTxnIdDespiteNullEvidence() {
         var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoIdentityCheckSuccessful()));
-
-        assertEquals(1, txns.size());
-        assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
-    }
-
-    @Test
-    void shouldExtractTxIdDespiteNullEvidence() {
-        var txns =
-                VcHelper.extractTxnIdsFromCredentials(
-                        List.of(
-                                vcNinoIdentityCheckSuccessful(),
-                                vcHmrcMigrationPCL200NoEvidence()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
@@ -200,14 +160,8 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldCheckIsItOperationalVC() throws Exception {
-        assertTrue(VcHelper.isOperationalProfileVc(vcHmrcMigrationPCL200()));
-        assertFalse(VcHelper.isOperationalProfileVc(vcWebPassportSuccessful()));
-    }
-
-    @Test
     void shouldGetVcVot() throws Exception {
-        assertEquals(Vot.PCL250, VcHelper.getVcVot(vcHmrcMigrationPCL250()));
+        assertEquals(Vot.P2, VcHelper.getVcVot(vcP2Vot()));
     }
 
     @Test

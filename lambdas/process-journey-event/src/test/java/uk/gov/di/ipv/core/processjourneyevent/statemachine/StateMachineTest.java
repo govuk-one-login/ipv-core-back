@@ -289,7 +289,11 @@ class StateMachineTest {
     void transitionShouldHandleNestedStateName() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
 
-        State startingState = mock(NestedJourneyInvokeState.class);
+        var startingState = mock(NestedJourneyInvokeState.class);
+        var nestedJourneyDefinition = mock(NestedJourneyDefinition.class);
+        when(startingState.getNestedJourneyDefinition()).thenReturn(nestedJourneyDefinition);
+        when(nestedJourneyDefinition.getNestedJourneyStates())
+                .thenReturn(Map.of("NESTED_JOURNEY", new BasicState()));
         when(startingState.transition(
                         "event",
                         "START_STATE/NESTED_JOURNEY",
@@ -297,11 +301,11 @@ class StateMachineTest {
                         eventResolver))
                 .thenReturn(expectedResult);
 
-        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        var mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
                 .thenReturn(Map.of("START_STATE", startingState));
 
-        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+        var stateMachine = new StateMachine(mockStateMachineInitializer);
 
         var actualResult =
                 stateMachine.transition(
@@ -312,6 +316,78 @@ class StateMachineTest {
                         eventResolver);
 
         assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldBeBlockedIfUnexpectedCurrentPage() throws Exception {
+        // Arrange
+        var startingState = mock(BasicState.class);
+        when(startingState.getResponse()).thenReturn(new PageStepResponse("some-page", null, null));
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
+                .thenReturn(new TransitionResult(new BasicState()));
+
+        var mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+        var stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var result =
+                stateMachine.transition(
+                        "START_STATE",
+                        "event",
+                        "not-the-same-page",
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
+
+        // Assert
+        assertEquals(startingState, result.state());
+    }
+
+    @Test
+    void transitionShouldBeBlockedIfUnexpectedCurrentPageInNestedState() throws Exception {
+        var startingState = mock(NestedJourneyInvokeState.class);
+        var nestedJourneyDefinition = mock(NestedJourneyDefinition.class);
+        when(startingState.getNestedJourneyDefinition()).thenReturn(nestedJourneyDefinition);
+        var startingBasicState = mock(BasicState.class);
+        when(startingBasicState.getResponse())
+                .thenReturn(new PageStepResponse("some-page", null, null));
+        when(nestedJourneyDefinition.getNestedJourneyStates())
+                .thenReturn(Map.of("NESTED_JOURNEY", startingBasicState));
+        when(startingState.transition(
+                        "event",
+                        "START_STATE/NESTED_JOURNEY",
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver))
+                .thenReturn(
+                        new TransitionResult(
+                                new BasicState(
+                                        "Unreachable due to incorrect previous pageId",
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null)));
+
+        var mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        var stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var result =
+                stateMachine.transition(
+                        "START_STATE/NESTED_JOURNEY",
+                        "event",
+                        "not-the-same-page",
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
+
+        // Assert
+        assertEquals(startingBasicState, result.state());
     }
 
     @Test

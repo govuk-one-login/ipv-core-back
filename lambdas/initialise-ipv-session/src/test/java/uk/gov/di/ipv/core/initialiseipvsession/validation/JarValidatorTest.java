@@ -719,7 +719,6 @@ class JarValidatorTest {
                         new JarUserInfo(
                                 null,
                                 null,
-                                new StringListClaim(List.of("DEFO.A.JWT")),
                                 new StringListClaim(List.of("EVCS_ACCESS_TOKEN")),
                                 null)));
         return validClaims;

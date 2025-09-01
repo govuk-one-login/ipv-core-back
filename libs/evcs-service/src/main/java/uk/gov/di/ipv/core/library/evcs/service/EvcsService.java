@@ -3,18 +3,22 @@ package uk.gov.di.ipv.core.library.evcs.service;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.evcs.metadata.InheritedIdentityMetadata;
+import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -23,42 +27,30 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.EXTERNAL;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 
 public class EvcsService {
     private final EvcsClient evcsClient;
     private final ConfigService configService;
+    private final StoredIdentityService storedIdentityService;
 
     @ExcludeFromGeneratedCoverageReport
-    public EvcsService(EvcsClient evcsClient, ConfigService configService) {
+    public EvcsService(
+            EvcsClient evcsClient,
+            ConfigService configService,
+            StoredIdentityService storedIdentityService) {
         this.evcsClient = evcsClient;
         this.configService = configService;
+        this.storedIdentityService = storedIdentityService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsService(ConfigService configService) {
         this.evcsClient = new EvcsClient(configService);
         this.configService = configService;
-    }
-
-    public void storeCompletedIdentity(
-            String userId,
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs)
-            throws EvcsServiceException {
-        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, false);
-    }
-
-    public void storePendingIdentity(
-            String userId,
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> currentAndPendingEvcsVcs)
-            throws EvcsServiceException {
-        persistUserVCs(userId, credentials, currentAndPendingEvcsVcs, true);
+        this.storedIdentityService = new StoredIdentityService(configService);
     }
 
     public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
@@ -72,34 +64,6 @@ public class EvcsService {
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(), CURRENT, null, ONLINE))
                         .toList());
-    }
-
-    public void storeInheritedIdentity(
-            String userId,
-            VerifiableCredential incomingInheritedIdentity,
-            List<VerifiableCredential> existingInheritedIdentity)
-            throws EvcsServiceException {
-        if (!existingInheritedIdentity.isEmpty()) {
-            evcsClient.updateUserVCs(
-                    userId,
-                    existingInheritedIdentity.stream()
-                            .map(
-                                    id ->
-                                            new EvcsUpdateUserVCsDto(
-                                                    getVcSignature(id.getVcString()),
-                                                    HISTORIC,
-                                                    null))
-                            .toList());
-        }
-        evcsClient.storeUserVCs(
-                userId,
-                List.of(
-                        new EvcsCreateUserVCsDto(
-                                incomingInheritedIdentity.getVcString(),
-                                CURRENT,
-                                new InheritedIdentityMetadata(
-                                        incomingInheritedIdentity.getCri().getId()),
-                                EXTERNAL)));
     }
 
     public List<VerifiableCredential> getVerifiableCredentials(
@@ -137,24 +101,42 @@ public class EvcsService {
             getParsedVerifiableCredentialsFromEvcsResponse(
                     String userId, List<EvcsGetUserVCDto> evcsUserVcs)
                     throws CredentialParseException {
-        Map<EvcsVCState, List<VerifiableCredential>> credentials = new EnumMap<>(EvcsVCState.class);
-        for (var vc : evcsUserVcs) {
-            try {
+        var credentials = new EnumMap<EvcsVCState, List<VerifiableCredential>>(EvcsVCState.class);
+
+        try {
+            var issuerCris = configService.getIssuerCris();
+            var cimitComponentId =
+                    configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
+
+            for (var vc : evcsUserVcs) {
                 var jwt = SignedJWT.parse(vc.vc());
-                var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+                var issuer = jwt.getJWTClaimsSet().getIssuer();
+
+                // With SIS, we now store the CIMIT VC. We don't want to add this to the
+                // credential bundle so we skip the VC if it's from CIMIT.
+                if (cimitComponentId.equals(issuer)) {
+                    continue;
+                }
+
+                var cri = issuerCris.get(issuer);
+                if (cri == null) {
+                    throw new CredentialParseException(
+                            String.format(
+                                    "Failed to find credential issuer for vc issuer: %s in %s",
+                                    issuer, issuerCris));
+                }
+
                 var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
                 if (!credentials.containsKey(vc.state())) {
                     credentials.put(vc.state(), new ArrayList<>());
                 }
                 credentials.get(vc.state()).add(credential);
-            } catch (NoCriForIssuerException e) {
-                throw new CredentialParseException("Failed to find credential issuer for vc", e);
-            } catch (ParseException e) {
-                throw new CredentialParseException(
-                        "Encountered a parsing error while attempting to parse evcs credentials",
-                        e);
             }
+        } catch (ParseException e) {
+            throw new CredentialParseException(
+                    "Encountered a parsing error while attempting to parse evcs credentials", e);
         }
+
         return credentials;
     }
 
@@ -184,7 +166,59 @@ public class EvcsService {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
-    private void persistUserVCs(
+    public void storePendingIdentityWithPostIdentity(
+            String userId, List<VerifiableCredential> credentials) throws EvcsServiceException {
+        var postIdentityDto = createPendingPostIdentityDto(userId, credentials);
+        evcsClient.storeUserIdentity(postIdentityDto);
+    }
+
+    public HttpResponse<String> storeCompletedIdentityWithPostIdentity(
+            String userId,
+            List<VerifiableCredential> credentials,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot)
+            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
+        var postIdentityDto =
+                createCompletedPostIdentityDto(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+        return evcsClient.storeUserIdentity(postIdentityDto);
+    }
+
+    private EvcsPostIdentityDto createCompletedPostIdentityDto(
+            String userId,
+            List<VerifiableCredential> credentials,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot)
+            throws FailedToCreateStoredIdentityForEvcsException {
+        var storedIdentityJwt =
+                storedIdentityService.getStoredIdentityForEvcs(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+
+        return new EvcsPostIdentityDto(
+                userId,
+                credentials.stream()
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(), CURRENT, null, ONLINE))
+                        .toList(),
+                storedIdentityJwt);
+    }
+
+    private EvcsPostIdentityDto createPendingPostIdentityDto(
+            String userId, List<VerifiableCredential> credentials) {
+        return new EvcsPostIdentityDto(
+                userId,
+                credentials.stream()
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(), PENDING_RETURN, null, ONLINE))
+                        .toList(),
+                null);
+    }
+
+    public void storeCompletedOrPendingIdentityWithPostVcs(
             String userId,
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
@@ -209,10 +243,28 @@ public class EvcsService {
                                                 null,
                                                 ONLINE))
                         .toList();
-
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
             updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
         if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
+    }
+
+    public HttpResponse<String> storeStoredIdentityRecord(
+            String userId,
+            List<VerifiableCredential> credentials,
+            VotMatchingResult.VotAndProfile strongestAchievedVot,
+            Vot achievedVot)
+            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
+        var storedIdentityJwt =
+                storedIdentityService.getStoredIdentityForEvcs(
+                        userId, credentials, strongestAchievedVot, achievedVot);
+
+        var evcsStoreIdentityDto = new EvcsPostIdentityDto(userId, null, storedIdentityJwt);
+
+        return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
+    }
+
+    public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
+        evcsClient.invalidateStoredIdentityRecord(userId);
     }
 
     private void updateExistingUserVCs(
@@ -265,11 +317,6 @@ public class EvcsService {
             var existingCurrentUserVcsNotInSessionToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
-                            .filter(
-                                    vc ->
-                                            vc.metadata() == null
-                                                    || vc.metadata().get("inheritedIdentity")
-                                                            == null) // Don't update inherited
                             // identity VCs
                             .filter(
                                     vc ->

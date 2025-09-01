@@ -10,12 +10,19 @@ get_current_status() {
 generate_traffic() {
   while true; do
     echo "Running @TrafficGeneration tests"
-    npm run test:build -- --profile trafficGeneration --tags '@TrafficGeneration' || true
+    npm run test:"$TEST_ENV" -- --profile trafficGeneration --tags '@TrafficGeneration' || true
   done
 }
 
 # Ensure the test report dir exists
 [ -e "$TEST_REPORT_ABSOLUTE_DIR" ] && mkdir -p "$TEST_REPORT_ABSOLUTE_DIR"
+
+ENVIRONMENT_SECRET=$(aws secretsmanager get-secret-value --secret-id ApiTestEnvironment | jq -r .SecretString)
+if echo "$ENVIRONMENT_SECRET" | grep -qi "devShared"; then
+  TEST_ENV="devShared"
+else
+  TEST_ENV="build"
+fi
 
 CORE_BACK_INTERNAL_API_KEY=$(aws secretsmanager get-secret-value --secret-id CoreBackInternalTestingApiKey | jq -r .SecretString)
 export CORE_BACK_INTERNAL_API_KEY
@@ -60,14 +67,13 @@ if [[ "${DEV_PLATFORM_STAGE}" == "TRAFFIC_TEST" ]]; then
   exit 0
 
 else
-  echo "Running API tests against the build environment"
-  npm run test:build -- --profile codepipeline
+  echo "Running API tests against the $TEST_ENV environment"
+  npm run test:"$TEST_ENV" -- --profile codepipeline
 
   api_tests_exit_code=$?
   cp reports/api-tests-cucumber-report.json "$TEST_REPORT_ABSOLUTE_DIR"
 
-  if [ $api_tests_exit_code != 0 ]
-  then
+  if [ $api_tests_exit_code != 0 ]; then
     echo "API tests failed with exit code ${api_tests_exit_code}"
     exit $api_tests_exit_code
   else

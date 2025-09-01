@@ -23,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
@@ -62,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -129,6 +129,7 @@ class ContractTest {
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
@@ -190,6 +191,7 @@ class ContractTest {
         when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
+        when(mockSigner.getKid()).thenReturn(CLIENT_ASSERTION_SIGNING_KID);
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
@@ -1780,9 +1782,7 @@ class ContractTest {
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
-        Mockito.lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
+        lenient().when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
     }
 
     @NotNull
@@ -1812,12 +1812,15 @@ class ContractTest {
             new CriOAuthSessionItem(
                     "dummySessionId", "dummyOAuthSessionId", DCMAW.getId(), "dummyConnection", 900);
 
-    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
+    private static final String CLIENT_ASSERTION_SIGNING_KID = "testKid";
+    private static final String CLIENT_ASSERTION_HEADER =
+            // pragma: allowlist nextline secret
+            "eyJraWQiOiJ0ZXN0S2lkIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ";
     private static final String CLIENT_ASSERTION_BODY =
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlEY21hd0NvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "42XAVWAIET_BI7FpFQHVIaoW3yRx9yt8HGgMRFMJdxjBey6tQLDRM_04cddot-pNCqYk8x6TueAOdHFsy6N9_A"; // pragma: allowlist secret
+            "jTwf404AtXAMpOjZuWwsoV8zii3Z1RPZ3POmNN2ezCvnBFwFIsxf4T7jlxWMjaAKIUJMxTMZ9YxhX0-uenUI6w"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team

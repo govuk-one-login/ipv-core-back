@@ -1,7 +1,7 @@
 @Build
 Feature: P1 Web Journeys
   Background: Start P1 journey ineligible for app
-    Given I activate the 'p1Journeys' feature set
+    Given I activate the 'p1Journeys,disableStrategicApp' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -16,10 +16,12 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -30,7 +32,7 @@ Feature: P1 Web Journeys
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    When I start a new 'low-confidence' journey and return to a 'pyi-f2f-technical' page response
+    When I start new 'low-confidence' journeys until I get a 'pyi-f2f-technical' page response
     Then I get a 'pyi-f2f-technical' page response
     When I submit a 'next' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -44,7 +46,9 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
         | Attribute          | Values                                      |
@@ -52,7 +56,7 @@ Feature: P1 Web Journeys
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    When I start a new 'low-confidence' journey and return to a 'page-ipv-reuse' page response
+    When I start new 'low-confidence' journeys until I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -65,10 +69,12 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -98,10 +104,12 @@ Feature: P1 Web Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-1' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -118,10 +126,12 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -139,10 +149,12 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -162,10 +174,12 @@ Feature: P1 Web Journeys
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
-    Then I get a 'kbv' CRI response
+    Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -191,7 +205,9 @@ Feature: P1 Web Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response
@@ -218,7 +234,9 @@ Feature: P1 Web Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response
@@ -231,7 +249,7 @@ Feature: P1 Web Journeys
       When I submit a 'next' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
@@ -253,7 +271,9 @@ Feature: P1 Web Journeys
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-1' details to the CRI stub
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response
@@ -270,5 +290,4 @@ Feature: P1 Web Journeys
 
       Examples:
         | error                     |
-        | server_error              |
         | temporarily_unavailable   |

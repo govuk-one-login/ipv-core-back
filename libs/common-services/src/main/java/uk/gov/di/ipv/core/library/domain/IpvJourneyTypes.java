@@ -29,10 +29,6 @@ public enum IpvJourneyTypes {
     F2F_PENDING("f2f-pending"),
     F2F_FAILED("f2f-failed"),
 
-    // Operational profile journeys
-    OPERATIONAL_PROFILE_MIGRATION("operational-profile-migration"),
-    OPERATIONAL_PROFILE_REUSE("operational-profile-reuse"),
-
     // Continuity of Identity journeys
     UPDATE_ADDRESS("update-address"),
     UPDATE_NAME("update-name"),

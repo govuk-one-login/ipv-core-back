@@ -1,0 +1,35 @@
+name: Test Journey Map
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+    paths:
+      - 'journey-map/**'
+      - 'lambdas/process-journey-event/src/main/resources/statemachine/journey-maps/**'
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./journey-map
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install dependencies
+        run: npm ci
+      - name: Linting
+        run: npm run lint
+      - name: Typechecking
+        run: npm run tsc
+      - name: Tests
+        run: npm run test

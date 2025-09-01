@@ -20,6 +20,8 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
+import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -55,9 +57,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
-import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.io.UncheckedIOException;
 import java.util.Collections;
@@ -65,6 +65,7 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 public class ProcessCriCallbackHandler
@@ -75,6 +76,8 @@ public class ProcessCriCallbackHandler
     private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
     private static final JourneyResponse JOURNEY_NOT_FOUND =
             new JourneyResponse(JOURNEY_NOT_FOUND_PATH);
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+
     private final ConfigService configService;
     private final CriApiService criApiService;
     private final CriStoringService criStoringService;
@@ -149,6 +152,8 @@ public class ProcessCriCallbackHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachTraceId();
+        LogHelper.attachComponentId(configService);
         CriCallbackRequest callbackRequest = null;
 
         try {
@@ -296,11 +301,20 @@ public class ProcessCriCallbackHandler
     }
 
     private JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
-            throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
-                    CiRetrievalException, CriApiException, VerifiableCredentialException,
-                    CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException, IpvSessionNotFoundException, CiExtractionException,
-                    CredentialParseException, MissingSecurityCheckCredential {
+            throws JsonProcessingException,
+                    HttpResponseExceptionWithErrorBody,
+                    ConfigException,
+                    CiRetrievalException,
+                    CriApiException,
+                    VerifiableCredentialException,
+                    CiPostMitigationsException,
+                    CiPutException,
+                    InvalidCriCallbackRequestException,
+                    UnrecognisedVotException,
+                    IpvSessionNotFoundException,
+                    CiExtractionException,
+                    CredentialParseException,
+                    MissingSecurityCheckCredential {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -323,10 +337,9 @@ public class ProcessCriCallbackHandler
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
-        LogHelper.attachComponentId(configService);
         LogHelper.attachCriSessionIdToLogs(callbackRequest.getState());
 
-        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());
+        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuer().getId());
 
         // Validate callback request
         if (callbackRequest.getError() != null) {
@@ -354,12 +367,17 @@ public class ProcessCriCallbackHandler
                         ipvSessionItem,
                         sessionVcs);
 
-        return criCheckingService.checkVcResponse(
-                vcs,
-                callbackRequest.getIpAddress(),
-                clientOAuthSessionItem,
-                ipvSessionItem,
-                sessionVcs);
+        var forcedJourney =
+                criCheckingService.checkVcResponse(
+                        vcs,
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        sessionVcs);
+        if (forcedJourney != null) {
+            return forcedJourney;
+        }
+        return JOURNEY_NEXT;
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(
@@ -369,8 +387,11 @@ public class ProcessCriCallbackHandler
             CriOAuthSessionItem criOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws VerifiableCredentialException, JsonProcessingException,
-                    InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
+            throws VerifiableCredentialException,
+                    JsonProcessingException,
+                    InvalidCriCallbackRequestException,
+                    CiPutException,
+                    CiPostMitigationsException,
                     UnrecognisedVotException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);

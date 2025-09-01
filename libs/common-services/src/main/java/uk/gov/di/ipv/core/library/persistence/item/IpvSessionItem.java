@@ -8,10 +8,12 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 
@@ -43,6 +45,8 @@ public class IpvSessionItem implements PersistenceItem {
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
+    private AccountInterventionState initialAccountInterventionState;
+    private AisInterventionType aisInterventionType;
     @Builder.Default private List<String> stateStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
@@ -58,7 +62,6 @@ public class IpvSessionItem implements PersistenceItem {
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
     private String featureSet;
-    private boolean inheritedIdentityReceivedThisSession;
     private String riskAssessmentCredential;
 
     private String securityCheckCredential;

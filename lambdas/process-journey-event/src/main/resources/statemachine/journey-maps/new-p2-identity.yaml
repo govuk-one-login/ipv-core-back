@@ -1,7 +1,7 @@
 name: New P2 Identity
 description: >-
-  The routes a user can take to prove their identity to a medium
-  confidence level (P2).
+  The routes a user can take to prove their identity to at least
+  a medium confidence level (P2).
 
 states:
   # Entry points
@@ -24,10 +24,28 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
+  DCMAW_ASYNC_ANOTHER_WAY:
+    events:
+      next:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
+
+  DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK:
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: dl-auth-source-check
+
   DCMAW_ASYNC_COMPLETE:
     events:
       next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
 
   # Parent states
 
@@ -72,6 +90,9 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   IDENTITY_START_PAGE:
     response:
@@ -203,10 +224,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: BANK_ACCOUNT_START_PAGE
         checkIfDisabled:
@@ -220,10 +237,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: BANK_ACCOUNT_START_PAGE
         checkIfDisabled:
@@ -239,10 +252,6 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
         auditEvents:
           - IPV_NO_PHOTO_ID_JOURNEY_START
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
 
@@ -255,10 +264,6 @@ states:
         targetState: WEB_DL_OR_PASSPORT
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -604,10 +609,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -619,10 +620,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -729,10 +726,6 @@ states:
       next:
         targetJourney: F2F_HAND_OFF
         targetState: START
-#     PYIC-8264 Temporary routing
-      appTriageBanner:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -861,6 +854,9 @@ states:
     events:
       next:
         targetState: IPV_SUCCESS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -894,17 +890,11 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       fail-with-ci:
         targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

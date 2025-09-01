@@ -4,6 +4,8 @@
 core:
   self:
     componentId: "https://identity.local.account.gov.uk"
+    signingKeyId: "some-signin-id"
+    sisSigningKeyId: "dummy-value"
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
@@ -18,19 +20,38 @@ core:
     authCodeExpirySeconds: 3600
     oauthKeyCacheDurationMins: 5
     # Test CI scoring values
-    ciScoringThreshold: 10
+    ciScoringConfig:
+      - ci: "NON-BREACHING"
+        detectedScore: 2
+        checkedScore: -2
+        returnCode: "non-breaching"
+      - ci: "BREACHING"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "breaching"
+      - ci: "BREACHING-P1-ONLY"
+        detectedScore: 7
+        checkedScore: -7
+        returnCode: "breaching-p1-only"
+      - ci: "NEEDS-ENHANCED-VERIFICATION"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-enhanced-verification"
+      - ci: "NEEDS-ALTERNATE-DOC"
+        detectedScore: 20
+        checkedScore: -20
+        returnCode: "needs-alternate-doc"
+      - ci: "ALWAYS-REQUIRED"
+        detectedScore: 1
+        checkedScore: -1
+        returnCode: "always-required"
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
-      PCL200: 3
-      PCL250: 3
+      P3: 10
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
-    govUkNotify:
-      emailTemplates:
-        UserTriggeredIdentityResetConfirmation: "dummy-value"
-        UserTriggeredIdentityResetConfirmationF2f: "dummy-value"
     coi:
       # Test COI config
       familyNameChars: 5
@@ -62,22 +83,27 @@ core:
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
+  ais:
+    apiBaseUrl: "https://ais.stubs.account.gov.uk"
   cimit:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
     # Test CIMIT config
-    config: '{
-      "NEEDS-ENHANCED-VERIFICATION":[
-        {"event":"/journey/enhanced-verification"}
-      ],
-      "NEEDS-ALTERNATE-DOC":[
-        {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"},
-        {"event":"/journey/alternate-doc-invalid-passport","document":"passport"}
-      ]
-    }'
+    config:
+      NEEDS-ENHANCED-VERIFICATION:
+        - event: /journey/enhanced-verification
+      NEEDS-ALTERNATE-DOC:
+        - event: /journey/alternate-doc-invalid-dl
+          document: drivingPermit
+        - event: /journey/alternate-doc-invalid-passport
+          document: passport
     apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
+  sis:
+    applicationUrl: "https://sis.stubs.account.gov.uk"
+  storedIdentityService:
+    componentId: "https://reuse-identity.build.account.gov.uk"
   credentialIssuers:
     address:
       id: address
@@ -87,19 +113,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://address-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://address-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://address-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://address-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/address",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://address-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://address-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://address-cri.stubs.account.gov.uk/token
+          credentialUrl: https://address-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://address-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/address
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://address-cri.stubs.account.gov.uk/.well-known/jwks.json
     dcmaw:
       id: dcmaw
       name: "Document Checking - Mobile App and Web"
@@ -108,19 +133,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://dcmaw-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://dcmaw-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://dcmaw-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}","encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://dcmaw-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmaw",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://dcmaw-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://dcmaw-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://dcmaw-cri.stubs.account.gov.uk/token
+          credentialUrl: https://dcmaw-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://dcmaw-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/dcmaw
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://dcmaw-cri.stubs.account.gov.uk/.well-known/jwks.json
     dcmawAsync:
       id: dcmawAsync
       name: "Document Checking - Mobile App and Web - Async"
@@ -129,16 +153,15 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "credentialUrl": "https://dcmaw-async.stubs.account.gov.uk/async/credential",
-          "tokenUrl":"https://dcmaw-async.stubs.account.gov.uk/async/token",
-          "clientId": "dummyClientId",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}","encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://dcmaw-async.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmawAsync",
-          "requiresApiKey": "false",
-          "jwksUrl":"https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          credentialUrl: https://dcmaw-async.stubs.account.gov.uk/async/credential
+          tokenUrl: https://dcmaw-async.stubs.account.gov.uk/async/token
+          clientId: dummyClientId
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          componentId: https://dcmaw-async.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/dcmawAsync
+          requiresApiKey: false
+          jwksUrl: https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json
     fraud:
       id: fraud
       name: Fraud
@@ -147,40 +170,38 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://fraud-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://fraud-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://fraud-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://fraud-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/fraud",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://fraud-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
-    kbv:
-      id: kbv
+        stub:
+          authorizeUrl: https://fraud-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://fraud-cri.stubs.account.gov.uk/token
+          credentialUrl: https://fraud-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://fraud-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/fraud
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://fraud-cri.stubs.account.gov.uk/.well-known/jwks.json
+    experianKbv:
+      id: experianKbv
       name: Experian KBV
       enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://experian-kbv-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://experian-kbv-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://experian-kbv-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://experian-kbv-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/kbv",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://experian-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://experian-kbv-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://experian-kbv-cri.stubs.account.gov.uk/token
+          credentialUrl: https://experian-kbv-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://experian-kbv-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/kbv
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://experian-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json
     ukPassport:
       id: ukPassport
       name: ukPassport
@@ -189,19 +210,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://passport-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://passport-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://passport-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://passport-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/ukPassport",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://passport-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://passport-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://passport-cri.stubs.account.gov.uk/token
+          credentialUrl: https://passport-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://passport-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/ukPassport
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://passport-cri.stubs.account.gov.uk/.well-known/jwks.json
     drivingLicence:
       id: drivingLicence
       name: Driving Licence
@@ -210,19 +230,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address,drivingPermit"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://driving-license-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://driving-license-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://driving-license-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://driving-license-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/drivingLicence",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://driving-license-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://driving-licence-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://driving-licence-cri.stubs.account.gov.uk/token
+          credentialUrl: https://driving-licence-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://driving-licence-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/drivingLicence
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://driving-licence-cri.stubs.account.gov.uk/.well-known/jwks.json
     claimedIdentity:
       id: claimedIdentity
       name: ClaimedIdentity
@@ -231,19 +250,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://claimed-identity-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://claimed-identity-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://claimed-identity-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://claimed-identity-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/claimedIdentity",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://claimed-identity-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://claimed-identity-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://claimed-identity-cri.stubs.account.gov.uk/token
+          credentialUrl: https://claimed-identity-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://claimed-identity-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/claimedIdentity
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://claimed-identity-cri.stubs.account.gov.uk/.well-known/jwks.json
     f2f:
       id: f2f
       name: Face to Face
@@ -252,19 +270,18 @@ core:
       allowedSharedAttributes: "name,birthDate,emailAddress"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://f2f-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://f2f-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://f2f-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://f2f-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/f2f",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://f2f-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://f2f-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://f2f-cri.stubs.account.gov.uk/token
+          credentialUrl: https://f2f-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://f2f-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/f2f
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://f2f-cri.stubs.account.gov.uk/.well-known/jwks.json
     nino:
       id: nino
       name: NINO
@@ -273,19 +290,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://nino-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://nino-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://nino-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://nino-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/nino",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://nino-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://nino-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://nino-cri.stubs.account.gov.uk/token
+          credentialUrl: https://nino-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://nino-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/nino
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://nino-cri.stubs.account.gov.uk/.well-known/jwks.json
     bav:
       id: bav
       name: Bank account verification
@@ -294,19 +310,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://bav-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://bav-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://bav-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://bav-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/bav",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"true",
-          "jwksUrl":"https://bav-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://bav-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://bav-cri.stubs.account.gov.uk/token
+          credentialUrl: https://bav-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://bav-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/bav
+          requiresApiKey: false
+          requiresAdditionalEvidence: true
+          jwksUrl: https://bav-cri.stubs.account.gov.uk/.well-known/jwks.json
     dwpKbv:
       id: dwpKbv
       name: DWP KBV
@@ -315,19 +330,18 @@ core:
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "authorizeUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/authorize",
-          "tokenUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/token",
-          "credentialUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/credentials/issue",
-          "clientId":"ipv-core-local",
-          "signingKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "encryptionKey":"{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}",
-          "componentId":"https://dwp-kbv-cri.stubs.account.gov.uk",
-          "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dwpKbv",
-          "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false",
-          "jwksUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
-        }'
+        stub:
+          authorizeUrl: https://dwp-kbv-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://dwp-kbv-cri.stubs.account.gov.uk/token
+          credentialUrl: https://dwp-kbv-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          encryptionKey: '{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}'
+          componentId: https://dwp-kbv-cri.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/dwpKbv
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://dwp-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json
     ticf:
       id: ticf
       name: Threat Intelligence and Counter Fraud
@@ -335,32 +349,19 @@ core:
       unavailable: "false"
       activeConnection: "stub"
       connections:
-        stub: '{
-          "credentialUrl": "https://ticf.stubs.account.gov.uk/risk-assessment",
-          "signingKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}",
-          "componentId": "https://ticf.stubs.account.gov.uk",
-          "requiresApiKey": "true",
-          "requestTimeout": 5
-        }'
-    hmrcMigration:
-      id: hmrcMigration
-      name: HMRC migration
-      activeConnection: "stub"
-      connections:
-        stub: '{
-          "signingKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}",
-          "componentId": "https://orch.stubs.account.gov.uk/migration/v1"
-        }'
+        stub:
+          credentialUrl: https://ticf.stubs.account.gov.uk/risk-assessment
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}'
+          componentId: https://ticf.stubs.account.gov.uk
+          requiresApiKey: true
+          requestTimeout: 5
   local:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     resetIdentity: false
-    deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
-    strategicAppEnabled: false
-    internationalAddressEnabled: true
-    inheritedIdentity: true
+    strategicAppEnabled: true
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
@@ -369,31 +370,33 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: false
+    accountInterventionsEnabled: true
+
   features:
+    accountInterventions:
+      featureFlags:
+        accountInterventionsEnabled: true
+    disableAccountInterventions:
+      featureFlags:
+        accountInterventionsEnabled: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    internationalAddress:
-      featureFlags:
-        internationalAddressEnabled: true
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
-    deleteDetailsTestJourney:
-      featureFlags:
-        deleteDetailsEnabled: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
     strategicApp:
       featureFlags:
         strategicAppEnabled: true
-    inheritedIdentity:
+    disableStrategicApp:
       featureFlags:
-        inheritedIdentity: true
+        strategicAppEnabled: false
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodHours: 0
@@ -417,7 +420,7 @@ core:
       credentialIssuers:
         dwpKbv:
           enabled: false
-    drivingLicenseTest:
+    drivingLicenceTest:
       credentialIssuers:
         drivingLicence:
           enabled: false

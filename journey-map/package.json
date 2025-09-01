@@ -1,27 +1,37 @@
 {
   "name": "ipv-core-journey-map",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Generate an interactive IPV core journey map",
   "main": "src/server.ts",
   "author": "Government Digital Service",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "start": "NODE_ENV=development ts-node src/server.ts",
-    "start-build": "node --enable-source-maps build/server.js",
-    "tsc": "tsc",
-    "lint": "eslint . && prettier . --check",
-    "lint-fix": "eslint --fix . && prettier . --write"
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=chrome135,firefox137,safari18,edge135 --outfile=public/application.js",
+    "build-server": "tsc --project tsconfig.server.json",
+    "start": "NODE_ENV=development tsx watch --clear-screen=false server/app.ts",
+    "start-build": "node --enable-source-maps build/app.js",
+    "dev": "npm run build -- --watch=forever & npm run start; wait",
+    "tsc": "tsc && tsc --project tsconfig.server.json --noEmit",
+    "lint": "eslint src server && prettier src server --check",
+    "lint-fix": "eslint --fix src server && prettier src server --write",
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "express": "5.0.1"
+    "express": "5.0.1",
+    "mermaid": "11.10.0",
+    "svg-pan-zoom": "3.6.2",
+    "yaml": "2.7.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.0",
     "@types/express": "^5.0.0",
+    "esbuild": "^0.25.3",
     "eslint": "^9.11.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.9.0",
     "prettier": "^3.5.1",
-    "ts-node": "^10.9.2"
+    "tsx": "^4.19.3",
+    "typescript-eslint": "^8.31.0"
   }
 }

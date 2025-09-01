@@ -123,6 +123,19 @@ class ClientOAuthSessionDetailsServiceTest {
     }
 
     @Test
+    void shouldUpdateClientOAuthSessionItem() {
+        // Arrange
+        var clientOAuthSessionItem = new ClientOAuthSessionItem();
+        var underTest = new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+
+        // Act
+        underTest.updateClientSessionDetails(clientOAuthSessionItem);
+
+        // Assert
+        verify(mockDataStore).update(clientOAuthSessionItem);
+    }
+
+    @Test
     void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
         when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(false);
 

@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
+import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
+import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -37,9 +39,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
-import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -136,7 +137,16 @@ class ProcessCriCallbackHandlerTest {
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
                         OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .encryptionKey("")
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
                                 .build());
 
         // Act
@@ -261,7 +271,16 @@ class ProcessCriCallbackHandlerTest {
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
                         OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .encryptionKey("")
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
                                 .build());
         when(mockCriCheckingService.checkVcResponse(
                         any(),

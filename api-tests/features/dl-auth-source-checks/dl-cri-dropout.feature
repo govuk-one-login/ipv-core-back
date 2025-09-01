@@ -1,9 +1,9 @@
 @Build
 Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to incorrect details)
   Background: Activate the featureSet
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck,p1Journeys,disableStrategicApp' feature sets
 
-  Scenario Outline: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL low-confidence
+  Scenario: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL low-confidence
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -23,7 +23,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL medium-confidence
+  Scenario: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL medium-confidence
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -45,7 +45,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: User backs out of driving licence CRI and returns to DCMAW with a passport P1 - identity has only one DCMAW VC
+  Scenario: User backs out of driving licence CRI and returns to DCMAW with a passport P1 - identity has only one DCMAW VC
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -64,7 +64,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -72,7 +74,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'P1' identity
     And I have a dcmaw VC without 'drivingPermit' details
 
-    Scenario Outline: User backs out of driving licence CRI and returns to DCMAW with a passport P2 - identity has only one DCMAW VC
+    Scenario: User backs out of driving licence CRI and returns to DCMAW with a passport P2 - identity has only one DCMAW VC
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -93,7 +95,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -101,7 +105,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'P2' identity
     And I have a dcmaw VC without 'drivingPermit' details
 
-  Scenario Outline: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
+  Scenario: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -115,14 +119,16 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit a 'postOffice' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
+    Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
       | Attribute          | Values                     |
@@ -130,13 +136,13 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    When I start a new 'low-confidence' journey and return to a 'page-ipv-reuse' page response
+    When I start new 'low-confidence' journeys until I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity without a 'dcmaw' VC
 
-  Scenario Outline: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
+  Scenario: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -159,7 +165,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'f2f' CRI response
     When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
       | Attribute          | Values                                      |
@@ -167,13 +175,13 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+    When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity without a 'dcmaw' VC
 
-  Scenario Outline: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC low-confidence
+  Scenario: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC low-confidence
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -191,7 +199,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-  Scenario Outline: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC medium-confidence
+  Scenario: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC medium-confidence
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -240,7 +248,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -269,7 +279,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
         | Attribute | Values               |
         | context   | "international_user" |
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-and-address-score-2' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-and-address-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response with context 'updateIdentity'
       When I submit a 'next' event
       Then I get an OAuth response
@@ -303,11 +315,11 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
   Rule: Separate session enhanced verification mitigation with DCMAW + DL auth source check
     Background: User returns with an enhanced verification CI and mitigates with DCMAW but user drops out of DL CRI
       And the subject already has the following credentials
-        | CRI        | scenario                            |
-        | ukPassport | kenneth-passport-valid              |
-        | address    | kenneth-current                     |
-        | fraud      | kenneth-score-2                     |
-        | kbv        | kenneth-needs-enhanced-verification |
+        | CRI         | scenario                            |
+        | ukPassport  | kenneth-passport-valid              |
+        | address     | kenneth-current                     |
+        | fraud       | kenneth-score-2                     |
+        | experianKbv | kenneth-needs-enhanced-verification |
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -353,10 +365,12 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
-      Then I get a 'kbv' CRI response
+      Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |

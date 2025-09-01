@@ -85,9 +85,6 @@ states:
       appTriage:
         targetState: APP_DOC_CHECK
         targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
@@ -95,34 +92,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-
-  STRATEGIC_APP_TRIAGE:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: PROCESS_REVERIFICATION_IDENTITY
-      anotherWay:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
-      incompleteDlAuthCheckInvalidDl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_STRATEGIC_APP
-      failedDlAuthCheckInvalidDl:
-        targetJourney: FAILED
-        targetState: FAILED_SKIP_MESSAGE
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_STRATEGIC_APP:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-      context: noF2f
-    events:
-      anotherTypePhotoId:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
@@ -159,6 +128,9 @@ states:
     events:
       next:
         targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
       enhanced-verification:
         targetState: RETURN_TO_RP
       alternate-doc-invalid-dl:
@@ -170,30 +142,6 @@ states:
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  PROCESS_INCOMPLETE_IDENTITY:
-    response:
-      type: process
-      lambda: process-candidate-identity
-      lambdaInput:
-        identityType: INCOMPLETE
-    events:
-      next:
-        targetState: RETURN_TO_RP
-      fail-with-ci:
-        targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

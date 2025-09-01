@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum ConfigurationVariable {
+    AIS_API_BASE_URL("ais/apiBaseUrl"),
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     BACKEND_SESSION_TIMEOUT("self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("self/backendSessionTtl"),
@@ -10,7 +11,7 @@ public enum ConfigurationVariable {
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_API_BASE_URL("cimit/apiBaseUrl"),
     CIMIT_API_KEY("cimitApi/apiKey"),
-    CI_CONFIG("self/ciConfig"),
+    CI_SCORING_CONFIG("self/ciScoringConfig"),
     CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_JWKS_URL("clients/%s/jwksUrl"),
@@ -33,11 +34,6 @@ public enum ConfigurationVariable {
     EVCS_APPLICATION_URL("evcs/applicationUrl"),
     FEATURE_FLAGS("featureFlags/%s"),
     FRAUD_CHECK_EXPIRY_PERIOD_HOURS("self/fraudCheckExpiryPeriodHours"),
-    GOV_UK_NOTIFY_API_KEY("govUkNotify/apiKey"),
-    GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmationF2f"),
-    GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
-            "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY("self/clientJarKmsEncryptionKeyAliasPrimary"),
     CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY("self/clientJarKmsEncryptionKeyAliasSecondary"),
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
@@ -50,6 +46,8 @@ public enum ConfigurationVariable {
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),
     SIGNING_KEY_JWK("self/signingKey"),
+    SIS_SIGNING_KEY_ID("self/sisSigningKeyId"),
+    STORED_IDENTITY_SERVICE_COMPONENT_ID("storedIdentityService/componentId"),
     DCMAW_ASYNC_VC_PENDING_RETURN_TTL("self/dcmawAsyncVcPendingReturnTtl");
 
     private final String path;

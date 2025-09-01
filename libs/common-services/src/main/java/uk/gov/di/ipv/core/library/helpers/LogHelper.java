@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import io.opentelemetry.api.trace.Span;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -17,6 +18,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_QUEUE_NAME;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
@@ -49,7 +51,6 @@ public class LogHelper {
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
         LOG_GPG45_PROFILE("gpg45Profile"),
         LOG_HASH_USER_ID("hashUserId"),
-        LOG_IS_USER_INITIATED("isUserInitiated"),
         LOG_IPV_SESSION_ID("ipvSessionId"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
         LOG_JWKS_URL("jwksUrl"),
@@ -70,6 +71,8 @@ public class LogHelper {
         LOG_PARAMETER_PATH("parameterPath"),
         LOG_PAYLOAD("payload"),
         LOG_PROFILE("profile"),
+        LOG_QUEUE_NAME("queueName"),
+        LOG_SQS_MESSAGE_ID("sqsMessageId"),
         LOG_REDIRECT_URI("redirectUri"),
         LOG_RESET_TYPE("resetType"),
         LOG_RESPONSE_CONTENT_TYPE("responseContentType"),
@@ -78,7 +81,9 @@ public class LogHelper {
         LOG_SCORE_TYPE("scoreType"),
         LOG_SECRET_ID("secretId"),
         LOG_SHA256_ACCESS_TOKEN("sha256AccessToken"),
+        LOG_SPAN_ID("dt.span_id"),
         LOG_STATUS_CODE("statusCode"),
+        LOG_TRACE_ID("dt.trace_id"),
         LOG_UNCORRELATABLE_DATA("uncorrelatableData"),
         LOG_USER_STATE("userState"),
         LOG_VOT("vot");
@@ -96,6 +101,16 @@ public class LogHelper {
 
     private LogHelper() {
         throw new IllegalStateException("Utility class");
+    }
+
+    public static void attachTraceId() {
+        // Adapted from
+        // https://docs.dynatrace.com/docs/analyze-explore-automate/logs/lma-log-enrichment#retrieve-span-and-trace-ids
+        var spanContext = Span.current().getSpanContext();
+        if (spanContext.isValid()) {
+            attachFieldToLogs(LogField.LOG_TRACE_ID, spanContext.getTraceId());
+            attachFieldToLogs(LogField.LOG_SPAN_ID, spanContext.getSpanId());
+        }
     }
 
     public static void attachComponentId(ConfigService configService) {
@@ -137,6 +152,19 @@ public class LogHelper {
         } else {
             attachFieldToLogs(LogField.LOG_GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId);
         }
+    }
+
+    public static void attachQueueNameToLogs(String queueName) {
+        if (StringUtils.isBlank(queueName)) {
+            LogHelper.attachFieldToLogs(LOG_QUEUE_NAME, "unknown");
+        } else {
+            LogHelper.attachFieldToLogs(LOG_QUEUE_NAME, queueName);
+        }
+    }
+
+    public static void attachSqsMessageIdToLogs(String sqsMessageId) {
+        var idValue = StringUtils.isBlank(sqsMessageId) ? "unknown" : sqsMessageId;
+        attachFieldToLogs(LogField.LOG_SQS_MESSAGE_ID, idValue);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {

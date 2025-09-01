@@ -47,8 +47,14 @@ export const sendJourneyEvent = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
   clientOAuthSessionId?: string,
+  currentPage?: string,
 ): Promise<JourneyEngineResponse> => {
-  const url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
+  let url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
+
+  if (currentPage) {
+    url += `?currentPage=${currentPage}`;
+  }
+
   const response = await fetch(url, {
     method: POST,
     headers: {
@@ -93,7 +99,13 @@ export const callbackFromStrategicApp = async (
 
   const body = await response.json();
 
-  return await sendJourneyEvent(body?.journey, ipvSessionId, featureSet);
+  return await sendJourneyEvent(
+    body?.journey,
+    ipvSessionId,
+    featureSet,
+    body?.clientOAuthSessionId,
+    "pyi-triage-mobile-download-app",
+  );
 };
 
 // Returns the response if there is a VC, or undefined if no VC is found (404). Any other response will trigger an error.

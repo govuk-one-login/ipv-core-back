@@ -1,14 +1,13 @@
 @Build
 Feature: Identity reuse update details failures
-
     Rule: Update given name only
-
         Background:
             Given the subject already has the following credentials
                 | CRI     | scenario                     |
                 | dcmaw   | kenneth-driving-permit-valid |
                 | address | kenneth-current              |
                 | fraud   | kenneth-score-2              |
+            And I activate the 'disableStrategicApp' feature set
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
             When I submit an 'update-details' event
@@ -69,7 +68,9 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I submit 'kenneth-changed-given-name-score-0' details to the CRI stub
+            When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
             When I submit a 'returnToRp' event
             Then I get an OAuth response
@@ -87,7 +88,9 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I submit 'kenneth-breaching-ci' details to the CRI stub
+            When I submit 'kenneth-breaching-ci' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
             When I submit a 'returnToRp' event
             Then I get an OAuth response
@@ -103,7 +106,9 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
+            When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":1} |
             Then I get a 'pyi-no-match' page response
             When I submit a 'next' event
             Then I get an OAuth response
@@ -118,7 +123,9 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I submit 'alice-score-2' details to the CRI stub
+            When I submit 'alice-score-2' details with attributes to the CRI stub
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":1} |
             Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
             When I submit an 'returnToRp' event
             Then I get an OAuth response
@@ -136,7 +143,9 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I call the CRI stub and get an 'access_denied' OAuth error
+            When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+                | Attribute          | Values                   |
+                | evidence_requested | {"identityFraudScore":2} |
             Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
             When I submit a 'returnToRp' event
             Then I get an OAuth response
@@ -146,7 +155,6 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
     Rule: Update address only
-
         Background:
             Given the subject already has the following credentials
                 | CRI     | scenario                     |
