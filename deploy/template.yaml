@@ -846,7 +846,9 @@ Resources:
 
   IPVCoreAnalyticsAPI:
     Type: AWS::Serverless::Api
-    DependsOn: FetchJourneyTransitionsFunction
+    DependsOn:
+      - FetchJourneyTransitionsFunction
+      - FetchSystemSettingsFunction
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Analytics API Gateway ${Environment}
@@ -3541,7 +3543,7 @@ Resources:
     DependsOn: FetchSystemSettingsFunction
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref FetchJourneyTransitionsFunction.Alias
+      FunctionName: !Ref FetchSystemSettingsFunction.Alias
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/POST/system-settings"
 
