@@ -298,7 +298,7 @@ public class CheckExistingIdentityHandler
 
             if (configService.enabled(SIS_VERIFICATION)) {
                 // PYIC-8393 Make use of the results of this call
-                sisService.getStoredIdentity(clientOAuthSessionItem.getEvcsAccessToken());
+                sisService.getStoredIdentity(clientOAuthSessionItem);
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {

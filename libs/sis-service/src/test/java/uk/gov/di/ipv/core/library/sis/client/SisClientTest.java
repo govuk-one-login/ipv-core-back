@@ -21,7 +21,10 @@ import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.Flow;
 import java.util.stream.Stream;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
@@ -38,6 +41,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SisClientTest {
     private static final String SIS_APPLICATION_URL = "http://localhost/v1";
+    private static final String TEST_JOURNEY_ID = "TEST_JOURNEY_ID";
+    private static final List<Vot> TEST_VOTS = List.of(Vot.P1, Vot.P2);
+    public static final String TEST_ACCESS_TOKEN = "dummy_access_token";
 
     @Mock private ConfigService mockConfigService;
     @Mock private HttpClient mockHttpClient;
@@ -60,7 +66,7 @@ class SisClientTest {
                 .thenReturn("\\");
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertFalse(result.requestSucceeded());
@@ -80,7 +86,7 @@ class SisClientTest {
                         HttpStatusCode.THROTTLING, HttpStatusCode.THROTTLING, HttpStatusCode.OK);
 
         // Act
-        sisClient.getStoredIdentity("dummy_access_token");
+        sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         verify(mockHttpClient, times(3)).send(any(), any());
@@ -98,7 +104,7 @@ class SisClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.THROTTLING);
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertFalse(result.requestSucceeded());
@@ -119,17 +125,26 @@ class SisClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
 
         // Act
-        sisClient.getStoredIdentity("dummy_access_token");
+        sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
         HttpRequest httpRequest = httpRequestCaptor.getValue();
-        assertEquals("GET", httpRequest.method());
+        assertEquals("POST", httpRequest.method());
         assertEquals("/v1/user-identity", httpRequest.uri().getPath());
         assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertEquals(
                 List.of("Bearer dummy_access_token"),
                 httpRequest.headers().map().get(AUTHORIZATION));
+
+        assertTrue(httpRequest.bodyPublisher().isPresent());
+
+        var bodySubsrciber = new BodyExtractingSubscriber();
+        httpRequest.bodyPublisher().get().subscribe(bodySubsrciber);
+        assertEquals(
+                """
+                {"vtr":["P1","P2"],"govuk_signin_journey_id":"TEST_JOURNEY_ID"}""",
+                bodySubsrciber.getBody());
     }
 
     @ParameterizedTest
@@ -142,7 +157,7 @@ class SisClientTest {
         when(mockHttpResponse.body()).thenReturn(responseJson);
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertEquals(expectedResult, result);
@@ -178,7 +193,7 @@ class SisClientTest {
         when(mockHttpResponse.body()).thenReturn("not valid json");
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertEquals(new SisGetStoredIdentityResult(false, false, null), result);
@@ -191,7 +206,7 @@ class SisClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertEquals(new SisGetStoredIdentityResult(false, false, null), result);
@@ -204,9 +219,37 @@ class SisClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
 
         // Act
-        var result = sisClient.getStoredIdentity("dummy_access_token");
+        var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
         assertEquals(new SisGetStoredIdentityResult(true, false, null), result);
+    }
+
+    public static class BodyExtractingSubscriber implements Flow.Subscriber<ByteBuffer> {
+        private final StringBuilder body = new StringBuilder();
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            subscription.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(ByteBuffer item) {
+            body.append(StandardCharsets.UTF_8.decode(item));
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            // Not needed for testing
+        }
+
+        @Override
+        public void onComplete() {
+            // Not needed for testing
+        }
+
+        public String getBody() {
+            return body.toString();
+        }
     }
 }

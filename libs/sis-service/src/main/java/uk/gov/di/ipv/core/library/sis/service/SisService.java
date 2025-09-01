@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
@@ -21,7 +22,11 @@ public class SisService {
         this.configService = configService;
     }
 
-    public SisGetStoredIdentityResult getStoredIdentity(String evcsAccessToken) {
-        return sisClient.getStoredIdentity(evcsAccessToken);
+    public SisGetStoredIdentityResult getStoredIdentity(
+            ClientOAuthSessionItem clientOAuthSessionItem) {
+        return sisClient.getStoredIdentity(
+                clientOAuthSessionItem.getEvcsAccessToken(),
+                clientOAuthSessionItem.getVtrAsVots(),
+                clientOAuthSessionItem.getGovukSigninJourneyId());
     }
 }

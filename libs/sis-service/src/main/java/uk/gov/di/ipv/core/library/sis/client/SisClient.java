@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -16,6 +17,7 @@ import uk.gov.di.ipv.core.library.retry.Retry;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityRequestBody;
 import uk.gov.di.ipv.core.library.sis.exception.SisServiceException;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
@@ -59,14 +61,19 @@ public class SisClient {
         this.sleeper = sleeper;
     }
 
-    public SisGetStoredIdentityResult getStoredIdentity(String accessToken) {
+    public SisGetStoredIdentityResult getStoredIdentity(
+            String accessToken, List<Vot> vtr, String journeyId) {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving existing stored identity from SIS."));
+
+            var requestBody = new SisStoredIdentityRequestBody(vtr, journeyId);
 
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(getUri(USER_IDENTITY_SUB_PATH))
-                            .GET() // qq:DCC post
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(requestBody)))
                             .header(AUTHORIZATION, "Bearer " + accessToken);
 
             var httpResponse = sendHttpRequest(httpRequestBuilder.build());
