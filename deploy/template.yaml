@@ -3489,7 +3489,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref FetchJourneyTransitionsFunction.Alias
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/POST/journey-transitions"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
   FetchSystemSettingsFunction:
     Type: AWS::Serverless::Function
@@ -3545,7 +3545,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref FetchSystemSettingsFunction.Alias
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/POST/system-settings"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
   SessionCredentialsTable:
     Type: AWS::DynamoDB::Table
