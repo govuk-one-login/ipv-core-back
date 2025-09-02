@@ -55,6 +55,7 @@ public class EventResolver {
         return resolve(exitEvent, parameters);
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity should not be too high
     private TransitionResult resolveBasicEvent(
             BasicEvent event, EventResolveParameters resolveParameters)
             throws UnknownEventException, JourneyEngineException {
@@ -103,7 +104,6 @@ public class EventResolver {
                     return resolve(checkFeatureFlag.get(featureFlagValue), resolveParameters);
                 }
             }
-
             if (isCheckMitigationAllowed(event, resolveParameters.clientOAuthSessionItem())) {
                 var checkMitigation = event.getCheckMitigation();
                 var matchedMitigation = getMitigationEvent(event, resolveParameters);

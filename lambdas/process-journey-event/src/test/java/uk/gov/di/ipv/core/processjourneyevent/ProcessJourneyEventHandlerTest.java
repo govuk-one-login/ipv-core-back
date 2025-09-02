@@ -1140,6 +1140,28 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
+    void shouldNotSetOrUnsetJourneyContextIfNotProvided() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-another-page-state", output.get("page"));
+        verify(spyIpvSessionItem, times(0)).setJourneyContext("someContext");
+        verify(spyIpvSessionItem, times(0)).unsetJourneyContext("someContext");
+        verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
+    }
+
+    @Test
     void shouldUnsetJourneyContextIfProvided() throws Exception {
         var input =
                 JourneyRequest.builder()
