@@ -296,8 +296,9 @@ public class CheckExistingIdentityHandler
             }
 
             if (configService.enabled(SIS_VERIFICATION)) {
-                // PYIC-8393 Make use of the results of this call
-                sisService.getStoredIdentity(clientOAuthSessionItem);
+                // Call this before we invalidate the stored identity!
+                sisService.compareStoredIdentityWithStoredVcs(
+                        clientOAuthSessionItem, auditEventUser);
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
@@ -351,7 +352,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
-            var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
+            var credentialBundle = getCredentialBundle(userId, evcsAccessToken, false);
 
             var previousAchievedVot =
                     getStrongestAchievableVotFromBundle(credentialBundle.credentials);
@@ -475,11 +476,12 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
+    private VerifiableCredentialBundle getCredentialBundle(
+            String userId, String evcsAccessToken, boolean includeCimit)
             throws CredentialParseException, EvcsServiceException {
         var vcs =
                 evcsService.fetchEvcsVerifiableCredentialsByState(
-                        userId, evcsAccessToken, CURRENT, PENDING_RETURN);
+                        userId, evcsAccessToken, includeCimit, CURRENT, PENDING_RETURN);
 
         // PENDING_RETURN vcs need a pending record to be valid
         var pendingRecords = criResponseService.getCriResponseItems(userId);
