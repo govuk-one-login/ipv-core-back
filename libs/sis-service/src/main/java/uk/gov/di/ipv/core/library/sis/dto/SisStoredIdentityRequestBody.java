@@ -6,4 +6,4 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record SisStoredIdentityRequestBody(List<Vot> vtr, String govuk_signin_journey_id) {}
+public record SisStoredIdentityRequestBody(List<Vot> vtr, String govukSigninJourneyId) {}

@@ -143,7 +143,7 @@ class SisClientTest {
         httpRequest.bodyPublisher().get().subscribe(bodySubsrciber);
         assertEquals(
                 """
-                {"vtr":["P1","P2"],"govuk_signin_journey_id":"TEST_JOURNEY_ID"}""",
+                {"vtr":["P1","P2"],"govukSigninJourneyId":"TEST_JOURNEY_ID"}""",
                 bodySubsrciber.getBody());
     }
 
