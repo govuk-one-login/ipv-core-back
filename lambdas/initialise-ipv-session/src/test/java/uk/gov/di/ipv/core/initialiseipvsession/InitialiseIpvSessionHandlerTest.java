@@ -39,6 +39,8 @@ import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -51,6 +53,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
+import java.net.URI;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
@@ -75,11 +78,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
@@ -159,6 +159,12 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2"));
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
         clientOAuthSessionItem.setReproveIdentity(false);
+
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create("https://core-component.example"));
     }
 
     @AfterEach

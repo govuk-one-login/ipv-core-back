@@ -7,12 +7,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -32,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -42,10 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -68,6 +70,16 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private EvcsService evcsService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
+
+    @BeforeEach
+    void setUpEach() {
+        // config stubbing here
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create("https://core-component.example"));
+    }
 
     @Test
     void shouldReturnErrorWhenCallbackRequestMissingIpvSessionId() throws JsonProcessingException {

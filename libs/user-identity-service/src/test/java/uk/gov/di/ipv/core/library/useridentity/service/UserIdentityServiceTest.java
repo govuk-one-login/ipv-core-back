@@ -58,11 +58,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
@@ -567,7 +563,13 @@ class UserIdentityServiceTest {
 
         @BeforeEach
         void setup() {
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
+            when(mockConfigService
+                            .getConfiguration()
+                            .getSelf()
+                            .getCoi()
+                            .getFamilyNameChars()
+                            .toString())
+                    .thenReturn("5");
         }
 
         @Test
@@ -593,7 +595,13 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
             // Arrange
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
+            when(mockConfigService
+                            .getConfiguration()
+                            .getSelf()
+                            .getCoi()
+                            .getFamilyNameChars()
+                            .toString())
+                    .thenReturn("500");
             var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
 
             // Act & Assert
@@ -758,7 +766,13 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
 
         // Act
         var credentials =
@@ -801,7 +815,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportMissingName(), vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -821,7 +836,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportMissingBirthDate(), vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -886,7 +902,13 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
 
         // Act
         var credentials =
@@ -984,7 +1006,13 @@ class UserIdentityServiceTest {
                         vcNinoIdentityCheckSuccessful());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
 
         // Act
         var credentials =
@@ -1151,7 +1179,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressEmpty());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
@@ -1175,7 +1204,8 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressNoCredentialSubject());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
@@ -1196,7 +1226,13 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcExperianFraudScoreOne(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
 
         // Act
         var credentials =
@@ -1258,7 +1294,13 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
 
         // Act
         var credentials =
@@ -1369,7 +1411,8 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
-        when(mockConfigService.getParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("🦆,🐧");
+        when(mockConfigService.getConfiguration().getSelf().getReturnCodes().get("alwaysRequired"))
+                .thenReturn("🦆,🐧");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1406,7 +1449,8 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1424,7 +1468,13 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1451,7 +1501,8 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1468,7 +1519,13 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1495,9 +1552,21 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("10");
-        when(mockConfigService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("mock-vtm-claim");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getP2()
+                        .toString())
+                .thenReturn("10");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getReturnCodes()
+                        .get("nonCiBreachingP0"))
+                .thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
@@ -1511,7 +1580,11 @@ class UserIdentityServiceTest {
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
-        verify(mockConfigService, never()).getParameter(RETURN_CODES_ALWAYS_REQUIRED);
+        verify(mockConfigService, never())
+                .getConfiguration()
+                .getSelf()
+                .getReturnCodes()
+                .get("alwaysRequired");
     }
 
     @Test
@@ -1702,8 +1775,20 @@ class UserIdentityServiceTest {
     class AreNamesAndDobCorrelatedForReverification {
         @BeforeEach
         void setup() {
-            when(mockConfigService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)).thenReturn("1");
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("3");
+            when(mockConfigService
+                            .getConfiguration()
+                            .getSelf()
+                            .getCoi()
+                            .getGivenNameChars()
+                            .toString())
+                    .thenReturn("1");
+            when(mockConfigService
+                            .getConfiguration()
+                            .getSelf()
+                            .getCoi()
+                            .getFamilyNameChars()
+                            .toString())
+                    .thenReturn("3");
         }
 
         @Test

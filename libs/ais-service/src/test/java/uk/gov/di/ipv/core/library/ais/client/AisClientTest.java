@@ -30,7 +30,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.AIS_NO_INTERVENTION_DTO;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_REPROVE_IDENTITY_DTO;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_RESPONSE_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_RESPONSE_REPROVE_IDENTITY;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AIS_API_BASE_URL;
 
 @ExtendWith(MockitoExtension.class)
 class AisClientTest {
@@ -48,7 +47,8 @@ class AisClientTest {
 
     @BeforeEach
     void setUp() {
-        when(configService.getParameter(AIS_API_BASE_URL)).thenReturn(TEST_BASE_URL);
+        when(configService.getConfiguration().getAis().getApiBaseUrl().toString())
+                .thenReturn(TEST_BASE_URL);
 
         underTest = new AisClient(configService, httpClient, sleeper);
     }

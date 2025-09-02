@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -28,6 +30,7 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,11 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.CLIENT_OAUTH_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS;
@@ -105,6 +104,13 @@ class CheckReverificationIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
                         .build();
+
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create("https://core-component.example"));
     }
 
     @Nested

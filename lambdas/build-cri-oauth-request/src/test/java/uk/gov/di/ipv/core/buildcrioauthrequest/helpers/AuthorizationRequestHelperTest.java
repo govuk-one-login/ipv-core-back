@@ -19,6 +19,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -53,7 +55,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -336,7 +337,11 @@ class AuthorizationRequestHelperTest {
 
     private void setupConfigurationServiceMock() {
         when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create(IPV_ISSUER));
     }
 
     private PrivateKey getEncryptionPrivateKey()

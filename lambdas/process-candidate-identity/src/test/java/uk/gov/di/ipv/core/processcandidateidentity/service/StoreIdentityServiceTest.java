@@ -18,7 +18,6 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -97,7 +96,7 @@ class StoreIdentityServiceTest {
     class StoreIdentityServiceSuccessfulStoreTest {
         @BeforeEach
         void setUp() {
-            when(configService.getParameter(ConfigurationVariable.COMPONENT_ID))
+            when(configService.getConfiguration().getSelf().getComponentId().toString())
                     .thenReturn(COMPONENT_ID);
         }
 

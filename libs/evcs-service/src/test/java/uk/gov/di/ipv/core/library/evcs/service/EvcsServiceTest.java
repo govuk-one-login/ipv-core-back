@@ -10,7 +10,6 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -439,7 +438,7 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getCimit().getComponentId().toString())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
@@ -488,7 +487,7 @@ class EvcsServiceTest {
                                                 EvcsVCState.CURRENT,
                                                 null)),
                                 null));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getCimit().getComponentId().toString())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act/Assert
@@ -515,7 +514,7 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getCimit().getComponentId().toString())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
@@ -547,7 +546,7 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getCimit().getComponentId().toString())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
@@ -582,7 +581,7 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getCimit().getComponentId().toString())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act

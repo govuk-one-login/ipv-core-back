@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
@@ -211,7 +210,7 @@ public class InitialiseIpvSessionHandler
             AuditEvent auditEvent =
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_START,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             auditEventUser,
                             extensionsIpvJourneyStart,
                             restrictedDeviceInformation);
@@ -222,7 +221,11 @@ public class InitialiseIpvSessionHandler
                 AuditEvent reverificationAuditEvent =
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_REVERIFY_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString(),
                                 auditEventUser,
                                 restrictedDeviceInformation);
                 auditService.sendAuditEvent(reverificationAuditEvent);

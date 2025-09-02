@@ -118,7 +118,7 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsParameters() {
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("test-component-id", param);
@@ -130,7 +130,7 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("someOtherFeature"));
 
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("test-component-id", param);
@@ -141,7 +141,7 @@ class AppConfigServiceTest {
         // Act & Assert
         assertThrows(
                 ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL));
+                () -> configService.getConfiguration().getEvcs().getApplicationUrl().toString());
     }
 
     // Get specific parameters
@@ -179,8 +179,9 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsUpdatedParameters() {
         // Act
-        var componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-        var bearerTokenTtl = configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
+        var componentId = configService.getConfiguration().getSelf().getComponentId().toString();
+        var bearerTokenTtl =
+                configService.getConfiguration().getSelf().getBearerTokenTtl().toString();
 
         // Assert
         assertEquals("test-component-id", componentId);
@@ -196,13 +197,13 @@ class AppConfigServiceTest {
         """);
 
         // Act
-        componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("different-component-id", componentId);
         assertThrows(
                 ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
+                () -> configService.getConfiguration().getSelf().getBearerTokenTtl().toString());
     }
 
     // Feature flags
@@ -213,7 +214,7 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("testFeature"));
 
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("alternate-component-id", param);

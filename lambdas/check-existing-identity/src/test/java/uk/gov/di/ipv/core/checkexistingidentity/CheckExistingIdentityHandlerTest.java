@@ -30,6 +30,8 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountInterv
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -73,6 +75,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -90,15 +93,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -251,6 +247,13 @@ class CheckExistingIdentityHandlerTest {
                         .vtr(List.of(P2.name()))
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
+
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create("https://core-component.example"));
     }
 
     @AfterEach
@@ -1379,8 +1382,10 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+            when(configService.getConfiguration().getSelf().getComponentId())
+                    .thenReturn(URI.create("http://ipv/"));
+            when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours())
+                    .thenReturn(1);
 
             var journeyResponse =
                     toResponseClass(
@@ -1407,9 +1412,10 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
-                    .thenReturn("100000000"); // not the best way to test this
+            when(configService.getConfiguration().getSelf().getComponentId())
+                    .thenReturn(URI.create("http://ipv/"));
+            when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours())
+                    .thenReturn(100000000); // not the best way to test this
 
             var journeyResponse =
                     toResponseClass(

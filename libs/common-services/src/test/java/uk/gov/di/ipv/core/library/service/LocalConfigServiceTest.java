@@ -36,7 +36,7 @@ class LocalConfigServiceTest {
     void getParameterReturnsParameters() throws Exception {
         var configService = getConfigService();
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         assertEquals("https://identity.local.account.gov.uk", param);
     }
@@ -46,7 +46,7 @@ class LocalConfigServiceTest {
         var configService = getConfigService();
         configService.setFeatureSet(List.of("testFeature"));
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         assertEquals("alternate-component-id", param);
         configService.removeFeatureSet();
@@ -57,7 +57,7 @@ class LocalConfigServiceTest {
         var configService = getConfigService();
         configService.setFeatureSet(List.of("someOtherFeature"));
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         assertEquals("https://identity.local.account.gov.uk", param);
         configService.removeFeatureSet();

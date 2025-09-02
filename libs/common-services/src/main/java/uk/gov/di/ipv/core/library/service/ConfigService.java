@@ -128,7 +128,11 @@ public abstract class ConfigService {
 
     public List<String> getHistoricSigningKeys(String criId) {
         return Arrays.asList(
-                getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS, criId)
+                getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(criId)
+                        .getAllowedSharedAttributes()
+                        .toString()
                         .split("/"));
     }
 
@@ -187,12 +191,16 @@ public abstract class ConfigService {
     }
 
     public String getActiveConnection(Cri cri) {
-        return getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_ACTIVE_CONNECTION, cri.getId());
+        return getConfiguration()
+                .getCredentialIssuers()
+                .getById(cri.getId())
+                .getActiveConnection()
+                .toString();
     }
 
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
         try {
-            var secretValue = getParameter(ConfigurationVariable.CI_SCORING_CONFIG);
+            var secretValue = getConfiguration().getSelf().getCiScoringConfig().toString();
             List<ContraIndicatorConfig> configList =
                     OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorConfig> configMap = new HashMap<>();

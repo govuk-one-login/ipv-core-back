@@ -30,8 +30,6 @@ import static com.nimbusds.jose.jwk.KeyUse.ENCRYPTION;
 import static com.nimbusds.jose.jwk.KeyUse.SIGNATURE;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JWKS_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWKS_URL;
@@ -91,7 +89,11 @@ public class OAuthKeyService {
                                     "No key ID found in header, returning key from config")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString());
         }
 
         var jwksUrl = getClientJwksUrl(clientId);
@@ -100,7 +102,11 @@ public class OAuthKeyService {
                     LogHelper.buildLogMessage("JWKS URL not configured, returning key from config")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString());
         }
 
         var keyByKeyId = getCachedJWKSet(jwksUrl).filter(SIG_USE_MATCHER).getKeyByKeyId(keyId);
@@ -111,7 +117,11 @@ public class OAuthKeyService {
                             .with(LOG_CLIENT_ID.getFieldName(), clientId)
                             .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString());
         }
 
         LOGGER.info(
@@ -123,7 +133,12 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            return URI.create(configService.getParameter(CLIENT_JWKS_URL, clientId));
+            return URI.create(
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getJwksUrl()
+                            .toString());
         } catch (ConfigParameterNotFoundException e) {
             return null;
         }

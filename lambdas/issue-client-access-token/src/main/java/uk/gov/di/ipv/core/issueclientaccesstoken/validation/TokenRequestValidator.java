@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.time.Instant;
 import java.util.Set;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JTI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JTI_USED_AT;
@@ -96,7 +95,13 @@ public class TokenRequestValidator {
             ConfigService configService) {
         return new ClientAuthenticationVerifier<>(
                 new OAuthKeyServiceClientCredentialsSelector(oAuthKeyService),
-                Set.of(new Audience(configService.getParameter(COMPONENT_ID))),
+                Set.of(
+                        new Audience(
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString())),
                 JWTAudienceCheck.STRICT);
     }
 }
