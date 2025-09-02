@@ -83,13 +83,6 @@ public class SisClient {
                 return new SisGetStoredIdentityResult(true, false, null);
             }
 
-            if (httpResponse.statusCode() != HttpStatus.SC_OK) {
-                LOGGER.error(
-                        LogHelper.buildLogMessage(
-                                "Error response received from SIS: " + httpResponse.statusCode()));
-                return new SisGetStoredIdentityResult(false, false, null);
-            }
-
             SisStoredIdentityCheckDto identity = parseIdentity(httpResponse.body());
             if (identity == null) {
                 return new SisGetStoredIdentityResult(false, false, null);

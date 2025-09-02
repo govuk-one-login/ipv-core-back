@@ -8,18 +8,15 @@ import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 
 public class SisService {
     private final SisClient sisClient;
-    private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
-    public SisService(SisClient sisClient, ConfigService configService) {
+    public SisService(SisClient sisClient) {
         this.sisClient = sisClient;
-        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SisService(ConfigService configService) {
         this.sisClient = new SisClient(configService);
-        this.configService = configService;
     }
 
     public SisGetStoredIdentityResult getStoredIdentity(
