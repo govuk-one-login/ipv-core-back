@@ -32,8 +32,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.STORED_IDENTITY_SERVICE_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -84,8 +82,13 @@ class StoredIdentityServiceTest {
                 UserClaims.builder().passportClaim(List.of(PASSPORT_CLAIM, PASSPORT_CLAIM)).build();
 
         when(mockSignerFactory.getSisSigner()).thenReturn(signer);
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(MOCK_COMPONENT_ID);
-        when(mockConfigService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
+                .thenReturn(MOCK_COMPONENT_ID);
+        when(mockConfigService
+                        .getConfiguration()
+                        .getStoredIdentityService()
+                        .getComponentId()
+                        .toString())
                 .thenReturn(MOCK_SIS_COMPONENT_ID);
         when(mockUserIdentityService.getUserClaims(vcs)).thenReturn(userClaims);
 

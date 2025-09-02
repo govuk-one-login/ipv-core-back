@@ -13,6 +13,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -35,8 +37,8 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
@@ -64,6 +66,15 @@ class DcmawAsyncCriServiceTest {
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
 
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
+
+    private void stubComponentId() {
+        Config mockConfig = mock(Config.class);
+        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getComponentId()).thenReturn(URI.create("https://core-component.example"));
+    }
 
     @ParameterizedTest
     @MethodSource("mobileAppJourneyTypesAndClientCallbackUrls")
@@ -150,6 +161,7 @@ class DcmawAsyncCriServiceTest {
 
     @Test
     void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
+        stubComponentId();
         var journeyRequest =
                 JourneyRequest.builder()
                         .ipvSessionId("ipvSessionId")

@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
@@ -122,7 +121,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             var reverificationEndAuditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_REVERIFY_END,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             new AuditEventUser(
                                     userId,
                                     ipvSessionItem.getIpvSessionId(),

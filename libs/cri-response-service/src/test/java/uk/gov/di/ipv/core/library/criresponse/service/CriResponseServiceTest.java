@@ -28,7 +28,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -219,7 +218,11 @@ class CriResponseServiceTest {
     @Test
     void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
         // Arrange
-        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL))
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getDcmawAsyncVcPendingReturnTtl()
+                        .toString())
                 .thenReturn("1000000000");
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
@@ -237,7 +240,12 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
         // Arrange
-        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL)).thenReturn("-1");
+        when(mockConfigService
+                        .getConfiguration()
+                        .getSelf()
+                        .getDcmawAsyncVcPendingReturnTtl()
+                        .toString())
+                .thenReturn("-1");
 
         // Act
         var asyncCriStatus =

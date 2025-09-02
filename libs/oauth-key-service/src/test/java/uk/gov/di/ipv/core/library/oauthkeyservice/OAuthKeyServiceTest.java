@@ -33,8 +33,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JWKS_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -208,7 +206,11 @@ class OAuthKeyServiceTest {
             when(mockConfigService.getLongParameter(
                             ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
                     .thenReturn(5L);
-            when(mockConfigService.getParameter(CLIENT_JWKS_URL, TEST_CLIENT_ID))
+            when(mockConfigService
+                            .getConfiguration()
+                            .getClientConfig(TEST_CLIENT_ID)
+                            .getJwksUrl()
+                            .toString())
                     .thenReturn(TEST_JWKS_ENDPOINT);
             when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
@@ -232,8 +234,11 @@ class OAuthKeyServiceTest {
         @Test
         @MockitoSettings(strictness = LENIENT)
         void shouldReturnConfigKeyWhenNoKeyIdInHeader() throws Exception {
-            when(mockConfigService.getParameter(
-                            PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, TEST_CLIENT_ID))
+            when(mockConfigService
+                            .getConfiguration()
+                            .getClientConfig(TEST_CLIENT_ID)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString())
                     .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
 
             var headerWithNoKeyId = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(null).build();
@@ -245,8 +250,11 @@ class OAuthKeyServiceTest {
 
         @Test
         void shouldReturnConfigKeyWhenKeyIdNotFoundInJwkSet() throws Exception {
-            when(mockConfigService.getParameter(
-                            PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, TEST_CLIENT_ID))
+            when(mockConfigService
+                            .getConfiguration()
+                            .getClientConfig(TEST_CLIENT_ID)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString())
                     .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
             when(mockHttpResponse.body()).thenReturn("{\"keys\":[]}");
 
@@ -259,10 +267,17 @@ class OAuthKeyServiceTest {
         @Test
         @MockitoSettings(strictness = LENIENT)
         void shouldReturnConfigKeyIfJwksUrlNotConfiguredForClient() throws Exception {
-            when(mockConfigService.getParameter(CLIENT_JWKS_URL, TEST_CLIENT_ID))
+            when(mockConfigService
+                            .getConfiguration()
+                            .getClientConfig(TEST_CLIENT_ID)
+                            .getJwksUrl()
+                            .toString())
                     .thenThrow(new ConfigParameterNotFoundException("boop"));
-            when(mockConfigService.getParameter(
-                            PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, TEST_CLIENT_ID))
+            when(mockConfigService
+                            .getConfiguration()
+                            .getClientConfig(TEST_CLIENT_ID)
+                            .getPublicKeyMaterialForCoreToVerify()
+                            .toString())
                     .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
 
             var signingKey =

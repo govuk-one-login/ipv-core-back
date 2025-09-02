@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -186,7 +185,11 @@ public class CriStoringService {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_DWP_KBV_CRI_VC_ISSUED,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString(),
                                 auditEventUser,
                                 getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                                 new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -194,7 +197,7 @@ public class CriStoringService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_VC_RECEIVED,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             auditEventUser,
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -245,7 +248,7 @@ public class CriStoringService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

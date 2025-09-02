@@ -96,7 +96,7 @@ class ContractTest {
 
     @BeforeEach
     void setUp(MockServer mockServer) {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn("http://localhost:" + mockServer.getPort());
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
