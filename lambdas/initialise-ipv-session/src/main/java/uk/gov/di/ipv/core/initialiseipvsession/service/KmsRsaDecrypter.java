@@ -12,7 +12,7 @@ import com.nimbusds.jose.util.Base64URL;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import software.amazon.awssdk.services.kms.model.DecryptResponse;
@@ -47,7 +47,7 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         this.kmsClient =
                 KmsClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(UrlConnectionHttpClient.builder())
+                        .httpClientBuilder(AwsCrtHttpClient.builder())
                         .build();
     }
 
