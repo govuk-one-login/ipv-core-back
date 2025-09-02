@@ -21,14 +21,25 @@ public class LocalConfigService extends ConfigService {
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(File parametersFile, File secretsFile) {
-        setParameters(parseParameters(parametersFile));
-        secrets = parseParameters(secretsFile);
+        secrets = updateParameters(parseYamlFile(secretsFile));
+
+        // Update parameters
+        var yaml = parseYamlFile(parametersFile);
+        setParameters(updateParameters(yaml));
+
+        // Update configuration in parallel
+        setConfiguration(generateConfiguration(yaml));
     }
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(String parametersYaml, String secretsYaml) {
-        setParameters(updateParameters(parametersYaml));
         secrets = updateParameters(secretsYaml);
+
+        // Update parameters
+        setParameters(updateParameters(parametersYaml));
+
+        // Update configuration in parallel
+        setConfiguration(generateConfiguration(parametersYaml));
     }
 
     public List<String> getFeatureSet() {
@@ -45,10 +56,9 @@ public class LocalConfigService extends ConfigService {
 
     private Map<String, String> secrets = new HashMap<>();
 
-    private Map<String, String> parseParameters(File yamlFile) {
+    private String parseYamlFile(File yamlFile) {
         try {
-            String yamlContent = Files.readString(yamlFile.toPath());
-            return updateParameters(yamlContent);
+            return Files.readString(yamlFile.toPath());
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }

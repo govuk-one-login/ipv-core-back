@@ -91,11 +91,15 @@ public class AppConfigService extends ConfigService {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
 
+        // Updates parameters
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
             setParameters(updateParameters(paramsRaw));
             paramsRawHash = retrievedParamsHash;
         }
+
+        // Update configuration in parallel
+        setConfiguration(generateConfiguration(paramsRaw));
     }
 
     private static String getParamsRawHash(String appConfigYaml) {
