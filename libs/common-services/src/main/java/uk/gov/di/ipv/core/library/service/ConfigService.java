@@ -45,6 +45,7 @@ public abstract class ConfigService {
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
     private Map<String, String> parameters = new HashMap<>();
+    @Getter @Setter private Config configuration;
 
     @Getter @Setter private static boolean local;
 
