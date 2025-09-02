@@ -8,6 +8,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -28,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -42,6 +43,8 @@ class CriResponseServiceTest {
     private static final String TEST_FEATURE_SET = "test-feature-set";
     @Mock private DataStore<CriResponseItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
+    @Mock private InternalOperationsConfig mockSelf;
 
     private CriResponseService criResponseService;
 
@@ -58,6 +61,12 @@ class CriResponseServiceTest {
     @BeforeEach
     void setUp() {
         criResponseService = new CriResponseService(mockDataStore, mockConfigService);
+    }
+
+    private void stubDcmawPendingTtl(int ttlSeconds) {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getDcmawAsyncVcPendingReturnTtl()).thenReturn(ttlSeconds);
     }
 
     @Test
@@ -218,17 +227,13 @@ class CriResponseServiceTest {
 
     @Test
     void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
-        // Arrange
-        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL))
-                .thenReturn("1000000000");
+        stubDcmawPendingTtl(1000000000);
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
         var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
 
-        // Act
         var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
 
-        // Assert
         assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
         assertNull(asyncCriStatus.incompleteStatus());
         assertFalse(asyncCriStatus.isAwaitingVc());
@@ -237,7 +242,7 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
         // Arrange
-        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL)).thenReturn("-1");
+        stubDcmawPendingTtl(-1);
 
         // Act
         var asyncCriStatus =

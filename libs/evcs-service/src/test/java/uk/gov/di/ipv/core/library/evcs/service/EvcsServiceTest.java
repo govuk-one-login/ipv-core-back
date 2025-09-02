@@ -10,7 +10,8 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.CimitConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -28,6 +29,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,10 +117,18 @@ class EvcsServiceTest {
     @Mock ConfigService mockConfigService;
     @Mock StoredIdentityService mockStoredIdentityService;
     @InjectMocks EvcsService evcsService;
+    @Mock Config mockConfig;
+    @Mock CimitConfig mockCimit;
 
     @BeforeEach
     void setUp() {
         clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
+    }
+
+    private void givenCimitComponentId(String uri) {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getCimit()).thenReturn(mockCimit);
+        when(mockCimit.getComponentId()).thenReturn(URI.create(uri));
     }
 
     @Nested
@@ -432,6 +442,7 @@ class EvcsServiceTest {
     @Test
     void testGetVerifiableCredentials() throws CredentialParseException, EvcsServiceException {
         // Arrange
+        givenCimitComponentId("https://cimit.stubs.account.gov.uk");
         when(mockConfigService.getIssuerCris())
                 .thenReturn(
                         Map.of(
@@ -439,8 +450,6 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
                 .thenReturn(
@@ -473,6 +482,7 @@ class EvcsServiceTest {
     @Test
     void testGetVerifiableCredentialsShouldErrorWhenCriNotFound() throws EvcsServiceException {
         // Arrange
+        givenCimitComponentId("https://cimit.stubs.account.gov.uk");
         when(mockConfigService.getIssuerCris()).thenReturn(Map.of());
 
         when(mockEvcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(CURRENT)))
@@ -488,8 +498,6 @@ class EvcsServiceTest {
                                                 EvcsVCState.CURRENT,
                                                 null)),
                                 null));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act/Assert
         assertThrows(
@@ -502,6 +510,7 @@ class EvcsServiceTest {
     @Test
     void getVerifiableCredentialsShouldReturnParsedVcsWhenGivenEvcsVcs() throws Exception {
         // Arrange
+        givenCimitComponentId("https://cimit.stubs.account.gov.uk");
         var evcsVcs =
                 List.of(
                         new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
@@ -515,8 +524,6 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
         var vcs = evcsService.getVerifiableCredentials(TEST_USER_ID, evcsVcs, CURRENT);
@@ -534,6 +541,7 @@ class EvcsServiceTest {
     @Test
     void getVerifiableCredentialsSupportsMultipleStates() throws Exception {
         // Arrange
+        givenCimitComponentId("https://cimit.stubs.account.gov.uk");
         var evcsVcs =
                 List.of(
                         new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
@@ -547,8 +555,6 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
         var vcs =
@@ -568,6 +574,7 @@ class EvcsServiceTest {
     @Test
     void getVerifiableCredentialsFiltersOutCimitVcs() throws Exception {
         // Arrange
+        givenCimitComponentId("https://cimit.stubs.account.gov.uk");
         var evcsVcs =
                 List.of(
                         new EvcsGetUserVCDto(vcAddressM1a().getVcString(), CURRENT, null),
@@ -582,8 +589,6 @@ class EvcsServiceTest {
                                 Cri.ADDRESS,
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
-        when(mockConfigService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn("https://cimit.stubs.account.gov.uk");
 
         // Act
         var vcs = evcsService.getVerifiableCredentials(TEST_USER_ID, evcsVcs, CURRENT);

@@ -8,10 +8,13 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
+import uk.gov.di.ipv.core.library.config.domain.AisConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -30,7 +33,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.AIS_NO_INTERVENTION_DTO;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_REPROVE_IDENTITY_DTO;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_RESPONSE_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.ais.TestData.AIS_RESPONSE_REPROVE_IDENTITY;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AIS_API_BASE_URL;
 
 @ExtendWith(MockitoExtension.class)
 class AisClientTest {
@@ -43,12 +45,16 @@ class AisClientTest {
     @Mock HttpClient httpClient;
     @Captor private ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor;
     @Mock ConfigService configService;
+    @Mock Config mockConfig;
     @Mock Sleeper sleeper;
     AisClient underTest;
+    @Mock AisConfig mockAis;
 
     @BeforeEach
     void setUp() {
-        when(configService.getParameter(AIS_API_BASE_URL)).thenReturn(TEST_BASE_URL);
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getAis()).thenReturn(mockAis);
+        when(mockAis.getApiBaseUrl()).thenReturn(URI.create(TEST_BASE_URL));
 
         underTest = new AisClient(configService, httpClient, sleeper);
     }

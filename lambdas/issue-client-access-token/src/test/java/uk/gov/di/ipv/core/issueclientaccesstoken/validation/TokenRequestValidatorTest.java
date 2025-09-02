@@ -21,9 +21,11 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +49,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
@@ -60,13 +61,14 @@ class TokenRequestValidatorTest {
     private static final String TEST_JTI = "test-jti";
 
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private ClientAuthJwtIdService mockClientAuthJwtIdService;
     @Mock private OAuthKeyService mockOAuthKeyService;
     @InjectMocks private TokenRequestValidator validator;
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE);
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
     }
 
     @Test
@@ -308,29 +310,27 @@ class TokenRequestValidatorTest {
     }
 
     private Map<String, Object> getValidClaimsSetValues() {
+        // Use the same audience the validator will check
+        String expectedAud =
+                mockConfigService.getConfiguration().getSelf().getComponentId().toString();
+
         return Map.of(
-                JWTClaimNames.ISSUER,
-                CLIENT_ID,
-                JWTClaimNames.SUBJECT,
-                CLIENT_ID,
-                JWTClaimNames.AUDIENCE,
-                AUDIENCE,
-                JWTClaimNames.EXPIRATION_TIME,
-                fifteenMinutesFromNow(),
-                JWTClaimNames.JWT_ID,
-                TEST_JTI);
+                JWTClaimNames.ISSUER, CLIENT_ID,
+                JWTClaimNames.SUBJECT, CLIENT_ID,
+                JWTClaimNames.AUDIENCE, expectedAud,
+                JWTClaimNames.EXPIRATION_TIME, fifteenMinutesFromNow(),
+                JWTClaimNames.JWT_ID, TEST_JTI);
     }
 
     private Map<String, Object> getClaimsSetValuesMissingJwtId() {
+        String expectedAud =
+                mockConfigService.getConfiguration().getSelf().getComponentId().toString();
+
         return Map.of(
-                JWTClaimNames.ISSUER,
-                CLIENT_ID,
-                JWTClaimNames.SUBJECT,
-                CLIENT_ID,
-                JWTClaimNames.AUDIENCE,
-                AUDIENCE,
-                JWTClaimNames.EXPIRATION_TIME,
-                fifteenMinutesFromNow());
+                JWTClaimNames.ISSUER, CLIENT_ID,
+                JWTClaimNames.SUBJECT, CLIENT_ID,
+                JWTClaimNames.AUDIENCE, expectedAud,
+                JWTClaimNames.EXPIRATION_TIME, fifteenMinutesFromNow());
     }
 
     private static long fifteenMinutesFromNow() {

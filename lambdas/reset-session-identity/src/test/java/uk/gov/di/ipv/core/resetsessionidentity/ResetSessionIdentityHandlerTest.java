@@ -10,6 +10,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -26,6 +27,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -77,6 +79,7 @@ class ResetSessionIdentityHandlerTest {
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
@@ -105,6 +108,8 @@ class ResetSessionIdentityHandlerTest {
                         .evcsAccessToken(TEST_EVCS_TOKEN)
                         .scope(ScopeConstants.OPENID)
                         .build();
+
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
     }
 
     @Test

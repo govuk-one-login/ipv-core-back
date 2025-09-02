@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
@@ -105,7 +104,8 @@ class BuildUserIdentityHandlerTest {
         when(mockCimitUtilityService.getContraIndicatorsFromVc(cimitVc)).thenReturn(List.of());
 
         // Configure the config service
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
+        when(mockConfigService.getConfiguration().getSelf().getCoreVtmClaim().toString())
+                .thenReturn("dummyVtmClaim");
 
         var passportVcBuilder =
                 new PactJwtBuilder(

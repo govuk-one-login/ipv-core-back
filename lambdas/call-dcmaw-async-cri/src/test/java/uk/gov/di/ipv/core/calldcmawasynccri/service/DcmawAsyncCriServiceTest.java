@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -25,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
@@ -35,8 +37,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
@@ -58,11 +59,11 @@ class DcmawAsyncCriServiceTest {
     public static final String CONNECTION = "connection";
 
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private CriApiService mockCriApiService;
-    @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService auditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
-
+    @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
     @ParameterizedTest
@@ -150,6 +151,7 @@ class DcmawAsyncCriServiceTest {
 
     @Test
     void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
         var journeyRequest =
                 JourneyRequest.builder()
                         .ipvSessionId("ipvSessionId")

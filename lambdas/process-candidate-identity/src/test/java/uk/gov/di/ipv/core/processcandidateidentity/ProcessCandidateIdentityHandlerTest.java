@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -40,6 +41,7 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
@@ -139,6 +141,7 @@ class ProcessCandidateIdentityHandlerTest {
 
     @Mock private Context context;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private AuditService auditService;
@@ -157,6 +160,7 @@ class ProcessCandidateIdentityHandlerTest {
 
     @BeforeEach
     void setUp() {
+        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
         requestBuilder =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(SESSION_ID)

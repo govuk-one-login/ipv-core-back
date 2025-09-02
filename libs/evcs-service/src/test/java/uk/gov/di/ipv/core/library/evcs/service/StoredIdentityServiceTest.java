@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
+import uk.gov.di.ipv.core.library.config.domain.StoredIdentityServiceConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserClaims;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -21,6 +24,7 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.PassportDetails;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
@@ -32,8 +36,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.STORED_IDENTITY_SERVICE_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -59,6 +61,9 @@ class StoredIdentityServiceTest {
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private Config mockConfig;
+    @Mock private InternalOperationsConfig mockSelfConfig;
+    @Mock private StoredIdentityServiceConfig mockSisConfig;
 
     private StoredIdentityService storedIdentityService;
 
@@ -75,6 +80,15 @@ class StoredIdentityServiceTest {
                         CURRENT_TIME);
     }
 
+    private void stubComponentIds() {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelfConfig);
+        when(mockSelfConfig.getComponentId()).thenReturn(URI.create(MOCK_COMPONENT_ID));
+
+        when(mockConfig.getStoredIdentityService()).thenReturn(mockSisConfig);
+        when(mockSisConfig.getComponentId()).thenReturn(URI.create(MOCK_SIS_COMPONENT_ID));
+    }
+
     @Test
     void getStoredIdentityForEvcsShouldReturnGeneratedStoredIdentity() throws Exception {
         // Arrange
@@ -82,11 +96,8 @@ class StoredIdentityServiceTest {
         var vcs = List.of(passportVc);
         var userClaims =
                 UserClaims.builder().passportClaim(List.of(PASSPORT_CLAIM, PASSPORT_CLAIM)).build();
-
         when(mockSignerFactory.getSisSigner()).thenReturn(signer);
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(MOCK_COMPONENT_ID);
-        when(mockConfigService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
-                .thenReturn(MOCK_SIS_COMPONENT_ID);
+        stubComponentIds();
         when(mockUserIdentityService.getUserClaims(vcs)).thenReturn(userClaims);
 
         // Act

@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
@@ -33,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -73,6 +75,7 @@ class UserReverificationHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private AuditService mockAuditService;
@@ -83,6 +86,7 @@ class UserReverificationHandlerTest {
 
     @BeforeEach
     void setUp() {
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);

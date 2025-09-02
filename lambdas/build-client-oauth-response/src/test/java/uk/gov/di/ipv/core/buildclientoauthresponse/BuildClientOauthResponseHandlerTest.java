@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidat
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -37,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -75,6 +77,7 @@ class BuildClientOauthResponseHandlerTest {
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
@@ -84,6 +87,8 @@ class BuildClientOauthResponseHandlerTest {
     @BeforeEach
     void setUp() {
         authorizationCode = new AuthorizationCode().getValue();
+
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
     }
 
     @AfterEach

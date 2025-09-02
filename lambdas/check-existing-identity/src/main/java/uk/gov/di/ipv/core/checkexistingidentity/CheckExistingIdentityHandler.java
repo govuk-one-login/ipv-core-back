@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSe
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -285,7 +284,11 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString(),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
             }
@@ -681,7 +684,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
@@ -694,7 +697,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         new AuditExtensionPreviousIpvSessionId(previousIpvSessionId),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
