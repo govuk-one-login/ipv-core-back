@@ -32,31 +32,35 @@ public class FetchSystemSettingsHandler
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
-        // Fetch current feature flag statuses
-        Map<String, Boolean> featureFlagStatuses =
-                configService.getParametersByPrefix("featureFlags").entrySet().stream()
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        entry -> Boolean.parseBoolean(entry.getValue())));
-
-        // Fetch current CRI statuses
-        Map<String, Boolean> criStatuses =
-                configService.getParametersByPrefix("credentialIssuers").entrySet().stream()
-                        .filter(entry -> entry.getKey().matches("([a-zA-Z0-9]*)/enabled"))
-                        .collect(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().split("/")[0],
-                                        entry -> Boolean.parseBoolean(entry.getValue())));
-
-        var results =
-                Map.of("featureFlagStatuses", featureFlagStatuses, "criStatuses", criStatuses);
-
         try {
+            // Fetch current feature flag statuses
+            Map<String, Boolean> featureFlagStatuses =
+                    configService.getParametersByPrefix("featureFlags").entrySet().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            entry -> Boolean.parseBoolean(entry.getValue())));
+            LOGGER.error("Fetched feature flag statuses: {}", featureFlagStatuses);
+
+            // Fetch current CRI statuses
+            Map<String, Boolean> criStatuses =
+                    configService.getParametersByPrefix("credentialIssuers").entrySet().stream()
+                            .filter(entry -> entry.getKey().matches("([a-zA-Z0-9]*)/enabled"))
+                            .collect(
+                                    Collectors.toMap(
+                                            entry -> entry.getKey().split("/")[0],
+                                            entry -> Boolean.parseBoolean(entry.getValue())));
+            LOGGER.error("Fetched credential issuer statuses: {}", criStatuses);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Map.of("Content-Type", "application/json"))
-                    .withBody(OBJECT_MAPPER.writeValueAsString(results));
+                    .withBody(
+                            OBJECT_MAPPER.writeValueAsString(
+                                    Map.of(
+                                            "featureFlagStatuses",
+                                            featureFlagStatuses,
+                                            "criStatuses",
+                                            criStatuses)));
         } catch (JsonProcessingException e) {
             LOGGER.error("Unhandled exception", e);
             return new APIGatewayProxyResponseEvent()
