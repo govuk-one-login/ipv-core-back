@@ -28,7 +28,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
@@ -65,7 +64,12 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(oauthCriConfig.getComponentId())
-                        .issuer(configService.getParameter(COMPONENT_ID))
+                        .issuer(
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString())
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(

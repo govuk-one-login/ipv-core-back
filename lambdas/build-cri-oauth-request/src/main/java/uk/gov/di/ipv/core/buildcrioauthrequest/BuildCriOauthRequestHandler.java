@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -217,7 +216,7 @@ public class BuildCriOauthRequestHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -225,7 +224,11 @@ public class BuildCriOauthRequestHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_DWP_KBV_CRI_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getComponentId()
+                                        .toString(),
                                 auditEventUser,
                                 new AuditRestrictedDeviceInformation(
                                         input.getDeviceInformation())));
@@ -474,8 +477,12 @@ public class BuildCriOauthRequestHandler
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
         String allowedSharedAttributes =
-                configService.getParameter(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, cri.getId());
+                configService
+                        .getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(cri.getId())
+                        .getAllowedSharedAttributes()
+                        .toString();
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));

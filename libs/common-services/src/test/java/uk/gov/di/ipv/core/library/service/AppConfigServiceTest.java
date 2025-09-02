@@ -26,10 +26,12 @@ import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
+import uk.gov.di.ipv.core.library.testdata.CommonData;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -53,64 +55,29 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class AppConfigServiceTest {
-    private static final String TEST_RAW_PARAMETERS =
-            """
-        core:
-          self:
-            componentId: "test-component-id"
-            bearerTokenTtl: 1800
-            someStringList: "a,list,of,strings"
-          credentialIssuers:
-            address:
-              activeConnection: main
-              connections:
-                main:
-                  componentId: main-issuer
-                  authorizeUrl: https://testAuthoriseUrl
-                  tokenUrl: https://testTokenUrl
-                  credentialUrl: https://testCredentialUrl
-                  clientId: ipv-core-test
-                  signingKey: '{\\"kty\\":\\"EC\\",\\"kid\\":\\"test-fixtures-ec-key\\",\\"use\\":\\"sig\\",\\"d\\":\\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\\",\\"y\\":\\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\\"}' # pragma: allowlist secret
-                  encryptionKey: '{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"use\\":\\"enc\\",\\"kid\\":\\"nfwejnfwefcojwnk\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}' # pragma: allowlist secret
-                  clientCallbackUrl: https://testClientCallBackUrl
-                  requiresApiKey: true
-                  requiresAdditionalEvidence: false
-                  jwksUrl: https://testWellKnownUrl
-                stub:
-                  componentId: stub-issuer
-              historicSigningKeys: '{"kty":"EC","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}/{"kty":"EC","crv":"P-256","x":"MjTFSolNjla11Dl8Zk9UpcpnMyWumfjIbO1E-0c8v-E","y":"xTdKNukh5sOvMgNTKjo0hVYNNcAS-N7X1R1S0cjllTo"}' # pragma: allowlist secret
-            dcmaw:
-              activeConnection: test
-              connections:
-                test:
-                  componentId: dcmaw-issuer
-          featureFlags:
-            testFeatureFlag: false
-            anotherFeatureFlag: true
-          features:
-            testFeature:
-              featureFlags:
-                testFeatureFlag: true
-              self:
-                componentId: "alternate-component-id"
-          cimit:
-            config:
-              NEEDS-ALTERNATE-DOC:
-                - event: /journey/alternate-doc-invalid-dl
-                  document: drivingPermit
-          clients:
-            testClient:
-              validRedirectUrls: a,list,of,strings
-    """;
+    private static String TEST_RAW_PARAMETERS;
+
     @Mock Cri criMock;
     @Mock AppConfigProvider appConfigProvider;
     @Mock SecretsProvider secretsProvider;
     AppConfigService configService;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        if (TEST_RAW_PARAMETERS == null) {
+            TEST_RAW_PARAMETERS =
+                    new String(
+                            CommonData.class
+                                    .getResourceAsStream("/test-parameters.yaml")
+                                    .readAllBytes(),
+                            StandardCharsets.UTF_8);
+        }
+
         configService = new AppConfigService(appConfigProvider, secretsProvider);
         lenient().when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS);
+
+        configService.setParameters(configService.updateParameters(TEST_RAW_PARAMETERS));
+        configService.setConfiguration(ConfigService.generateConfiguration(TEST_RAW_PARAMETERS));
     }
 
     // Get parameter
@@ -118,10 +85,10 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsParameters() {
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
-        assertEquals("test-component-id", param);
+        assertEquals("https://identity.local.account.gov.uk", param);
     }
 
     @Test
@@ -130,18 +97,19 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("someOtherFeature"));
 
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
-        assertEquals("test-component-id", param);
+        assertEquals("https://identity.local.account.gov.uk", param);
     }
+
 
     @Test
     void getParameterThrowsForMissingValue() {
         // Act & Assert
         assertThrows(
                 ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL));
+                () -> configService.getConfiguration().getEvcs().getApplicationUrl().toString());
     }
 
     // Get specific parameters
@@ -160,7 +128,7 @@ class AppConfigServiceTest {
         var value = configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
 
         // Assert
-        assertEquals(1800L, value);
+        assertEquals(3600L, value);
     }
 
     @Test
@@ -168,10 +136,9 @@ class AppConfigServiceTest {
         // Act
         var value =
                 configService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "testClient");
-
+                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "orchStub");
         // Assert
-        assertEquals(List.of("a", "list", "of", "strings"), value);
+        assertEquals(List.of("http://localhost:4500/callback"), value);
     }
 
     // Updated config
@@ -179,30 +146,31 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsUpdatedParameters() {
         // Act
-        var componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-        var bearerTokenTtl = configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
+        var componentId = configService.getConfiguration().getSelf().getComponentId().toString();
+        var bearerTokenTtl =
+                configService.getConfiguration().getSelf().getBearerTokenTtl().toString();
 
         // Assert
-        assertEquals("test-component-id", componentId);
-        assertEquals("1800", bearerTokenTtl);
+        assertEquals("https://identity.local.account.gov.uk", componentId);
+        assertEquals("3600", bearerTokenTtl);
 
         // Arrange
         when(appConfigProvider.get(any()))
                 .thenReturn(
                         """
-          core:
-            self:
-              componentId: "different-component-id"
-        """);
+              core:
+                self:
+                  componentId: "different-component-id"
+            """);
 
         // Act
-        componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("different-component-id", componentId);
         assertThrows(
                 ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
+                () -> configService.getConfiguration().getSelf().getBearerTokenTtl().toString());
     }
 
     // Feature flags
@@ -213,7 +181,7 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("testFeature"));
 
         // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getConfiguration().getSelf().getComponentId().toString();
 
         // Assert
         assertEquals("alternate-component-id", param);
@@ -381,10 +349,12 @@ class AppConfigServiceTest {
 
     @Test
     void shouldReturnIssuerCris() {
-        // Act & Assert
-        assertEquals(
-                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "dcmaw-issuer", DCMAW),
-                configService.getIssuerCris());
+        var issuerCris = configService.getIssuerCris();
+
+        assertEquals(ADDRESS, issuerCris.get("https://address-cri.stubs.account.gov.uk"));
+        assertEquals(DCMAW, issuerCris.get("https://dcmaw-cri.stubs.account.gov.uk"));
+        assertEquals(PASSPORT, issuerCris.get("https://passport-cri.stubs.account.gov.uk"));
+        assertTrue(issuerCris.size() > 3);
     }
 
     // OAuth CRI config

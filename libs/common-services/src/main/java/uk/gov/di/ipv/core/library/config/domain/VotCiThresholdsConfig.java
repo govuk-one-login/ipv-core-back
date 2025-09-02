@@ -21,4 +21,13 @@ public class VotCiThresholdsConfig {
     @NonNull
     @JsonProperty("P3")
     final Integer p3;
+
+    public Integer getThreshold(String vot) {
+        return switch (vot.toUpperCase()) {
+            case "P1" -> p1;
+            case "P2" -> p2;
+            case "P3" -> p3;
+            default -> null;
+        };
+    }
 }

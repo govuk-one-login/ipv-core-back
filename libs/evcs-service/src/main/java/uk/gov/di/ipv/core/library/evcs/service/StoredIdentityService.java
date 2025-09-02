@@ -23,8 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.STORED_IDENTITY_SERVICE_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSisSignedJwt;
 
 public class StoredIdentityService {
@@ -71,8 +69,13 @@ public class StoredIdentityService {
                         userIdentityService.getUserClaims(vcs), new TypeReference<>() {});
 
         return new JWTClaimsSet.Builder()
-                .issuer(configService.getParameter(COMPONENT_ID))
-                .audience(configService.getParameter(STORED_IDENTITY_SERVICE_COMPONENT_ID))
+                .issuer(configService.getConfiguration().getSelf().getComponentId().toString())
+                .audience(
+                        configService
+                                .getConfiguration()
+                                .getStoredIdentityService()
+                                .getComponentId()
+                                .toString())
                 .subject(userId)
                 .notBeforeTime(Date.from(now))
                 .issueTime(Date.from(now))

@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -30,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 
@@ -53,7 +56,8 @@ class ProcessMobileAppCallbackHandlerTest {
     private static final String TEST_OAUTH_STATE = "test_oauth_state";
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private Context mockContext;
-    @Mock private ConfigService configService;
+    @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -61,6 +65,11 @@ class ProcessMobileAppCallbackHandlerTest {
     @Mock private AuditService auditService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
     @InjectMocks private ProcessMobileAppCallbackHandler processMobileAppCallbackHandler;
+
+    @BeforeEach
+    void setUp() {
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+    }
 
     @Test
     void shouldReturnNextWhenCriResponseStatusNotError() throws Exception {

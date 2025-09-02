@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -21,6 +22,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -34,9 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +59,7 @@ class CallDcmawAsyncCriHandlerTest {
                     .build();
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private DcmawAsyncCriService mockDcmawAsyncCriService;
@@ -70,6 +71,8 @@ class CallDcmawAsyncCriHandlerTest {
     @BeforeEach
     public void setUp() {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
+
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
     }
 
     @AfterEach

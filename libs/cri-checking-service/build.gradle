@@ -16,6 +16,8 @@ dependencies {
 			project(":libs:verifiable-credentials"),
 			project(":libs:common-services")
 
+	testImplementation project(':libs:test-helpers')
+
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 

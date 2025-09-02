@@ -42,7 +42,6 @@ import java.io.IOException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 // To run these tests locally you need to:
@@ -162,7 +161,8 @@ class IssueClientAccessTokenHandlerTest {
 
     @State("the audience is http://ipv/")
     public void setAudience() {
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getConfiguration().getSelf().getComponentId().toString())
+                .thenReturn("http://ipv/");
     }
 
     @TestTemplate

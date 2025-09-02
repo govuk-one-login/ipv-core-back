@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -98,7 +97,7 @@ public class StoreIdentityService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventParameters.auditEventUser(),
                         new AuditExtensionCandidateIdentityType(
                                 identityType, isSiRecordCreated, vot),

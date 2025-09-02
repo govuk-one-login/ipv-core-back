@@ -8,6 +8,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -25,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
@@ -56,6 +57,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSucces
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
+    @Mock private InternalOperationsConfig mockSelf;
 
     private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
@@ -177,9 +180,11 @@ class VcHelperTest {
     @Test
     void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
         // Arrange
         VerifiableCredential vc = vcExperianFraudExpired();
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(mockSelf.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);
@@ -191,9 +196,12 @@ class VcHelperTest {
     @Test
     void shouldReturnFalseWhenVcIsNotExpired() {
         VcHelper.setConfigService(configService);
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+
         // Arrange
         VerifiableCredential vc = vcExperianFraudNotExpired();
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(mockSelf.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);

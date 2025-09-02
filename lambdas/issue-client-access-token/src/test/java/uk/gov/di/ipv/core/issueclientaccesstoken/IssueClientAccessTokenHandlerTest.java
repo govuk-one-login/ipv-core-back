@@ -25,6 +25,7 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -33,6 +34,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -61,6 +63,7 @@ class IssueClientAccessTokenHandlerTest {
     private IpvSessionItem sessionItem;
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private AccessTokenService mockAccessTokenService;
     @Mock private IpvSessionService mockSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
@@ -71,6 +74,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @BeforeEach
     void setUp() {
+        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 

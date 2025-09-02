@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -22,8 +23,8 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
-import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.util.HashMap;
@@ -35,9 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CheckGpg45ScoreHandlerTest {
@@ -53,10 +52,10 @@ class CheckGpg45ScoreHandlerTest {
     private static ProcessRequest request;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private Context context;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
-    @Mock private UserIdentityService userIdentityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @InjectMocks private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private IpvSessionItem ipvSessionItem;
@@ -91,6 +90,8 @@ class CheckGpg45ScoreHandlerTest {
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
                         .build();
+
+        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
     }
 
     @Test

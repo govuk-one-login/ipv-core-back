@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.evcs.service;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -95,7 +94,7 @@ public class EvcsService {
         try {
             var issuerCris = configService.getIssuerCris();
             var cimitComponentId =
-                    configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
+                    configService.getConfiguration().getCimit().getComponentId().toString();
 
             for (var vc : evcsUserVcs) {
                 var jwt = SignedJWT.parse(vc.vc());

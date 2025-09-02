@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -453,7 +452,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         getAuditExtensions(auditEventType, auditContext),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -482,7 +481,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         new AuditExtensionSubjourneyType(journeyType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

@@ -32,9 +32,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
@@ -160,13 +157,18 @@ public class JarValidator {
                             .with(LOG_COUNT.getFieldName(), requiredScopesInRequest.size()));
             return false;
         }
-        return Scope.parse(configService.getParameter(CLIENT_VALID_SCOPES, clientId))
+        return Scope.parse(
+                        configService
+                                .getConfiguration()
+                                .getClientConfig(clientId)
+                                .getValidScopes()
+                                .toString())
                 .contains(requiredScopesInRequest.get(0));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configService.getParameter(CLIENT_ISSUER, clientId);
+            configService.getConfiguration().getClientConfig(clientId).getIssuer().toString();
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ConfigParameterNotFoundException e) {
             LOGGER.error(
@@ -229,8 +231,9 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configService.getParameter(COMPONENT_ID);
-        String clientIssuer = configService.getParameter(CLIENT_ISSUER, clientId);
+        String criAudience = configService.getConfiguration().getSelf().getComponentId().toString();
+        String clientIssuer =
+                configService.getConfiguration().getClientConfig(clientId).getIssuer().toString();
 
         var requiredClaims =
                 new HashSet<>(

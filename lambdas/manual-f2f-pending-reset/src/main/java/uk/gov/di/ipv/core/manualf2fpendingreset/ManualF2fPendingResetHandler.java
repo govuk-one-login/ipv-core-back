@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -84,7 +83,7 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
             auditService.sendAuditEvent(
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_F2F_SUPPORT_CANCEL,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             new AuditEventUser(input, null, null, null)));
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to delete record", e));

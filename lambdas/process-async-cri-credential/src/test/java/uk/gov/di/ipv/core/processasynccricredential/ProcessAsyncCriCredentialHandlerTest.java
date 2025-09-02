@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -29,6 +30,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
@@ -91,6 +93,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @Captor private ArgumentCaptor<VerifiableCredential> vcArgumentCaptor;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private AuditService auditService;
     @Mock private CimitService cimitService;
@@ -106,6 +109,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @BeforeEach
     void setUp() {
         F2F_VC = vcF2fPassportPhotoM1a();
+        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
     }
 
     @AfterEach

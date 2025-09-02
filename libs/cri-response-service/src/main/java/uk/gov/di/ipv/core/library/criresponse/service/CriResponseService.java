@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -120,8 +119,11 @@ public class CriResponseService {
                 var expiry =
                         DateUtils.toSecondsSinceEpoch(issuedAt)
                                 + Integer.parseInt(
-                                        configService.getParameter(
-                                                DCMAW_ASYNC_VC_PENDING_RETURN_TTL));
+                                        configService
+                                                .getConfiguration()
+                                                .getSelf()
+                                                .getDcmawAsyncVcPendingReturnTtl()
+                                                .toString());
                 if (now < expiry) {
                     var criResponse = getCriResponseItem(userId, DCMAW_ASYNC);
                     return new AsyncCriStatus(
