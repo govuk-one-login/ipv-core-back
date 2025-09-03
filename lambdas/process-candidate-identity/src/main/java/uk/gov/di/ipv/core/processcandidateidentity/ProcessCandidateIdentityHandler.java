@@ -260,7 +260,7 @@ public class ProcessCandidateIdentityHandler
 
             String userId = clientOAuthSessionItem.getUserId();
 
-            // fail open scenario - assuming no intervention
+            // default - assuming no intervention
             // once AIS_ENABLED flag will be cleared, this can be removed
             var currentAccountInterventionType = AIS_NO_INTERVENTION;
 
