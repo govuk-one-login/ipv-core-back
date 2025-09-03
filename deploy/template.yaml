@@ -3434,6 +3434,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "fetch-journey-transitions-${Environment}"
+      Description: Lambda that fetches user traffic over journey map edges.
       Handler: uk.gov.di.ipv.core.fetchjourneytransitions.FetchJourneyTransitionsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/fetch-journey-transitions
@@ -3498,6 +3499,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "fetch-system-settings-${Environment}"
+      Description: "Lambda that fetches AppConfig to discover feature flag and CRI enabled settings."
       Handler: uk.gov.di.ipv.core.fetchsystemsettings.FetchSystemSettingsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/fetch-system-settings
