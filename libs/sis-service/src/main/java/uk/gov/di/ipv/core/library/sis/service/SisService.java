@@ -102,41 +102,23 @@ public class SisService {
         Optional<VotMatchingResult.VotAndProfile> maximumMatchedVot = Optional.empty();
 
         try {
-            // Get SIS details
-            storedIdentityResult = getStoredIdentity(clientOAuthSessionItem);
-
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             String userId = clientOAuthSessionItem.getUserId();
 
-            // Get EVCS details
-            var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
+            // Get SIS details
+            storedIdentityResult = getStoredIdentity(clientOAuthSessionItem);
 
-            // Get EVCS VC signatures
-            evcsVcSignatures =
-                    evcsCredentials.stream()
-                            .map(credential -> getVcSignature(credential.getVcString()))
-                            .toList();
-
-            maximumMatchedVot = calculateMaximumMatchedVot(evcsCredentials, userId);
-
-            // Check SIS result
             if (!storedIdentityResult.requestSucceeded()) {
                 throw new SisMatchException(
                         FailureCode.sis_error,
                         "Call to SIS service failed, no stored identity comparison can be made");
             }
 
-            if (!storedIdentityResult.identityWasFound() && evcsCredentials.isEmpty()) {
+            if (!storedIdentityResult.identityWasFound()) {
                 LOGGER.info(
                         LogHelper.buildLogMessage(
-                                "No credential found in EVCS or SIS so no comparison to do"));
+                                "No credential found in SIS so no comparison to do"));
                 return;
-            }
-
-            if (!storedIdentityResult.identityWasFound()) {
-                throw new SisMatchException(
-                        FailureCode.sis_no_identity,
-                        "Call to SIS service did not find an identity record, but EVCS has VCs for user");
             }
 
             // Get stored signatures
@@ -148,6 +130,16 @@ public class SisService {
                             new Base64URL(storedJwtParts[2]));
             var storedClaimset = storedJwt.getJWTClaimsSet();
             sisVcSignatures = (ArrayList<String>) storedClaimset.getClaims().get("credentials");
+
+            // Get EVCS details
+            var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
+
+            evcsVcSignatures =
+                    evcsCredentials.stream()
+                            .map(credential -> getVcSignature(credential.getVcString()))
+                            .toList();
+
+            maximumMatchedVot = calculateMaximumMatchedVot(evcsCredentials, userId);
 
             // Compare VOTs
             var evcsVot = maximumMatchedVot.isPresent() ? maximumMatchedVot.get().vot() : null;
