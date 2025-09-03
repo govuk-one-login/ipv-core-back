@@ -261,7 +261,6 @@ public class ProcessCandidateIdentityHandler
             String userId = clientOAuthSessionItem.getUserId();
 
             // default - assuming no intervention
-            // once AIS_ENABLED flag will be cleared, this can be removed
             var currentAccountInterventionType = AIS_NO_INTERVENTION;
 
             // We skip AIS checks for reverification journeys or if we don't have a user ID to check
