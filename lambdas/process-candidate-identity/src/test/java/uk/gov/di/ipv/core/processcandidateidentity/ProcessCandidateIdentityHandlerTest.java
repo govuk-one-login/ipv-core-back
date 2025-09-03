@@ -652,12 +652,9 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @ParameterizedTest
-        @MethodSource("createNonRelevantInterventionStates")
+        @MethodSource("createNonRelevantMidInterventionTypes")
         void shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromAis(
-                boolean isReproveIdentity,
-                String finalAccountInterventionCode,
-                AisInterventionType finalAccountInterventionType,
-                AisInterventionType finalFetchedAccountInterventionType)
+                boolean isReproveIdentity, AisInterventionType finalFetchedAccountInterventionType)
                 throws Exception {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID))
@@ -717,12 +714,22 @@ class ProcessCandidateIdentityHandlerTest {
                             any());
         }
 
+        private static Stream<Arguments> createNonRelevantMidInterventionTypes() {
+            return Stream.of(
+                    // No interventions
+                    Arguments.of(false, AIS_NO_INTERVENTION),
+                    // Reprove identity cleared after reproved
+                    Arguments.of(true, AIS_NO_INTERVENTION),
+                    // Reprove identity not cleared yet
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY));
+        }
+
         @ParameterizedTest
-        @MethodSource("createNonRelevantInterventionStates")
+        @MethodSource("createNonRelevantTicfInterventionTypes")
         void
                 shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
                         boolean isReproveIdentity,
-                        String finalAccountInterventionCode,
+                        String ticfInterventionCode,
                         AisInterventionType finalAccountInterventionType)
                         throws Exception {
             // Arrange
@@ -736,7 +743,7 @@ class ProcessCandidateIdentityHandlerTest {
             var vcTicfWithIntervention =
                     generateTicfVcWithIntervention(
                             Intervention.builder()
-                                    .withInterventionCode(finalAccountInterventionCode)
+                                    .withInterventionCode(ticfInterventionCode)
                                     .build());
             var ticfVcs = List.of(vcTicfWithIntervention);
             when(checkCoiService.isCoiCheckSuccessful(
@@ -788,18 +795,14 @@ class ProcessCandidateIdentityHandlerTest {
                             any());
         }
 
-        private static Stream<Arguments> createNonRelevantInterventionStates() {
+        private static Stream<Arguments> createNonRelevantTicfInterventionTypes() {
             return Stream.of(
                     // No interventions
-                    Arguments.of(false, "00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
+                    Arguments.of(false, "00", AIS_NO_INTERVENTION),
                     // Reprove identity cleared after reproved
-                    Arguments.of(true, "00", AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
+                    Arguments.of(true, "00", AIS_NO_INTERVENTION),
                     // Reprove identity not cleared yet
-                    Arguments.of(
-                            true,
-                            "05",
-                            AIS_FORCED_USER_IDENTITY_VERIFY,
-                            AIS_FORCED_USER_IDENTITY_VERIFY));
+                    Arguments.of(true, "05", AIS_FORCED_USER_IDENTITY_VERIFY));
         }
 
         @ParameterizedTest
