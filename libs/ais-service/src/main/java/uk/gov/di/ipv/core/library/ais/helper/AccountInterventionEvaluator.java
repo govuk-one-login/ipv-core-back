@@ -49,11 +49,12 @@ public final class AccountInterventionEvaluator {
     }
 
     public static boolean hasTicfIntervention(
-            AisInterventionType current, AisInterventionType ticfIntervention) {
+            AisInterventionType currentIntervention, AisInterventionType ticfIntervention) {
 
-        var bothValid = isValidIntervention(current) && isValidIntervention(ticfIntervention);
-        var bothReprove = isBothIdentityVerify(current, ticfIntervention);
-        var reproveToValid = isIdentityVerifyToValid(current, ticfIntervention);
+        var bothValid =
+                isValidIntervention(currentIntervention) && isValidIntervention(ticfIntervention);
+        var bothReprove = isBothIdentityVerify(currentIntervention, ticfIntervention);
+        var reproveToValid = isIdentityVerifyToValid(currentIntervention, ticfIntervention);
 
         if (bothValid || bothReprove || reproveToValid) {
             return false;
@@ -62,7 +63,7 @@ public final class AccountInterventionEvaluator {
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         "TICF intervention detected. Current intervention: %s TICF intervention: %s"
-                                .formatted(current, current)));
+                                .formatted(currentIntervention, ticfIntervention)));
         return true;
     }
 
