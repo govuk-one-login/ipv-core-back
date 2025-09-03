@@ -48,6 +48,35 @@ public final class AccountInterventionEvaluator {
         return true;
     }
 
+    public static boolean hasTicfIntervention(
+            AisInterventionType current, AisInterventionType ticfIntervention) {
+
+        var bothValid = isValidIntervention(current) && isValidIntervention(ticfIntervention);
+        var bothReprove = isBothIdentityVerify(current, ticfIntervention);
+        var reproveToValid = isIdentityVerifyToValid(current, ticfIntervention);
+
+        if (bothValid || bothReprove || reproveToValid) {
+            return false;
+        }
+
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "TICF intervention detected. Current intervention: %s TICF intervention: %s"
+                                .formatted(current, current)));
+        return true;
+    }
+
+    private static boolean isBothIdentityVerify(
+            AisInterventionType initial, AisInterventionType current) {
+        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial)
+                && AIS_FORCED_USER_IDENTITY_VERIFY.equals(current);
+    }
+
+    private static boolean isIdentityVerifyToValid(
+            AisInterventionType initial, AisInterventionType current) {
+        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial) && isValidIntervention(current);
+    }
+
     private static boolean isValidIntervention(AisInterventionType aisInterventionType) {
         return AIS_NO_INTERVENTION.equals(aisInterventionType)
                 || AIS_ACCOUNT_UNBLOCKED.equals(aisInterventionType)

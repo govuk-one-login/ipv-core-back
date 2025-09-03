@@ -84,4 +84,70 @@ class AccountInterventionEvaluatorTest {
                 Arguments.of(true, AIS_ACCOUNT_UNSUSPENDED),
                 Arguments.of(true, AIS_NO_INTERVENTION));
     }
+
+    @ParameterizedTest
+    @MethodSource("getInvalidTicfAccountInterventionTypes")
+    void shouldReturnTrueWhenProvideInvalidTicfAccountInterventionTypes(
+            AisInterventionType currentAccountInterventionType,
+            AisInterventionType ticfAccountInterventionType) {
+        assertTrue(
+                AccountInterventionEvaluator.hasTicfIntervention(
+                        currentAccountInterventionType, ticfAccountInterventionType));
+    }
+
+    private static Stream<Arguments> getInvalidTicfAccountInterventionTypes() {
+        return Stream.of(
+                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(AIS_NO_INTERVENTION, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(AIS_NO_INTERVENTION, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(
+                        AIS_NO_INTERVENTION, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(
+                        AIS_ACCOUNT_UNBLOCKED, AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(
+                        AIS_ACCOUNT_UNSUSPENDED,
+                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_BLOCKED),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_SUSPENDED),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(
+                        AIS_FORCED_USER_IDENTITY_VERIFY,
+                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
+    }
+
+    @ParameterizedTest
+    @MethodSource("getValidTicfAccountInterventionTypes")
+    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
+            AisInterventionType currentAccountInterventionType,
+            AisInterventionType ticfAccountInterventionType) {
+        assertFalse(
+                AccountInterventionEvaluator.hasTicfIntervention(
+                        currentAccountInterventionType, ticfAccountInterventionType));
+    }
+
+    private static Stream<Arguments> getValidTicfAccountInterventionTypes() {
+        return Stream.of(
+                Arguments.of(AIS_NO_INTERVENTION, AIS_NO_INTERVENTION),
+                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(AIS_NO_INTERVENTION, AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_NO_INTERVENTION),
+                Arguments.of(AIS_ACCOUNT_UNBLOCKED, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_NO_INTERVENTION),
+                Arguments.of(AIS_ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_UNBLOCKED),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_ACCOUNT_UNSUSPENDED),
+                Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY, AIS_NO_INTERVENTION));
+    }
 }
