@@ -51,7 +51,7 @@ N.B. for clarity, the map only displays states that are accessible via preconfig
 We run a very lightweight express server to serve the static HTML and JS,
 and provide a route to expose the journey map as a JSON object.
 
-We use an analytics API Gateway in core-back to fetch real data via Lambda endpoints:
+We use an [analytics API Gateway](../openAPI/core-back-analytics.yaml) in core-back to fetch real data via Lambda endpoints:
 - fetch journey transition numbers
 - fetch system settings, e.g. real feature flag settings
 
