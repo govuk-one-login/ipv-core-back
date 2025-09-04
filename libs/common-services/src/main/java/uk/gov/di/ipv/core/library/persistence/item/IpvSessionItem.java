@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.persistence.item;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,6 +59,8 @@ public class IpvSessionItem implements PersistenceItem {
      * @see uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent#TransitionResult
      */
     @Builder.Default private Set<String> journeyContexts = new HashSet<>();
+    // TODO PYIC-8614: delete support once merged
+    private String journeyContext;
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
@@ -121,13 +124,24 @@ public class IpvSessionItem implements PersistenceItem {
 
     public void setJourneyContext(String journeyContext) {
         this.journeyContexts.add(journeyContext);
+        // TODO PYIC-8614: delete support once merged
+        this.journeyContext = journeyContext;
     }
 
     public void unsetJourneyContext(String journeyContext) {
         this.journeyContexts.remove(journeyContext);
+        // TODO PYIC-8614: delete support once merged
+        this.journeyContext = null;
     }
 
     public Set<String> getActiveJourneyContexts() {
+        // TODO PYIC-8614: delete support once merged
+        // This needs to add the existing journey context to the
+        // journeyContexts set in case a user uses a mix
+        // of old and new version of the process-journey-event lambda
+        if (StringUtils.isNotBlank(journeyContext)) {
+            this.journeyContexts.add(journeyContext);
+        }
         return this.journeyContexts;
     }
 }
