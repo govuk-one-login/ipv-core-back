@@ -40,9 +40,9 @@ body {
 }
 #header-content {
   display: flex;
-  margin: 16px 0;
-  overflow: hidden;
-  max-height: 500px;
+  margin: 8px 0;
+  overflow: auto;
+  max-height: 300px;
   transition:
     max-height 0.15s ease-out,
     margin 0.15s ease-out;
@@ -79,8 +79,7 @@ body {
   width: 100%;
 }
 form {
-  flex: 0 1 525px;
-  padding: 8px 32px 0;
+  padding: 8px 16px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -114,18 +113,19 @@ form fieldset p {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
 }
 #checkbox-controls fieldset {
   flex: 1 0 0;
+  max-width: 30%;
 }
 #nodeInfo {
   flex: 1 1 auto;
-  padding: 8px 32px;
+  padding: 8px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 60%;
+  max-width: 30%;
 }
 #nodeDef {
   background: #f3f2f1;
@@ -142,52 +142,6 @@ form fieldset p {
 #journeyDesc {
   max-height: 100px;
   overflow: auto;
-}
-#key {
-  flex: 0 1 525px;
-  padding: 16px 32px;
-  display: flex;
-  gap: 16px;
-  flex-direction: column;
-  align-items: start;
-}
-.key-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.key-node {
-  flex: 0 0 auto;
-  border: 1px solid black;
-  text-align: center;
-  padding: 8px;
-}
-/* These styles should be kept in sync with the mermaid in render.js */
-.key-node.page {
-  background: #ae8;
-}
-.key-node.cri {
-  background: #faf;
-  border-radius: 16px;
-}
-.key-node.process {
-  background: #ffa;
-  border-radius: 4px;
-}
-.key-node.journey_transition {
-  background: #aaf;
-  border-radius: 4px;
-}
-.key-node.nested_journey {
-  background: #aaedff;
-  border-radius: 4px;
-}
-.key-node.error_transition {
-  background: #f99;
-  border-radius: 4px;
-}
-.key-node.other {
-  background: #f3f2f1;
 }
 #diagramSvg .highlight.outgoingEdge {
   stroke-width: 3px;

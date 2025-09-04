@@ -1,5 +1,3 @@
-import { JourneyEvent, JourneyMap, NestedJourneyMap } from "../types.js";
-
 export interface AvailableOptions {
   disabledCris: string[];
   featureFlags: string[];
@@ -12,59 +10,22 @@ export interface RenderOptions extends AvailableOptions {
   onlyOrphanStates: boolean;
 }
 
-const addDefinitionOptions = (
-  definition: JourneyEvent,
-  disabledOptions: string[],
-  featureFlagOptions: string[],
-): void => {
-  Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
-    if (!disabledOptions.includes(opt)) {
-      disabledOptions.push(opt);
-    }
-    addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-  });
-  Object.entries(definition.checkFeatureFlag || {}).forEach(([opt, def]) => {
-    if (!featureFlagOptions.includes(opt)) {
-      featureFlagOptions.push(opt);
-    }
-    addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-  });
-};
+export interface SystemSettings {
+  featureFlagStatuses: Record<string, boolean>;
+  criStatuses: Record<string, boolean>;
+}
 
-// Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getAvailableOptions = (
-  journeyMaps: Record<string, JourneyMap>,
-  nestedJourneys: Record<string, NestedJourneyMap>,
-): AvailableOptions => {
-  const disabledOptions: string[] = [];
-  const featureFlagOptions: string[] = [];
-
-  const states = [
-    ...Object.values(journeyMaps).flatMap((journeyMap) =>
-      Object.values(journeyMap.states),
-    ),
-    ...Object.values(nestedJourneys).flatMap((nestedJourney) =>
-      Object.values(nestedJourney.nestedJourneyStates),
-    ),
-  ];
-
-  states.forEach((definition) => {
-    const events = definition.events || definition.exitEvents || {};
-    Object.values(events).forEach((def) => {
-      addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-  });
-
-  Object.values(nestedJourneys).forEach((nestedJourney) => {
-    Object.values(nestedJourney.entryEvents).forEach((def) => {
-      addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-  });
-
-  disabledOptions.sort();
-  featureFlagOptions.sort();
-
-  return { disabledCris: disabledOptions, featureFlags: featureFlagOptions };
+export const getSystemSettings = async (): Promise<
+  SystemSettings | undefined
+> => {
+  const response = await fetch("/system-settings");
+  if (!response.ok) {
+    console.warn(
+      `Failed to fetch system settings from journey map server: ${response.statusText}`,
+    );
+    return undefined;
+  }
+  return await response.json();
 };
 
 export const parseOptions = (formData: FormData): RenderOptions => ({
