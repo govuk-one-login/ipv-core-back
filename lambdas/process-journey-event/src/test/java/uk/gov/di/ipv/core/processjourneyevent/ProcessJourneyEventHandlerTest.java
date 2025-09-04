@@ -1231,15 +1231,8 @@ class ProcessJourneyEventHandlerTest {
     @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     @Test
     void shouldRouteToCorrectStateIfJourneyContextIsUnset() throws Exception {
-        IpvSessionItem spyIpvSessionItem = spy(IpvSessionItem.class);
-        spyIpvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        spyIpvSessionItem.setCreationDateTime(Instant.now().toString());
-        spyIpvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
-        spyIpvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
-        spyIpvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
         spyIpvSessionItem.setJourneyContext("someContext");
-
-        mockIpvSessionItemAndClientSessionItem(spyIpvSessionItem);
 
         // The initial input sets the journey context and takes user to ANOTHER_PAGE_STATE state
         var initialInput =
@@ -1329,18 +1322,13 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
-        mockIpvSessionItemAndClientSessionItem(ipvSessionItem);
-
-        return ipvSessionItem;
-    }
-
-    private void mockIpvSessionItemAndClientSessionItem(IpvSessionItem ipvSessionItem)
-            throws Exception {
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
         when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
+
+        return ipvSessionItem;
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
