@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 
 public class CimitUtilityService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -99,7 +98,13 @@ public class CimitUtilityService {
 
     private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD, vot.name()));
+                > Integer.parseInt(
+                        configService
+                                .getConfiguration()
+                                .getSelf()
+                                .getCiScoringThresholdByVot()
+                                .getThreshold(vot.name())
+                                .toString());
     }
 
     public Optional<String> getMitigationEventIfBreachingOrActive(

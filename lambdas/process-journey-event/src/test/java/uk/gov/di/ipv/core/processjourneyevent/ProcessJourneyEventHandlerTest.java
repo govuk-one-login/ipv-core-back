@@ -65,7 +65,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
@@ -1165,7 +1164,8 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
+                .thenReturn("core");
         when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))

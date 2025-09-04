@@ -119,7 +119,7 @@ class EvcsClientTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn(EVCS_APPLICATION_URL);
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
@@ -129,7 +129,7 @@ class EvcsClientTest {
     @ParameterizedTest
     @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
     void testGetUserVCs(String appUrl) throws Exception {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn(appUrl);
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
@@ -268,7 +268,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn("\\");
         // Act
         // Assert
@@ -290,7 +290,7 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
@@ -356,7 +356,7 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
@@ -391,7 +391,7 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
@@ -476,7 +476,7 @@ class EvcsClientTest {
     @Test
     void testCreateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn("\\");
         // Act
         // Assert
@@ -517,7 +517,7 @@ class EvcsClientTest {
     @Test
     void testUpdateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn("\\");
         // Act
         // Assert
@@ -645,7 +645,7 @@ class EvcsClientTest {
     @Test
     void invalidateStoredIdentityRecordShouldThrowIfBadUri() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getConfiguration().getEvcs().getApplicationUrl().toString())
                 .thenReturn("\\");
         // Act/Assert
         assertThrows(

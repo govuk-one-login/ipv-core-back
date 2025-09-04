@@ -24,4 +24,26 @@ public class CredentialIssuersConfig {
     @NonNull final CriConnectionWrapper<OauthCriConfig> bav;
     @NonNull final CriConnectionWrapper<OauthCriConfig> dwpKbv;
     @NonNull final CriConnectionWrapper<RestCriConfig> ticf;
+
+    public CriConnectionWrapper<?> getById(String criId) {
+        if (criId == null) {
+            return null;
+        }
+        return switch (criId) {
+            case "address" -> address;
+            case "dcmaw" -> dcmaw;
+            case "dcmawAsync" -> dcmawAsync;
+            case "fraud" -> fraud;
+            case "experianKbv" -> experianKbv;
+            case "ukPassport" -> ukPassport;
+            case "drivingLicence" -> drivingLicence;
+            case "claimedIdentity" -> claimedIdentity;
+            case "f2f" -> f2f;
+            case "nino" -> nino;
+            case "bav" -> bav;
+            case "dwpKbv" -> dwpKbv;
+            case "ticf" -> ticf;
+            default -> null;
+        };
+    }
 }

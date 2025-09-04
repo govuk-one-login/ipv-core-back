@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -104,7 +103,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -125,7 +124,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -146,7 +145,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -167,7 +166,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -193,7 +192,7 @@ class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 
@@ -235,7 +234,7 @@ class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getConfiguration().getSelf().getComponentId().toString())
                 .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 

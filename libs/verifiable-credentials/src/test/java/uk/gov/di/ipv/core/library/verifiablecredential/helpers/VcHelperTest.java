@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
@@ -179,7 +178,8 @@ class VcHelperTest {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcExperianFraudExpired();
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours().toString())
+                .thenReturn("1");
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);
@@ -193,7 +193,8 @@ class VcHelperTest {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcExperianFraudNotExpired();
-        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours().toString())
+                .thenReturn("1");
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);

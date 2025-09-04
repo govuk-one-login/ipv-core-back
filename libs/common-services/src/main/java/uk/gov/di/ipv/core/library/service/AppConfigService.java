@@ -93,7 +93,12 @@ public class AppConfigService extends ConfigService {
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
+            // Updates parameters
             setParameters(updateParameters(paramsRaw));
+
+            // Update configuration in parallel
+            setConfiguration(generateConfiguration(paramsRaw));
+
             paramsRawHash = retrievedParamsHash;
         }
     }

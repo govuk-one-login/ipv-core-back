@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -137,7 +136,7 @@ public class CriCheckingService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getConfiguration().getSelf().getComponentId().toString(),
                         auditEventUser,
                         extensions,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -152,7 +151,7 @@ public class CriCheckingService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_DWP_KBV_CRI_ABANDONED,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getConfiguration().getSelf().getComponentId().toString(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(deviceInformation)));
         }

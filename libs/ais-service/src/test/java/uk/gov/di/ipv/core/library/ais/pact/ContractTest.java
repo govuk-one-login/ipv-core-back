@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.ais.client.AisClient;
 import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -49,7 +48,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsNoInterventionsWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -74,7 +73,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsSuspendedWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -99,7 +98,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsUnsuspendedWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -123,7 +122,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "validGetAccountInterventionRequestReturnsBlockedWith200")
     void getUserAccountInterventionsReturnsBlockedWith200(MockServer mockServer) throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -148,7 +147,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsUnblockedWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -174,7 +173,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsForcedPasswordResetWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -202,7 +201,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsForcedUserIdentityVerifyWith200(MockServer mockServer)
             throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -231,7 +230,7 @@ class ContractTest {
     void getUserAccountInterventionsReturnsForcedPasswordResetAndUserIdentityVerifyWith200(
             MockServer mockServer) throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act
@@ -262,7 +261,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidGetAccountInterventionRequestReturns400")
     void getUserAccountInterventionsReturns400Error(MockServer mockServer) {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act/Assert
@@ -292,7 +291,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns500")
     void getUserAccountInterventionsReturns500Error(MockServer mockServer) {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act/Assert
@@ -322,7 +321,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns502")
     void getUserAccountInterventionsReturns502Error(MockServer mockServer) {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act/Assert
@@ -351,7 +350,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "getAccountInterventionRequestReturns504")
     void getUserAccountInterventionsReturns504Error(MockServer mockServer) {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.AIS_API_BASE_URL))
+        when(mockConfigService.getConfiguration().getAis().getApiBaseUrl().toString())
                 .thenReturn(getMockAisBaseUrl(mockServer));
 
         // Act/Assert

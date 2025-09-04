@@ -5,7 +5,6 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.util.Base64URL;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +17,8 @@ import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import software.amazon.awssdk.services.kms.model.DecryptResponse;
 import software.amazon.awssdk.services.kms.model.IncorrectKeyException;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import static com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256;
@@ -28,12 +29,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class KmsRsaDecrypterTest {
@@ -44,14 +41,14 @@ class KmsRsaDecrypterTest {
 
     @InjectMocks private KmsRsaDecrypter underTest;
 
-    @BeforeEach
-    void setup() {
-        lenient()
-                .when(mockConfigService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY))
-                .thenReturn("primaryKeyAlias");
-        lenient()
-                .when(mockConfigService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY))
-                .thenReturn("secondaryKeyAlias");
+    private final Config mockConfig = mock(Config.class);
+    private final InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
+
+    private void stubKmsAliases() {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getClientJarKmsEncryptionKeyAliasPrimary()).thenReturn("primaryKeyAlias");
+        when(mockSelf.getClientJarKmsEncryptionKeyAliasSecondary()).thenReturn("secondaryKeyAlias");
     }
 
     @Test
@@ -123,6 +120,7 @@ class KmsRsaDecrypterTest {
     @Test
     void decrypt_whenPrimaryKeyWorks_shouldNotTrySecondaryKey() throws JOSEException {
         // Arrange
+        stubKmsAliases();
         try (var staticMock = Mockito.mockStatic(ContentCryptoProvider.class)) {
             var expectedResult = new byte[] {};
             Mockito.when(
@@ -161,6 +159,7 @@ class KmsRsaDecrypterTest {
     @Test
     void decrypt_whenPrimaryKeyIsWrong_shouldTrySecondaryKey() throws JOSEException {
         // Arrange
+        stubKmsAliases();
         try (var staticMock = Mockito.mockStatic(ContentCryptoProvider.class)) {
             var expectedResult = new byte[] {};
             Mockito.when(
@@ -207,6 +206,7 @@ class KmsRsaDecrypterTest {
     @Test
     void decrypt_whenPrimaryKeyFails_shouldTrySecondaryKey() throws JOSEException {
         // Arrange
+        stubKmsAliases();
         try (var staticMock = Mockito.mockStatic(ContentCryptoProvider.class)) {
             var expectedResult = new byte[] {};
             Mockito.when(
