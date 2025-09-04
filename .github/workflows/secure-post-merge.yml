@@ -90,7 +90,7 @@ jobs:
           "$(dirname "$(readlink "$(which sam)")")/pip" install --force-reinstall "cryptography==38.0.4"
 
       - name: Set up AWS creds For Pipeline
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.GH_ACTIONS_ROLE_ARN || secrets.GH_ACTIONS_ROLE_ARN_DEV }}
           aws-region: eu-west-2
