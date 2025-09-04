@@ -18,7 +18,7 @@ export interface SystemSettings {
 export const getSystemSettings = async (): Promise<
   SystemSettings | undefined
 > => {
-  const response = await fetch("/journey-transitions");
+  const response = await fetch("/system-settings");
   if (!response.ok) {
     console.warn(
       `Failed to fetch system settings from journey map server: ${response.statusText}`,

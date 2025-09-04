@@ -51,7 +51,9 @@ public class AppConfigService extends ConfigService {
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
-        LOGGER.error(String.format("applicationId: %s, environmentId: %s", applicationId, environmentId));
+        LOGGER.error(
+                String.format(
+                        "applicationId: %s, environmentId: %s", applicationId, environmentId));
 
         appConfigProvider =
                 ParamManager.getAppConfigProvider(

@@ -462,12 +462,15 @@ const initialize = async (): Promise<void> => {
   );
 
   const systemSettings = await getSystemSettings();
-  setupOptions(
-    "disabledCri",
-    systemSettings?.criStatuses ?? {},
-    disabledInput,
-    CRI_NAMES,
-  );
+  const disabledCris =
+    systemSettings?.criStatuses &&
+    Object.fromEntries(
+      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
+        cri,
+        !enabled,
+      ]),
+    );
+  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
   setupOptions(
     "featureFlag",
     systemSettings?.featureFlagStatuses ?? {},
