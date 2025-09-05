@@ -305,7 +305,7 @@
     "extensions": {
       "identity_type": "new",
       "vot": "P3",
-      "sis_record_created": false
+      "sis_record_created": true
     },
     "restricted": {
       "device_information": {}
