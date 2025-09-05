@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.sis.audit.AuditExtensionsSisComparison;
 import uk.gov.di.ipv.core.library.sis.audit.AuditRestrictedSisComparison;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.sis.enums.FailureCode;
 import uk.gov.di.ipv.core.library.sis.enums.VerificationOutcome;
 import uk.gov.di.ipv.core.library.sis.exception.SisMatchException;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -123,14 +125,7 @@ public class SisService {
             }
 
             // Get stored signatures
-            var storedJwtParts = storedIdentityResult.identityDetails().content().split("\\.");
-            var storedJwt =
-                    new SignedJWT(
-                            new Base64URL(storedJwtParts[0]),
-                            new Base64URL(storedJwtParts[1]),
-                            new Base64URL(storedJwtParts[2]));
-            var storedClaimset = storedJwt.getJWTClaimsSet();
-            sisVcSignatures = (ArrayList<String>) storedClaimset.getClaims().get("credentials");
+            sisVcSignatures = getSisSignatures(storedIdentityResult.identityDetails());
 
             // Get EVCS details
             var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
@@ -157,106 +152,71 @@ public class SisService {
             }
 
             // Compare signatures
-            var missingEvcsVcSignatures = new ArrayList<String>();
-            var missingStoredSignatures = new ArrayList<String>();
-
-            for (var evcsVcSignature : evcsVcSignatures) {
-                if (!sisVcSignatures.contains(evcsVcSignature)) {
-                    missingEvcsVcSignatures.add(evcsVcSignature);
-                }
-            }
-
-            for (var storedSignature : sisVcSignatures) {
-                if (!evcsVcSignatures.contains(storedSignature)) {
-                    missingStoredSignatures.add(storedSignature);
-                }
-            }
-
-            if (!missingEvcsVcSignatures.isEmpty()) {
-                throw new SisMatchException(
-                        FailureCode.MISSING_SIGNATURE,
-                        "Some signatures from EVCS are not in the stored identity: "
-                                + String.join(", ", missingEvcsVcSignatures));
-            }
-
-            if (!missingStoredSignatures.isEmpty()) {
-                throw new SisMatchException(
-                        FailureCode.EXTRA_SIGNATURE,
-                        "Some signatures in the stored identity are not present in EVCS: "
-                                + String.join(", ", missingStoredSignatures));
-            }
+            assertSignatureListsMatch(evcsVcSignatures, sisVcSignatures);
 
             sendComparisonAuditEvent(
                     auditEventUser,
-                    storedIdentityResult.identityDetails().vot(),
-                    storedIdentityResult.identityDetails().isValid(),
-                    storedIdentityResult.identityDetails().expired(),
+                    storedIdentityResult,
                     VerificationOutcome.success,
                     null,
                     null,
                     evcsVcSignatures,
-                    sisVcSignatures,
-                    storedIdentityResult.identityDetails().content());
+                    sisVcSignatures);
         } catch (SisMatchException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Comparison between SIS and EVCS failed", e));
-
-            boolean sisIdFound = storedIdentityResult.identityWasFound();
-
             sendComparisonAuditEvent(
                     auditEventUser,
-                    sisIdFound ? storedIdentityResult.identityDetails().vot() : null,
-                    sisIdFound ? storedIdentityResult.identityDetails().isValid() : null,
-                    sisIdFound ? storedIdentityResult.identityDetails().expired() : null,
+                    storedIdentityResult,
                     VerificationOutcome.failure,
                     e.getFailureCode(),
                     e.getMessage(),
                     evcsVcSignatures,
-                    sisVcSignatures,
-                    sisIdFound ? storedIdentityResult.identityDetails().content() : "");
+                    sisVcSignatures);
         } catch (Exception e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Unexpected error comparing SIS and EVCS identities", e));
-
-            boolean sisIdFound = storedIdentityResult.identityWasFound();
-
             sendComparisonAuditEvent(
                     auditEventUser,
-                    sisIdFound ? storedIdentityResult.identityDetails().vot() : null,
-                    sisIdFound ? storedIdentityResult.identityDetails().isValid() : null,
-                    sisIdFound ? storedIdentityResult.identityDetails().expired() : null,
+                    storedIdentityResult,
                     VerificationOutcome.failure,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
                     evcsVcSignatures,
-                    sisVcSignatures,
-                    sisIdFound ? storedIdentityResult.identityDetails().content() : "");
+                    sisVcSignatures);
         }
     }
 
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private void sendComparisonAuditEvent(
             AuditEventUser auditEventUser,
-            Vot sisVot,
-            Boolean sisIsValid,
-            Boolean sisIsExpired,
+            SisGetStoredIdentityResult storedIdentityResult,
             VerificationOutcome verificationOutcome,
             FailureCode failureCode,
             String failureDetails,
             List<String> evcsSignatures,
-            List<String> sisSignatures,
-            String sisJwt) {
+            List<String> sisSignatures) {
 
         try {
+            boolean sisIdFound =
+                    storedIdentityResult != null && storedIdentityResult.identityWasFound();
+
+            String sisJwt = sisIdFound ? storedIdentityResult.identityDetails().content() : "";
+
             var auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_STORED_IDENTITY_CHECKED,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditExtensionsSisComparison(
-                                    sisVot,
-                                    sisIsValid,
-                                    sisIsExpired,
+                                    sisIdFound
+                                            ? storedIdentityResult.identityDetails().vot()
+                                            : null,
+                                    sisIdFound
+                                            ? storedIdentityResult.identityDetails().isValid()
+                                            : null,
+                                    sisIdFound
+                                            ? storedIdentityResult.identityDetails().expired()
+                                            : null,
                                     verificationOutcome,
                                     failureCode),
                             new AuditRestrictedSisComparison(
@@ -266,6 +226,50 @@ public class SisService {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Failed to send SIS comparison audit event", e));
         }
+    }
+
+    private static void assertSignatureListsMatch(
+            List<String> evcsVcSignatures, List<String> sisVcSignatures) throws SisMatchException {
+        var missingEvcsVcSignatures = new ArrayList<String>();
+        var missingStoredSignatures = new ArrayList<String>();
+
+        for (var evcsVcSignature : evcsVcSignatures) {
+            if (!sisVcSignatures.contains(evcsVcSignature)) {
+                missingEvcsVcSignatures.add(evcsVcSignature);
+            }
+        }
+
+        for (var storedSignature : sisVcSignatures) {
+            if (!evcsVcSignatures.contains(storedSignature)) {
+                missingStoredSignatures.add(storedSignature);
+            }
+        }
+
+        if (!missingEvcsVcSignatures.isEmpty()) {
+            throw new SisMatchException(
+                    FailureCode.MISSING_SIGNATURE,
+                    "Some signatures from EVCS are not in the stored identity: "
+                            + String.join(", ", missingEvcsVcSignatures));
+        }
+
+        if (!missingStoredSignatures.isEmpty()) {
+            throw new SisMatchException(
+                    FailureCode.EXTRA_SIGNATURE,
+                    "Some signatures in the stored identity are not present in EVCS: "
+                            + String.join(", ", missingStoredSignatures));
+        }
+    }
+
+    private ArrayList<String> getSisSignatures(SisStoredIdentityCheckDto storedIdentity)
+            throws ParseException {
+        var storedJwtParts = storedIdentity.content().split("\\.");
+        var storedJwt =
+                new SignedJWT(
+                        new Base64URL(storedJwtParts[0]),
+                        new Base64URL(storedJwtParts[1]),
+                        new Base64URL(storedJwtParts[2]));
+        var storedClaimset = storedJwt.getJWTClaimsSet();
+        return (ArrayList<String>) storedClaimset.getClaims().get("credentials");
     }
 
     private String getVcSignature(String vcString) {
