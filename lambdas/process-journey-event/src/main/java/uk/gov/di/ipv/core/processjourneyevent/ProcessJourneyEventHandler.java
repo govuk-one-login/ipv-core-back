@@ -381,6 +381,7 @@ public class ProcessJourneyEventHandler
                 String.format("Back event provided to state: '%s'", initialJourneyState.state()));
     }
 
+    // This logging is depended on for user traffic data in the journey map
     private void logStateChange(
             JourneyState oldJourneyState, String journeyEvent, IpvSessionItem ipvSessionItem) {
         var newJourneyState = ipvSessionItem.getState();

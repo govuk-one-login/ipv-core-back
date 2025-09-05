@@ -28,6 +28,17 @@ Use `npm start` to run the built code.
 
 In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
 
+### Visualising real data
+
+Run the map locally, but set the following environment variables, for the deployment of your choice! Check API Gateway for the endpoint and API key info.
+```bash
+export JOURNEY_TRANSITIONS_ENDPOINT=...
+export SYSTEM_SETTINGS_ENDPOINT=...
+export ANALYTICS_API_KEY=...
+npm run dev
+```
+This allows the user to see user traffic over journey edges and real system settings for disabled CRIs and feature flags.
+
 ## Using the map
 
 You should be able to pan and zoom using the mouse and scroll wheel,
@@ -39,6 +50,10 @@ N.B. for clarity, the map only displays states that are accessible via preconfig
 
 We run a very lightweight express server to serve the static HTML and JS,
 and provide a route to expose the journey map as a JSON object.
+
+We use an [analytics API Gateway](../openAPI/core-back-analytics.yaml) in core-back to fetch real data via Lambda endpoints:
+- fetch journey transition numbers
+- fetch system settings, e.g. real feature flag settings
 
 The frontend converts this to mermaid format, and renders using two publicly available libraries:
 
