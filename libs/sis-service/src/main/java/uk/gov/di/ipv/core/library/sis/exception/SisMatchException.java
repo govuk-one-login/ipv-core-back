@@ -5,7 +5,7 @@ import uk.gov.di.ipv.core.library.sis.enums.FailureCode;
 
 @Getter
 public class SisMatchException extends Exception {
-    private FailureCode failureCode;
+    private final FailureCode failureCode;
 
     public SisMatchException(FailureCode failureCode, String message) {
         super(message);

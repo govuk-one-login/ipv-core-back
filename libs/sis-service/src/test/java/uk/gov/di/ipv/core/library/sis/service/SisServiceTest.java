@@ -135,7 +135,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.sis_error,
+                FailureCode.SIS_ERROR,
                 null,
                 null,
                 null,
@@ -167,7 +167,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.evcs_error,
+                FailureCode.EVCS_ERROR,
                 false,
                 true,
                 Vot.P3,
@@ -202,7 +202,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.evcs_vot_calculation_error,
+                FailureCode.EVCS_VOT_CALCULATION_ERROR,
                 false,
                 true,
                 Vot.P3,
@@ -239,7 +239,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.vot_mismatch,
+                FailureCode.VOT_MISMATCH,
                 false,
                 true,
                 Vot.P2,
@@ -276,7 +276,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.extra_signature,
+                FailureCode.EXTRA_SIGNATURE,
                 false,
                 true,
                 Vot.P3,
@@ -313,7 +313,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.missing_signature,
+                FailureCode.MISSING_SIGNATURE,
                 false,
                 true,
                 Vot.P3,
@@ -348,7 +348,7 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.failure,
-                FailureCode.unexpected_error,
+                FailureCode.UNEXPECTED_ERROR,
                 false,
                 true,
                 Vot.P3,

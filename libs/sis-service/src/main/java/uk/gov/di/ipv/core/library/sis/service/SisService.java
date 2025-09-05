@@ -51,6 +51,7 @@ public class SisService {
     private final EvcsService evcsService;
     private final CriResponseService criResponseService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     @ExcludeFromGeneratedCoverageReport
     public SisService(
             SisClient sisClient,
@@ -110,7 +111,7 @@ public class SisService {
 
             if (!storedIdentityResult.requestSucceeded()) {
                 throw new SisMatchException(
-                        FailureCode.sis_error,
+                        FailureCode.SIS_ERROR,
                         "Call to SIS service failed, no stored identity comparison can be made");
             }
 
@@ -145,7 +146,7 @@ public class SisService {
             var evcsVot = maximumMatchedVot.isPresent() ? maximumMatchedVot.get().vot() : null;
             if (storedIdentityResult.identityDetails().vot() != evcsVot) {
                 throw new SisMatchException(
-                        FailureCode.vot_mismatch,
+                        FailureCode.VOT_MISMATCH,
                         "EVCS ("
                                 + (maximumMatchedVot.isPresent()
                                         ? maximumMatchedVot.get().vot()
@@ -173,14 +174,14 @@ public class SisService {
 
             if (!missingEvcsVcSignatures.isEmpty()) {
                 throw new SisMatchException(
-                        FailureCode.missing_signature,
+                        FailureCode.MISSING_SIGNATURE,
                         "Some signatures from EVCS are not in the stored identity: "
                                 + String.join(", ", missingEvcsVcSignatures));
             }
 
             if (!missingStoredSignatures.isEmpty()) {
                 throw new SisMatchException(
-                        FailureCode.extra_signature,
+                        FailureCode.EXTRA_SIGNATURE,
                         "Some signatures in the stored identity are not present in EVCS: "
                                 + String.join(", ", missingStoredSignatures));
             }
@@ -225,7 +226,7 @@ public class SisService {
                     sisIdFound ? storedIdentityResult.identityDetails().isValid() : null,
                     sisIdFound ? storedIdentityResult.identityDetails().expired() : null,
                     VerificationOutcome.failure,
-                    FailureCode.unexpected_error,
+                    FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
                     evcsVcSignatures,
                     sisVcSignatures,
@@ -300,7 +301,7 @@ public class SisService {
             return votMatchingResult.strongestMatch();
         } catch (Exception e) {
             throw new SisMatchException(
-                    FailureCode.evcs_vot_calculation_error,
+                    FailureCode.EVCS_VOT_CALCULATION_ERROR,
                     "Exception caught calculating VOT from EVCS VCs");
         }
     }
@@ -330,7 +331,7 @@ public class SisService {
             return evcsIdentityVcs;
         } catch (Exception e) {
             throw new SisMatchException(
-                    FailureCode.evcs_error, "Exception caught retrieving VCs from EVCS");
+                    FailureCode.EVCS_ERROR, "Exception caught retrieving VCs from EVCS");
         }
     }
 }
