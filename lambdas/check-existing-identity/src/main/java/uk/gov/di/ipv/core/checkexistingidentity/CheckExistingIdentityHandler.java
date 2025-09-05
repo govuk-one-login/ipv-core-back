@@ -476,8 +476,7 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    private VerifiableCredentialBundle getCredentialBundle(
-            String userId, String evcsAccessToken)
+    private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
         var vcs =
                 evcsService.fetchEvcsVerifiableCredentialsByState(
