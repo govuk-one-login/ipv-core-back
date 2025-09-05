@@ -48,7 +48,8 @@ public enum ConfigurationVariable {
     SIGNING_KEY_JWK("self/signingKey"),
     SIS_SIGNING_KEY_ID("self/sisSigningKeyId"),
     STORED_IDENTITY_SERVICE_COMPONENT_ID("storedIdentityService/componentId"),
-    DCMAW_ASYNC_VC_PENDING_RETURN_TTL("self/dcmawAsyncVcPendingReturnTtl");
+    DCMAW_ASYNC_VC_PENDING_RETURN_TTL("self/dcmawAsyncVcPendingReturnTtl"),
+    SIS_APPLICATION_URL("sis/applicationUrl");
 
     private final String path;
 

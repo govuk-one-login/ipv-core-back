@@ -7,6 +7,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -145,7 +146,7 @@ public class EvcsClient {
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
 
             EvcsGetUserVCsDto evcsGetUserVCs =
-                    evcsHttpResponse.statusCode() != 404
+                    evcsHttpResponse.statusCode() != HttpStatus.SC_NOT_FOUND
                             ? OBJECT_MAPPER.readValue(
                                     evcsHttpResponse.body(), new TypeReference<>() {})
                             : new EvcsGetUserVCsDto(Collections.emptyList(), null);
@@ -317,7 +318,7 @@ public class EvcsClient {
         var statusCode = evcsHttpResponse.statusCode();
 
         // 404 is valid and indicates the user has no VCs
-        if (statusCode > 299 && statusCode != 404) {
+        if (statusCode >= HttpStatus.SC_MULTIPLE_CHOICES && statusCode != HttpStatus.SC_NOT_FOUND) {
             String responseMessage;
             try {
                 Map<String, String> responseBody =

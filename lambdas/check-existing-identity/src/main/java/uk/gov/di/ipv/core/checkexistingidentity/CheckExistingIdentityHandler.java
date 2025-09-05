@@ -56,6 +56,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.sis.service.SisService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -73,6 +74,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -157,6 +159,7 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final SisService sisService;
     private final AisService aisService;
     private final VotMatcher votMatcher;
 
@@ -177,6 +180,7 @@ public class CheckExistingIdentityHandler
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService,
+            SisService sisService,
             AisService aisService,
             VotMatcher votMatcher) {
         this.configService = configService;
@@ -190,6 +194,7 @@ public class CheckExistingIdentityHandler
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
+        this.sisService = sisService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.votMatcher = votMatcher;
         this.aisService = aisService;
@@ -222,6 +227,7 @@ public class CheckExistingIdentityHandler
                         ipvSessionService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
+        this.sisService = new SisService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.aisService = new AisService(configService);
         this.votMatcher =
@@ -287,6 +293,11 @@ public class CheckExistingIdentityHandler
                                 configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
+
+            if (configService.enabled(SIS_VERIFICATION)) {
+                // PYIC-8393 Make use of the results of this call
+                sisService.getStoredIdentity(clientOAuthSessionItem);
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
