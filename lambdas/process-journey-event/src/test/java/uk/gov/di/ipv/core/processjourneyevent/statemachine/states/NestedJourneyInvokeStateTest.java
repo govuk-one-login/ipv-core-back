@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEve
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 class NestedJourneyInvokeStateTest {
     private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
             new EventResolveParameters(
-                    "journeyContext", new IpvSessionItem(), new ClientOAuthSessionItem());
+                    Set.of("journeyContext"), new IpvSessionItem(), new ClientOAuthSessionItem());
     @Mock private EventResolver eventResolver;
 
     @Test

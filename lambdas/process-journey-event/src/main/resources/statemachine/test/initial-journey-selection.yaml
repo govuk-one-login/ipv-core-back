@@ -33,6 +33,12 @@ states:
         checkMitigation:
           first-mitigation:
             targetState: CRI_STATE
+      eventWithSetJourneyContext:
+        targetState: ANOTHER_PAGE_STATE
+        journeyContextToSet: someContext
+      eventWithUnsetJourneyContext:
+        targetState: ANOTHER_PAGE_STATE
+        journeyContextToUnset: someContext
 
   CRI_STATE:
     response:
@@ -170,3 +176,9 @@ states:
     response:
       type: page
       pageId: page-id-for-another-page-state
+    events:
+      next:
+        targetState: PROCESS_STATE
+        checkJourneyContext:
+          someContext:
+            targetState: CRI_STATE

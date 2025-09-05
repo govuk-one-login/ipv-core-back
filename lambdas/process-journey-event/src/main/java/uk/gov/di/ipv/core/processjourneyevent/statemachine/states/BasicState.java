@@ -25,7 +25,6 @@ public class BasicState implements State {
 
     private String name;
     private String parent;
-    private String journeyContext;
     private BasicState parentObj;
     private StepResponse response;
     private Map<String, Event> events = new HashMap<>();

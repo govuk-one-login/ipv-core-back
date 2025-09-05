@@ -1,5 +1,26 @@
 @Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys
+
+  Scenario: User initially clicks international then changes their mind and can continue to a different identity proving method
+    Given I activate the 'strategicApp' feature sets
+    And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'international' event
+    Then I get a 'non-uk-passport' page response
+    When I submit a 'back' event
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+
+
   Rule: UK user
     Background: Start journey
       Given I activate the 'strategicApp' feature set
