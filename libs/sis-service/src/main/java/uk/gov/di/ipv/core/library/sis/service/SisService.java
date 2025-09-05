@@ -157,7 +157,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    VerificationOutcome.success,
+                    VerificationOutcome.SUCCESS,
                     null,
                     null,
                     evcsVcSignatures,
@@ -167,7 +167,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    VerificationOutcome.failure,
+                    VerificationOutcome.FAILURE,
                     e.getFailureCode(),
                     e.getMessage(),
                     evcsVcSignatures,
@@ -179,7 +179,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    VerificationOutcome.failure,
+                    VerificationOutcome.FAILURE,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
                     evcsVcSignatures,

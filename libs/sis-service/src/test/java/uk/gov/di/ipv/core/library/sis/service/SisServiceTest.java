@@ -134,7 +134,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.SIS_ERROR,
                 null,
                 null,
@@ -166,7 +166,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.EVCS_ERROR,
                 false,
                 true,
@@ -201,7 +201,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.EVCS_VOT_CALCULATION_ERROR,
                 false,
                 true,
@@ -238,7 +238,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.VOT_MISMATCH,
                 false,
                 true,
@@ -275,7 +275,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.EXTRA_SIGNATURE,
                 false,
                 true,
@@ -312,7 +312,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.MISSING_SIGNATURE,
                 false,
                 true,
@@ -347,7 +347,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.failure,
+                VerificationOutcome.FAILURE,
                 FailureCode.UNEXPECTED_ERROR,
                 false,
                 true,
@@ -379,7 +379,7 @@ class SisServiceTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
-                VerificationOutcome.success,
+                VerificationOutcome.SUCCESS,
                 null,
                 false,
                 true,
