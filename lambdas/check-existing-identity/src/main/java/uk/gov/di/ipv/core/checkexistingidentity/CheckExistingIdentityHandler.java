@@ -352,7 +352,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
-            var credentialBundle = getCredentialBundle(userId, evcsAccessToken, false);
+            var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
             var previousAchievedVot =
                     getStrongestAchievableVotFromBundle(credentialBundle.credentials);
@@ -477,11 +477,11 @@ public class CheckExistingIdentityHandler
     }
 
     private VerifiableCredentialBundle getCredentialBundle(
-            String userId, String evcsAccessToken, boolean includeCimit)
+            String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
         var vcs =
                 evcsService.fetchEvcsVerifiableCredentialsByState(
-                        userId, evcsAccessToken, includeCimit, CURRENT, PENDING_RETURN);
+                        userId, evcsAccessToken, false, CURRENT, PENDING_RETURN);
 
         // PENDING_RETURN vcs need a pending record to be valid
         var pendingRecords = criResponseService.getCriResponseItems(userId);
