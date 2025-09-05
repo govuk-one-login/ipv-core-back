@@ -1026,7 +1026,7 @@ class CheckExistingIdentityHandlerTest {
                 throws Exception {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
