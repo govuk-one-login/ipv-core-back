@@ -15,7 +15,11 @@ dependencies {
 			libs.jacksonDatabind,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service")
+			project(":libs:user-identity-service"),
+			project(":libs:audit-service"),
+			project(":libs:cri-response-service"),
+			project(":libs:evcs-service"),
+			project(":libs:gpg45-evaluator")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok

@@ -296,8 +296,9 @@ public class CheckExistingIdentityHandler
             }
 
             if (configService.enabled(SIS_VERIFICATION)) {
-                // PYIC-8393 Make use of the results of this call
-                sisService.getStoredIdentity(clientOAuthSessionItem);
+                // Call this before we invalidate the stored identity!
+                sisService.compareStoredIdentityWithStoredVcs(
+                        clientOAuthSessionItem, auditEventUser);
             }
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)) {
@@ -479,7 +480,7 @@ public class CheckExistingIdentityHandler
             throws CredentialParseException, EvcsServiceException {
         var vcs =
                 evcsService.fetchEvcsVerifiableCredentialsByState(
-                        userId, evcsAccessToken, CURRENT, PENDING_RETURN);
+                        userId, evcsAccessToken, false, CURRENT, PENDING_RETURN);
 
         // PENDING_RETURN vcs need a pending record to be valid
         var pendingRecords = criResponseService.getCriResponseItems(userId);
