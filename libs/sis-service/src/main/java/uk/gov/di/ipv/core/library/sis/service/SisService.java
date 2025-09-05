@@ -90,7 +90,7 @@ public class SisService {
 
     public SisGetStoredIdentityResult getStoredIdentity(
             ClientOAuthSessionItem clientOAuthSessionItem) {
-        // We want to know what the strongest VOT is stored in SIS so we ask for all of them.
+        // We want to get any identity in SIS so we ask for all vots.
         return sisClient.getStoredIdentity(
                 clientOAuthSessionItem.getEvcsAccessToken(),
                 List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
