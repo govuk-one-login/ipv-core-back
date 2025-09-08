@@ -936,7 +936,10 @@ Resources:
           - IsDev01
           - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
           - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+        - !If
+          - IsProduction
+          - "analytics-api.identity.account.gov.uk"
+          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
       ValidationMethod: DNS
       DomainValidationOptions:
         - DomainName: !If
@@ -945,7 +948,10 @@ Resources:
             - IsDev01
             - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
             - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+          - !If
+            - IsProduction
+            - "analytics-api.identity.account.gov.uk"
+            - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
           HostedZoneId: !If
             - IsDevelopment
             - !If
@@ -967,7 +973,10 @@ Resources:
           - IsDev01
           - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
           - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+        - !If
+          - IsProduction
+          - "analytics-api.identity.account.gov.uk"
+          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
       EndpointConfiguration:
         Types:
           - REGIONAL
