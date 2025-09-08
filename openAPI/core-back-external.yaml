@@ -398,13 +398,27 @@ components:
       type: object
       properties:
         "@context":
-          type: string
+          type: array
+          items:
+            type: string
         id:
           type: string
         verificationMethod:
           type: array
           items:
-            type: object
+            $ref: "#/components/schemas/didVerificationMethod"
+
+    didVerificationMethod:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        controller:
+          type: string
+        publicKeyJwk:
+          type: object
 
     healthcheckResponse:
       type: object
