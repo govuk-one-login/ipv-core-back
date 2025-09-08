@@ -56,18 +56,19 @@ class FetchSystemSettingsHandlerTest {
                 OBJECT_MAPPER.readValue(
                         """
                         {
-                            "kidJarHeaderEnabled": true,
                             "strategicAppEnabled": true,
-                            "drivingLicenceAuthCheck": true,
                             "mfaResetEnabled": true,
                             "resetIdentity": false,
-                            "repeatFraudCheckEnabled": true,
                             "sqsAsync": true,
+                            "parseVcClasses": true,
+                            "kidJarHeaderEnabled": true,
+                            "drivingLicenceAuthCheck": true,
+                            "sisVerificationEnabled": false,
+                            "repeatFraudCheckEnabled": true,
                             "p1JourneysEnabled": true,
                             "storedIdentityServiceEnabled": false,
                             "accountInterventionsEnabled": true,
-                            "pendingF2FResetEnabled": false,
-                            "parseVcClasses": true
+                            "pendingF2FResetEnabled": false
                         }
                     """,
                         new TypeReference<>() {}),
