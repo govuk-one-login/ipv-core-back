@@ -22,11 +22,11 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
-import uk.gov.di.ipv.core.library.ais.domain.AccountInterventionStateWithType;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -103,7 +102,11 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
@@ -225,17 +228,12 @@ class CheckExistingIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setVot(Vot.P0);
-        ipvSessionItem.setInitialAccountInterventionState(
-                AccountInterventionState.builder()
-                        .isResetPassword(false)
-                        .isSuspended(false)
-                        .isBlocked(false)
-                        .isReproveIdentity(false)
-                        .build());
 
         lenient()
                 .when(mockVotMatcher.findStrongestMatches(any(), any(), any(), anyBoolean()))
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
+
+        lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -988,6 +986,12 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(
                             List.of(P2), List.of(gpg45Vc), List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
+            when(mockVotMatcher.findStrongestMatches(
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(gpg45Vc),
+                            List.of(),
+                            true))
+                    .thenReturn(buildMatchResultFor(P2, matchedProfile));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
             var journeyResponse =
@@ -1002,6 +1006,11 @@ class CheckExistingIdentityHandlerTest {
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                     auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
+            var ext =
+                    (AuditExtensionPreviousAchievedVot)
+                            auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
+            assertEquals(P2, ext.getPreviousAchievedVot());
+
             verify(mockSessionCredentialService)
                     .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
 
@@ -1010,6 +1019,41 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldEmitReuseCompleteWithNullPreviousAchievedVotWhenComputationFails()
+                throws Exception {
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2), List.of(gpg45Vc), List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(mockVotMatcher.findStrongestMatches(
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(gpg45Vc),
+                            List.of(),
+                            true))
+                    .thenThrow(new RuntimeException("boom"));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+            var ext =
+                    (AuditExtensionPreviousAchievedVot)
+                            auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
+            assertEquals(null, ext.getPreviousAchievedVot());
         }
 
         @Test
@@ -1028,6 +1072,9 @@ class CheckExistingIdentityHandlerTest {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(mockVotMatcher.findStrongestMatches(
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
@@ -1443,16 +1490,8 @@ class CheckExistingIdentityHandlerTest {
         void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
             // Arrange
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-            when(mockAisService.fetchAccountStateWithType(TEST_USER_ID))
-                    .thenReturn(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(false)
-                                            .isSuspended(true)
-                                            .isReproveIdentity(true)
-                                            .isResetPassword(false)
-                                            .build(),
-                                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY));
+            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
+                    .thenReturn(AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY);
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1475,11 +1514,10 @@ class CheckExistingIdentityHandlerTest {
 
         @ParameterizedTest
         @MethodSource("getFetchedAccountInterventionStateWithTypeForInvalidJourney")
-        void shouldInvalidSession(
-                AccountInterventionStateWithType accountInterventionStateWithType) {
+        void shouldInvalidSession(AisInterventionType aisInterventionType) {
             // Arrange
-            when(mockAisService.fetchAccountStateWithType(TEST_USER_ID))
-                    .thenReturn(accountInterventionStateWithType);
+            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
+                    .thenReturn(aisInterventionType);
 
             // Act
             var journeyResponse =
@@ -1495,33 +1533,9 @@ class CheckExistingIdentityHandlerTest {
         private static Stream<Arguments>
                 getFetchedAccountInterventionStateWithTypeForInvalidJourney() {
             return Stream.of(
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(true)
-                                            .isSuspended(false)
-                                            .isReproveIdentity(false)
-                                            .isResetPassword(false)
-                                            .build(),
-                                    AisInterventionType.AIS_ACCOUNT_BLOCKED)),
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(false)
-                                            .isSuspended(true)
-                                            .isReproveIdentity(false)
-                                            .isResetPassword(false)
-                                            .build(),
-                                    AisInterventionType.AIS_ACCOUNT_SUSPENDED)),
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    AccountInterventionState.builder()
-                                            .isBlocked(false)
-                                            .isSuspended(false)
-                                            .isReproveIdentity(false)
-                                            .isResetPassword(true)
-                                            .build(),
-                                    AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET)));
+                    Arguments.of(AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(AIS_FORCED_USER_PASSWORD_RESET));
         }
     }
 

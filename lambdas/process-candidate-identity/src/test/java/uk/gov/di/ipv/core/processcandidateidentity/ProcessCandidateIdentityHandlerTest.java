@@ -13,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.ais.domain.AccountInterventionStateWithType;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -24,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -174,11 +172,10 @@ class ProcessCandidateIdentityHandlerTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setVot(P2);
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
-        ipvSessionItem.setInitialAccountInterventionState(
-                new AccountInterventionState(false, false, false, false));
+
         lenient()
-                .when(aisService.fetchAccountState(USER_ID))
-                .thenReturn(new AccountInterventionState(false, false, false, false));
+                .when(aisService.fetchAisInterventionType(USER_ID))
+                .thenReturn(AIS_NO_INTERVENTION);
     }
 
     @Nested
@@ -655,27 +652,23 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @ParameterizedTest
-        @MethodSource("createNonRelevantInterventionStates")
+        @MethodSource("createNonRelevantMidInterventionTypes")
         void shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromAis(
-                AccountInterventionStateWithType initialAccountInterventionStateWithType,
-                String finalAccountInterventionCode,
-                AisInterventionType finalAccountInterventionType,
-                AccountInterventionStateWithType finalAccountInterventionStateWithType)
+                boolean isReproveIdentity, AisInterventionType finalFetchedAccountInterventionType)
                 throws Exception {
             // Arrange
-            ipvSessionItem.setInitialAccountInterventionState(
-                    initialAccountInterventionStateWithType.accountInterventionState());
-            ipvSessionItem.setAisInterventionType(
-                    initialAccountInterventionStateWithType.aisInterventionType());
-            when(aisService.fetchAccountStateWithType(USER_ID))
-                    .thenReturn(finalAccountInterventionStateWithType);
+            when(aisService.fetchAisInterventionType(USER_ID))
+                    .thenReturn(finalFetchedAccountInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
 
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -721,33 +714,42 @@ class ProcessCandidateIdentityHandlerTest {
                             any());
         }
 
+        private static Stream<Arguments> createNonRelevantMidInterventionTypes() {
+            return Stream.of(
+                    // No interventions
+                    Arguments.of(false, AIS_NO_INTERVENTION),
+                    // Reprove identity cleared after reproved
+                    Arguments.of(true, AIS_NO_INTERVENTION),
+                    // Reprove identity not cleared yet
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY));
+        }
+
         @ParameterizedTest
-        @MethodSource("createNonRelevantInterventionStates")
+        @MethodSource("createNonRelevantTicfInterventionTypes")
         void
                 shouldNotInterruptProcessingIfNoRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
-                        AccountInterventionStateWithType initialAccountInterventionStateWithType,
-                        String finalAccountInterventionCode,
+                        boolean isReproveIdentity,
+                        String ticfInterventionCode,
                         AisInterventionType finalAccountInterventionType)
                         throws Exception {
             // Arrange
-            ipvSessionItem.setInitialAccountInterventionState(
-                    initialAccountInterventionStateWithType.accountInterventionState());
-            ipvSessionItem.setAisInterventionType(
-                    initialAccountInterventionStateWithType.aisInterventionType());
-            when(aisService.fetchAccountStateWithType(USER_ID))
-                    .thenReturn(initialAccountInterventionStateWithType);
+            when(aisService.fetchAisInterventionType(USER_ID))
+                    .thenReturn(finalAccountInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
 
             var vcTicfWithIntervention =
                     generateTicfVcWithIntervention(
                             Intervention.builder()
-                                    .withInterventionCode(finalAccountInterventionCode)
+                                    .withInterventionCode(ticfInterventionCode)
                                     .build());
             var ticfVcs = List.of(vcTicfWithIntervention);
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -793,53 +795,22 @@ class ProcessCandidateIdentityHandlerTest {
                             any());
         }
 
-        private static Stream<Arguments> createNonRelevantInterventionStates() {
+        private static Stream<Arguments> createNonRelevantTicfInterventionTypes() {
             return Stream.of(
                     // No interventions
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "00",
-                            AIS_NO_INTERVENTION,
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION)),
+                    Arguments.of(false, "00", AIS_NO_INTERVENTION),
                     // Reprove identity cleared after reproved
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            "00",
-                            AIS_NO_INTERVENTION,
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION)),
-                    // Reprove identity not cleared after reproved
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            "05",
-                            AIS_FORCED_USER_IDENTITY_VERIFY,
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY)));
+                    Arguments.of(true, "00", AIS_NO_INTERVENTION),
+                    // Reprove identity not cleared yet
+                    Arguments.of(true, "05", AIS_FORCED_USER_IDENTITY_VERIFY));
         }
 
         @ParameterizedTest
         @MethodSource("createRelevantAisInterventionStates")
         void shouldInterruptProcessingIfRelevantMidJourneyAccountInterventionIsReceivedFromAis(
-                AccountInterventionStateWithType initialAccountInterventionStateWithType,
-                AccountInterventionStateWithType finalAccountInterventionStateWithType)
-                throws Exception {
+                AisInterventionType finalAisInterventionType) throws Exception {
             // Arrange
-            ipvSessionItem.setInitialAccountInterventionState(
-                    initialAccountInterventionStateWithType.accountInterventionState());
-            ipvSessionItem.setAisInterventionType(
-                    initialAccountInterventionStateWithType.aisInterventionType());
-            when(aisService.fetchAccountStateWithType(USER_ID))
-                    .thenReturn(finalAccountInterventionStateWithType);
+            when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(finalAisInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
             var request =
@@ -862,74 +833,26 @@ class ProcessCandidateIdentityHandlerTest {
 
         private static Stream<Arguments> createRelevantAisInterventionStates() {
             return Stream.of(
-                    // Finally blocked
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(true, false, false, false),
-                                    AIS_ACCOUNT_BLOCKED)),
-                    // Finally just suspended
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, false, false),
-                                    AIS_ACCOUNT_SUSPENDED)),
-
-                    // Finally reset password
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, true),
-                                    AIS_FORCED_USER_PASSWORD_RESET)),
-                    // Reprove identity that has been triggered during the journey
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY)),
-                    // Reprove identity that cleared during the journey but got re-suspended
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, false, false),
-                                    AIS_ACCOUNT_SUSPENDED)),
-                    // Reprove identity that cleared during the journey but got blocked during the
-                    // journey
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(true, false, false, false),
-                                    AIS_ACCOUNT_BLOCKED)));
+                    Arguments.of(AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(AIS_FORCED_USER_PASSWORD_RESET),
+                    // Reprove identity that has been triggered during the non reprove journey
+                    Arguments.of(AIS_FORCED_USER_IDENTITY_VERIFY));
         }
 
         @ParameterizedTest
         @MethodSource("createRelevantTicfInterventionStates")
         void shouldInterruptProcessingIfRelevantMidJourneyAccountInterventionIsReceivedFromTicf(
-                AccountInterventionStateWithType initialAisAccountInterventionStateWithType,
-                AccountInterventionStateWithType midAisAccountInterventionStateWithType,
-                String ticfAccountInterventionCode,
-                AisInterventionType ticfAccountInterventionType)
+                boolean isReproveIdentity,
+                AisInterventionType midAisInterventionType,
+                String ticfAccountInterventionCode)
                 throws Exception {
             // Arrange
-            ipvSessionItem.setInitialAccountInterventionState(
-                    initialAisAccountInterventionStateWithType.accountInterventionState());
-            ipvSessionItem.setAisInterventionType(
-                    initialAisAccountInterventionStateWithType.aisInterventionType());
-            when(aisService.fetchAccountStateWithType(USER_ID))
-                    .thenReturn(midAisAccountInterventionStateWithType);
+            when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(midAisInterventionType);
             when(configService.enabled(AIS_ENABLED)).thenReturn(true);
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
 
             var vcTicfWithIntervention =
                     generateTicfVcWithIntervention(
@@ -940,7 +863,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
-                            eq(STANDARD),
+                            eq(coiCheckType),
                             eq(List.of()),
                             any(),
                             any()))
@@ -974,111 +897,31 @@ class ProcessCandidateIdentityHandlerTest {
 
         private static Stream<Arguments> createRelevantTicfInterventionStates() {
             return Stream.of(
-                    // AIS: No interventions, TICF:
+                    // AIS: Not reprove journey, no interventions, TICF:
                     // Blocked
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "03",
-                            AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "01",
-                            AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "05",
-                            AIS_FORCED_USER_IDENTITY_VERIFY),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "04",
-                            AIS_FORCED_USER_PASSWORD_RESET),
+                    Arguments.of(false, AIS_NO_INTERVENTION, "04"),
 
                     // AIS: Reprove identity cleared after reproved, TICF:
                     // Blocked
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "03",
-                            AIS_ACCOUNT_BLOCKED),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "03"),
                     // Suspended
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "01",
-                            AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "01"),
                     // Reprove identity
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "05",
-                            AIS_FORCED_USER_IDENTITY_VERIFY),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "05"),
                     // Reset password
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, false, false, false),
-                                    AIS_NO_INTERVENTION),
-                            "04",
-                            AIS_FORCED_USER_PASSWORD_RESET),
+                    Arguments.of(true, AIS_NO_INTERVENTION, "04"),
 
                     // AIS: Reprove identity not cleared after reproved, TICF:
                     // Re-suspended
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            "01",
-                            AIS_ACCOUNT_SUSPENDED),
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY, "01"),
                     // Blocked
-                    Arguments.of(
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            new AccountInterventionStateWithType(
-                                    new AccountInterventionState(false, true, true, false),
-                                    AIS_FORCED_USER_IDENTITY_VERIFY),
-                            "03",
-                            AIS_ACCOUNT_BLOCKED));
+                    Arguments.of(true, AIS_FORCED_USER_IDENTITY_VERIFY, "03"));
         }
 
         @Test

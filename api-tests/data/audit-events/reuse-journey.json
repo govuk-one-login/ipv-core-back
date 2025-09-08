@@ -12,6 +12,9 @@
   {
     "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
     "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "previous_achieved_vot": "P2"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -70,6 +73,18 @@
     "extensions": {
       "cri": "ticf",
       "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "existing",
+      "sis_record_created": true,
+      "vot": "P2"
     },
     "restricted": {
       "device_information": {}

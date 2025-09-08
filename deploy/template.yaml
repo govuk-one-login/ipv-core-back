@@ -4016,6 +4016,7 @@ Resources:
             Stat: Sum
 
   DwpKbvCriReturnRateAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub ${AWS::StackName}-DwpKbvCriReturnRateAlarm
