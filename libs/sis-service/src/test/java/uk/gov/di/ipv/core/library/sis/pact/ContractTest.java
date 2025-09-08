@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.sis.client.pact;
+package uk.gov.di.ipv.core.library.sis.pact;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
@@ -9,6 +9,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,23 +22,26 @@ import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 
 import java.util.List;
+import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static io.netty.handler.codec.http.HttpMethod.POST;
+import static org.apache.hc.core5.http.ContentType.APPLICATION_JSON;
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.hc.core5.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static org.apache.hc.core5.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.hc.core5.http.HttpStatus.SC_OK;
+import static org.apache.hc.core5.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-import static software.amazon.awssdk.http.HttpStatusCode.FORBIDDEN;
-import static software.amazon.awssdk.http.HttpStatusCode.INTERNAL_SERVER_ERROR;
-import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
-import static software.amazon.awssdk.http.HttpStatusCode.OK;
-import static software.amazon.awssdk.http.HttpStatusCode.UNAUTHORIZED;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "StoredIdentityProvider")
 @MockServerConfig(hostInterface = "localhost")
-public class SisContractTest {
+public class ContractTest {
 
     private static final String TEST_SIS_ACCESS_TOKEN = "test-access-token";
     private static final String TEST_INVALID_SIS_ACCESS_TOKEN = "test-invalid-access-token";
@@ -54,7 +58,6 @@ public class SisContractTest {
 
     @BeforeEach
     void setup(MockServer mockServer) {
-
         when(mockConfigService.getParameter(ConfigurationVariable.SIS_APPLICATION_URL))
                 .thenReturn("http://localhost:" + mockServer.getPort());
     }
@@ -64,29 +67,15 @@ public class SisContractTest {
             PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
                 .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record.")
+                .uponReceiving("A request to get existing stored identity record (200)")
                 .path(USER_IDENTITY_PATH)
                 .method(POST.name())
                 .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
-                .body(getValidRequestBody().toString())
+                .body(getValidRequestBody())
                 .willRespondWith()
-                .status(OK)
+                .status(SC_OK)
                 .body(getValidResponseBody())
                 .toPact();
-    }
-
-    private static DslPart getValidRequestBody() {
-        return newJsonBody(
-                        body -> {
-                            body.array(
-                                    "vtr",
-                                    vtr -> {
-                                        vtr.stringValue(Vot.P1.name());
-                                        vtr.stringValue(Vot.P2.name());
-                                    });
-                            body.stringValue("govukSigninJourneyId", TEST_JOURNEY_ID);
-                        })
-                .build();
     }
 
     private static DslPart getValidResponseBody() {
@@ -103,6 +92,7 @@ public class SisContractTest {
     }
 
     @Test
+    @DisplayName("POST /user-identity - 200 returns stored identity")
     @PactTestFor(pactMethod = "validGetStoredIdentityRequestReturns200")
     void testGetUserIdentityRequestReturns200(MockServer mockServer) {
         // Arrange
@@ -123,19 +113,12 @@ public class SisContractTest {
     @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns404(
             PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record.")
-                .path(USER_IDENTITY_PATH)
-                .method(POST.name())
-                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
-                .body(getValidRequestBody().toString())
-                .willRespondWith()
-                .status(NOT_FOUND)
-                .toPact();
+        return buildStoredIdentityInteraction(
+                "(404 no record)", SC_NOT_FOUND, TEST_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
+    @DisplayName("POST /user-identity - 404 returns empty with successful request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns404")
     void testGetUserIdentityRequestReturns404(MockServer mockServer) {
         // Arrange
@@ -153,19 +136,12 @@ public class SisContractTest {
     @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns401(
             PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record.")
-                .path(USER_IDENTITY_PATH)
-                .method(POST.name())
-                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_INVALID_SIS_ACCESS_TOKEN))
-                .body(getValidRequestBody().toString())
-                .willRespondWith()
-                .status(UNAUTHORIZED)
-                .toPact();
+        return buildStoredIdentityInteraction(
+                "(401 unauthorized)", SC_UNAUTHORIZED, TEST_INVALID_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
+    @DisplayName("POST /user-identity - 401 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns401")
     void testGetUserIdentityRequestReturns401(MockServer mockServer) {
         // Arrange
@@ -183,19 +159,12 @@ public class SisContractTest {
     @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns403(
             PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record.")
-                .path(USER_IDENTITY_PATH)
-                .method(POST.name())
-                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_EXPIRED_SIS_ACCESS_TOKEN))
-                .body(getValidRequestBody().toString())
-                .willRespondWith()
-                .status(FORBIDDEN)
-                .toPact();
+        return buildStoredIdentityInteraction(
+                "(403 forbidden)", SC_FORBIDDEN, TEST_EXPIRED_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
+    @DisplayName("POST /user-identity - 403 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns403")
     void testGetUserIdentityRequestReturns403(MockServer mockServer) {
         // Arrange
@@ -213,19 +182,12 @@ public class SisContractTest {
     @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns500(
             PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record.")
-                .path(USER_IDENTITY_PATH)
-                .method(POST.name())
-                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
-                .body(getValidRequestBody().toString())
-                .willRespondWith()
-                .status(INTERNAL_SERVER_ERROR)
-                .toPact();
+        return buildStoredIdentityInteraction(
+                "(500 server error)", SC_INTERNAL_SERVER_ERROR, TEST_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
+    @DisplayName("POST /user-identity - 500 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns500")
     void testGetUserIdentityRequestReturns500(MockServer mockServer) {
         // Arrange
@@ -237,5 +199,41 @@ public class SisContractTest {
 
         // Assert
         assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
+    }
+
+    private static RequestResponsePact buildStoredIdentityInteraction(
+            String description,
+            int httpStatusCode,
+            String bearerToken,
+            PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
+                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+                .uponReceiving(description)
+                .path(USER_IDENTITY_PATH)
+                .method(POST.name())
+                .headers(
+                        Map.of(
+                                AUTHORIZATION,
+                                String.format("Bearer %s", bearerToken),
+                                CONTENT_TYPE,
+                                APPLICATION_JSON.getMimeType()))
+                .body(getValidRequestBody())
+                .willRespondWith()
+                .status(httpStatusCode)
+                .toPact();
+    }
+
+    private static DslPart getValidRequestBody() {
+        return newJsonBody(
+                        body -> {
+                            body.array(
+                                    "vtr",
+                                    vtr -> {
+                                        vtr.stringValue(Vot.P1.name());
+                                        vtr.stringValue(Vot.P2.name());
+                                    });
+                            body.stringValue("govukSigninJourneyId", TEST_JOURNEY_ID);
+                        })
+                .build();
     }
 }
