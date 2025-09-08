@@ -17,17 +17,21 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
+import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 
 import java.util.List;
-import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static io.netty.handler.codec.http.HttpMethod.POST;
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static software.amazon.awssdk.http.HttpStatusCode.FORBIDDEN;
+import static software.amazon.awssdk.http.HttpStatusCode.INTERNAL_SERVER_ERROR;
+import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
+import static software.amazon.awssdk.http.HttpStatusCode.OK;
+import static software.amazon.awssdk.http.HttpStatusCode.UNAUTHORIZED;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -36,10 +40,15 @@ import static org.mockito.Mockito.when;
 public class SisContractTest {
 
     private static final String TEST_SIS_ACCESS_TOKEN = "test-access-token";
+    private static final String TEST_INVALID_SIS_ACCESS_TOKEN = "test-invalid-access-token";
+    private static final String TEST_EXPIRED_SIS_ACCESS_TOKEN = "test-expired-access-token";
     private static final List<Vot> TEST_VOTS = List.of(Vot.P1, Vot.P2);
     private static final String TEST_JOURNEY_ID = "test-gov-journey-id";
 
     private static final String USER_IDENTITY_PATH = "/user-identity";
+
+    private static final SisGetStoredIdentityResult EXPECTED_INVALID_RESULT =
+            new SisGetStoredIdentityResult(false, false, null);
 
     @Mock ConfigService mockConfigService;
 
@@ -58,10 +67,10 @@ public class SisContractTest {
                 .uponReceiving("A request to get existing stored identity record.")
                 .path(USER_IDENTITY_PATH)
                 .method(POST.name())
-                .headers(Map.of(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN)))
+                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
                 .body(getValidRequestBody().toString())
                 .willRespondWith()
-                .status(200)
+                .status(OK)
                 .body(getValidResponseBody())
                 .toPact();
     }
@@ -95,19 +104,138 @@ public class SisContractTest {
 
     @Test
     @PactTestFor(pactMethod = "validGetStoredIdentityRequestReturns200")
-    void testPostUserIdentityReturns200(MockServer mockServer) {
+    void testGetUserIdentityRequestReturns200(MockServer mockServer) {
         // Arrange
-        var underTest = new SisClient(mockConfigService);
+        var sisClient = new SisClient(mockConfigService);
         var expectedIdentityDetails =
                 new SisStoredIdentityCheckDto("test-content", true, false, Vot.P2, true, true);
+        var expectedValidResult =
+                new SisGetStoredIdentityResult(true, true, expectedIdentityDetails);
 
         // Act
         var sisGetStoredIdentityResult =
-                underTest.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
-        assertTrue(sisGetStoredIdentityResult.requestSucceeded());
-        assertTrue(sisGetStoredIdentityResult.identityWasFound());
-        assertEquals(expectedIdentityDetails, sisGetStoredIdentityResult.identityDetails());
+        assertEquals(expectedValidResult, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturns404(
+            PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
+                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+                .uponReceiving("A request to get existing stored identity record.")
+                .path(USER_IDENTITY_PATH)
+                .method(POST.name())
+                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
+                .body(getValidRequestBody().toString())
+                .willRespondWith()
+                .status(NOT_FOUND)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns404")
+    void testGetUserIdentityRequestReturns404(MockServer mockServer) {
+        // Arrange
+        var sisClient = new SisClient(mockConfigService);
+        var expectedNotFoundResult = new SisGetStoredIdentityResult(true, false, null);
+
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(expectedNotFoundResult, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturns401(
+            PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
+                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+                .uponReceiving("A request to get existing stored identity record.")
+                .path(USER_IDENTITY_PATH)
+                .method(POST.name())
+                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_INVALID_SIS_ACCESS_TOKEN))
+                .body(getValidRequestBody().toString())
+                .willRespondWith()
+                .status(UNAUTHORIZED)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns401")
+    void testGetUserIdentityRequestReturns401(MockServer mockServer) {
+        // Arrange
+        var sisClient = new SisClient(mockConfigService);
+
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(
+                        TEST_INVALID_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturns403(
+            PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
+                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+                .uponReceiving("A request to get existing stored identity record.")
+                .path(USER_IDENTITY_PATH)
+                .method(POST.name())
+                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_EXPIRED_SIS_ACCESS_TOKEN))
+                .body(getValidRequestBody().toString())
+                .willRespondWith()
+                .status(FORBIDDEN)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns403")
+    void testGetUserIdentityRequestReturns403(MockServer mockServer) {
+        // Arrange
+        var sisClient = new SisClient(mockConfigService);
+
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(
+                        TEST_EXPIRED_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturns500(
+            PactDslWithProvider builder) {
+        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
+                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+                .uponReceiving("A request to get existing stored identity record.")
+                .path(USER_IDENTITY_PATH)
+                .method(POST.name())
+                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
+                .body(getValidRequestBody().toString())
+                .willRespondWith()
+                .status(INTERNAL_SERVER_ERROR)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns500")
+    void testGetUserIdentityRequestReturns500(MockServer mockServer) {
+        // Arrange
+        var sisClient = new SisClient(mockConfigService);
+
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
     }
 }
