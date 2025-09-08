@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "StoredIdentityProvider")
 @MockServerConfig(hostInterface = "localhost")
-public class ContractTest {
+class ContractTest {
 
     private static final String TEST_SIS_ACCESS_TOKEN = "test-access-token";
     private static final String TEST_INVALID_SIS_ACCESS_TOKEN = "test-invalid-access-token";
