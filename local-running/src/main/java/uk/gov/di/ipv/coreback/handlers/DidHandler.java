@@ -19,6 +19,6 @@ public class DidHandler {
         var signingKey =
                 ECKey.parse(configService.getSecret(ConfigurationVariable.SIGNING_KEY_JWK));
 
-        ctx.json(new DidDocument(signingKey));
+        ctx.json(new DidDocument(signingKey.toPublicJWK()));
     }
 }
