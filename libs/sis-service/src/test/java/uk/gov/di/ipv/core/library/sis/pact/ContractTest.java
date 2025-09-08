@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "StoredIdentityProvider")
+@PactTestFor(providerName = "StoredIdentityServiceProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
 
@@ -62,7 +62,7 @@ class ContractTest {
                 .thenReturn("http://localhost:" + mockServer.getPort());
     }
 
-    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetStoredIdentityRequestReturns200(
             PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
@@ -110,7 +110,7 @@ class ContractTest {
         assertEquals(expectedValidResult, sisGetStoredIdentityResult);
     }
 
-    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns404(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
@@ -133,7 +133,7 @@ class ContractTest {
         assertEquals(expectedNotFoundResult, sisGetStoredIdentityResult);
     }
 
-    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns401(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
@@ -156,7 +156,7 @@ class ContractTest {
         assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
     }
 
-    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns403(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
@@ -179,7 +179,7 @@ class ContractTest {
         assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
     }
 
-    @Pact(provider = "StoredIdentityProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns500(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
