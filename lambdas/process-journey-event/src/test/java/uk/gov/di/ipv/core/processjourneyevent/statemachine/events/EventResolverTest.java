@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -57,7 +56,7 @@ public class EventResolverTest {
 
             eventResolveParameters =
                     new EventResolveParameters(
-                            Collections.emptySet(), new IpvSessionItem(), clientOAuthSessionItem);
+                            Collections.emptyList(), new IpvSessionItem(), clientOAuthSessionItem);
         }
 
         @Test
@@ -68,8 +67,8 @@ public class EventResolverTest {
                             null,
                             null,
                             null,
-                            Collections.emptySet(),
-                            Collections.emptySet());
+                            Collections.emptyList(),
+                            Collections.emptyList());
             BasicEvent basicEvent = new BasicEvent();
             basicEvent.setTargetStateObj(expectedResult.state());
 
@@ -84,8 +83,8 @@ public class EventResolverTest {
                             null,
                             null,
                             null,
-                            Set.of("test-context-to-set"),
-                            Set.of("test-context-to-unset"));
+                            List.of("test-context-to-set"),
+                            List.of("test-context-to-unset"));
             BasicEvent basicEvent = new BasicEvent();
             basicEvent.setTargetStateObj(expectedResult.state());
             basicEvent.setJourneyContextToSet("test-context-to-set");
@@ -168,7 +167,7 @@ public class EventResolverTest {
 
             var testParams =
                     new EventResolveParameters(
-                            Set.of("test-context"),
+                            List.of("test-context"),
                             new IpvSessionItem(),
                             ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build());
             var result = eventResolver.resolve(defaultEvent, testParams);
@@ -211,7 +210,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        Set.of("journeyContext"),
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         clientOAuthSessionItem));
 
@@ -241,7 +240,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        Set.of("journeyContext"),
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         clientOAuthSessionItem));
 
@@ -272,7 +271,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        Set.of("journeyContext"),
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         clientOAuthSessionItem));
 
@@ -299,7 +298,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        Set.of("journeyContext"),
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         ClientOAuthSessionItem.builder()
                                                 .scope(ScopeConstants.REVERIFICATION)
@@ -328,7 +327,7 @@ public class EventResolverTest {
                                         eventResolver.resolve(
                                                 basicEventWithCheckMitigationConfigured,
                                                 new EventResolveParameters(
-                                                        Set.of("journeyContext"),
+                                                        List.of("journeyContext"),
                                                         ipvSessionWithMissingSecurityCheckCredential,
                                                         clientOAuthSessionItem)));
 
@@ -345,7 +344,9 @@ public class EventResolverTest {
             clientOAuthSessionItem = new ClientOAuthSessionItem();
             eventResolveParameters =
                     new EventResolveParameters(
-                            Set.of("journeyContext"), new IpvSessionItem(), clientOAuthSessionItem);
+                            List.of("journeyContext"),
+                            new IpvSessionItem(),
+                            clientOAuthSessionItem);
         }
 
         @Test

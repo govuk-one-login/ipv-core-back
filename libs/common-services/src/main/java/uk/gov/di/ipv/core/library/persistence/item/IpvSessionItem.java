@@ -21,9 +21,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -58,7 +56,7 @@ public class IpvSessionItem implements PersistenceItem {
      * and can be used to re-route particular contexts
      * @see uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent#TransitionResult
      */
-    @Builder.Default private Set<String> journeyContexts = new HashSet<>();
+    @Builder.Default private List<String> journeyContexts = new ArrayList<>();
     private String journeyContext;
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
@@ -122,7 +120,9 @@ public class IpvSessionItem implements PersistenceItem {
     }
 
     public void setJourneyContext(String journeyContext) {
-        this.journeyContexts.add(journeyContext);
+        if (!this.journeyContexts.contains(journeyContext)) {
+            this.journeyContexts.add(journeyContext);
+        }
         this.journeyContext = journeyContext;
     }
 
@@ -131,11 +131,12 @@ public class IpvSessionItem implements PersistenceItem {
         this.journeyContext = null;
     }
 
-    public Set<String> getActiveJourneyContexts() {
+    public List<String> getActiveJourneyContexts() {
         // This needs to add the existing journey context to the
         // journeyContexts set in case a user uses a mix
         // of old and new version of the process-journey-event lambda
-        if (StringUtils.isNotBlank(journeyContext)) {
+        if (StringUtils.isNotBlank(journeyContext)
+                && !this.journeyContexts.contains(journeyContext)) {
             this.journeyContexts.add(journeyContext);
         }
         return this.journeyContexts;

@@ -18,8 +18,8 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +32,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_
 class StateMachineTest {
     private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
             new EventResolveParameters(
-                    Set.of("journeyContext"), new IpvSessionItem(), new ClientOAuthSessionItem());
+                    List.of("journeyContext"), new IpvSessionItem(), new ClientOAuthSessionItem());
     @Mock private EventResolver eventResolver;
 
     @Test
@@ -121,8 +121,8 @@ class StateMachineTest {
                                 Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                                 Map.of("testKey", "testValue"),
                                 null,
-                                Collections.emptySet(),
-                                Collections.emptySet()));
+                                Collections.emptyList(),
+                                Collections.emptyList()));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -142,8 +142,8 @@ class StateMachineTest {
                         Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                         Map.of("testKey", "testValue"),
                         null,
-                        Collections.emptySet(),
-                        Collections.emptySet());
+                        Collections.emptyList(),
+                        Collections.emptyList());
         assertEquals(expectedResult, actualResult);
     }
 
@@ -157,8 +157,8 @@ class StateMachineTest {
                         Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                         Map.of("testKey", "testValue"),
                         null,
-                        Collections.emptySet(),
-                        Collections.emptySet());
+                        Collections.emptyList(),
+                        Collections.emptyList());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
         when(nestedJourneyInvokeState.transition(
                         "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
@@ -187,8 +187,8 @@ class StateMachineTest {
                         Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                         Map.of("testKey", "testValue"),
                         null,
-                        Collections.emptySet(),
-                        Collections.emptySet());
+                        Collections.emptyList(),
+                        Collections.emptyList());
         assertEquals(expectedResult, actualResult);
     }
 
@@ -202,8 +202,8 @@ class StateMachineTest {
                         Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                         Map.of("testKey1", "testValue1"),
                         null,
-                        Collections.emptySet(),
-                        Collections.emptySet());
+                        Collections.emptyList(),
+                        Collections.emptyList());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
         when(nestedJourneyInvokeState.transition(
                         "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
@@ -218,8 +218,8 @@ class StateMachineTest {
                                 Arrays.asList(AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START),
                                 Map.of("testKey2", "testValue2"),
                                 null,
-                                Collections.emptySet(),
-                                Collections.emptySet()));
+                                Collections.emptyList(),
+                                Collections.emptyList()));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -241,8 +241,8 @@ class StateMachineTest {
                                 AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
                         Map.of("testKey1", "testValue1", "testKey2", "testValue2"),
                         null,
-                        Collections.emptySet(),
-                        Collections.emptySet());
+                        Collections.emptyList(),
+                        Collections.emptyList());
         assertEquals(expectedResult, actualResult);
     }
 
@@ -269,8 +269,8 @@ class StateMachineTest {
                                 null,
                                 null,
                                 eventOverride,
-                                Collections.emptySet(),
-                                Collections.emptySet()));
+                                Collections.emptyList(),
+                                Collections.emptyList()));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())

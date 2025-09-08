@@ -15,8 +15,8 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,7 +31,7 @@ class BasicStateTest {
     void setUp() {
         eventResolveParameters =
                 new EventResolveParameters(
-                        Set.of("journeyContext"),
+                        List.of("journeyContext"),
                         new IpvSessionItem(),
                         ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build());
 

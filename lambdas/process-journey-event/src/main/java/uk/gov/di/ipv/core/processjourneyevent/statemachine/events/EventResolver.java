@@ -16,8 +16,9 @@ import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
@@ -117,13 +118,13 @@ public class EventResolver {
                 }
             }
 
-            Set<String> journeyContextsToSet = new java.util.HashSet<>();
+            List<String> journeyContextsToSet = new ArrayList<>();
             var eventContextToSet = event.getJourneyContextToSet();
             if (eventContextToSet != null && !eventContextToSet.isEmpty()) {
                 journeyContextsToSet.add(eventContextToSet);
             }
 
-            Set<String> journeyContextsToUnset = new java.util.HashSet<>();
+            List<String> journeyContextsToUnset = new ArrayList<>();
             var eventContextToUnset = event.getJourneyContextToUnset();
             if (eventContextToUnset != null && !eventContextToUnset.isEmpty()) {
                 journeyContextsToUnset.add(eventContextToUnset);
