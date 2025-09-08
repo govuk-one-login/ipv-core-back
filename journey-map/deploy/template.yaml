@@ -318,6 +318,10 @@ Resources:
               Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_USERNAME}}'
             - Name: JOURNEY_MAP_PASSWORD
               Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_PASSWORD}}'
+            - Name: JOURNEY_TRANSITIONS_ENDPOINT
+              Value: '{{resolve:ssm:/journeyMap/JOURNEY_TRANSITIONS_ENDPOINT}}'
+            - Name: ANALYTICS_API_KEY
+              Value: '{{resolve:ssm:/journeyMap/ANALYTICS_API_KEY}}'
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp

@@ -66,6 +66,7 @@ export const renderClickHandler = ({ name, definition }: StateNode): string => {
 
 export interface TransitionEvent {
   eventName: string;
+  targetJourney?: string;
   targetEntryEvent?: string;
   journeyContext?: string;
   mitigation?: string;
@@ -74,6 +75,7 @@ export interface TransitionEvent {
 export interface TransitionEdge {
   sourceState: string;
   targetState: string;
+  transitionCount?: number;
   transitionEvents: TransitionEvent[];
 }
 
@@ -114,8 +116,9 @@ const createTransitionLabel = ({
 export const renderTransition = ({
   sourceState,
   targetState,
+  transitionCount,
   transitionEvents,
 }: TransitionEdge): string => {
   const label = transitionEvents.map(createTransitionLabel).join("\n");
-  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}|${targetState}`;
+  return `    ${sourceState} ${sourceState}-${targetState}@-->|${label}${transitionCount ? "\n" + transitionCount : ""}|${targetState}`;
 };
