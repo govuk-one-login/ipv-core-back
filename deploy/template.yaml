@@ -855,7 +855,7 @@ Resources:
           ResourcePath: '/*'
           HttpMethod: '*'
           MetricsEnabled: true
-      StageName: !Sub ${Environment}
+      StageName: !Sub "${Environment}-analytics"
       TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
@@ -906,7 +906,7 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     Properties:
       RestApiId: !Ref IPVCoreAnalyticsAPI
-      StageName: !Sub ${Environment}
+      StageName: !Ref IPVCoreAnalyticsAPI.Stage
 
   IPVCoreAnalyticsUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
@@ -915,7 +915,7 @@ Resources:
       UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
       ApiStages:
         - ApiId: !Ref IPVCoreAnalyticsAPI
-          Stage: !Sub ${Environment}
+          Stage: !Ref IPVCoreAnalyticsAPI.Stage
       Throttle:
         RateLimit: 10
         BurstLimit: 2
@@ -979,7 +979,7 @@ Resources:
     Properties:
       DomainName: !Ref IPVCoreAnalyticsDomain
       RestApiId: !Ref IPVCoreAnalyticsAPI
-      Stage: !Sub ${Environment}
+      Stage: !Ref IPVCoreAnalyticsAPI.Stage
       BasePath: ""
 
   IPVCoreAnalyticsDNSRecord:
