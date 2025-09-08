@@ -142,11 +142,53 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         credentials:
-          Fn::GetAtt: ExternalApiGatewayJwksS3Role.Arn
+          Fn::GetAtt: ExternalApiGatewayS3Role.Arn
         httpMethod: GET
         uri:
           Fn::Sub:
             - arn:aws:apigateway:eu-west-2:s3:path/ipv-core-well-known-jwks-${env}/well-known-v2.json
+            - env:
+                Fn::If:
+                  - IsDevelopment
+                  - Fn::If:
+                      - IsDev01
+                      - dev01
+                      - dev02
+                  - Ref: Environment
+        responses:
+          default:
+            statusCode: 200
+            responseParameters:
+              method.response.header.Cache-Control: "'max-age=300'"
+          \[45\]\d{2}:
+            statusCode: 500
+
+  /.well-known/stored-identity/did.json:
+    get:
+      description: "DID for IPV Core public keys"
+      responses:
+        200:
+          description: "List of public keys"
+          headers:
+            Cache-Control:
+              description: "Cache-Control header"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/didResponse"
+        500:
+          description: "Error fetching public keys"
+          content: {}
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials:
+          Fn::GetAtt: ExternalApiGatewayS3Role.Arn
+        httpMethod: GET
+        uri:
+          Fn::Sub:
+            - arn:aws:apigateway:eu-west-2:s3:path/ipv-core-well-known-did-${env}/well-known.json
             - env:
                 Fn::If:
                   - IsDevelopment
@@ -351,6 +393,18 @@ components:
       required:
         - keys
       additionalProperties: false
+
+    didResponse:
+      type: object
+      properties:
+        "@context":
+          type: string
+        id:
+          type: string
+        verificationMethod:
+          type: array
+          items:
+            type: object
 
     healthcheckResponse:
       type: object

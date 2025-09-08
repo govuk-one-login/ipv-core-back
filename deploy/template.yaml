@@ -603,7 +603,7 @@ Resources:
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
     DependsOn:
-      - ExternalApiGatewayJwksS3Role
+      - ExternalApiGatewayS3Role
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
@@ -653,7 +653,7 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
-  ExternalApiGatewayJwksS3Role:
+  ExternalApiGatewayS3Role:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -683,6 +683,23 @@ Resources:
                         - !Ref Environment
                   - !Sub
                     - "arn:aws:s3:::ipv-core-well-known-jwks-${env}/well-known-v2.json"
+                    - env: !If
+                        - IsDevelopment
+                        - !If
+                          - IsDev01
+                          - dev01
+                          - dev02
+                        - !Ref Environment
+        - PolicyName: AccessDidS3Bucket
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - !Sub
+                    - "arn:aws:s3:::ipv-core-well-known-did-${env}/well-known.json"
                     - env: !If
                         - IsDevelopment
                         - !If
