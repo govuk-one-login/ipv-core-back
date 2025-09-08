@@ -1,9 +1,15 @@
 import { JourneyEngineResponse, JourneyResponse } from "./internal-api.js";
-import { MfaResetResult, UserIdentity } from "./external-api.js";
+import { MfaResetResult, UserIdentity, VcJwtPayload } from "./external-api.js";
 import { World as CucumberWorld } from "@cucumber/cucumber";
-import { VcJwtPayload } from "./external-api.js";
-import { JSONWebKeySet } from "jose";
+import { JSONWebKeySet, JWK } from "jose";
 import { CriStubRequest } from "./cri-stub.js";
+
+interface DidVerificationMethod {
+  id: string;
+  type: string;
+  controller: string;
+  publicKeyJwk: JWK;
+}
 
 export interface World extends CucumberWorld {
   // Journey properties
@@ -30,6 +36,9 @@ export interface World extends CucumberWorld {
 
   // JWKS result
   jwksResult?: JSONWebKeySet;
+
+  // DID result
+  didResult?: DidVerificationMethod[];
 
   // Latest error to assert against
   error?: Error;

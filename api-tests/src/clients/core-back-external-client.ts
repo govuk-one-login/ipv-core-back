@@ -140,3 +140,21 @@ export const jwks = async (): Promise<JSONWebKeySet> => {
 
   return body;
 };
+
+export const did = async () => {
+  const response = await fetch(
+    `${config.core.externalApiUrl}/.well-known/stored-identity/did.json`,
+    {
+      method: "GET",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`DID request failed: ${response.statusText}`);
+  }
+
+  const body = await response.json();
+  await validateResponseSchema(body, "didResponse");
+
+  return body;
+};
