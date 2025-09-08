@@ -45,7 +45,7 @@ class FetchSystemSettingsHandlerTest {
     }
 
     @Test
-    void handlerShouldReturnJourneyTransitions() throws JsonProcessingException {
+    void handlerShouldReturnSystemSettings() throws JsonProcessingException {
         // Act
         var response = handler.handleRequest(new APIGatewayProxyRequestEvent(), mockContext);
         HashMap<String, Map<String, Object>> body =
