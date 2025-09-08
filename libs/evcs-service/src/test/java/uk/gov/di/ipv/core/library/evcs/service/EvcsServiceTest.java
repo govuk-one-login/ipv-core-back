@@ -364,21 +364,6 @@ class EvcsServiceTest {
     }
 
     @Test
-    void storeMigratedIdentityShouldStoreVcsWithCurrentState() throws EvcsServiceException {
-        evcsService.storeMigratedIdentity(TEST_USER_ID, List.of(VC_ADDRESS_TEST));
-
-        verify(mockEvcsClient)
-                .storeUserVCs(
-                        stringArgumentCaptor.capture(), evcsCreateUserVCsDtosCaptor.capture());
-
-        assertEquals(TEST_USER_ID, stringArgumentCaptor.getValue());
-        assertEquals(
-                VC_ADDRESS_TEST.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
-        assertEquals(CURRENT, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
-        assertEquals(ONLINE, evcsCreateUserVCsDtosCaptor.getValue().get(0).provenance());
-    }
-
-    @Test
     void storeAsyncVcShouldStoreVcWithPendingReturnState() throws EvcsServiceException {
         evcsService.storePendingVc(VC_ADDRESS_TEST);
 

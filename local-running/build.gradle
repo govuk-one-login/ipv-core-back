@@ -7,7 +7,7 @@ plugins {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkSqs,
-			libs.awsSdkUrlConnectionClient,
+			libs.awsSdkCrtClient,
 			libs.bundles.awsLambda,
 			libs.bundles.log4j,
 			libs.jacksonDatabind,

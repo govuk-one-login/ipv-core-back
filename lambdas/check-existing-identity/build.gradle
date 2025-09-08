@@ -5,6 +5,10 @@ plugins {
 	alias libs.plugins.postCompileWeaving
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
@@ -16,6 +20,7 @@ dependencies {
 			project(":libs:verifiable-credentials"),
 			project(":libs:user-identity-service"),
 			project(":libs:evcs-service"),
+			project(":libs:sis-service"),
 			project(":libs:ais-service")
 
 	compileOnly libs.lombok
@@ -28,6 +33,9 @@ dependencies {
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly(libs.junitPlatform)
 }
@@ -40,6 +48,7 @@ java {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {

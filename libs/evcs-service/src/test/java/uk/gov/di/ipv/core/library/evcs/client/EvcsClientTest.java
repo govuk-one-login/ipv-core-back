@@ -128,7 +128,7 @@ class EvcsClientTest {
 
     @ParameterizedTest
     @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
-    void testGetUserVCs(String appUrl) throws Exception {
+    void getUserVCs(String appUrl) throws Exception {
         when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn(appUrl);
         // Arrange
@@ -163,7 +163,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_emptyListIsReturned() throws Exception {
+    void getUserVCs_emptyListIsReturned() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
@@ -184,8 +184,7 @@ class EvcsClientTest {
 
     @ParameterizedTest
     @ValueSource(ints = {400, 500})
-    void testGetUserVCs_shouldThrowException_ifNon200ResponseStatus(int statusCode)
-            throws Exception {
+    void getUserVCs_shouldThrowException_ifNon200ResponseStatus(int statusCode) throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body()).thenReturn("{\"message\":\"Forbidden\"}");
@@ -203,7 +202,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldNotThrowException_for404ResponseStatus() throws Exception {
+    void getUserVCs_shouldNotThrowException_for404ResponseStatus() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(404);
@@ -222,7 +221,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldThrowException_non200Response_failedParsingResponseBody()
+    void getUserVCs_shouldThrowException_non200Response_failedParsingResponseBody()
             throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
@@ -238,7 +237,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldThrowException_ifHttpClientException() throws Exception {
+    void getUserVCs_shouldThrowException_ifHttpClientException() throws Exception {
         // Arrange
         when(mockHttpClient.send(any(), any())).thenThrow(new InterruptedException());
         // Act
@@ -251,7 +250,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldThrowException_ifResponseBodyParsingFail() throws Exception {
+    void getUserVCs_shouldThrowException_ifResponseBodyParsingFail() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
@@ -266,7 +265,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldThrowException_ifBadUrl() {
+    void getUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
         when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn("\\");

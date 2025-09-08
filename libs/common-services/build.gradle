@@ -5,6 +5,10 @@ plugins {
 	id "jacoco"
 }
 
+configurations {
+	mockitoAgent
+}
+
 dependencies {
 	api libs.nimbusdsOauth2OidcSdk,
 			libs.diVocab
@@ -15,6 +19,7 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkKms,
 			libs.awsSdkAppConfigData,
+			libs.awsSdkCrtClient,
 			libs.commonsCodec,
 			libs.commonsCollections,
 			libs.jacksonDatabind,
@@ -32,6 +37,10 @@ dependencies {
 			libs.systemStubs,
 			libs.hamcrest,
 			project(path: ':libs:test-data')
+
+	mockitoAgent(libs.mockitoCore) {
+		transitive = false
+	}
 
 	testRuntimeOnly libs.junitPlatform
 
@@ -60,6 +69,7 @@ tasks.named('jar') {
 test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 }
 
 jacocoTestReport {
