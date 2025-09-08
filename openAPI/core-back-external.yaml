@@ -406,19 +406,16 @@ components:
         verificationMethod:
           type: array
           items:
-            $ref: "#/components/schemas/didVerificationMethod"
-
-    didVerificationMethod:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-        controller:
-          type: string
-        publicKeyJwk:
-          type: object
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              controller:
+                type: string
+              publicKeyJwk:
+                type: object
 
     healthcheckResponse:
       type: object
