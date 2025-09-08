@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.service.AppConfigService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -20,11 +21,16 @@ public class FetchSystemSettingsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final ConfigService configService;
 
-    final ConfigService configService = getConfigService();
+    @ExcludeFromGeneratedCoverageReport
+    public FetchSystemSettingsHandler() {
+        this.configService = new AppConfigService();
+    }
 
-    protected ConfigService getConfigService() {
-        return new AppConfigService();
+    @ExcludeFromGeneratedCoverageReport
+    public FetchSystemSettingsHandler(ConfigService configService) {
+        this.configService = configService;
     }
 
     @Override

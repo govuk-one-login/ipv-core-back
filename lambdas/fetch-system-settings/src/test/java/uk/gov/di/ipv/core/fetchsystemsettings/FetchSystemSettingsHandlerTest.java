@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.LocalConfigService;
 import uk.gov.di.ipv.core.library.testdata.CommonData;
 
@@ -42,12 +41,7 @@ class FetchSystemSettingsHandlerTest {
                         StandardCharsets.UTF_8);
 
         handler =
-                new FetchSystemSettingsHandler() {
-                    @Override
-                    protected ConfigService getConfigService() {
-                        return new LocalConfigService(parametersYaml, secretsYaml);
-                    }
-                };
+                new FetchSystemSettingsHandler(new LocalConfigService(parametersYaml, secretsYaml));
     }
 
     @Test
