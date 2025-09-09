@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +36,6 @@ import uk.gov.di.model.ContraIndicator;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
@@ -93,7 +93,7 @@ public class SisService {
         // We want to get any identity in SIS so we ask for all vots.
         return sisClient.getStoredIdentity(
                 clientOAuthSessionItem.getEvcsAccessToken(),
-                List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
+                clientOAuthSessionItem.getVtrAsVots(),
                 clientOAuthSessionItem.getGovukSigninJourneyId());
     }
 
@@ -102,7 +102,7 @@ public class SisService {
         SisGetStoredIdentityResult storedIdentityResult = null;
         List<String> sisVcSignatures = new ArrayList<>();
         List<String> evcsVcSignatures = new ArrayList<>();
-        Optional<VotMatchingResult.VotAndProfile> maximumMatchedVot = Optional.empty();
+        Vot sisRequestedVot = null;
 
         try {
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -124,8 +124,10 @@ public class SisService {
                 return;
             }
 
-            // Get stored signatures
-            sisVcSignatures = getSisSignatures(storedIdentityResult.identityDetails());
+            // Get stored signatures and calculated VoT
+            var sisClaims = getSisClaims(storedIdentityResult.identityDetails());
+            sisRequestedVot = getSisRequestedVot(sisClaims);
+            sisVcSignatures = getSisSignatures(sisClaims);
 
             // Get EVCS details
             var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
@@ -135,19 +137,34 @@ public class SisService {
                             .map(credential -> getVcSignature(credential.getVcString()))
                             .toList();
 
-            maximumMatchedVot = calculateMaximumMatchedVot(evcsCredentials, userId);
-
             // Compare VOTs
-            var evcsVot = maximumMatchedVot.isPresent() ? maximumMatchedVot.get().vot() : null;
-            if (storedIdentityResult.identityDetails().vot() != evcsVot) {
+            var evcsVotMatches =
+                    calculateVotMatches(
+                            evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
+            var evcsMaxVotOptional = evcsVotMatches.strongestMatch();
+            var evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
+            if (storedIdentityResult.identityDetails().vot() != evcsMaxVot) {
                 throw new SisMatchException(
-                        FailureCode.VOT_MISMATCH,
-                        "EVCS ("
-                                + (maximumMatchedVot.isPresent()
-                                        ? maximumMatchedVot.get().vot()
-                                        : "no VOT")
+                        FailureCode.MAX_VOT_MISMATCH,
+                        "Maximum EVCS ("
+                                + (evcsMaxVot == null ? "no VOT" : evcsMaxVot)
                                 + ") and SIS ("
                                 + storedIdentityResult.identityDetails().vot()
+                                + ") vots do not match");
+            }
+
+            var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
+            var evcsRequestedVot =
+                    evcsRequestedVotOptional.isPresent()
+                            ? evcsRequestedVotOptional.get().vot()
+                            : null;
+            if (sisRequestedVot != evcsRequestedVot) {
+                throw new SisMatchException(
+                        FailureCode.REQUESTED_VOT_MISMATCH,
+                        "Requested EVCS ("
+                                + (evcsRequestedVot == null ? "no VOT" : evcsRequestedVot)
+                                + ") and SIS ("
+                                + sisRequestedVot
                                 + ") vots do not match");
             }
 
@@ -157,6 +174,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     VerificationOutcome.SUCCESS,
                     null,
                     null,
@@ -167,6 +185,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     VerificationOutcome.FAILURE,
                     e.getFailureCode(),
                     e.getMessage(),
@@ -179,6 +198,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     VerificationOutcome.FAILURE,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
@@ -190,6 +210,7 @@ public class SisService {
     private void sendComparisonAuditEvent(
             AuditEventUser auditEventUser,
             SisGetStoredIdentityResult storedIdentityResult,
+            Vot sisRequestedVot,
             VerificationOutcome verificationOutcome,
             FailureCode failureCode,
             String failureDetails,
@@ -208,9 +229,7 @@ public class SisService {
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditExtensionsSisComparison(
-                                    sisIdFound
-                                            ? storedIdentityResult.identityDetails().vot()
-                                            : null,
+                                    sisRequestedVot,
                                     sisIdFound
                                             ? storedIdentityResult.identityDetails().isValid()
                                             : null,
@@ -260,7 +279,7 @@ public class SisService {
         }
     }
 
-    private ArrayList<String> getSisSignatures(SisStoredIdentityCheckDto storedIdentity)
+    private JWTClaimsSet getSisClaims(SisStoredIdentityCheckDto storedIdentity)
             throws ParseException {
         var storedJwtParts = storedIdentity.content().split("\\.");
         var storedJwt =
@@ -268,8 +287,16 @@ public class SisService {
                         new Base64URL(storedJwtParts[0]),
                         new Base64URL(storedJwtParts[1]),
                         new Base64URL(storedJwtParts[2]));
-        var storedClaimset = storedJwt.getJWTClaimsSet();
-        return (ArrayList<String>) storedClaimset.getClaims().get("credentials");
+        return storedJwt.getJWTClaimsSet();
+    }
+
+    private ArrayList<String> getSisSignatures(JWTClaimsSet sisClaims) {
+        return (ArrayList<String>) sisClaims.getClaims().get("credentials");
+    }
+
+    private Vot getSisRequestedVot(JWTClaimsSet sisClaims) {
+        var votString = (String) sisClaims.getClaims().get("vot");
+        return Vot.valueOf(votString);
     }
 
     private String getVcSignature(String vcString) {
@@ -277,8 +304,9 @@ public class SisService {
         return parts[2];
     }
 
-    private Optional<VotMatchingResult.VotAndProfile> calculateMaximumMatchedVot(
-            List<VerifiableCredential> evcsCredentials, String userId) throws SisMatchException {
+    private VotMatchingResult calculateVotMatches(
+            List<VerifiableCredential> evcsCredentials, String userId, List<Vot> requestedVots)
+            throws SisMatchException {
         try {
             // Remove CIMIT VC from list of VCs, use it as security check credential
             List<ContraIndicator> contraIndicators = new ArrayList<>();
@@ -296,13 +324,8 @@ public class SisService {
 
             var areVcsCorrelated = userIdentityService.areVcsCorrelated(vcsWithoutCimit);
 
-            // We don't care about matching any specific vot here, we just want to find out what the
-            // highest vot is that can be matched.
-            var votMatchingResult =
-                    votMatcher.findStrongestMatches(
-                            List.of(Vot.P0), vcsWithoutCimit, contraIndicators, areVcsCorrelated);
-
-            return votMatchingResult.strongestMatch();
+            return votMatcher.findStrongestMatches(
+                    requestedVots, vcsWithoutCimit, contraIndicators, areVcsCorrelated);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to calculate maximum matched vot", e));
             throw new SisMatchException(

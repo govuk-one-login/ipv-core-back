@@ -54,6 +54,7 @@ class SisServiceTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_GOV_SIGNIN_JOURNEY_ID = "test-gov-signin-journey-id";
     private static final String TEST_IP_ADDRESS = "test-ip-address";
+    public static final List<Vot> REQUEST_VTR = List.of(Vot.P1, Vot.P2);
 
     @Mock private SisClient sisClient;
     @Mock private ConfigService configService;
@@ -88,6 +89,7 @@ class SisServiceTest {
         clientOAuthSessionItem.setUserId(TEST_USER_ID);
         clientOAuthSessionItem.setEvcsAccessToken(TEST_TOKEN);
         clientOAuthSessionItem.setGovukSigninJourneyId(TEST_GOV_SIGNIN_JOURNEY_ID);
+        clientOAuthSessionItem.setVtr(REQUEST_VTR.stream().map(Enum::toString).toList());
 
         auditEventUser =
                 new AuditEventUser(
@@ -101,10 +103,7 @@ class SisServiceTest {
         // Arrange
         SisGetStoredIdentityResult sisResult = new SisGetStoredIdentityResult(true, false, null);
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisResult);
 
         // Act
@@ -120,10 +119,7 @@ class SisServiceTest {
         SisGetStoredIdentityResult sisFailureResult =
                 new SisGetStoredIdentityResult(false, false, null);
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisFailureResult);
 
         // Act
@@ -149,10 +145,7 @@ class SisServiceTest {
     void shouldSendFailureAuditEventWhenEvcsFails() throws Exception {
         // Arrange
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
@@ -170,7 +163,7 @@ class SisServiceTest {
                 FailureCode.EVCS_ERROR,
                 false,
                 true,
-                Vot.P3,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
@@ -181,10 +174,7 @@ class SisServiceTest {
     void shouldSendFailureAuditEventWhenVotCalculationFails() throws Exception {
         // Arrange
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
@@ -205,7 +195,7 @@ class SisServiceTest {
                 FailureCode.EVCS_VOT_CALCULATION_ERROR,
                 false,
                 true,
-                Vot.P3,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -213,19 +203,16 @@ class SisServiceTest {
     }
 
     @Test
-    void shouldSendFailureAuditEventWhenVotComparisonFails() throws Exception {
+    void shouldSendFailureAuditEventWhenMaxVotComparisonFails() throws Exception {
         // Arrange
-        var sisP2Result =
+        var sisP2MaxResult =
                 new SisGetStoredIdentityResult(
                         true,
                         true,
                         new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P2, true, true));
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2Result);
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisP2MaxResult);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
@@ -239,14 +226,48 @@ class SisServiceTest {
         checkAuditEvent(
                 auditEventCaptor.getValue(),
                 VerificationOutcome.FAILURE,
-                FailureCode.VOT_MISMATCH,
+                FailureCode.MAX_VOT_MISMATCH,
                 false,
                 true,
                 Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
-                "EVCS (P3) and SIS (P2) vots do not match");
+                "Maximum EVCS (P3) and SIS (P2) vots do not match");
+    }
+
+    @Test
+    void shouldSendFailureAuditEventWhenRequestedVotComparisonFails() throws Exception {
+        // Arrange
+        var sisP1CalculatedResult =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto(SIS_JWT_P1, true, false, Vot.P3, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisP1CalculatedResult);
+        when(evcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FailureCode.REQUESTED_VOT_MISMATCH,
+                false,
+                true,
+                Vot.P1,
+                SIS_JWT_P1,
+                SUCCESSFUL_SIGNATURES,
+                SUCCESSFUL_SIGNATURES,
+                "Requested EVCS (P2) and SIS (P1) vots do not match");
     }
 
     @Test
@@ -258,10 +279,7 @@ class SisServiceTest {
                         true,
                         new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P3, true, true));
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
@@ -279,7 +297,7 @@ class SisServiceTest {
                 FailureCode.EXTRA_SIGNATURE,
                 false,
                 true,
-                Vot.P3,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 MISSING_ONE_SIGNATURES,
@@ -295,10 +313,7 @@ class SisServiceTest {
                         true,
                         new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P3, true, true));
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
@@ -316,7 +331,7 @@ class SisServiceTest {
                 FailureCode.MISSING_SIGNATURE,
                 false,
                 true,
-                Vot.P3,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
@@ -333,10 +348,7 @@ class SisServiceTest {
                         new SisStoredIdentityCheckDto(
                                 "Not a valid JWT", true, false, Vot.P3, true, true));
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
 
         // Act
@@ -351,7 +363,7 @@ class SisServiceTest {
                 FailureCode.UNEXPECTED_ERROR,
                 false,
                 true,
-                Vot.P3,
+                null,
                 "Not a valid JWT",
                 List.of(),
                 List.of(),
@@ -363,10 +375,7 @@ class SisServiceTest {
         // Arrange
         ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
 
-        when(sisClient.getStoredIdentity(
-                        TEST_TOKEN,
-                        List.of(Vot.P0, Vot.P1, Vot.P2, Vot.P3),
-                        TEST_GOV_SIGNIN_JOURNEY_ID))
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
@@ -383,7 +392,7 @@ class SisServiceTest {
                 null,
                 false,
                 true,
-                Vot.P3,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -444,10 +453,16 @@ class SisServiceTest {
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RpY2Yuc3R1YnMuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDQ4MjI1NzAsImlhdCI6MTcwNDgyMjU3MCwidmMiOnsiZXZpZGVuY2UiOlt7InR4biI6Ijk2M2RlZWI1LWE1MmMtNDAzMC1hNjlhLTMxODRmNzdhNGYxOCIsInR5cGUiOiJSaXNrQXNzZXNzbWVudCJ9XSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlJpc2tBc3Nlc3NtZW50Q3JlZGVudGlhbCJdfX0.H3mI9mnYfYRszuAQa-0HyIMkIjcmukvMsmpdOo0cTICOWwmvLF-hJgIqSkK17m2Ua6PE3wNo0CiLsotVK84_Og";
 
     // Created in JWT.IO to contain the signatures from DCMAW_PASSPORT_JWT, ADDRESS_JWT, FRAUD_JWT,
-    // and CIMIT_JWT
+    // and CIMIT_JWT. Claiming to match a P2
     private static final String SIS_JWT =
             // pragma: allowlist nextline secret
             "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiWm01UXlHU2dMWTluZUFHTUE3aHphLXVSN0VraXoxb25TVThzMGl6MndQWGxyQkxUam5VS1FOTVduSXBKZVk0SU1FSE52TDB6SnB2ZHlrSmdBYjZRZXciLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzU2ODA4MzA0fQ.40hzV7Uv7pquD-hd62-ABHIp6p0AwsUCmNosOjhMz2Ylx0q4OTNFyAZzsarVUz_AGgKVE6Zl67DIzg1lVacWUg";
+
+    // This JWT is the same as the one above except that it says that the user has only reached P1
+    // instead of P2 for this request
+    private static final String SIS_JWT_P1 =
+            // pragma: allowlist nextline secret
+            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiWm01UXlHU2dMWTluZUFHTUE3aHphLXVSN0VraXoxb25TVThzMGl6MndQWGxyQkxUam5VS1FOTVduSXBKZVk0SU1FSE52TDB6SnB2ZHlrSmdBYjZRZXciLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAxIiwiaWF0IjoxNzU2ODA4MzA0fQ.7DvTrBqiQayu01nElk0udyDA_4PXq2HxIxC4gZOXwGbBLowElKi1sSOxrmIdQt5UbwHgGtr_MVe4bRvWWvbFWQ";
 
     private static final SisGetStoredIdentityResult SIS_SUCCESSFUL_RESULT =
             new SisGetStoredIdentityResult(
