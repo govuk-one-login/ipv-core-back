@@ -304,6 +304,7 @@ public class SisService {
 
             return votMatchingResult.strongestMatch();
         } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to calculate maximum matched vot", e));
             throw new SisMatchException(
                     FailureCode.EVCS_VOT_CALCULATION_ERROR,
                     "Exception caught calculating VOT from EVCS VCs");
@@ -334,6 +335,7 @@ public class SisService {
 
             return evcsIdentityVcs;
         } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to fetch VCs from EVCS", e));
             throw new SisMatchException(
                     FailureCode.EVCS_ERROR, "Exception caught retrieving VCs from EVCS");
         }
