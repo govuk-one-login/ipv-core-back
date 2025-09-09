@@ -203,7 +203,7 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns400(
             PactDslWithProvider builder) {
-        return builder.given(String.format("Request is missing mandatory field vtr"))
+        return builder.given("Request is missing mandatory field vtr")
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
                 .method(POST.name())
@@ -257,6 +257,7 @@ class ContractTest {
                 .toPact();
     }
 
+    @SuppressWarnings("java:S4144")
     @Test
     @DisplayName("POST /user-identity - malformed 200 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturnsMalformed200")
