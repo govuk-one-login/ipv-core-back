@@ -4,7 +4,7 @@ import config from "./config.js";
 const CACHE_TTL_MS = 60 * 1000;
 
 let cache: {
-  data: any;
+  data: object;
   expiresAt: number;
 } | null = null;
 
