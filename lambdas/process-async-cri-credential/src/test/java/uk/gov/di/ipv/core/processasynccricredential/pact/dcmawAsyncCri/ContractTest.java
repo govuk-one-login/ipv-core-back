@@ -341,7 +341,7 @@ class ContractTest {
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(
                         URI.create(
-                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f"))
+                                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmawAsync"))
                 .requiresApiKey(true)
                 .requiresAdditionalEvidence(false)
                 .build();
