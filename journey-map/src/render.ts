@@ -268,4 +268,3 @@ function alphaFromCount(count: number, maxCount: number) {
   const alpha = Math.round(scaled * 255);
   return alpha.toString(16).padStart(2, "0");
 }
-
