@@ -27,7 +27,10 @@ public class FetchJourneyTransitionsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String LOG_GROUP = "/aws/lambda/process-journey-event-dev";
+    private static final String ENVIRONMENT =
+            Optional.ofNullable(System.getenv("ENVIRONMENT")).orElse("build");
+    private static final String LOG_GROUP =
+            String.format("/aws/lambda/process-journey-event-%s", ENVIRONMENT);
     private static final int MAX_ATTEMPTS = 10;
     private static final Pattern JOURNEY_ID_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
     private static final Map<String, String> CORS_HEADERS =

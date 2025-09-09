@@ -73,7 +73,11 @@ public class StateMachine {
                     nestedResult.state(),
                     mergeLists(result.auditEvents(), nestedResult.auditEvents()),
                     mergeMaps(result.auditContext(), nestedResult.auditContext()),
-                    nestedResult.targetEntryEvent());
+                    nestedResult.targetEntryEvent(),
+                    mergeLists(result.journeyContextsToSet(), nestedResult.journeyContextsToSet()),
+                    mergeLists(
+                            result.journeyContextsToUnset(),
+                            nestedResult.journeyContextsToUnset()));
         }
 
         return result;
