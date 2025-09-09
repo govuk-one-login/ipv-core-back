@@ -29,6 +29,7 @@ import static io.netty.handler.codec.http.HttpMethod.POST;
 import static org.apache.hc.core5.http.ContentType.APPLICATION_JSON;
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.hc.core5.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.hc.core5.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static org.apache.hc.core5.http.HttpStatus.SC_NOT_FOUND;
@@ -57,6 +58,8 @@ class ContractTest {
     private static final SisGetStoredIdentityResult EXPECTED_INVALID_RESULT =
             new SisGetStoredIdentityResult(false, false, null);
 
+    private static final Vot EXPECTED_VOT = Vot.P2;
+
     @Mock private ConfigService mockConfigService;
     private SisClient sisClient;
 
@@ -70,8 +73,8 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validGetStoredIdentityRequestReturns200(
             PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+        return builder.given(String.format("%s and %s are valid", TEST_VOTS, TEST_JOURNEY_ID))
+                .given(String.format("A request returns at least %s vot", EXPECTED_VOT))
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
                 .method(POST.name())
@@ -86,19 +89,6 @@ class ContractTest {
                 .status(SC_OK)
                 .body(getValidResponseBody())
                 .toPact();
-    }
-
-    private static DslPart getValidResponseBody() {
-        return newJsonBody(
-                        body -> {
-                            body.stringValue("content", CONTENT_JWT);
-                            body.booleanValue("isValid", true);
-                            body.booleanValue("expired", false);
-                            body.stringValue("vot", Vot.P2.name());
-                            body.booleanValue("signatureValid", true);
-                            body.booleanValue("kidValid", true);
-                        })
-                .build();
     }
 
     @Test
@@ -122,7 +112,12 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns404(
             PactDslWithProvider builder) {
-        return buildStoredIdentityInteraction(SC_NOT_FOUND, TEST_SIS_ACCESS_TOKEN, builder);
+        return buildStoredIdentityInteraction(
+                String.format(
+                        "%s and %s are valid but record was not found", TEST_VOTS, TEST_JOURNEY_ID),
+                SC_NOT_FOUND,
+                TEST_SIS_ACCESS_TOKEN,
+                builder);
     }
 
     @Test
@@ -144,7 +139,10 @@ class ContractTest {
     public RequestResponsePact invalidGetStoredIdentityRequestReturns401(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
-                SC_UNAUTHORIZED, TEST_INVALID_SIS_ACCESS_TOKEN, builder);
+                String.format("%s is invalid bearer token", TEST_INVALID_SIS_ACCESS_TOKEN),
+                SC_UNAUTHORIZED,
+                TEST_INVALID_SIS_ACCESS_TOKEN,
+                builder);
     }
 
     @Test
@@ -163,7 +161,11 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns403(
             PactDslWithProvider builder) {
-        return buildStoredIdentityInteraction(SC_FORBIDDEN, TEST_EXPIRED_SIS_ACCESS_TOKEN, builder);
+        return buildStoredIdentityInteraction(
+                String.format("%s is expired bearer token", TEST_EXPIRED_SIS_ACCESS_TOKEN),
+                SC_FORBIDDEN,
+                TEST_EXPIRED_SIS_ACCESS_TOKEN,
+                builder);
     }
 
     @Test
@@ -183,7 +185,7 @@ class ContractTest {
     public RequestResponsePact invalidGetStoredIdentityRequestReturns500(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
-                SC_INTERNAL_SERVER_ERROR, TEST_SIS_ACCESS_TOKEN, builder);
+                "A request returns 500", SC_INTERNAL_SERVER_ERROR, TEST_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
@@ -198,10 +200,78 @@ class ContractTest {
         assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
     }
 
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturns400(
+            PactDslWithProvider builder) {
+        return builder.given(String.format("Request is missing mandatory field vtr"))
+                .uponReceiving("A request to get user stored identity")
+                .path(USER_IDENTITY_ENDPOINT_PATH)
+                .method(POST.name())
+                .headers(
+                        Map.of(
+                                AUTHORIZATION,
+                                String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN),
+                                CONTENT_TYPE,
+                                APPLICATION_JSON.getMimeType()))
+                .body(
+                        newJsonBody(
+                                        body ->
+                                                // missing vtr
+                                                body.stringValue(
+                                                        "govukSigninJourneyId", TEST_JOURNEY_ID))
+                                .build())
+                .willRespondWith()
+                .status(SC_BAD_REQUEST)
+                .toPact();
+    }
+
+    @Test
+    @DisplayName("POST /user-identity - 400 returns empty with failed request")
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns400")
+    void testGetUserIdentityRequestReturns400(MockServer mockServer) {
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, null, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidGetStoredIdentityRequestReturnsMalformed200(
+            PactDslWithProvider builder) {
+        return builder.given("Malformed response is missing vtr")
+                .uponReceiving("A request to get user stored identity")
+                .path(USER_IDENTITY_ENDPOINT_PATH)
+                .method(POST.name())
+                .headers(
+                        Map.of(
+                                AUTHORIZATION,
+                                String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN),
+                                CONTENT_TYPE,
+                                APPLICATION_JSON.getMimeType()))
+                .body(getValidRequestBody())
+                .willRespondWith()
+                .status(SC_OK)
+                .body(getMalformedResponse())
+                .toPact();
+    }
+
+    @Test
+    @DisplayName("POST /user-identity - malformed 200 returns empty with failed request")
+    @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturnsMalformed200")
+    void testGetUserIdentityRequestReturnsMalformed200(MockServer mockServer) {
+        // Act
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(EXPECTED_INVALID_RESULT, sisGetStoredIdentityResult);
+    }
+
     private static RequestResponsePact buildStoredIdentityInteraction(
-            int httpStatusCode, String bearerToken, PactDslWithProvider builder) {
-        return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
-                .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
+            String given, int httpStatusCode, String bearerToken, PactDslWithProvider builder) {
+        return builder.given(given)
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
                 .method(POST.name())
@@ -227,6 +297,31 @@ class ContractTest {
                                         vtr.stringValue(Vot.P2.name());
                                     });
                             body.stringValue("govukSigninJourneyId", TEST_JOURNEY_ID);
+                        })
+                .build();
+    }
+
+    private static DslPart getValidResponseBody() {
+        return newJsonBody(
+                        body -> {
+                            body.stringValue("content", CONTENT_JWT);
+                            body.booleanValue("isValid", true);
+                            body.booleanValue("expired", false);
+                            body.stringValue("vot", EXPECTED_VOT.name());
+                            body.booleanValue("signatureValid", true);
+                            body.booleanValue("kidValid", true);
+                        })
+                .build();
+    }
+
+    private static DslPart getMalformedResponse() {
+        return newJsonBody(
+                        body -> {
+                            body.booleanValue("isValid", true);
+                            body.booleanValue("expired", false);
+                            body.stringValue("vot", Vot.P2.name());
+                            body.booleanValue("signatureValid", true);
+                            body.booleanValue("kidValid", true);
                         })
                 .build();
     }
