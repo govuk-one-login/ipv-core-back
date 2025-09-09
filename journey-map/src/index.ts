@@ -11,7 +11,7 @@ import {
 } from "./constants.js";
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
 import {
-  getAvailableOptions,
+  getSystemSettings,
   parseOptions,
   RenderOptions,
 } from "./helpers/options.js";
@@ -204,14 +204,17 @@ const optionOnChangeHandler =
 
 const setupOptions = (
   name: string,
-  options: string[],
+  options: Record<string, boolean>,
   fieldset: HTMLFieldSetElement,
   labels?: Record<string, string>,
 ): void => {
-  const selectedOptions =
-    new URLSearchParams(window.location.search).getAll(name) || [];
-  if (options.length) {
-    options.forEach((option) => {
+  const selectedOptions = Object.entries(options)
+    .filter(([, value]) => value)
+    .map(([key]) => key);
+
+  const optionKeys = Object.keys(options);
+  if (optionKeys.length) {
+    optionKeys.forEach((option) => {
       const input = document.createElement("input");
       input.type = "checkbox";
       input.name = name;
@@ -220,10 +223,10 @@ const setupOptions = (
       input.checked = selectedOptions.includes(option);
       input.onchange = optionOnChangeHandler(name, input);
 
-      const label = document.createElement("label");
       const span = document.createElement("span");
       span.innerText = (labels && labels[option]) || option;
 
+      const label = document.createElement("label");
       label.appendChild(input);
       label.appendChild(span);
 
@@ -458,12 +461,22 @@ const initialize = async (): Promise<void> => {
     "nested-journeys",
   );
 
-  const { disabledCris, featureFlags } = getAvailableOptions(
-    journeyMaps,
-    nestedJourneys,
+  const systemSettings = await getSystemSettings();
+  const disabledCris =
+    systemSettings?.criStatuses &&
+    Object.fromEntries(
+      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
+        cri,
+        !enabled,
+      ]),
+    );
+  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
+  setupOptions(
+    "featureFlag",
+    systemSettings?.featureFlagStatuses ?? {},
+    featureFlagInput,
   );
-  setupOptions("disabledCri", disabledCris, disabledInput, CRI_NAMES);
-  setupOptions("featureFlag", featureFlags, featureFlagInput);
+
   setupOtherOptions();
   setupMermaidClickHandlers();
   setupHeaderToggleClickHandlers();
