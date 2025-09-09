@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.sis.client;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
@@ -74,7 +76,8 @@ public class SisClient {
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(requestBody)))
-                            .header(AUTHORIZATION, "Bearer " + accessToken);
+                            .header(AUTHORIZATION, "Bearer " + accessToken)
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             var httpResponse = sendHttpRequest(httpRequestBuilder.build());
 
