@@ -49,17 +49,22 @@ class ContractTest {
     private static final List<Vot> TEST_VOTS = List.of(Vot.P1, Vot.P2);
     private static final String TEST_JOURNEY_ID = "test-gov-journey-id";
 
-    private static final String USER_IDENTITY_PATH = "/user-identity";
+    private static final String USER_IDENTITY_ENDPOINT_PATH = "/user-identity";
+
+    private static final String CONTENT_JWT =
+            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoiZWFlMDFhYzI5MGE5ODRkMGVhN2MzM2NjNDVlMzZmMTIiLCJuYmYiOjE3NTA2ODIwMTgsImNyZWRlbnRpYWxzIjpbIk43UHhoZmtGa215VFFGS3lBWE15U19INk51Ri13RHpFa3RiX2RWdXJ1bFNSTU1YaG54aGJSMnJ4czlUYy1LUUIwaVhiMV85YUJJOFhDeTJBYkdRdkZRIiwiUzROSlBjaWltYmZ4MDhqczltOThoc3JLTDRiSkh0QlF5S0d0cmRJeklmWW1CUGpyVTlwYXpfdV8xaENySFo4aWp5UW81UlBtUWxNUC1fYzVldXZaSHciLCJBOU9IdUtJOE41aDRDNDU3UTRxdE52a1NGS2ZGZVZNNHNFR3dxUlBjU0hpUXlsemh4UnlxMDBlMURVUUxtU2RpZTlYSWswQ2ZpUVNBX3I3LW1tQ2JBdyIsInk0NHYwcEVBODh6dURoREZEQ0RjUGduOTZwOWJTRm9qeHZQQTFCeEdYTnhEMG5QelFONk1SaG1PWXBTUXg4TW92XzNLWUF4bmZ5aXdSemVBclhKa3FBIl0sImlzcyI6Imh0dHBzOi8vaWRlbnRpdHkubG9jYWwuYWNjb3VudC5nb3YudWsiLCJjbGFpbXMiOnsiaHR0cHM6Ly92b2NhYi5hY2NvdW50Lmdvdi51ay92MS9jb3JlSWRlbnRpdHkiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJLRU5ORVRIIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiREVDRVJRVUVJUkEifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5NjUtMDctMDgifV19LCJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2FkZHJlc3MiOlt7ImFkZHJlc3NDb3VudHJ5IjoiR0IiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwiYnVpbGRpbmdOYW1lIjoiIiwiYnVpbGRpbmdOdW1iZXIiOiI4IiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJzdHJlZXROYW1lIjoiSEFETEVZIFJPQUQiLCJzdWJCdWlsZGluZ05hbWUiOiIiLCJ1cHJuIjoxMDAxMjAwMTIwNzcsInZhbGlkRnJvbSI6IjEwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzUwNjgyMDE4fQ.nrbiwaOcvWM92TTAlORzerjjrrCuYD9fcxwEoXbf71J3YZUnwNW0KGUN5jaEvOysG0YWTXSLl_W4sN-Krf7PfQ"; // pragma: allowlist secret
 
     private static final SisGetStoredIdentityResult EXPECTED_INVALID_RESULT =
             new SisGetStoredIdentityResult(false, false, null);
 
-    @Mock ConfigService mockConfigService;
+    @Mock private ConfigService mockConfigService;
+    private SisClient sisClient;
 
     @BeforeEach
     void setup(MockServer mockServer) {
         when(mockConfigService.getParameter(ConfigurationVariable.SIS_APPLICATION_URL))
                 .thenReturn("http://localhost:" + mockServer.getPort());
+        sisClient = new SisClient(mockConfigService);
     }
 
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
@@ -67,10 +72,15 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
                 .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving("A request to get existing stored identity record (200)")
-                .path(USER_IDENTITY_PATH)
+                .uponReceiving("A request to get user stored identity")
+                .path(USER_IDENTITY_ENDPOINT_PATH)
                 .method(POST.name())
-                .headers(AUTHORIZATION, String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN))
+                .headers(
+                        Map.of(
+                                AUTHORIZATION,
+                                String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN),
+                                CONTENT_TYPE,
+                                APPLICATION_JSON.getMimeType()))
                 .body(getValidRequestBody())
                 .willRespondWith()
                 .status(SC_OK)
@@ -81,7 +91,7 @@ class ContractTest {
     private static DslPart getValidResponseBody() {
         return newJsonBody(
                         body -> {
-                            body.stringValue("content", "test-content");
+                            body.stringValue("content", CONTENT_JWT);
                             body.booleanValue("isValid", true);
                             body.booleanValue("expired", false);
                             body.stringValue("vot", Vot.P2.name());
@@ -96,9 +106,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "validGetStoredIdentityRequestReturns200")
     void testGetUserIdentityRequestReturns200(MockServer mockServer) {
         // Arrange
-        var sisClient = new SisClient(mockConfigService);
         var expectedIdentityDetails =
-                new SisStoredIdentityCheckDto("test-content", true, false, Vot.P2, true, true);
+                new SisStoredIdentityCheckDto(CONTENT_JWT, true, false, Vot.P2, true, true);
         var expectedValidResult =
                 new SisGetStoredIdentityResult(true, true, expectedIdentityDetails);
 
@@ -113,8 +122,7 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns404(
             PactDslWithProvider builder) {
-        return buildStoredIdentityInteraction(
-                "(404 no record)", SC_NOT_FOUND, TEST_SIS_ACCESS_TOKEN, builder);
+        return buildStoredIdentityInteraction(SC_NOT_FOUND, TEST_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
@@ -122,7 +130,6 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns404")
     void testGetUserIdentityRequestReturns404(MockServer mockServer) {
         // Arrange
-        var sisClient = new SisClient(mockConfigService);
         var expectedNotFoundResult = new SisGetStoredIdentityResult(true, false, null);
 
         // Act
@@ -137,16 +144,13 @@ class ContractTest {
     public RequestResponsePact invalidGetStoredIdentityRequestReturns401(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
-                "(401 unauthorized)", SC_UNAUTHORIZED, TEST_INVALID_SIS_ACCESS_TOKEN, builder);
+                SC_UNAUTHORIZED, TEST_INVALID_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
     @DisplayName("POST /user-identity - 401 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns401")
     void testGetUserIdentityRequestReturns401(MockServer mockServer) {
-        // Arrange
-        var sisClient = new SisClient(mockConfigService);
-
         // Act
         var sisGetStoredIdentityResult =
                 sisClient.getStoredIdentity(
@@ -159,17 +163,13 @@ class ContractTest {
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidGetStoredIdentityRequestReturns403(
             PactDslWithProvider builder) {
-        return buildStoredIdentityInteraction(
-                "(403 forbidden)", SC_FORBIDDEN, TEST_EXPIRED_SIS_ACCESS_TOKEN, builder);
+        return buildStoredIdentityInteraction(SC_FORBIDDEN, TEST_EXPIRED_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
     @DisplayName("POST /user-identity - 403 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns403")
     void testGetUserIdentityRequestReturns403(MockServer mockServer) {
-        // Arrange
-        var sisClient = new SisClient(mockConfigService);
-
         // Act
         var sisGetStoredIdentityResult =
                 sisClient.getStoredIdentity(
@@ -183,16 +183,13 @@ class ContractTest {
     public RequestResponsePact invalidGetStoredIdentityRequestReturns500(
             PactDslWithProvider builder) {
         return buildStoredIdentityInteraction(
-                "(500 server error)", SC_INTERNAL_SERVER_ERROR, TEST_SIS_ACCESS_TOKEN, builder);
+                SC_INTERNAL_SERVER_ERROR, TEST_SIS_ACCESS_TOKEN, builder);
     }
 
     @Test
     @DisplayName("POST /user-identity - 500 returns empty with failed request")
     @PactTestFor(pactMethod = "invalidGetStoredIdentityRequestReturns500")
     void testGetUserIdentityRequestReturns500(MockServer mockServer) {
-        // Arrange
-        var sisClient = new SisClient(mockConfigService);
-
         // Act
         var sisGetStoredIdentityResult =
                 sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
@@ -202,14 +199,11 @@ class ContractTest {
     }
 
     private static RequestResponsePact buildStoredIdentityInteraction(
-            String description,
-            int httpStatusCode,
-            String bearerToken,
-            PactDslWithProvider builder) {
+            int httpStatusCode, String bearerToken, PactDslWithProvider builder) {
         return builder.given(String.format("%s is a valid vtr list", TEST_VOTS))
                 .given(String.format("%s is a valid journey id", TEST_JOURNEY_ID))
-                .uponReceiving(description)
-                .path(USER_IDENTITY_PATH)
+                .uponReceiving("A request to get user stored identity")
+                .path(USER_IDENTITY_ENDPOINT_PATH)
                 .method(POST.name())
                 .headers(
                         Map.of(
