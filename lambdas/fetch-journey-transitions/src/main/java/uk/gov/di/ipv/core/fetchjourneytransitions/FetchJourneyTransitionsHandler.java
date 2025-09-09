@@ -16,6 +16,7 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.Request;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.time.Instant;
 import java.util.*;
@@ -35,10 +36,16 @@ public class FetchJourneyTransitionsHandler
                     "Access-Control-Allow-Methods", "POST,OPTIONS",
                     "Access-Control-Allow-Headers", "Content-Type,x-api-key");
 
-    private final AWSLogs logsClient = getLogsClient();
+    private final AWSLogs logsClient;
 
-    protected AWSLogs getLogsClient() {
-        return AWSLogsClientBuilder.defaultClient();
+    @ExcludeFromGeneratedCoverageReport
+    public FetchJourneyTransitionsHandler() {
+        this.logsClient = AWSLogsClientBuilder.defaultClient();
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public FetchJourneyTransitionsHandler(AWSLogs logsClient) {
+        this.logsClient = logsClient;
     }
 
     @Override

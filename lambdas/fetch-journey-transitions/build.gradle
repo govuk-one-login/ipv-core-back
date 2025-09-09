@@ -9,7 +9,8 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.awsLambdaJavaCore,
 			libs.lombok,
-			libs.awsSdkLogs
+			libs.awsSdkLogs,
+			project(":libs:common-services")
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit

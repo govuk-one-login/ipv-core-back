@@ -40,13 +40,7 @@ class FetchJourneyTransitionHandlerTest {
 
     @BeforeEach
     void setup() {
-        handler =
-                new FetchJourneyTransitionsHandler() {
-                    @Override
-                    protected AWSLogs getLogsClient() {
-                        return mockLogsClient;
-                    }
-                };
+        handler = new FetchJourneyTransitionsHandler(mockLogsClient);
     }
 
     @Test
