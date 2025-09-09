@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -54,11 +56,12 @@ public class EventResolver {
         return resolve(exitEvent, parameters);
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity should not be too high
     private TransitionResult resolveBasicEvent(
             BasicEvent event, EventResolveParameters resolveParameters)
             throws UnknownEventException, JourneyEngineException {
         try {
-            var journeyContext = resolveParameters.journeyContext();
+            var journeyContexts = resolveParameters.journeyContexts();
 
             if (event.getCheckIfDisabled() != null) {
                 var checkIfDisabled = event.getCheckIfDisabled();
@@ -76,11 +79,11 @@ public class EventResolver {
                     return resolve(checkIfDisabled.get(disabledCriId), resolveParameters);
                 }
             }
-            if (event.getCheckJourneyContext() != null && !StringUtils.isEmpty(journeyContext)) {
+            if (event.getCheckJourneyContext() != null && !journeyContexts.isEmpty()) {
                 var checkJourneyContext = event.getCheckJourneyContext();
                 Optional<String> matchingContext =
                         checkJourneyContext.keySet().stream()
-                                .filter(ctx -> ctx.equals(journeyContext))
+                                .filter(journeyContexts::contains)
                                 .findFirst();
                 if (matchingContext.isPresent()) {
                     String contextValue = matchingContext.get();
@@ -102,7 +105,6 @@ public class EventResolver {
                     return resolve(checkFeatureFlag.get(featureFlagValue), resolveParameters);
                 }
             }
-
             if (isCheckMitigationAllowed(event, resolveParameters.clientOAuthSessionItem())) {
                 var checkMitigation = event.getCheckMitigation();
                 var matchedMitigation = getMitigationEvent(event, resolveParameters);
@@ -116,11 +118,25 @@ public class EventResolver {
                 }
             }
 
+            List<String> journeyContextsToSet = new ArrayList<>();
+            var eventContextToSet = event.getJourneyContextToSet();
+            if (eventContextToSet != null && !eventContextToSet.isEmpty()) {
+                journeyContextsToSet.add(eventContextToSet);
+            }
+
+            List<String> journeyContextsToUnset = new ArrayList<>();
+            var eventContextToUnset = event.getJourneyContextToUnset();
+            if (eventContextToUnset != null && !eventContextToUnset.isEmpty()) {
+                journeyContextsToUnset.add(eventContextToUnset);
+            }
+
             return new TransitionResult(
                     event.getTargetStateObj(),
                     event.getAuditEvents(),
                     event.getAuditContext(),
-                    event.getTargetEntryEvent());
+                    event.getTargetEntryEvent(),
+                    journeyContextsToSet,
+                    journeyContextsToUnset);
         } catch (MissingSecurityCheckCredential
                 | CiExtractionException
                 | CredentialParseException

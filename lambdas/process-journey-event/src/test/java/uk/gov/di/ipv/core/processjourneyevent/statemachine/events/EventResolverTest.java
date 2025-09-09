@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +55,40 @@ public class EventResolverTest {
                             .build();
 
             eventResolveParameters =
-                    new EventResolveParameters("", new IpvSessionItem(), clientOAuthSessionItem);
+                    new EventResolveParameters(
+                            Collections.emptyList(), new IpvSessionItem(), clientOAuthSessionItem);
         }
 
         @Test
         void resolveShouldReturnAState() throws Exception {
-            var expectedResult = new TransitionResult(new BasicState(), null, null, null);
+            var expectedResult =
+                    new TransitionResult(
+                            new BasicState(),
+                            null,
+                            null,
+                            null,
+                            Collections.emptyList(),
+                            Collections.emptyList());
             BasicEvent basicEvent = new BasicEvent();
             basicEvent.setTargetStateObj(expectedResult.state());
+
+            assertEquals(expectedResult, eventResolver.resolve(basicEvent, eventResolveParameters));
+        }
+
+        @Test
+        void resolveShouldReturnAStateWithJourneyContexts() throws Exception {
+            var expectedResult =
+                    new TransitionResult(
+                            new BasicState(),
+                            null,
+                            null,
+                            null,
+                            List.of("test-context-to-set"),
+                            List.of("test-context-to-unset"));
+            BasicEvent basicEvent = new BasicEvent();
+            basicEvent.setTargetStateObj(expectedResult.state());
+            basicEvent.setJourneyContextToSet("test-context-to-set");
+            basicEvent.setJourneyContextToUnset("test-context-to-unset");
 
             assertEquals(expectedResult, eventResolver.resolve(basicEvent, eventResolveParameters));
         }
@@ -118,14 +145,14 @@ public class EventResolverTest {
             BasicState featureFlagTargetState = new BasicState();
             eventWithCheckFeatureFlagConfigured.setTargetStateObj(featureFlagTargetState);
 
-            BasicEvent eventWithContextConfigured = new BasicEvent();
-            BasicState contextTargetState =
-                    new BasicState("evtWithContext", "", "test-context", null, null, null, null);
-            eventWithContextConfigured.setTargetStateObj(contextTargetState);
+            BasicEvent eventForCheckContext = new BasicEvent();
+            BasicState checkContextTargetState =
+                    new BasicState("targetEventForContext", "", null, null, null, null);
+            eventForCheckContext.setTargetStateObj(checkContextTargetState);
 
             BasicEvent defaultEvent = new BasicEvent();
             defaultEvent.setTargetStateObj(
-                    new BasicState("defaultEvent", "", "", null, null, null, null));
+                    new BasicState("defaultEvent", "", null, null, null, null));
 
             LinkedHashMap<String, Event> checkFeatureFlag = new LinkedHashMap<>();
             checkFeatureFlag.put(
@@ -134,18 +161,18 @@ public class EventResolverTest {
             defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
 
             LinkedHashMap<String, Event> checkContext = new LinkedHashMap<>();
-            checkContext.put("test-context", eventWithContextConfigured);
+            checkContext.put("test-context", eventForCheckContext);
 
             defaultEvent.setCheckJourneyContext(checkContext);
 
             var testParams =
                     new EventResolveParameters(
-                            "test-context",
+                            List.of("test-context"),
                             new IpvSessionItem(),
                             ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build());
             var result = eventResolver.resolve(defaultEvent, testParams);
 
-            assertEquals(contextTargetState, result.state());
+            assertEquals(checkContextTargetState, result.state());
         }
 
         @Nested
@@ -183,7 +210,9 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"),
+                                        ipvSessionItem,
+                                        clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(alternativeTargetState, result.state());
@@ -211,7 +240,9 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"),
+                                        ipvSessionItem,
+                                        clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(originalTargetStateObj, result.state());
@@ -240,7 +271,9 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext", ipvSessionItem, clientOAuthSessionItem));
+                                        List.of("journeyContext"),
+                                        ipvSessionItem,
+                                        clientOAuthSessionItem));
 
                 // Assert
                 assertEquals(originalTargetStateObj, result.state());
@@ -265,7 +298,7 @@ public class EventResolverTest {
                         eventResolver.resolve(
                                 basicEventWithCheckMitigationConfigured,
                                 new EventResolveParameters(
-                                        "journeyContext",
+                                        List.of("journeyContext"),
                                         ipvSessionItem,
                                         ClientOAuthSessionItem.builder()
                                                 .scope(ScopeConstants.REVERIFICATION)
@@ -294,7 +327,7 @@ public class EventResolverTest {
                                         eventResolver.resolve(
                                                 basicEventWithCheckMitigationConfigured,
                                                 new EventResolveParameters(
-                                                        "journeyContext",
+                                                        List.of("journeyContext"),
                                                         ipvSessionWithMissingSecurityCheckCredential,
                                                         clientOAuthSessionItem)));
 
@@ -311,7 +344,9 @@ public class EventResolverTest {
             clientOAuthSessionItem = new ClientOAuthSessionItem();
             eventResolveParameters =
                     new EventResolveParameters(
-                            "journeyContext", new IpvSessionItem(), clientOAuthSessionItem);
+                            List.of("journeyContext"),
+                            new IpvSessionItem(),
+                            clientOAuthSessionItem);
         }
 
         @Test
