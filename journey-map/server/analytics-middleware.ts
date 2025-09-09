@@ -1,12 +1,26 @@
 import { RequestHandler } from "express";
 import config from "./config.js";
 
+const CACHE_TTL_MS = 60 * 1000;
+
+let cache: {
+  data: any;
+  expiresAt: number;
+} | null = null;
+
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
   res,
   next,
 ) => {
   try {
+    const now = Date.now();
+    if (cache && cache.expiresAt > now) {
+      res.json(cache.data);
+      next();
+      return;
+    }
+
     const query = new URLSearchParams({
       minutes: "30",
       limit: "200",
@@ -25,7 +39,14 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       );
     }
 
-    res.json(await response.json());
+    const data = await response.json();
+    cache = {
+      data,
+      expiresAt: now + CACHE_TTL_MS,
+    };
+
+    res.set("Cache-Control", "public, max-age=60");
+    res.json(data);
     next();
   } catch (err) {
     next(err);
