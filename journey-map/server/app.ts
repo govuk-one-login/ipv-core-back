@@ -1,5 +1,9 @@
 import express from "express";
 import { authorise } from "./auth-middleware.js";
+import {
+  fetchJourneyTransitionsHandler,
+  fetchSystemSettingsHandler,
+} from "./analytics-middleware.js";
 
 const port = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -13,6 +17,8 @@ app.get("/healthcheck", (req, res) => {
 if (!isDevelopment) {
   app.use(authorise);
 }
+app.get("/journey-transitions", fetchJourneyTransitionsHandler);
+app.get("/system-settings", fetchSystemSettingsHandler);
 
 app.use(express.static("public"));
 app.use(express.static("journey-maps"));

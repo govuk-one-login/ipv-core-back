@@ -17,7 +17,8 @@ awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
-awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
+awsSdkLogs = "com.amazonaws:aws-java-sdk-logs:1.12.664"
+awsSdkCrtClient = { module = "software.amazon.awssdk:aws-crt-client" }
 awsSdkAppConfigData = { module = "software.amazon.awssdk:appconfigdata" }
 commonsCodec = "commons-codec:commons-codec:1.19.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"

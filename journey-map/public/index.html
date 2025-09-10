@@ -43,51 +43,50 @@
             </fieldset>
             <fieldset id="featureFlagInput">
               <legend>Turn on a feature flag</legend>
-              <p>Show a feature currently in development.</p>
+            </fieldset>
+            <fieldset id="otherOptions">
+              <legend>Turn on other options</legend>
+              <p>By default, only successful identity journeys are displayed.</p>
+              <label>
+                <input
+                        id="includeFailuresInput"
+                        name="otherOption"
+                        value="includeFailures"
+                        type="checkbox"
+                />
+                <span>Show journeys that end in <strong>failures</strong></span>
+              </label>
+              <label>
+                <input
+                        id="includeErrorsInput"
+                        name="otherOption"
+                        value="includeErrors"
+                        type="checkbox"
+                />
+                <span>Show unexpected <strong>errors</strong></span>
+              </label>
+              <label>
+                <input
+                        id="onlyOrphanStatesInput"
+                        name="otherOption"
+                        value="onlyOrphanStates"
+                        type="checkbox"
+                />
+                <span>Show only <strong>orphaned states</strong></span>
+              </label>
+              <label>
+                <input
+                        id="expandNestedJourneysInput"
+                        name="otherOption"
+                        value="expandNestedJourneys"
+                        type="checkbox"
+                />
+                <span
+                >Show all states within <strong>nested journeys</strong></span
+                >
+              </label>
             </fieldset>
           </div>
-          <fieldset id="otherOptions">
-            <legend>Turn on other options</legend>
-            <p>By default, only successful identity journeys are displayed.</p>
-            <label>
-              <input
-                id="includeFailuresInput"
-                name="otherOption"
-                value="includeFailures"
-                type="checkbox"
-              />
-              <span>Show journeys that end in <strong>failures</strong></span>
-            </label>
-            <label>
-              <input
-                id="includeErrorsInput"
-                name="otherOption"
-                value="includeErrors"
-                type="checkbox"
-              />
-              <span>Show unexpected <strong>errors</strong></span>
-            </label>
-            <label>
-              <input
-                id="onlyOrphanStatesInput"
-                name="otherOption"
-                value="onlyOrphanStates"
-                type="checkbox"
-              />
-              <span>Show only <strong>orphaned states</strong></span>
-            </label>
-            <label>
-              <input
-                id="expandNestedJourneysInput"
-                name="otherOption"
-                value="expandNestedJourneys"
-                type="checkbox"
-              />
-              <span
-                >Show all states within <strong>nested journeys</strong></span
-              >
-            </label>
-          </fieldset>
         </form>
         <div id="nodeInfo">
           <h2 id="journeyName"></h2>
@@ -101,33 +100,6 @@
               Use the <strong>Options</strong> panel to tailor what you see.
             </p>
             <p>Click on a node to display more information.</p>
-          </div>
-        </div>
-        <div id="key">
-          <h2>Key</h2>
-          <div class="key-item">
-            <div class="key-node page">Page state</div>
-            Page displayed by IPV Core
-          </div>
-          <div class="key-item">
-            <div class="key-node process">Process state</div>
-            IPV Core backend process
-          </div>
-          <div class="key-item">
-            <div class="key-node cri">Credential issuer</div>
-            Redirection to a credential issuer
-          </div>
-          <div class="key-item">
-            <div class="key-node journey_transition">Journey transition</div>
-            Transition to another journey type
-          </div>
-          <div class="key-item">
-            <div class="key-node error_transition">Failure transition</div>
-            Transition to a failed or error journey
-          </div>
-          <div class="key-item">
-            <div class="key-node nested_journey">Nested journey</div>
-            State representing more than one other state
           </div>
         </div>
       </div>

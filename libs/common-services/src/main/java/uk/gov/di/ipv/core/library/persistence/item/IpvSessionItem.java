@@ -51,7 +51,7 @@ public class IpvSessionItem implements PersistenceItem {
      * and can be used to re-route particular contexts
      * @see uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent#TransitionResult
      */
-    private String journeyContext;
+    @Builder.Default private List<String> journeyContexts = new ArrayList<>();
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
@@ -111,5 +111,19 @@ public class IpvSessionItem implements PersistenceItem {
             throw new IllegalStateException();
         }
         return new JourneyState(stateStack.get(stateStack.size() - 2));
+    }
+
+    public void setJourneyContext(String journeyContext) {
+        if (!this.journeyContexts.contains(journeyContext)) {
+            this.journeyContexts.add(journeyContext);
+        }
+    }
+
+    public void unsetJourneyContext(String journeyContext) {
+        this.journeyContexts.remove(journeyContext);
+    }
+
+    public List<String> getActiveJourneyContexts() {
+        return this.journeyContexts;
     }
 }

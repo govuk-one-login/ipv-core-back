@@ -752,14 +752,16 @@ states:
     events:
       uk:
         targetState: IDENTITY_START_PAGE
+        journeyContextToUnset: internationalAddress
       international:
         targetState: NON_UK_APP_INTRO_PAGE
+        journeyContextToSet: internationalAddress
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: NON_UK_PASSPORT
+            journeyContextToSet: internationalAddress
 
   NON_UK_PASSPORT:
-    journeyContext: internationalAddress
     response:
       type: page
       pageId: non-uk-passport

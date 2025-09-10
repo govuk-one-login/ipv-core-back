@@ -844,6 +844,171 @@ Resources:
       MaxSessionDuration: 43200
       Path: /runbooks/
 
+  IPVCoreAnalyticsAPI:
+    Type: AWS::Serverless::Api
+    DependsOn:
+      - FetchJourneyTransitionsFunction
+      - FetchSystemSettingsFunction
+    Properties:
+      # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
+      Name: !Sub IPV Core Analytics API Gateway ${Environment}
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: true
+      StageName: !Sub "${Environment}-analytics"
+      TracingEnabled: true
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-analytics.yaml"
+      AccessLogSetting:
+        DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
+        Format: >-
+          {
+          "requestId":"$context.requestId",
+          "ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "path":"$context.path",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLatency":"$context.responseLatency",
+          "responseLength":"$context.responseLength"
+          }
+
+  IPVCoreAnalyticsAPILogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      LogGroupName: !If
+        - IsDevelopment
+        - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackAnalytics-API-GW-AccessLogs
+        - !Sub /aws/apigateway/${AWS::StackName}-CoreBackAnalytics-API-GW-AccessLogs
+      RetentionInDays: 30
+
+  IPVCoreAnalyticsAPILogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref IPVCoreAnalyticsAPILogGroup
+
+  IPVCoreAnalyticsAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub IPVCoreAnalyticsAPIKey-${Environment}
+      Enabled: true
+
+  IPVCoreAnalyticsDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      StageName: !Ref IPVCoreAnalyticsAPI.Stage
+
+  IPVCoreAnalyticsUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: IPVCoreAnalyticsDeployment
+    Properties:
+      UsagePlanName: !Sub IPVCoreAnalyticsUsagePlan-${Environment}
+      ApiStages:
+        - ApiId: !Ref IPVCoreAnalyticsAPI
+          Stage: !Ref IPVCoreAnalyticsAPI.Stage
+      Throttle:
+        RateLimit: 10
+        BurstLimit: 2
+
+  IPVCoreAnalyticsUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref IPVCoreAnalyticsAPIKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref IPVCoreAnalyticsUsagePlan
+
+  IPVCoreAnalyticsSSLCert:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !If
+          - IsProduction
+          - "analytics-api.identity.account.gov.uk"
+          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !If
+          - IsDevelopment
+          - !If
+            - IsDev01
+            - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+          - !If
+            - IsProduction
+            - "analytics-api.identity.account.gov.uk"
+            - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+          HostedZoneId: !If
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !ImportValue Dev01IdentityHostedZoneId
+              - !ImportValue Dev02IdentityHostedZoneId
+            - !ImportValue PublicHostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Sub "Certificate for analytics-api-${Environment}"
+      CertificateTransparencyLoggingPreference: ENABLED
+
+  IPVCoreAnalyticsDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "analytics-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "analytics-api-${Environment}.02.dev.identity.account.gov.uk"
+        - !If
+          - IsProduction
+          - "analytics-api.identity.account.gov.uk"
+          - !Sub "analytics-api.identity.${Environment}.account.gov.uk"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Ref IPVCoreAnalyticsSSLCert
+
+  IPVCoreAnalyticsBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: IPVCoreAnalyticsDeployment
+    Properties:
+      DomainName: !Ref IPVCoreAnalyticsDomain
+      RestApiId: !Ref IPVCoreAnalyticsAPI
+      Stage: !Ref IPVCoreAnalyticsAPI.Stage
+      BasePath: ""
+
+  IPVCoreAnalyticsDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref IPVCoreAnalyticsDomain
+      HostedZoneId: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !ImportValue Dev01IdentityHostedZoneId
+          - !ImportValue Dev02IdentityHostedZoneId
+        - !ImportValue PublicHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt IPVCoreAnalyticsDomain.RegionalDomainName
+        HostedZoneId: !GetAtt IPVCoreAnalyticsDomain.RegionalHostedZoneId
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -3267,6 +3432,140 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ProcessCandidateIdentityFunctionLogGroup
+
+  FetchJourneyTransitionsFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - FetchJourneyTransitionsFunctionLogGroup
+      - IPVProcessJourneyEventFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "fetch-journey-transitions-${Environment}"
+      Description: Lambda that fetches user traffic over journey map edges.
+      Handler: uk.gov.di.ipv.core.fetchjourneytransitions.FetchJourneyTransitionsHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/fetch-journey-transitions
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub fetch-journey-transitions-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+          - Sid: CloudWatchLogsInsights
+            Effect: Allow
+            Action:
+              - logs:StartQuery
+              - logs:GetQueryResults
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/process-journey-event-${Environment}:*
+      Events:
+        IPVCoreAnalyticsAPIJourneyTransitions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreAnalyticsAPI
+            Path: /journey-transitions
+            Method: POST
+      AutoPublishAlias: live
+
+  FetchJourneyTransitionsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/fetch-journey-transitions-${Environment}"
+
+  FetchJourneyTransitionsFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref FetchJourneyTransitionsFunctionLogGroup
+
+  FetchJourneyTransitionsFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: FetchJourneyTransitionsFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FetchJourneyTransitionsFunction.Alias
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
+
+  FetchSystemSettingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "fetch-system-settings-${Environment}"
+      Description: "Lambda that fetches AppConfig to discover feature flag and CRI enabled settings."
+      Handler: uk.gov.di.ipv.core.fetchsystemsettings.FetchSystemSettingsHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/fetch-system-settings
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub fetch-system-settings-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+      Events:
+        IPVCoreAnalyticsAPIJourneyTransitions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreAnalyticsAPI
+            Path: /system-settings
+            Method: POST
+      AutoPublishAlias: live
+
+  FetchSystemSettingsFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/fetch-system-settings-${Environment}"
+
+  FetchSystemSettingsFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref FetchSystemSettingsFunctionLogGroup
+
+  FetchSystemSettingsFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: FetchSystemSettingsFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FetchSystemSettingsFunction.Alias
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreAnalyticsAPI}/*/*/*"
 
   SessionCredentialsTable:
     Type: AWS::DynamoDB::Table

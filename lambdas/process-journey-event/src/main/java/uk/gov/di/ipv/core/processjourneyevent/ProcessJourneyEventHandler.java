@@ -296,7 +296,6 @@ public class ProcessJourneyEventHandler
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private State executeStateTransition(
             JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
@@ -335,7 +334,7 @@ public class ProcessJourneyEventHandler
                         journeyEvent,
                         currentPage,
                         new EventResolveParameters(
-                                ipvSessionItem.getJourneyContext(),
+                                ipvSessionItem.getActiveJourneyContexts(),
                                 ipvSessionItem,
                                 clientOAuthSessionItem),
                         eventResolver);
@@ -347,13 +346,16 @@ public class ProcessJourneyEventHandler
             }
         }
 
+        if (!isNullOrEmpty(result.journeyContextsToSet())) {
+            result.journeyContextsToSet().forEach(ipvSessionItem::setJourneyContext);
+        }
+        if (!isNullOrEmpty(result.journeyContextsToUnset())) {
+            result.journeyContextsToUnset().forEach(ipvSessionItem::unsetJourneyContext);
+        }
+
         if (result.state() instanceof BasicState basicState) {
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
-            var ctx = basicState.getJourneyContext();
-            if (ctx != null && !ctx.isEmpty()) {
-                ipvSessionItem.setJourneyContext(ctx);
-            }
         }
 
         return result.state();
@@ -381,6 +383,7 @@ public class ProcessJourneyEventHandler
                 String.format("Back event provided to state: '%s'", initialJourneyState.state()));
     }
 
+    // This logging is depended on for user traffic data in the journey map
     private void logStateChange(
             JourneyState oldJourneyState, String journeyEvent, IpvSessionItem ipvSessionItem) {
         var newJourneyState = ipvSessionItem.getState();

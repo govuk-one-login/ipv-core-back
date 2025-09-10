@@ -19,6 +19,7 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkKms,
 			libs.awsSdkAppConfigData,
+			libs.awsSdkCrtClient,
 			libs.commonsCodec,
 			libs.commonsCollections,
 			libs.jacksonDatabind,
