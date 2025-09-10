@@ -90,7 +90,6 @@ public class SisService {
 
     public SisGetStoredIdentityResult getStoredIdentity(
             ClientOAuthSessionItem clientOAuthSessionItem) {
-        // We want to get any identity in SIS so we ask for all vots.
         return sisClient.getStoredIdentity(
                 clientOAuthSessionItem.getEvcsAccessToken(),
                 clientOAuthSessionItem.getVtrAsVots(),
