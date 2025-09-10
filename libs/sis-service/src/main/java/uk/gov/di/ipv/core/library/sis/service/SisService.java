@@ -211,6 +211,7 @@ public class SisService {
         }
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private void sendComparisonAuditEvent(
             AuditEventUser auditEventUser,
             SisGetStoredIdentityResult storedIdentityResult,
