@@ -144,7 +144,6 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenEvcsFails() throws Exception {
         // Arrange
-
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
@@ -173,7 +172,6 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenVotCalculationFails() throws Exception {
         // Arrange
-
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
@@ -205,14 +203,14 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenMaxVotComparisonFails() throws Exception {
         // Arrange
-        var sisP2MaxResult =
+        var sisP1MaxResult =
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P1, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2MaxResult);
+                .thenReturn(sisP1MaxResult);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
@@ -233,7 +231,7 @@ class SisServiceTest {
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
-                "Maximum EVCS (P3) and SIS (P2) vots do not match");
+                "Maximum EVCS (P2) and SIS (P1) vots do not match");
     }
 
     @Test
@@ -243,7 +241,7 @@ class SisServiceTest {
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(SIS_JWT_P1, true, false, Vot.P3, true, true));
+                        new SisStoredIdentityCheckDto(SIS_JWT_P1, true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP1CalculatedResult);
@@ -273,14 +271,8 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenSisHasAnExtraVc() throws Exception {
         // Arrange
-        var sisP2Result =
-                new SisGetStoredIdentityResult(
-                        true,
-                        true,
-                        new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P3, true, true));
-
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2Result);
+                .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_MISSING_ONE_VCS, PENDING_RETURN, List.of()));
@@ -307,14 +299,8 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenSisIsMissingAVc() throws Exception {
         // Arrange
-        var sisP2Result =
-                new SisGetStoredIdentityResult(
-                        true,
-                        true,
-                        new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P3, true, true));
-
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2Result);
+                .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_EXTRA_ONE_VCS, PENDING_RETURN, List.of()));
@@ -346,7 +332,7 @@ class SisServiceTest {
                         true,
                         true,
                         new SisStoredIdentityCheckDto(
-                                "Not a valid JWT", true, false, Vot.P3, true, true));
+                                "Not a valid JWT", true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
@@ -373,8 +359,6 @@ class SisServiceTest {
     @Test
     void shouldSendSuccessAuditEventWhenEverythingMatches() throws Exception {
         // Arrange
-        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
-
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
@@ -385,6 +369,7 @@ class SisServiceTest {
         sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
 
         // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         checkAuditEvent(
                 auditEventCaptor.getValue(),
@@ -399,13 +384,49 @@ class SisServiceTest {
                 null);
     }
 
+    @Test
+    void shouldSendSuccessAuditEventIfRequestedVotCannotBeAchieved() throws Exception {
+        // Arrange
+        clientOAuthSessionItem.setVtr(List.of("P3"));
+        var sisP2Result =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto(
+                                SIS_JWT_P0, false, false, Vot.P2, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, List.of(Vot.P3), TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisP2Result);
+        when(evcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.SUCCESS,
+                null,
+                false,
+                false,
+                Vot.P0,
+                SIS_JWT_P0,
+                SUCCESSFUL_SIGNATURES,
+                SUCCESSFUL_SIGNATURES,
+                null);
+    }
+
     private void checkAuditEvent(
             AuditEvent auditEvent,
             VerificationOutcome expectedVerificationOutcome,
             FailureCode expectedFailureCode,
             Boolean expectedExpired,
             Boolean expectedIsValid,
-            Vot expectedSisVot,
+            Vot expectedSisRequestedVot,
             String expectedSisJwt,
             List<String> expectedSisSignatures,
             List<String> expectedEvcsSignatures,
@@ -421,7 +442,7 @@ class SisServiceTest {
         assertEquals(expectedFailureCode, extensionValues.getFailureCode());
         assertEquals(expectedExpired, extensionValues.getExpired());
         assertEquals(expectedIsValid, extensionValues.getIsValid());
-        assertEquals(expectedSisVot, extensionValues.getSisVot());
+        assertEquals(expectedSisRequestedVot, extensionValues.getSisVot());
     }
 
     private static String getSignature(String jwt) {
@@ -435,9 +456,11 @@ class SisServiceTest {
 
     // Dummy JWTs containing realistic looking data, created using JWT.IO and the dummy JWT content
     // from process-cri-callback contract tests
+    // Passport JWT has been tweaked to strength 3 so that the EVCS calculated identity is only P2
+    // maximum
     private static final String DCMAW_PASSPORT_JWT =
             // pragma: allowlist nextline secret
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTIyMjg3MjgsImlzcyI6ImR1bW15RGNtYXdDb21wb25lbnRJZCIsImF1ZCI6Imlzc3VlciIsInN1YiI6InRlc3Qtc3ViamVjdCIsIm5iZiI6NDA3MDkwODgwMCwianRpIjoidXJuOnV1aWQ6YzViN2MxYjAtODI2Mi00ZDU3LWIxNjgtOWJjOTQ1NjhhZjE3IiwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL2NvbnRleHRzL2lkZW50aXR5LXYxLmpzb25sZCJdLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiSWRlbnRpdHlDaGVja0NyZWRlbnRpYWwiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJBTk5BIn0seyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJOSUNIT0xBIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiT1RIRVIgRk9SVFlGT1VSIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTYwLTAxLTAxIn1dLCJkZXZpY2VJZCI6W3sidmFsdWUiOiJhMzAxNzUxMS1iNjM5LTQ2ZmYtYWI3My02NmU1YWIwMTkzYzkifV0sInBhc3Nwb3J0IjpbeyJkb2N1bWVudE51bWJlciI6IjU0OTM2NDc4MyIsImV4cGlyeURhdGUiOiIyMDI3LTA4LTAxIiwiaWNhb0lzc3VlckNvZGUiOiJHQlIifV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiaW9tZXRyaWNJZCIsInN0cmVuZ3RoU2NvcmUiOjQsInZhbGlkaXR5U2NvcmUiOjMsImNoZWNrRGV0YWlscyI6W3siY2hlY2tNZXRob2QiOiJ2Y3J5cHQiLCJpZGVudGl0eUNoZWNrUG9saWN5IjoicHVibGlzaGVkIiwiYWN0aXZpdHlGcm9tIjpudWxsfSx7ImNoZWNrTWV0aG9kIjoiYnZyIiwiYmlvbWV0cmljVmVyaWZpY2F0aW9uUHJvY2Vzc0xldmVsIjozfV19XX0sImV4cCI6NDA3MDkwOTQwMH0.Zm5QyGSgLY9neAGMA7hza-uR7Ekiz1onSU8s0iz2wPXlrBLTjnUKQNMWnIpJeY4IMEHNvL0zJpvdykJgAb6Qew";
+            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTIyMjg3MjgsImlzcyI6ImR1bW15RGNtYXdDb21wb25lbnRJZCIsImF1ZCI6Imlzc3VlciIsInN1YiI6InRlc3Qtc3ViamVjdCIsIm5iZiI6NDA3MDkwODgwMCwianRpIjoidXJuOnV1aWQ6YzViN2MxYjAtODI2Mi00ZDU3LWIxNjgtOWJjOTQ1NjhhZjE3IiwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL2NvbnRleHRzL2lkZW50aXR5LXYxLmpzb25sZCJdLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiSWRlbnRpdHlDaGVja0NyZWRlbnRpYWwiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJBTk5BIn0seyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJOSUNIT0xBIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiT1RIRVIgRk9SVFlGT1VSIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTYwLTAxLTAxIn1dLCJkZXZpY2VJZCI6W3sidmFsdWUiOiJhMzAxNzUxMS1iNjM5LTQ2ZmYtYWI3My02NmU1YWIwMTkzYzkifV0sInBhc3Nwb3J0IjpbeyJkb2N1bWVudE51bWJlciI6IjU0OTM2NDc4MyIsImV4cGlyeURhdGUiOiIyMDI3LTA4LTAxIiwiaWNhb0lzc3VlckNvZGUiOiJHQlIifV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiaW9tZXRyaWNJZCIsInN0cmVuZ3RoU2NvcmUiOjMsInZhbGlkaXR5U2NvcmUiOjMsImNoZWNrRGV0YWlscyI6W3siY2hlY2tNZXRob2QiOiJ2Y3J5cHQiLCJpZGVudGl0eUNoZWNrUG9saWN5IjoicHVibGlzaGVkIiwiYWN0aXZpdHlGcm9tIjpudWxsfSx7ImNoZWNrTWV0aG9kIjoiYnZyIiwiYmlvbWV0cmljVmVyaWZpY2F0aW9uUHJvY2Vzc0xldmVsIjozfV19XX0sImV4cCI6NDA3MDkwOTQwMH0.UUjG2Z4Hb3nSIO5sZdPzMwYbt8c7e98v502WEslDGexyU6xrrqWDLbOR1sUhn4XuC7-KKA_qOA1H5jEJSL86yQ";
     private static final String ADDRESS_JWT =
             // pragma: allowlist nextline secret
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDp3ZWI6ZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQjMTc1M2NmMGIxZTM2NDdkOTE3MTk4MjBiNzRjZjBjNGYwODc4MmQwZjA3MmViYWY1ZWM0ZWUwODczNDM2YTdhYiJ9.eyJpc3MiOiJkdW1teUFkZHJlc3NDb21wb25lbnRJZCIsInN1YiI6InRlc3Qtc3ViamVjdCIsIm5iZiI6NDA3MDkwODgwMCwiZXhwIjo0MDcwOTA5NDAwLCJ2YyI6eyJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiQWRkcmVzc0NyZWRlbnRpYWwiXSwiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL2NvbnRleHRzL2lkZW50aXR5LXYxLmpzb25sZCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6IkdCIiwiYnVpbGRpbmdOYW1lIjoiIiwic3RyZWV0TmFtZSI6IkhBRExFWSBST0FEIiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJidWlsZGluZ051bWJlciI6IjgiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwidmFsaWRGcm9tIjoiMjAwMC0wMS0wMSJ9XX19LCJqdGkiOiJkdW1teUp0aSJ9.71rsp9h4OS8kZOK4LtKh5dRtQ1uX8On4OL0W3nhCSmSZhtPJrE-0TXuc9rpzWzS0a92mc-aNGggcKDGp7oSc3g";
@@ -456,19 +479,25 @@ class SisServiceTest {
     // and CIMIT_JWT. Claiming to match a P2
     private static final String SIS_JWT =
             // pragma: allowlist nextline secret
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiWm01UXlHU2dMWTluZUFHTUE3aHphLXVSN0VraXoxb25TVThzMGl6MndQWGxyQkxUam5VS1FOTVduSXBKZVk0SU1FSE52TDB6SnB2ZHlrSmdBYjZRZXciLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzU2ODA4MzA0fQ.40hzV7Uv7pquD-hd62-ABHIp6p0AwsUCmNosOjhMz2Ylx0q4OTNFyAZzsarVUz_AGgKVE6Zl67DIzg1lVacWUg";
+            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzU2ODA4MzA0fQ.xGRJ14Py0jo1h5MIPPVUCOugBiJgrhhf7XwYQ7MxwG_2dRiLeOQd_-YuVZrOR2JVpzvmGNzhHHoC1vfKRaMoHA";
 
     // This JWT is the same as the one above except that it says that the user has only reached P1
     // instead of P2 for this request
     private static final String SIS_JWT_P1 =
             // pragma: allowlist nextline secret
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiWm01UXlHU2dMWTluZUFHTUE3aHphLXVSN0VraXoxb25TVThzMGl6MndQWGxyQkxUam5VS1FOTVduSXBKZVk0SU1FSE52TDB6SnB2ZHlrSmdBYjZRZXciLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAxIiwiaWF0IjoxNzU2ODA4MzA0fQ.7DvTrBqiQayu01nElk0udyDA_4PXq2HxIxC4gZOXwGbBLowElKi1sSOxrmIdQt5UbwHgGtr_MVe4bRvWWvbFWQ";
+            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAxIiwiaWF0IjoxNzU2ODA4MzA0fQ.VdsdMY2CDlTmoWToD-w_x6hTmqMZkielHC2X9Gy-SXtTSRVGmF_BxOqU-zZV7ta64FTWDfFMiepsRt8N_mAawQ";
+
+    // This JWT is the same as the one above except that it says that the user has only reached P0
+    // instead of P2 for this request
+    private static final String SIS_JWT_P0 =
+            // pragma: allowlist nextline secret
+            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAwIiwiaWF0IjoxNzU2ODA4MzA0fQ.rtgjOekdVjVthUCirvRtewA25VA0hnK-QewHn3BqyROgLp1CYgbisi8BDh-zlYv4q114lnBvJ9kZD7Qx-2Tv9A";
 
     private static final SisGetStoredIdentityResult SIS_SUCCESSFUL_RESULT =
             new SisGetStoredIdentityResult(
                     true,
                     true,
-                    new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P3, true, true));
+                    new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P2, true, true));
 
     private static final List<VerifiableCredential> EVCS_SUCCESSFUL_VCS;
     private static final List<VerifiableCredential> EVCS_MISSING_ONE_VCS;

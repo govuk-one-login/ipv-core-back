@@ -157,7 +157,12 @@ public class SisService {
                     evcsRequestedVotOptional.isPresent()
                             ? evcsRequestedVotOptional.get().vot()
                             : null;
-            if (sisRequestedVot != evcsRequestedVot) {
+            // If SIS doesn't think it can provide a strong enough identity it will still return a
+            // result with content.vot set to P0 and isValid set to false.
+            if (!(evcsRequestedVot == null
+                            && sisRequestedVot == Vot.P0
+                            && !storedIdentityResult.identityDetails().isValid())
+                    && sisRequestedVot != evcsRequestedVot) {
                 throw new SisMatchException(
                         FailureCode.REQUESTED_VOT_MISMATCH,
                         "Requested EVCS ("
