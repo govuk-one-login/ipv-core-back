@@ -9,6 +9,8 @@ public record SisStoredIdentityCheckDto(
         @NonNull String content,
         boolean isValid,
         boolean expired,
+        // This is the maximum VoT for the user, the calculated VoT for this request is stored in
+        // the content.
         @NonNull Vot vot,
         boolean kidValid,
         boolean signatureValid) {}

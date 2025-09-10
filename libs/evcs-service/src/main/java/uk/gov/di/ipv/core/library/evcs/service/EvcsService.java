@@ -4,6 +4,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
@@ -56,7 +57,7 @@ public class EvcsService {
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
-        return fetchEvcsVerifiableCredentialsByState(userId, evcsAccessToken, states)
+        return fetchEvcsVerifiableCredentialsByState(userId, evcsAccessToken, false, states)
                 .values()
                 .stream()
                 .flatMap(List::stream)
@@ -70,7 +71,8 @@ public class EvcsService {
                 evcsUserVcs.stream()
                         .filter(evcsVc -> List.of(states).contains(evcsVc.state()))
                         .toList();
-        return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcsByRequiredState)
+        return getParsedVerifiableCredentialsFromEvcsResponse(
+                        userId, evcsUserVcsByRequiredState, false)
                 .values()
                 .stream()
                 .flatMap(List::stream)
@@ -78,15 +80,15 @@ public class EvcsService {
     }
 
     public Map<EvcsVCState, List<VerifiableCredential>> fetchEvcsVerifiableCredentialsByState(
-            String userId, String evcsAccessToken, EvcsVCState... states)
+            String userId, String evcsAccessToken, boolean includeCimit, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
         var evcsUserVcs = getUserVCs(userId, evcsAccessToken, states);
-        return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcs);
+        return getParsedVerifiableCredentialsFromEvcsResponse(userId, evcsUserVcs, includeCimit);
     }
 
     private Map<EvcsVCState, List<VerifiableCredential>>
             getParsedVerifiableCredentialsFromEvcsResponse(
-                    String userId, List<EvcsGetUserVCDto> evcsUserVcs)
+                    String userId, List<EvcsGetUserVCDto> evcsUserVcs, boolean includeCimit)
                     throws CredentialParseException {
         var credentials = new EnumMap<EvcsVCState, List<VerifiableCredential>>(EvcsVCState.class);
 
@@ -101,11 +103,18 @@ public class EvcsService {
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the
                 // credential bundle so we skip the VC if it's from CIMIT.
-                if (cimitComponentId.equals(issuer)) {
+                // PYIC-8393 Allow overriding of this behaviour just for verification of stored
+                // identities
+                if (!includeCimit && cimitComponentId.equals(issuer)) {
                     continue;
                 }
 
                 var cri = issuerCris.get(issuer);
+                // PYIC-8393 Allow overriding of this behaviour just for verification of stored
+                // identities
+                if (cri == null && cimitComponentId.equals(issuer)) {
+                    cri = Cri.CIMIT;
+                }
                 if (cri == null) {
                     throw new CredentialParseException(
                             String.format(
