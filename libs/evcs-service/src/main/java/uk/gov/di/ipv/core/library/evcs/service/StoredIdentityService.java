@@ -25,7 +25,7 @@ import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.STORED_IDENTITY_SERVICE_COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
+import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSisSignedJwt;
 
 public class StoredIdentityService {
     public static final String VOT_CLAIM = "vot";
@@ -92,7 +92,8 @@ public class StoredIdentityService {
         try {
             var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
 
-            return createSignedJwt(storedIdentity, signerFactory.getSisSigner()).serialize();
+            return createSisSignedJwt(storedIdentity, signerFactory.getSisSigner(), configService)
+                    .serialize();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildLogMessage(e.getErrorResponse().getMessage()));
             throw new FailedToCreateStoredIdentityForEvcsException(
