@@ -123,7 +123,7 @@ class AppConfigServiceTest {
     @Test
     void shouldGetLongValueFromConfigIfSet() {
         // Act
-        var value = configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
+        var value = configService.getBearerTokenTtl();
 
         // Assert
         assertEquals(3600L, value);

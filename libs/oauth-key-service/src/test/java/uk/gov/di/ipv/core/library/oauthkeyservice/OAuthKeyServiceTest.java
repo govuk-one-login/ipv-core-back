@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.domain.ClientConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -81,9 +80,7 @@ class OAuthKeyServiceTest {
 
         @BeforeEach
         void beforeEach() throws Exception {
-            when(mockConfigService.getLongParameter(
-                            ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
-                    .thenReturn(5L);
+            when(mockConfigService.getOauthKeyCacheDurationMins()).thenReturn(5L);
 
             when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
@@ -185,10 +182,7 @@ class OAuthKeyServiceTest {
         @Test
         void getEncryptionKeyShouldCallJwksEndpointIfCachedKeyIsExpired() throws Exception {
             // Set up
-            when(mockConfigService.getLongParameter(
-                            ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
-                    .thenReturn(0L)
-                    .thenReturn(5L);
+            when(mockConfigService.getOauthKeyCacheDurationMins()).thenReturn(0L).thenReturn(5L);
 
             // Act
             // First call to cache key

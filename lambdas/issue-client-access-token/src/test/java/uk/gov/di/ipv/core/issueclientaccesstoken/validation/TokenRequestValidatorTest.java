@@ -49,7 +49,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,7 +72,7 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldNotThrowForValidJwt() throws Exception {
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
 
@@ -171,7 +170,7 @@ class TokenRequestValidatorTest {
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -225,7 +224,7 @@ class TokenRequestValidatorTest {
     void shouldThrowIfJwtIdIsMissingOrEmpty() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertion(claimsSetValues);
 
@@ -250,7 +249,7 @@ class TokenRequestValidatorTest {
     void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
         String clientAssertion = generateClientAssertion(claimsSetValues);
 

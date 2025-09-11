@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -119,8 +118,7 @@ class ContractTest {
             MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-        when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
@@ -181,8 +179,7 @@ class ContractTest {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
-        when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 

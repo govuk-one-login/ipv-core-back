@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
@@ -276,8 +275,7 @@ public class JarValidator {
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
         Instant maximumExpirationTime =
-                Instant.now()
-                        .plusSeconds(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+                Instant.now().plusSeconds(configService.getMaxAllowedAuthClientTtl());
         Instant expirationTime = claimsSet.getExpirationTime().toInstant();
 
         if (expirationTime.isAfter(maximumExpirationTime)) {
