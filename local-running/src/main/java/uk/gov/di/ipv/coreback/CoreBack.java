@@ -25,7 +25,6 @@ public class CoreBack {
         var journeyEngineHandler = new JourneyEngineHandler();
         var auditHandler = new AuditHandler();
         var jwksHandler = new JwksHandler();
-        var didHandler = new DidHandler();
 
         var app = Javalin.create();
 
@@ -47,7 +46,7 @@ public class CoreBack {
         app.get("/reverification", lambdaHandler::getUserReverification);
         app.get("/healthcheck", (ctx) -> ctx.json(Map.of("healthcheck", "ok")));
         app.get("/.well-known/jwks.json", jwksHandler::jwks);
-        app.get("/.well-known/stored-identity/did.json", didHandler::did);
+        app.get("/.well-known/stored-identity/did.json", DidHandler::did);
 
         // Poll for async credentials
         startAsyncPoller();
