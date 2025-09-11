@@ -272,7 +272,6 @@ public class ProcessCandidateIdentityHandler
                         isReproveIdentity, currentAccountInterventionType)) {
                     throw new AccountInterventionException();
                 }
-                ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
             var sessionVcs =

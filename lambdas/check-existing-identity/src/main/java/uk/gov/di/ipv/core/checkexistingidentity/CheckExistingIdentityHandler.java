@@ -260,11 +260,6 @@ public class CheckExistingIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
-
-            var isReproveIdentity =
-                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
-                            fetchedAisInterventionType);
-
             if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
                     fetchedAisInterventionType)) {
                 ipvSessionService.invalidateSession(
@@ -272,10 +267,11 @@ public class CheckExistingIdentityHandler
                 throw new AccountInterventionException();
             }
 
+            var isReproveIdentity =
+                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
+                            fetchedAisInterventionType);
             clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
             clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
-
-            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
