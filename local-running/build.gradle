@@ -7,6 +7,7 @@ plugins {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkSqs,
+			libs.lombok,
 			libs.awsSdkCrtClient,
 			libs.bundles.awsLambda,
 			libs.bundles.log4j,
@@ -35,6 +36,7 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
 			project(":libs:common-services"),
+			project(path: ':libs:common-services', configuration: 'tests'),
 			project(":libs:cri-response-service"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:user-identity-service"),
