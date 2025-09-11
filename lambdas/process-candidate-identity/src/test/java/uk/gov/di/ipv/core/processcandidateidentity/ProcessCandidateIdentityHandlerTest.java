@@ -70,7 +70,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
@@ -488,7 +487,6 @@ class ProcessCandidateIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(votMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(cimitUtilityService.getParsedSecurityCheckCredential(
                             SIGNED_CIMIT_VC_NO_CI, USER_ID))
@@ -659,7 +657,6 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID))
                     .thenReturn(finalFetchedAccountInterventionType);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
             clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
             var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
@@ -735,7 +732,6 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID))
                     .thenReturn(finalAccountInterventionType);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
             clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
             var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
@@ -811,7 +807,6 @@ class ProcessCandidateIdentityHandlerTest {
                 AisInterventionType finalAisInterventionType) throws Exception {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(finalAisInterventionType);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
             var request =
                     requestBuilder
@@ -849,7 +844,6 @@ class ProcessCandidateIdentityHandlerTest {
                 throws Exception {
             // Arrange
             when(aisService.fetchAisInterventionType(USER_ID)).thenReturn(midAisInterventionType);
-            when(configService.enabled(AIS_ENABLED)).thenReturn(true);
 
             clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
             var coiCheckType = isReproveIdentity ? ACCOUNT_INTERVENTION : STANDARD;
@@ -1477,7 +1471,6 @@ class ProcessCandidateIdentityHandlerTest {
                         throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
-            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
                             eq(clientOAuthSessionItem),
@@ -1531,7 +1524,6 @@ class ProcessCandidateIdentityHandlerTest {
         void shouldContinueToStoreIdentityIfFailedToParseSecurityCheckCredential()
                 throws Exception {
             // Arrange
-            when(configService.enabled(AIS_ENABLED)).thenReturn(false);
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
