@@ -9,7 +9,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -160,11 +159,7 @@ public class OAuthKeyService {
     private CachedJWKSet createCachedJWKSet(URI jwksEndpoint) {
         return new CachedJWKSet(
                 getJWKSetFromJwksEndpoint(jwksEndpoint),
-                Instant.now()
-                        .plus(
-                                configService.getLongParameter(
-                                        ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS),
-                                MINUTES));
+                Instant.now().plus(configService.getOauthKeyCacheDurationMins(), MINUTES));
     }
 
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {

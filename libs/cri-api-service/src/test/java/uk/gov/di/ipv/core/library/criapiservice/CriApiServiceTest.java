@@ -52,7 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -123,7 +122,7 @@ class CriApiServiceTest {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
-        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
@@ -167,7 +166,7 @@ class CriApiServiceTest {
     void fetchAccessTokenShouldReturnAccessTokenForNoApiKey() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
@@ -257,7 +256,7 @@ class CriApiServiceTest {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
-        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(400);
@@ -285,7 +284,7 @@ class CriApiServiceTest {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
-        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
@@ -320,7 +319,7 @@ class CriApiServiceTest {
             mockedJwtHelper
                     .when(() -> JwtHelper.createSignedJwt(any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
-            when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+            when(mockConfigService.getJwtTtlSeconds()).thenReturn(900L);
             when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
             // Act & Assert

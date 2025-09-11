@@ -63,7 +63,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
@@ -422,9 +421,7 @@ public class ProcessJourneyEventHandler
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
-                                        .minusSeconds(
-                                                configService.getLongParameter(
-                                                        BACKEND_SESSION_TIMEOUT)));
+                                        .minusSeconds(configService.getBackendSessionTimeout()));
     }
 
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(

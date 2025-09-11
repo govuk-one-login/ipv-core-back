@@ -61,7 +61,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -148,8 +147,7 @@ class JarValidatorTest {
         stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+        when(configService.getMaxAllowedAuthClientTtl()).thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
         when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
@@ -218,7 +216,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -237,7 +235,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -265,7 +263,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -293,7 +291,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -321,7 +319,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -348,7 +346,7 @@ class JarValidatorTest {
             stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
@@ -635,8 +633,7 @@ class JarValidatorTest {
         stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+        when(configService.getMaxAllowedAuthClientTtl()).thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 

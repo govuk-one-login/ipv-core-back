@@ -129,6 +129,30 @@ public abstract class ConfigService {
         return Long.parseLong(getParameter(configurationVariable, pathProperties));
     }
 
+    public long getBackendSessionTimeout() {
+        return getConfiguration().getSelf().getBackendSessionTimeout();
+    }
+
+    public long getOauthKeyCacheDurationMins() {
+        return getConfiguration().getSelf().getOauthKeyCacheDurationMins();
+    }
+
+    public long getBearerTokenTtl() {
+        return getConfiguration().getSelf().getBearerTokenTtl();
+    }
+
+    public long getJwtTtlSeconds() {
+        return getConfiguration().getSelf().getJwtTtlSeconds();
+    }
+
+    public long getAuthCodeExpirySeconds() {
+        return getConfiguration().getSelf().getAuthCodeExpirySeconds();
+    }
+
+    public long getMaxAllowedAuthClientTtl() {
+        return getConfiguration().getSelf().getMaxAllowedAuthClientTtl();
+    }
+
     public List<String> getHistoricSigningKeys(String criId) {
         return Arrays.asList(
                 getConfiguration()

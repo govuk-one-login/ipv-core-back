@@ -64,7 +64,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -395,7 +394,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("CRI_STATE");
         IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession(TEST_IP);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(99L);
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(99L);
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -1327,7 +1326,7 @@ class ProcessJourneyEventHandlerTest {
 
         when(mockConfigService.getConfiguration().getSelf().getComponentId())
                 .thenReturn(URI.create("core"));
-        when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());

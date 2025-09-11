@@ -28,7 +28,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
 public class AuthorizationRequestHelper {
@@ -72,9 +71,7 @@ public class AuthorizationRequestHelper {
                                         .toString())
                         .issueTime(Date.from(now))
                         .expirationTime(
-                                Date.from(
-                                        now.plusSeconds(
-                                                configService.getLongParameter(JWT_TTL_SECONDS))))
+                                Date.from(now.plusSeconds(configService.getJwtTtlSeconds())))
                         .notBeforeTime(Date.from(now))
                         .subject(userId)
                         .claim("govuk_signin_journey_id", govukSigninJourneyId);

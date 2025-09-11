@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.time.Instant;
 import java.util.Set;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JTI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JTI_USED_AT;
 
@@ -61,8 +60,7 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         var maxAllowedTtlInstant =
-                Instant.now()
-                        .plusSeconds(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+                Instant.now().plusSeconds(configService.getMaxAllowedAuthClientTtl());
 
         if (claimsSet.getExpirationTime().toInstant().isAfter(maxAllowedTtlInstant)) {
             LOGGER.error(

@@ -83,7 +83,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -273,13 +272,10 @@ class BuildCriOauthRequestHandlerTest {
         // Arrange
         when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         List<VerifiableCredential> vcs =
@@ -362,7 +358,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false, false);
 
@@ -447,7 +442,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(any(), any()))
@@ -531,7 +525,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -614,7 +607,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, DCMAW.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -698,7 +690,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, DWP_KBV.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -785,7 +776,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(oauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         stubAllowedShareAttributes(mockConfig, F2F.getId(), "name,birthDate,address,emailAddress");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -868,7 +858,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(EXPERIAN_FRAUD)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, EXPERIAN_FRAUD))
                 .thenReturn(oauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         stubAllowedShareAttributes(mockConfig, EXPERIAN_FRAUD.getId(), "");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -935,7 +924,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
                 .thenReturn(oauthCriConfig);
         stubAllowedShareAttributes(mockConfig, CLAIMED_IDENTITY.getId(), "");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(5000L);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
