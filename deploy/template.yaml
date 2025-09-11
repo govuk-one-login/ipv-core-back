@@ -166,6 +166,7 @@ Mappings:
       opentelemetryCollectorLayerArn: "not-used"
       opentelemetryJavaWrapperLayerArn: "not-used"
       dynatraceOtlpSecretArn: "not-used" # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.01.dev.identity.account.gov.uk:.well-known/stored-identity"
     "175872367215": # Core dev02
       environment: dev
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -182,6 +183,7 @@ Mappings:
       opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-collector-arm64-0_16_0:1
       opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:175872367215:secret:dynatrace_api_token_otlp # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.02.dev.identity.account.gov.uk:.well-known/stored-identity"
     "457601271792": # Build
       environment: build
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -198,6 +200,7 @@ Mappings:
       opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-collector-arm64-0_16_0:1
       opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.identity.build.account.gov.uk:.well-known/stored-identity"
     "335257547869": # Staging
       environment: staging
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -214,6 +217,7 @@ Mappings:
       opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-collector-arm64-0_16_0:1
       opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:335257547869:secret:/staging/core/dynatrace/openTelemetryApiKey-T2LX5E # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.identity.staging.account.gov.uk:.well-known/stored-identity"
     "991138514218": # Integration
       environment: integration
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -230,6 +234,7 @@ Mappings:
       opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-collector-arm64-0_16_0:1
       opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:991138514218:secret:/integration/core/dynatrace/openTelemetryApiKey-ACu0S2 # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.identity.integration.account.gov.uk:.well-known/stored-identity"
     "075701497069": # Production
       environment: production
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -246,6 +251,7 @@ Mappings:
       opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-collector-arm64-0_16_0:1
       opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-javawrapper-0_14_0:1
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:075701497069:secret:/production/core/dynatrace/openTelemetryApiKey-xj1sKg # pragma: allowlist secret
+      didStoredIdentityId: "did:web:api.identity.account.gov.uk:.well-known/stored-identity"
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -3332,6 +3338,7 @@ Resources:
             - UseDynatrace
             - /opt/otel-handler
             - !Ref AWS::NoValue
+          DID_STORED_IDENTITY_ID: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, didStoredIdentityId ]
       Layers:
         - !If
           - UseDynatrace

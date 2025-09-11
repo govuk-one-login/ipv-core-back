@@ -13,7 +13,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 
 import java.text.ParseException;
@@ -22,6 +24,8 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -29,6 +33,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 @ExtendWith(MockitoExtension.class)
 class JwtHelperTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Mock ConfigService mockConfigService;
 
     @Test
     void shouldCreateValidSignedJWT() throws Exception {
@@ -44,6 +49,25 @@ class JwtHelperTest {
         assertEquals("test", claimsSet.get("exampleField").asText());
 
         assertEquals("test-fixtures-ec-key", signedJWT.getHeader().getKeyID());
+    }
+
+    @Test
+    void shouldCreateValidSignedJWTForSis() throws Exception {
+        when(mockConfigService.getEnvironmentVariable(DID_STORED_IDENTITY_ID))
+                .thenReturn("some-id");
+
+        var signer = new LocalECDSASigner(getPrivateKey());
+        var exampleClaimsSet = new JWTClaimsSet.Builder().claim("exampleField", "test").build();
+
+        var signedJWT = JwtHelper.createSisSignedJwt(exampleClaimsSet, signer, mockConfigService);
+        var generatedClaims = signedJWT.getJWTClaimsSet();
+
+        assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK))));
+
+        var claimsSet = OBJECT_MAPPER.readTree(generatedClaims.toString());
+        assertEquals("test", claimsSet.get("exampleField").asText());
+
+        assertEquals("some-id#test-fixtures-ec-key", signedJWT.getHeader().getKeyID());
     }
 
     @Test

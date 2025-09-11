@@ -8,10 +8,26 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
+
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
 
 public class JwtHelper {
     private JwtHelper() {}
+
+    public static SignedJWT createSisSignedJwt(
+            JWTClaimsSet claimsSet, CoreSigner signer, ConfigService configService)
+            throws JOSEException {
+        var constructedKid =
+                configService.getEnvironmentVariable(DID_STORED_IDENTITY_ID)
+                        + "#"
+                        + signer.getKid();
+        JWSHeader jwsHeader = generateHeader(constructedKid);
+        SignedJWT signedJWT = new SignedJWT(jwsHeader, claimsSet);
+        signedJWT.sign(signer);
+        return signedJWT;
+    }
 
     public static SignedJWT createSignedJwt(JWTClaimsSet claimsSet, CoreSigner signer)
             throws JOSEException {
