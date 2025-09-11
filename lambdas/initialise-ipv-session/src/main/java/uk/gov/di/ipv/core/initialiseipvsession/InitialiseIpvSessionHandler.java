@@ -166,9 +166,6 @@ public class InitialiseIpvSessionHandler
                                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                     claimsSet));
 
-            var isReproveIdentity =
-                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
-
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
@@ -181,7 +178,7 @@ public class InitialiseIpvSessionHandler
                             ipAddress);
 
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
-                    new AuditExtensionsIpvJourneyStart(isReproveIdentity ? true : null, vtr);
+                    new AuditExtensionsIpvJourneyStart(vtr);
 
             var restrictedDeviceInformation =
                     new AuditRestrictedDeviceInformation(deviceInformation);
