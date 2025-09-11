@@ -20,7 +20,6 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -425,20 +424,6 @@ class AppConfigServiceTest {
                     RestCriConfig.builder()
                             .credentialUrl(new URI("https://testCredentialUrl"))
                             .requiresApiKey(true)
-                            .signingKey(EC_PRIVATE_KEY_JWK)
-                            .componentId("main-issuer")
-                            .build(),
-                    result);
-        }
-
-        @Test
-        void getCriConfigShouldReturnACriConfig() {
-            // Act
-            var result = configService.getCriConfig(ADDRESS);
-
-            // Assert
-            assertEquals(
-                    CriConfig.builder()
                             .signingKey(EC_PRIVATE_KEY_JWK)
                             .componentId("main-issuer")
                             .build(),
