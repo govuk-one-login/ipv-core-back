@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
-import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -80,12 +79,12 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
-    public String getParameter(
+    public String getParameter( // TO BE REMOVED
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
     }
 
-    public String getParameter(String path) {
+    public String getParameter(String path) { // TO BE REMOVED
         if (getFeatureSet() != null) {
             for (String individualFeatureSet : getFeatureSet()) {
                 var featurePath =
@@ -124,7 +123,7 @@ public abstract class ConfigService {
         return wrapper != null && Boolean.parseBoolean(wrapper.getEnabled());
     }
 
-    public long getLongParameter(
+    public long getLongParameter( // TO BE REMOVED
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Long.parseLong(getParameter(configurationVariable, pathProperties));
     }
@@ -181,39 +180,23 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(cri, connection, OauthCriConfig.class);
+        return OBJECT_MAPPER.convertValue(
+                getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(cri.getId())
+                        .getConnections()
+                        .get(connection),
+                OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(cri, connection, RestCriConfig.class);
-    }
-
-    public CriConfig getCriConfig(Cri cri) {
-        return getCriConfigForType(cri, getActiveConnection(cri), CriConfig.class);
-    }
-
-    private <T extends CriConfig> T getCriConfigForType(
-            Cri cri, String connection, Class<T> configType) {
-        var path =
-                formatPath(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                        cri.getId(),
-                        connection);
-        return getParametersByPrefix(path).entrySet().stream()
-                .collect(
-                        Collectors.collectingAndThen(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        entry ->
-                                                unescapeSigEncKey(
-                                                        entry.getKey(), entry.getValue())),
-                                params -> OBJECT_MAPPER.convertValue(params, configType)));
-    }
-
-    private String unescapeSigEncKey(String key, String value) {
-        return (key.equals("signingKey") || key.equals("encryptionKey"))
-                ? value.replace("\\", "")
-                : value;
+        return OBJECT_MAPPER.convertValue(
+                getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(cri.getId())
+                        .getConnections()
+                        .get(connection),
+                RestCriConfig.class);
     }
 
     public String getActiveConnection(Cri cri) {
