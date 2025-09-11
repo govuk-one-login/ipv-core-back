@@ -2,7 +2,7 @@
 Feature: Fail open scenarios
 
   Scenario Outline: Journey with AIS failures but no interventions succeeds
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     When The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -29,7 +29,7 @@ Feature: Fail open scenarios
       | ERROR               | ERROR               |
 
   Scenario Outline: Journey with AIS failure and <intervention> intervention fails
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     When The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -57,7 +57,7 @@ Feature: Fail open scenarios
 
 
   Scenario: Reprove identity journey with AIS failure succeeds
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |

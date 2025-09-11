@@ -82,7 +82,6 @@ Feature: TICF successful responses
 
   Rule: TICF responds with intervention
     Scenario: No intervention
-      Given I activate the 'accountInterventions' feature set
       And The AIS stub will return an 'AIS_NO_INTERVENTION' result
       And TICF CRI will respond with default parameters and
         | interventionCode | 00 |
@@ -112,7 +111,6 @@ Feature: TICF successful responses
       Then I get a 'P2' identity
 
     Scenario: Blocked
-      Given I activate the 'accountInterventions' feature set
       And The AIS stub will return an 'AIS_NO_INTERVENTION' result
       And TICF CRI will respond with default parameters and
         | interventionCode | 03 |
