@@ -71,7 +71,6 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -263,23 +262,21 @@ public class CheckExistingIdentityHandler
             var isReproveIdentity =
                     Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-            if (configService.enabled(AIS_ENABLED)) {
-                var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
+            var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
 
-                isReproveIdentity =
-                        AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
-                                fetchedAisInterventionType);
+            isReproveIdentity =
+                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
+                            fetchedAisInterventionType);
 
-                if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
-                        fetchedAisInterventionType)) {
-                    ipvSessionService.invalidateSession(
-                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
-                    throw new AccountInterventionException();
-                }
-
-                clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
-                clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
+            if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
+                    fetchedAisInterventionType)) {
+                ipvSessionService.invalidateSession(
+                        ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+                throw new AccountInterventionException();
             }
+
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
