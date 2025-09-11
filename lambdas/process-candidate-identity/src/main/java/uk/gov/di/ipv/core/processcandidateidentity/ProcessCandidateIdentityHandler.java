@@ -80,7 +80,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
@@ -442,7 +441,7 @@ public class ProcessCandidateIdentityHandler
             }
         }
 
-        if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())) {
+        if (configService.isCredentialIssuerEnabled(Cri.TICF.getId())) {
             LOGGER.info(LogHelper.buildLogMessage("Performing TICF CRI call"));
             var journey =
                     getJourneyResponseFromTicfCall(

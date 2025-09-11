@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 
 public class EventResolver {
@@ -67,10 +66,7 @@ public class EventResolver {
                 var checkIfDisabled = event.getCheckIfDisabled();
                 Optional<String> firstDisabledCri =
                         checkIfDisabled.keySet().stream()
-                                .filter(
-                                        id ->
-                                                !configService.getBooleanParameter(
-                                                        CREDENTIAL_ISSUER_ENABLED, id))
+                                .filter(id -> !configService.isCredentialIssuerEnabled(id))
                                 .findFirst();
                 if (firstDisabledCri.isPresent()) {
                     String disabledCriId = firstDisabledCri.get();

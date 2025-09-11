@@ -116,9 +116,12 @@ public abstract class ConfigService {
         return lookupParams;
     }
 
-    public boolean getBooleanParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Boolean.parseBoolean(getParameter(configurationVariable, pathProperties));
+    public boolean isCredentialIssuerEnabled(String criId) {
+        if (criId == null) return false;
+
+        var cfg = getConfiguration();
+        var wrapper = cfg.getCredentialIssuers().getById(criId);
+        return wrapper != null && Boolean.parseBoolean(wrapper.getEnabled());
     }
 
     public long getLongParameter(
@@ -225,19 +228,14 @@ public abstract class ConfigService {
         return parsedData;
     }
 
-    public boolean enabled(FeatureFlag featureFlag) {
-        return enabled(featureFlag.getName());
+    public boolean enabled(FeatureFlag flag) {
+        return enabled(flag.getName());
     }
 
-    public boolean enabled(String featureFlagValue) {
-        try {
-            return getBooleanParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue);
-        } catch (ConfigParameterNotFoundException ex) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "SSM parameter not found for feature flag: " + featureFlagValue));
-            return false;
-        }
+    public boolean enabled(String flagName) {
+        var cfg = getConfiguration();
+        var flags = (cfg != null) ? cfg.getFeatureFlags() : null;
+        return flags != null && Boolean.TRUE.equals(flags.get(flagName));
     }
 
     public Map<String, Cri> getIssuerCris() {
