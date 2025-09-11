@@ -302,7 +302,8 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             userId,
                             govukSigninJourneyId,
-                            auditEventUser)
+                            auditEventUser,
+                            isReproveIdentity)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
@@ -330,7 +331,8 @@ public class CheckExistingIdentityHandler
 
     @SuppressWarnings({
         "java:S3776", // Cognitive Complexity of methods should not be too high
-        "java:S6541" // "Brain method" PYIC-6901 should refactor this method
+        "java:S6541", // "Brain method" PYIC-6901 should refactor this method
+        "java:S3776" // Method shouldn't have to many parameters
     })
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
@@ -339,7 +341,8 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             String userId,
             String govukSigninJourneyId,
-            AuditEventUser auditEventUser) {
+            AuditEventUser auditEventUser,
+            boolean isReproveIdentity) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
@@ -363,12 +366,9 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (Boolean.TRUE.equals(isReproveIdentity)
-                            && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
