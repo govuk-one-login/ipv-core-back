@@ -259,12 +259,9 @@ public class CheckExistingIdentityHandler
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var isReproveIdentity =
-                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
-
             var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
 
-            isReproveIdentity =
+            var isReproveIdentity =
                     AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
                             fetchedAisInterventionType);
 

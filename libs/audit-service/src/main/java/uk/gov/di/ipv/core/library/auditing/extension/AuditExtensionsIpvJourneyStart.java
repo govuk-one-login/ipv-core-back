@@ -9,10 +9,4 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 public record AuditExtensionsIpvJourneyStart(
         @JsonProperty("vtr") @JsonInclude(JsonInclude.Include.NON_NULL) List<String> vtr)
-        implements AuditExtensions {
-
-    public AuditExtensionsIpvJourneyStart(
-            @JsonProperty(value = "vtr", required = false) List<String> vtr) {
-        this.vtr = vtr;
-    }
-}
+        implements AuditExtensions {}
