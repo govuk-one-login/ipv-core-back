@@ -33,7 +33,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,7 +101,6 @@ class AppConfigServiceTest {
         // Assert
         assertEquals("https://identity.local.account.gov.uk", param);
     }
-
 
     @Test
     void getParameterThrowsForMissingValue() {

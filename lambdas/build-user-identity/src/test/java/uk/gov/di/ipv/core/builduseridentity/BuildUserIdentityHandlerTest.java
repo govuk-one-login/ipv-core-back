@@ -23,13 +23,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.config.domain.Config;
-import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.domain.ReturnCode;
-import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.domain.*;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
@@ -78,9 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -487,8 +479,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(CONTRA_INDICATORS);
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId()))
-                .thenReturn(true);
+        when(mockConfigService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
         APIGatewayProxyResponseEvent response =

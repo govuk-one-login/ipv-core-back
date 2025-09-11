@@ -65,7 +65,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -290,8 +289,7 @@ class ProcessJourneyEventHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aCriId"))
-                .thenReturn(true);
+        when(mockConfigService.isCredentialIssuerEnabled("aCriId")).thenReturn(true);
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
 

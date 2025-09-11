@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
@@ -137,7 +136,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             vcs, userId, achievedVot, thresholdVot, contraIndicators);
             userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
-            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
+            if (configService.isCredentialIssuerEnabled(TICF.getId())
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
                 userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
             }
