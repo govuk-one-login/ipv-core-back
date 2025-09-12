@@ -13,13 +13,12 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -152,15 +151,6 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getMaxAllowedAuthClientTtl();
     }
 
-    public List<String> getHistoricSigningKeys(String criId) {
-        return Arrays.asList(
-                getConfiguration()
-                        .getCredentialIssuers()
-                        .getById(criId)
-                        .getAllowedSharedAttributes()
-                        .split("/"));
-    }
-
     public List<String> getStringListParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
@@ -219,20 +209,8 @@ public abstract class ConfigService {
         }
     }
 
-    public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        var params = getParametersByPrefix(ConfigurationVariable.CIMIT_CONFIG.getPath());
-        var parsedData = new HashMap<String, List<MitigationRoute>>();
-        for (var entry : params.entrySet()) {
-            try {
-                var list =
-                        OBJECT_MAPPER.readValue(
-                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
-                parsedData.put(entry.getKey(), list);
-            } catch (JsonProcessingException e) {
-                throw new ConfigException("Failed to parse route for cimit: " + e);
-            }
-        }
-        return parsedData;
+    public Map<String, List<CiRoutingConfig>> getCimitConfig() {
+        return getConfiguration().getCimit().getConfig();
     }
 
     public boolean enabled(FeatureFlag flag) {

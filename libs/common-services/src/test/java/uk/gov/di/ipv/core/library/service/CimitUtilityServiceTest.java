@@ -11,11 +11,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.config.domain.VotCiThresholdsConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
@@ -312,11 +312,10 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigated()
-            throws Exception {
+    void getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigated() {
         // arrange
         var code = "ci_code";
-        var journey = "some_mitigation";
+        var journey = "some_mitigation"; // expected last path segment
         String document = "doc_type/213123";
         String documentType = "doc_type";
         var ci = createCi(code);
@@ -324,7 +323,14 @@ class CimitUtilityServiceTest {
         var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+                .thenReturn(
+                        Map.of(
+                                code,
+                                List.of(
+                                        CiRoutingConfig.builder()
+                                                .event("/journey/" + journey)
+                                                .document(documentType)
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -339,8 +345,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigatedWithNoDocInCi()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigatedWithNoDocInCi() {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -348,7 +353,14 @@ class CimitUtilityServiceTest {
         var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, null))));
+                .thenReturn(
+                        Map.of(
+                                code,
+                                List.of(
+                                        CiRoutingConfig.builder()
+                                                .event("/journey/" + journey)
+                                                .build()
+                                        )));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -363,8 +375,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured() {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -379,8 +390,10 @@ class CimitUtilityServiceTest {
                         Map.of(
                                 code,
                                 List.of(
-                                        new MitigationRoute(
-                                                journey, configuredDocumentIdentifier))));
+                                        CiRoutingConfig.builder()
+                                                .event("/journey/" + journey)
+                                                .document(configuredDocumentIdentifier)
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -418,8 +431,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenNotBreachingAndCiIsAlreadyMitigated()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenNotBreachingAndCiIsAlreadyMitigated() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -427,7 +439,13 @@ class CimitUtilityServiceTest {
         var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute("some-event", null))));
+                .thenReturn(
+                        Map.of(
+                                code,
+                                List.of(
+                                        CiRoutingConfig.builder()
+                                                .event("/journey/some-event")
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -442,15 +460,20 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenMitigationDoesNotResolveBreach()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenMitigationDoesNotResolveBreach() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
         var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
+                .thenReturn(
+                        Map.of(
+                                code,
+                                List.of(
+                                        CiRoutingConfig.builder()
+                                                .event("/journey/journey")
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -1, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -464,8 +487,7 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getCiMitigationEvent_ShouldReturnEmpty_WhenCiMitigationConfigNotFoundForDocType()
-            throws Exception {
+    void getCiMitigationEvent_ShouldReturnEmpty_WhenCiMitigationConfigNotFoundForDocType() {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -473,7 +495,16 @@ class CimitUtilityServiceTest {
         var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, "documentType"))));
+                .thenReturn(
+                        Map.of(
+                                code,
+                                List.of(
+                                        CiRoutingConfig.builder()
+                                                .event(
+                                                        "/journey/"
+                                                                + journey)
+                                                .document("documentType")
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -488,8 +519,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator() {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -502,8 +532,9 @@ class CimitUtilityServiceTest {
         ci.setMitigation(List.of(new Mitigation()));
         var cis = List.of(ci, mitCi);
 
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+        var route = CiRoutingConfig.builder().event(journey).document(documentType).build();
+
+        when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, List.of(route)));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
                         code,
