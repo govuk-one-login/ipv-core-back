@@ -461,6 +461,7 @@ const setupHeaderToggleClickHandlers = (): void => {
 
 const toDateTimeLocalString = (date: Date): string => {
   const pad = (n: number): string => n.toString().padStart(2, "0");
+  // Converts date to YYYY-MM-DDT00:00 format
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
