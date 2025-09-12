@@ -64,6 +64,12 @@ const form = document.getElementById("configuration-form") as HTMLFormElement;
 const disabledInput = document.getElementById(
   "disabledInput",
 ) as HTMLFieldSetElement;
+const transitionsFromInput = document.getElementById(
+  "transitionsFromInput",
+) as HTMLInputElement;
+const transitionsToInput = document.getElementById(
+  "transitionsToInput",
+) as HTMLInputElement;
 const featureFlagInput = document.getElementById(
   "featureFlagInput",
 ) as HTMLFieldSetElement;
@@ -453,6 +459,36 @@ const setupHeaderToggleClickHandlers = (): void => {
   });
 };
 
+const toDateTimeLocalString = (date: Date): string => {
+  const pad = (n: number): string => n.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const setupJourneyTransitionInput = (): void => {
+  const now = toDateTimeLocalString(new Date());
+  const nowMinus30Min = toDateTimeLocalString(
+    new Date(Date.now() - 30 * 60 * 1000),
+  );
+  transitionsToInput.value = now;
+  transitionsFromInput.value = nowMinus30Min;
+  transitionsToInput.min = nowMinus30Min;
+  transitionsFromInput.max = now;
+
+  transitionsFromInput.addEventListener("change", () => {
+    if (transitionsFromInput.value > transitionsToInput.value) {
+      transitionsToInput.value = transitionsFromInput.value;
+    }
+    transitionsToInput.min = transitionsFromInput.value;
+  });
+
+  transitionsToInput.addEventListener("change", () => {
+    if (transitionsToInput.value < transitionsFromInput.value) {
+      transitionsFromInput.value = transitionsToInput.value;
+    }
+    transitionsFromInput.max = transitionsToInput.value;
+  });
+};
+
 const initialize = async (): Promise<void> => {
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
@@ -460,6 +496,8 @@ const initialize = async (): Promise<void> => {
     NESTED_JOURNEY_TYPES,
     "nested-journeys",
   );
+
+  setupJourneyTransitionInput();
 
   const systemSettings = await getSystemSettings();
   const disabledCris =
