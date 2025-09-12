@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -1091,7 +1090,6 @@ class ProcessJourneyEventHandlerTest {
     private static Stream<Arguments> getMitigationEventIfBreachingOrActiveErrors() {
         return Stream.of(
                 Arguments.of(new CredentialParseException("Unable to parse credentials")),
-                Arguments.of(new ConfigException("Unable to get config")),
                 Arguments.of(new CiExtractionException("Unable to extract CIs from VC")));
     }
 

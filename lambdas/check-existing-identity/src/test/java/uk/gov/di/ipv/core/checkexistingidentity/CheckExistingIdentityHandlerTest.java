@@ -1211,28 +1211,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
-        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenThrow(new ConfigException("Failed to get cimit config"));
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(configService.enabled(AIS_ENABLED)).thenReturn(false);
         when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);

@@ -46,9 +46,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -110,14 +108,6 @@ class AppConfigServiceTest {
     }
 
     // Get specific parameters
-
-    @Test
-    void shouldReturnSlashSeparatedHistoricSigningKeys() {
-        var result = configService.getHistoricSigningKeys(ADDRESS.getId());
-
-        assertEquals(TEST_EC_PUBLIC_JWK, result.get(0));
-        assertEquals(EC_PUBLIC_JWK_2, result.get(1));
-    }
 
     @Test
     void shouldGetLongValueFromConfigIfSet() {
@@ -309,15 +299,14 @@ class AppConfigServiceTest {
     // CIMIT config
 
     @Test
-    void shouldFetchCimitConfig() throws ConfigException {
+    void shouldFetchCimitConfig() {
         // Act
         var cimitConfig = configService.getCimitConfig();
 
         // Assert
-        assertEquals(
-                "/journey/alternate-doc-invalid-dl",
-                cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0).event());
-        assertEquals("drivingPermit", cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0).document());
+        var route = cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0);
+        assertEquals("/journey/alternate-doc-invalid-dl", route.getEvent());
+        assertEquals("drivingPermit", route.getDocument());
     }
 
     @Test
