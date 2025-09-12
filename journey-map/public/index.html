@@ -34,13 +34,8 @@
         </div>
       </div>
       <div id="header-content">
-        <form id="configuration-form">
-          <h2>Options</h2>
-          <div id="checkbox-controls">
-            <fieldset id="disabledInput">
-              <legend>Turn off a CRI</legend>
-              <p>See what happens when you turn off a service.</p>
-            </fieldset>
+        <form id="transitions-form">
+            <h2>Transitions Api</h2>
             <fieldset id="journeyTransitionsInput">
               <legend>Customise api</legend>
               <p>Customise api calls</p>
@@ -52,6 +47,18 @@
               <label>
                 <input id="transitionsToInput" type="datetime-local"/>
               </label>
+                <span>Journey Id</span>
+                <label>
+                    <input placeholder="Leave blank to fetch all journeys" type="text"/>
+                </label>
+            </fieldset>
+        </form>
+        <form id="configuration-form">
+          <h2>Options</h2>
+          <div id="checkbox-controls">
+            <fieldset id="disabledInput">
+              <legend>Turn off a CRI</legend>
+              <p>See what happens when you turn off a service.</p>
             </fieldset>
             <fieldset id="featureFlagInput">
               <legend>Turn on a feature flag</legend>

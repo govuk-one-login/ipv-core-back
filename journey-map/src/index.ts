@@ -60,16 +60,19 @@ const headerContent = document.getElementById(
 const headerToggle = document.getElementById(
   "header-toggle",
 ) as HTMLButtonElement;
-const form = document.getElementById("configuration-form") as HTMLFormElement;
-const disabledInput = document.getElementById(
-  "disabledInput",
-) as HTMLFieldSetElement;
+const transitionsForm = document.getElementById(
+  "transitions-form",
+) as HTMLFormElement;
 const transitionsFromInput = document.getElementById(
   "transitionsFromInput",
 ) as HTMLInputElement;
 const transitionsToInput = document.getElementById(
   "transitionsToInput",
 ) as HTMLInputElement;
+const form = document.getElementById("configuration-form") as HTMLFormElement;
+const disabledInput = document.getElementById(
+  "disabledInput",
+) as HTMLFieldSetElement;
 const featureFlagInput = document.getElementById(
   "featureFlagInput",
 ) as HTMLFieldSetElement;
@@ -488,17 +491,20 @@ const setupJourneyTransitionInput = (): void => {
     }
     transitionsFromInput.max = transitionsToInput.value;
   });
+
+  transitionsForm.addEventListener("change", () => {
+    // continue here
+  });
 };
 
 const initialize = async (): Promise<void> => {
+  setupJourneyTransitionInput();
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
   nestedJourneys = await loadJourneyMaps(
     NESTED_JOURNEY_TYPES,
     "nested-journeys",
   );
-
-  setupJourneyTransitionInput();
 
   const systemSettings = await getSystemSettings();
   const disabledCris =
