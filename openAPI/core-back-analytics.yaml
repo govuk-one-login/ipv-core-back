@@ -50,6 +50,12 @@ paths:
           schema:
             type: string
           description: "Session ID to filter journey transitions"
+        - name: journeyId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Govuk Journey ID to filter journey transitions"
       responses:
         200:
           description: "State journey transitions"
