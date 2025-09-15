@@ -12,8 +12,10 @@ import {
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
 import {
   getSystemSettings,
+  parseApiSettings,
   parseOptions,
   RenderOptions,
+  TransitionsApiSettings,
 } from "./helpers/options.js";
 import { getJourneyContexts } from "./helpers/journey-context.js";
 
@@ -277,6 +279,8 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 
 const updateView = async (): Promise<void> => {
   const options = parseOptions(new FormData(form));
+  const apiSettings = parseApiSettings(new FormData(form));
+  console.log(apiSettings);
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
   );
@@ -300,7 +304,7 @@ const updateView = async (): Promise<void> => {
     journeyContextsList.innerText = "";
   }
 
-  await renderSvg(selectedJourney, selectedNestedJourney, options);
+  await renderSvg(selectedJourney, selectedNestedJourney, options, apiSettings);
 };
 
 // Render the journey map SVG
@@ -308,12 +312,14 @@ const renderSvg = async (
   selectedJourney: string,
   selectedNestedJourney: string | null,
   options: RenderOptions,
+  apiSettings: TransitionsApiSettings,
 ): Promise<void> => {
   const diagram = await render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
     options,
+    apiSettings,
     journeyMaps,
   );
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);

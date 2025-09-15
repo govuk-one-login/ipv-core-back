@@ -2,7 +2,7 @@ import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import { resolveVisibleEventTargets } from "./helpers/event-resolver.js";
 import { expandNestedJourneys } from "./helpers/expand-nested.js";
 import { expandParents } from "./helpers/expand-parents.js";
-import { RenderOptions } from "./helpers/options.js";
+import { RenderOptions, TransitionsApiSettings } from "./helpers/options.js";
 import { findOrphanStates } from "./helpers/orphans.js";
 import { JourneyMap, JourneyState, NestedJourneyMap } from "./types.js";
 import { deepCloneJson } from "./helpers/deep-clone.js";
@@ -50,6 +50,8 @@ const getJourneyTransitions = async (
     body: JSON.stringify(body),
   });
 
+  console.log(response);
+
   if (!response.ok) {
     console.warn(
       `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
@@ -74,6 +76,7 @@ const addSystemTimeZone = (dateTimeStr: string): string => {
 const getVisibleEdgesAndNodes = async (
   journeyStates: Record<string, JourneyState>,
   options: RenderOptions,
+  apiSettings: TransitionsApiSettings,
   journeyMapName: string,
   journeyMaps: Record<string, JourneyMap>,
 ): Promise<RenderableMap> => {
@@ -86,14 +89,15 @@ const getVisibleEdgesAndNodes = async (
   const transitions: TransitionEdge[] = [];
 
   const body: JourneyTransitionRequestBody = {
-    fromDate: addSystemTimeZone(options.fromDate),
-    toDate: addSystemTimeZone(options.toDate),
+    fromDate: addSystemTimeZone(apiSettings.body.fromDate),
+    toDate: addSystemTimeZone(apiSettings.body.toDate),
   };
 
   console.log(body);
 
-  const journeyTransitions: JourneyTransition[] =
-    await getJourneyTransitions(body);
+  const journeyTransitions: JourneyTransition[] = apiSettings.isEnabled
+    ? await getJourneyTransitions(body)
+    : [];
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -233,6 +237,7 @@ export const render = async (
   journeyMap: JourneyMap,
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
+  apiSettings: TransitionsApiSettings,
   journeyMaps: Record<string, JourneyMap>,
 ): Promise<string> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
@@ -259,6 +264,7 @@ export const render = async (
     : await getVisibleEdgesAndNodes(
         journeyStates,
         options,
+        apiSettings,
         selectedJourney,
         journeyMaps,
       );

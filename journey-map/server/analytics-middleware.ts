@@ -16,9 +16,9 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
   try {
     const now = Date.now();
     if (cache && cache.expiresAt > now) {
-      res.json(cache.data);
-      next();
-      return;
+      // res.json(cache.data);
+      // next();
+      // return;
     }
 
     const { fromDate, toDate } = req.body;

@@ -8,13 +8,21 @@ export interface RenderOptions extends AvailableOptions {
   includeFailures: boolean;
   expandNestedJourneys: boolean;
   onlyOrphanStates: boolean;
-  fromDate: string;
-  toDate: string;
 }
 
 export interface SystemSettings {
   featureFlagStatuses: Record<string, boolean>;
   criStatuses: Record<string, boolean>;
+}
+
+export interface TransitionsApiRequestBody {
+  fromDate: string;
+  toDate: string;
+}
+
+export interface TransitionsApiSettings {
+  isEnabled: boolean;
+  body: TransitionsApiRequestBody;
 }
 
 export const getSystemSettings = async (): Promise<
@@ -39,6 +47,16 @@ export const parseOptions = (formData: FormData): RenderOptions => ({
     .getAll("otherOption")
     .includes("expandNestedJourneys"),
   onlyOrphanStates: formData.getAll("otherOption").includes("onlyOrphanStates"),
-  fromDate: formData.get("fromDate") as string,
-  toDate: formData.get("toDate") as string,
 });
+
+export const parseApiSettings = (
+  formData: FormData,
+): TransitionsApiSettings => {
+  return {
+    isEnabled: formData.getAll("isEnabled").includes("enableTraffic"),
+    body: {
+      fromDate: formData.get("fromDate") as string,
+      toDate: formData.get("toDate") as string,
+    },
+  };
+};
