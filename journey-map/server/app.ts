@@ -17,7 +17,10 @@ app.get("/healthcheck", (req, res) => {
 if (!isDevelopment) {
   app.use(authorise);
 }
-app.get("/journey-transitions", fetchJourneyTransitionsHandler);
+
+app.use(express.json());
+
+app.post("/journey-transitions", fetchJourneyTransitionsHandler);
 app.get("/system-settings", fetchSystemSettingsHandler);
 
 app.use(express.static("public"));

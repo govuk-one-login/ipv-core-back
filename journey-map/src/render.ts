@@ -28,6 +28,11 @@ interface RenderableMap {
   states: StateNode[];
 }
 
+interface JourneyTransitionRequestBody {
+  fromDate: string;
+  toDate: string;
+}
+
 interface JourneyTransition {
   fromJourney: string;
   from: string;
@@ -36,8 +41,15 @@ interface JourneyTransition {
   count: number;
 }
 
-const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
-  const response = await fetch("/journey-transitions");
+const getJourneyTransitions = async (
+  body: JourneyTransitionRequestBody,
+): Promise<JourneyTransition[]> => {
+  const response = await fetch("/journey-transitions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
   if (!response.ok) {
     console.warn(
       `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
@@ -45,6 +57,16 @@ const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
     return [];
   }
   return response.json();
+};
+
+const addSystemTimeZone = (dateTimeStr: string): string => {
+  const date = new Date(dateTimeStr);
+  const offset = date.getTimezoneOffset();
+  const sign = offset > 0 ? "-" : "+";
+  const absOffset = Math.abs(offset);
+  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
+  const offsetMinutes = String(absOffset % 60).padStart(2, "0");
+  return `${dateTimeStr}${sign}${offsetHours}:${offsetMinutes}`;
 };
 
 // Trace transitions (edges) and states (nodes) traced from the initial states
@@ -63,7 +85,15 @@ const getVisibleEdgesAndNodes = async (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
-  const journeyTransitions: JourneyTransition[] = await getJourneyTransitions();
+  const body: JourneyTransitionRequestBody = {
+    fromDate: addSystemTimeZone(options.fromDate),
+    toDate: addSystemTimeZone(options.toDate),
+  };
+
+  console.log(body);
+
+  const journeyTransitions: JourneyTransition[] =
+    await getJourneyTransitions(body);
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};

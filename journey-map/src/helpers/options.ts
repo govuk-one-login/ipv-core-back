@@ -8,6 +8,8 @@ export interface RenderOptions extends AvailableOptions {
   includeFailures: boolean;
   expandNestedJourneys: boolean;
   onlyOrphanStates: boolean;
+  fromDate: string;
+  toDate: string;
 }
 
 export interface SystemSettings {
@@ -37,4 +39,6 @@ export const parseOptions = (formData: FormData): RenderOptions => ({
     .getAll("otherOption")
     .includes("expandNestedJourneys"),
   onlyOrphanStates: formData.getAll("otherOption").includes("onlyOrphanStates"),
+  fromDate: formData.get("fromDate") as string,
+  toDate: formData.get("toDate") as string,
 });

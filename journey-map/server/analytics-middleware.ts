@@ -21,8 +21,10 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       return;
     }
 
+    const { fromDate, toDate } = req.body;
     const query = new URLSearchParams({
-      minutes: "30",
+      fromDate: fromDate,
+      toDate: toDate,
       limit: "200",
     });
 
