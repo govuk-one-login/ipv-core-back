@@ -18,8 +18,8 @@ export interface SystemSettings {
 export interface TransitionsApiRequestBody {
   fromDate: string;
   toDate: string;
-  ipvSessionId: string;
-  govukJourneyId: string;
+  ipvSessionId?: string;
+  govukJourneyId?: string;
 }
 
 export interface TransitionsApiSettings {
@@ -74,8 +74,12 @@ export const parseApiSettings = (
     body: {
       fromDate: addSystemTimeZone(formData.get("fromDate") as string),
       toDate: addSystemTimeZone(formData.get("toDate") as string),
-      ipvSessionId: selection === "session" ? typedInput : "",
-      govukJourneyId: selection === "journey" ? typedInput : "",
+      ...(selection === "session" && typedInput
+        ? { ipvSessionId: typedInput }
+        : {}),
+      ...(selection === "journey" && typedInput
+        ? { govukJourneyId: typedInput }
+        : {}),
     },
   };
 };
