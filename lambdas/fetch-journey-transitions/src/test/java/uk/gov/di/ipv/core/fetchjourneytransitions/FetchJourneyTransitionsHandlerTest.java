@@ -48,7 +48,12 @@ class FetchJourneyTransitionHandlerTest {
         // Arrange
         APIGatewayProxyRequestEvent request =
                 new APIGatewayProxyRequestEvent()
-                        .withQueryStringParameters(Map.of("minutes", "30"));
+                        .withQueryStringParameters(
+                                Map.of(
+                                        "fromDate",
+                                        "2025-09-15T12:45",
+                                        "toDate",
+                                        "2025-09-15T13:15"));
 
         when(mockLogsClient.startQuery(any()))
                 .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
@@ -82,7 +87,11 @@ class FetchJourneyTransitionHandlerTest {
         // Arrange
         APIGatewayProxyRequestEvent request =
                 new APIGatewayProxyRequestEvent()
-                        .withQueryStringParameters(Map.of("minutes", "30", "limit", "2"));
+                        .withQueryStringParameters(
+                                Map.of(
+                                        "fromDate", "2025-09-15T12:45",
+                                        "toDate", "2025-09-15T13:15",
+                                        "limit", "2"));
 
         when(mockLogsClient.startQuery(any()))
                 .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
@@ -104,7 +113,11 @@ class FetchJourneyTransitionHandlerTest {
         // Arrange
         APIGatewayProxyRequestEvent request =
                 new APIGatewayProxyRequestEvent()
-                        .withQueryStringParameters(Map.of("minutes", "30", "limit", "2"));
+                        .withQueryStringParameters(
+                                Map.of(
+                                        "fromDate", "2025-09-15T12:45",
+                                        "toDate", "2025-09-15T13:15",
+                                        "limit", "2"));
 
         when(mockLogsClient.startQuery(any()))
                 .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));

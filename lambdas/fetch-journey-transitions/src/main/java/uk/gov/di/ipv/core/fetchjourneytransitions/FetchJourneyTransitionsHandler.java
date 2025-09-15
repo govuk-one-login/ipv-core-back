@@ -18,7 +18,9 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -58,8 +60,6 @@ public class FetchJourneyTransitionsHandler
             APIGatewayProxyRequestEvent event, Context context) {
         try {
             Request input = parseRequest(event);
-            long now = Instant.now().getEpochSecond();
-            long startTime = now - input.minutes() * 60L;
 
             if (input.ipvSessionId() != null && !isValidIpvSessionId(input.ipvSessionId())) {
                 throw new IllegalArgumentException("Invalid ipvSessionId format");
@@ -68,7 +68,11 @@ public class FetchJourneyTransitionsHandler
             String query = buildQuery(input);
             LOGGER.info("Executing CloudWatch Logs query: {}", query);
 
-            List<TransitionCount> results = executeCloudWatchQuery(query, startTime, now);
+            List<TransitionCount> results =
+                    executeCloudWatchQuery(
+                            query,
+                            input.fromDate().getEpochSecond(),
+                            input.toDate().getEpochSecond());
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
@@ -89,12 +93,23 @@ public class FetchJourneyTransitionsHandler
     }
 
     private Request parseRequest(APIGatewayProxyRequestEvent event) {
-        Map<String, String> q =
+        Map<String, String> eventQueryParameters =
                 Optional.ofNullable(event.getQueryStringParameters()).orElse(Map.of());
-        int minutes = parseIntOrDefault(q.get("minutes"), 60);
-        int limit = parseIntOrDefault(q.get("limit"), 100);
-        String ipvSessionId = q.get("ipvSessionId");
-        return new Request(minutes, limit, ipvSessionId);
+        var fromDate =
+                LocalDateTime.parse(
+                                eventQueryParameters.get("fromDate"),
+                                DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant();
+        var toDate =
+                LocalDateTime.parse(
+                                eventQueryParameters.get("toDate"),
+                                DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant();
+        int limit = parseIntOrDefault(eventQueryParameters.get("limit"), 100);
+        String ipvSessionId = eventQueryParameters.get("ipvSessionId");
+        return new Request(fromDate, toDate, limit, ipvSessionId);
     }
 
     private int parseIntOrDefault(String value, int defaultVal) {
