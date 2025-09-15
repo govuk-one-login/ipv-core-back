@@ -18,9 +18,7 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -67,6 +65,7 @@ public class FetchJourneyTransitionsHandler
 
             String query = buildQuery(input);
             LOGGER.info("Executing CloudWatch Logs query: {}", query);
+            LOGGER.info("Input: {}", input);
 
             List<TransitionCount> results =
                     executeCloudWatchQuery(
@@ -95,18 +94,8 @@ public class FetchJourneyTransitionsHandler
     private Request parseRequest(APIGatewayProxyRequestEvent event) {
         Map<String, String> eventQueryParameters =
                 Optional.ofNullable(event.getQueryStringParameters()).orElse(Map.of());
-        var fromDate =
-                LocalDateTime.parse(
-                                eventQueryParameters.get("fromDate"),
-                                DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant();
-        var toDate =
-                LocalDateTime.parse(
-                                eventQueryParameters.get("toDate"),
-                                DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant();
+        var fromDate = OffsetDateTime.parse(eventQueryParameters.get("fromDate")).toInstant();
+        var toDate = OffsetDateTime.parse(eventQueryParameters.get("toDate")).toInstant();
         int limit = parseIntOrDefault(eventQueryParameters.get("limit"), 100);
         String ipvSessionId = eventQueryParameters.get("ipvSessionId");
         return new Request(fromDate, toDate, limit, ipvSessionId);

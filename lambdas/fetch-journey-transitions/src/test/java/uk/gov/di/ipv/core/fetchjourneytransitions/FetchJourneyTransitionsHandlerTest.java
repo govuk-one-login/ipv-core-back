@@ -50,10 +50,8 @@ class FetchJourneyTransitionHandlerTest {
                 new APIGatewayProxyRequestEvent()
                         .withQueryStringParameters(
                                 Map.of(
-                                        "fromDate",
-                                        "2025-09-15T12:45",
-                                        "toDate",
-                                        "2025-09-15T13:15"));
+                                        "fromDate", "2025-09-15T12:45+01:00",
+                                        "toDate", "2025-09-15T13:15+01:00"));
 
         when(mockLogsClient.startQuery(any()))
                 .thenReturn(new StartQueryResult().withQueryId(TEST_QUERY_ID));
@@ -89,8 +87,8 @@ class FetchJourneyTransitionHandlerTest {
                 new APIGatewayProxyRequestEvent()
                         .withQueryStringParameters(
                                 Map.of(
-                                        "fromDate", "2025-09-15T12:45",
-                                        "toDate", "2025-09-15T13:15",
+                                        "fromDate", "2025-09-15T12:45+01:00",
+                                        "toDate", "2025-09-15T13:15+01:00",
                                         "limit", "2"));
 
         when(mockLogsClient.startQuery(any()))
@@ -115,8 +113,8 @@ class FetchJourneyTransitionHandlerTest {
                 new APIGatewayProxyRequestEvent()
                         .withQueryStringParameters(
                                 Map.of(
-                                        "fromDate", "2025-09-15T12:45",
-                                        "toDate", "2025-09-15T13:15",
+                                        "fromDate", "2025-09-15T12:45+01:00",
+                                        "toDate", "2025-09-15T13:15+01:00",
                                         "limit", "2"));
 
         when(mockLogsClient.startQuery(any()))
