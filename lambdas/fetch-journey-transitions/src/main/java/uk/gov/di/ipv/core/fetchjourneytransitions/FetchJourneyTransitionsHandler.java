@@ -115,10 +115,17 @@ public class FetchJourneyTransitionsHandler
     }
 
     private String buildQuery(Request input) {
-        String filter =
-                input.ipvSessionId() != null
-                        ? String.format("| filter ipvSessionId = '%s'%n", input.ipvSessionId())
-                        : "";
+        var ipvSessionIdQuery = "| filter ipvSessionId = '%s'%n";
+        var govukJourneyIdQuery = "| filter govuk_signin_journey_id = '%s'%n";
+
+        var filter =
+                Optional.ofNullable(input.ipvSessionId())
+                        .map(id -> String.format(ipvSessionIdQuery, id))
+                        .or(
+                                () ->
+                                        Optional.ofNullable(input.govukJourneyId())
+                                                .map(id -> String.format(govukJourneyIdQuery, id)))
+                        .orElse("");
 
         return String.format(
                 """
