@@ -151,9 +151,10 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getMaxAllowedAuthClientTtl();
     }
 
-    public List<String> getStringListParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
+    public List<String> getClientValidRedirectUrls(String clientId) {
+        var clientConfigValidRedirectUrs =
+                getConfiguration().getClientConfig(clientId).getValidRedirectUrls();
+        return Arrays.asList(clientConfigValidRedirectUrs.split("\\s*,\\s*"));
     }
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {

@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -291,9 +290,7 @@ public class JarValidator {
             throws JarValidationException {
         try {
             URI redirectUri = claimsSet.getURIClaim(REDIRECT_URI_CLAIM);
-            List<String> allowedRedirectUris =
-                    configService.getStringListParameter(
-                            ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
+            List<String> allowedRedirectUris = configService.getClientValidRedirectUrls(clientId);
 
             if (redirectUri == null || !allowedRedirectUris.contains(redirectUri.toString())) {
                 LOGGER.error(

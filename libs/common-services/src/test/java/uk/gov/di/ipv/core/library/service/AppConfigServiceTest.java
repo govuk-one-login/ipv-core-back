@@ -121,14 +121,10 @@ class AppConfigServiceTest {
     @Test
     void shouldGetStringListValueFromConfigIfSet() {
         // Act
-        var value =
-                configService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "orchStub");
+        var value = configService.getClientValidRedirectUrls("orchStub");
         // Assert
         assertEquals(List.of("http://localhost:4500/callback"), value);
     }
-
-    // Updated config
 
     @Test
     void getParameterReturnsUpdatedParameters() {
