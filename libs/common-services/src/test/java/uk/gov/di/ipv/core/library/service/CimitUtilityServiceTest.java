@@ -359,8 +359,7 @@ class CimitUtilityServiceTest {
                                 List.of(
                                         CiRoutingConfig.builder()
                                                 .event("/journey/" + journey)
-                                                .build()
-                                        )));
+                                                .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
@@ -500,9 +499,7 @@ class CimitUtilityServiceTest {
                                 code,
                                 List.of(
                                         CiRoutingConfig.builder()
-                                                .event(
-                                                        "/journey/"
-                                                                + journey)
+                                                .event("/journey/" + journey)
                                                 .document("documentType")
                                                 .build())));
         Map<String, ContraIndicatorConfig> ciConfigMap =

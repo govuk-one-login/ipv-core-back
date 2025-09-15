@@ -226,25 +226,19 @@ public abstract class ConfigService {
     public Map<String, Cri> getIssuerCris() {
         var issuerToCri = new HashMap<String, Cri>();
         for (var cri : Cri.values()) {
-            if (cri.getId().equals(Cri.CIMIT.getId())) {
-                continue;
-            }
-
-            var connectionsPath =
-                    String.format(
-                            ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
-                            cri.getId());
-
-            try {
-                var connections =
-                        getParametersByPrefix(connectionsPath).entrySet().stream()
-                                .filter(entry -> entry.getKey().endsWith("/componentId"))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                connections.values().forEach(value -> issuerToCri.put(value, cri));
-            } catch (ConfigParameterNotFoundException e) {
+            if (cri.getId().equals(Cri.CIMIT.getId())) continue;
+            var wrapper = getConfiguration().getCredentialIssuers().getById(cri.getId());
+            var connections = (wrapper != null) ? wrapper.getConnections() : null;
+            if (connections == null || connections.isEmpty()) {
                 LOGGER.warn(
                         LogHelper.buildLogMessage(
-                                String.format("Issuer for CRI: %s not configured", cri.getId())));
+                                "Issuer for CRI: %s not configured".formatted(cri.getId())));
+                continue;
+            }
+            for (var conn : connections.values()) {
+                var componentId = conn.getComponentId();
+                if (componentId != null && !componentId.isBlank())
+                    issuerToCri.put(componentId, cri);
             }
         }
         return issuerToCri;
