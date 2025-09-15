@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
@@ -99,21 +98,6 @@ public abstract class ConfigService {
         return parameters.get(path);
     }
 
-    public Map<String, String> getParametersByPrefix(String path) {
-        var lookupParams =
-                parameters.entrySet().stream()
-                        .filter(e -> e.getKey().startsWith(path))
-                        .collect(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().substring(path.length() + 1),
-                                        Map.Entry::getValue));
-
-        if (lookupParams.isEmpty()) {
-            throw new ConfigParameterNotFoundException(path);
-        }
-        return lookupParams;
-    }
-
     public boolean isCredentialIssuerEnabled(String criId) {
         if (criId == null) return false;
 
@@ -141,6 +125,37 @@ public abstract class ConfigService {
 
     public long getJwtTtlSeconds() {
         return getConfiguration().getSelf().getJwtTtlSeconds();
+    }
+
+    public String getComponentId() {
+        return getConfiguration().getSelf().getComponentId().toString();
+    }
+
+    public String getSisComponentId() {
+        return getConfiguration().getStoredIdentityService().getComponentId().toString();
+    }
+
+    public String getCimitComponentId() {
+        return getConfiguration().getCimit().getComponentId().toString();
+    }
+
+    public String getAllowedSharedAttributes(Cri cri) {
+        return getConfiguration()
+                .getCredentialIssuers()
+                .getById(cri.getId())
+                .getAllowedSharedAttributes();
+    }
+
+    public String getValidScopes(String clientId) {
+        return getConfiguration().getClientConfig(clientId).getValidScopes();
+    }
+
+    public String getIssuer(String clientId) {
+        return getConfiguration().getClientConfig(clientId).getIssuer();
+    }
+
+    public Integer getFraudCheckExpiryPeriodHours() {
+        return getConfiguration().getSelf().getFraudCheckExpiryPeriodHours();
     }
 
     public long getAuthCodeExpirySeconds() {

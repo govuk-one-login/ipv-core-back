@@ -145,7 +145,7 @@ public class DcmawAsyncCriService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_APP_HANDOFF_START,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         deviceInformation));
     }

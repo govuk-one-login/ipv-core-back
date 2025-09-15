@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -337,7 +336,7 @@ class AuthorizationRequestHelperTest {
 
     private void setupConfigurationServiceMock() {
         when(configService.getJwtTtlSeconds()).thenReturn(IPV_TOKEN_TTL);
-        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     private PrivateKey getEncryptionPrivateKey()

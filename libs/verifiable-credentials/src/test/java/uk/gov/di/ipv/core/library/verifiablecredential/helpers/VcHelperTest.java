@@ -8,8 +8,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.domain.Config;
-import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -57,8 +55,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSucces
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
     @Mock private ConfigService configService;
-    @Mock private Config mockConfig;
-    @Mock private InternalOperationsConfig mockSelf;
 
     private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
@@ -180,34 +176,23 @@ class VcHelperTest {
     @Test
     void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelf);
-        // Arrange
-        VerifiableCredential vc = vcExperianFraudExpired();
-        when(mockSelf.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
-        // Act
-        boolean result = VcHelper.isExpiredFraudVc(vc);
+        // Only this stub is needed
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
-        // Assert
-        assertTrue(result);
+        var vc = vcExperianFraudExpired();
+
+        assertTrue(VcHelper.isExpiredFraudVc(vc));
     }
 
     @Test
     void shouldReturnFalseWhenVcIsNotExpired() {
         VcHelper.setConfigService(configService);
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
-        // Arrange
-        VerifiableCredential vc = vcExperianFraudNotExpired();
-        when(mockSelf.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+        var vc = vcExperianFraudNotExpired();
 
-        // Act
-        boolean result = VcHelper.isExpiredFraudVc(vc);
-
-        // Assert
-        assertFalse(result);
+        assertFalse(VcHelper.isExpiredFraudVc(vc));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {

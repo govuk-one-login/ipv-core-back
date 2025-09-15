@@ -121,7 +121,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             var reverificationEndAuditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_REVERIFY_END,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             new AuditEventUser(
                                     userId,
                                     ipvSessionItem.getIpvSessionId(),

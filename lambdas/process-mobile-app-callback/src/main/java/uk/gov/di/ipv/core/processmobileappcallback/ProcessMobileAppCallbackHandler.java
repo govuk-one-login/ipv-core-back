@@ -200,7 +200,7 @@ public class ProcessMobileAppCallbackHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_APP_MISSING_CONTEXT,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             new AuditEventUser(
                                     userId,
                                     previousIpvSessionId,

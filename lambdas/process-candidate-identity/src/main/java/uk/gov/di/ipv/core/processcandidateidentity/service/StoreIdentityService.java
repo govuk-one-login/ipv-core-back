@@ -97,7 +97,7 @@ public class StoreIdentityService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventParameters.auditEventUser(),
                         new AuditExtensionCandidateIdentityType(
                                 identityType, isSiRecordCreated, vot),

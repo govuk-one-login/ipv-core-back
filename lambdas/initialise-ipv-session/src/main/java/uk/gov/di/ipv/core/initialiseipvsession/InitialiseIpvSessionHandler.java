@@ -190,7 +190,7 @@ public class InitialiseIpvSessionHandler
             AuditEvent auditEvent =
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_START,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             auditEventUser,
                             extensionsIpvJourneyStart,
                             restrictedDeviceInformation);
@@ -201,11 +201,7 @@ public class InitialiseIpvSessionHandler
                 AuditEvent reverificationAuditEvent =
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_REVERIFY_START,
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString(),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 restrictedDeviceInformation);
                 auditService.sendAuditEvent(reverificationAuditEvent);

@@ -725,7 +725,7 @@ public class ProcessCandidateIdentityHandler
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         sharedAuditEventParameters.auditEventUser(),
                         new AuditExtensionGpg45ProfileMatched(
                                 matchedProfile,

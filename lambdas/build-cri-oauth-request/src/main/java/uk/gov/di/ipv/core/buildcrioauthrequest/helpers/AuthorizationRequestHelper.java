@@ -63,12 +63,7 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(oauthCriConfig.getComponentId())
-                        .issuer(
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString())
+                        .issuer(configService.getComponentId())
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(now.plusSeconds(configService.getJwtTtlSeconds())))

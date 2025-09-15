@@ -113,9 +113,7 @@ public class LogHelper {
     }
 
     public static void attachComponentId(ConfigService configService) {
-        attachFieldToLogs(
-                LogField.LOG_COMPONENT_ID,
-                configService.getConfiguration().getSelf().getComponentId().toString());
+        attachFieldToLogs(LogField.LOG_COMPONENT_ID, configService.getComponentId());
     }
 
     public static void attachClientIdToLogs(String clientId) {

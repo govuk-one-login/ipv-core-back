@@ -81,7 +81,7 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsParameters() {
         // Act
-        var param = configService.getConfiguration().getSelf().getComponentId().toString();
+        var param = configService.getComponentId();
 
         // Assert
         assertEquals("https://identity.local.account.gov.uk", param);
@@ -93,7 +93,7 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("someOtherFeature"));
 
         // Act
-        var param = configService.getConfiguration().getSelf().getComponentId().toString();
+        var param = configService.getComponentId();
 
         // Assert
         assertEquals("https://identity.local.account.gov.uk", param);
@@ -129,7 +129,7 @@ class AppConfigServiceTest {
     @Test
     void getParameterReturnsUpdatedParameters() {
         // Act
-        var componentId = configService.getConfiguration().getSelf().getComponentId().toString();
+        var componentId = configService.getComponentId();
         var bearerTokenTtl =
                 configService.getConfiguration().getSelf().getBearerTokenTtl().toString();
 
@@ -147,7 +147,7 @@ class AppConfigServiceTest {
             """);
 
         // Act
-        componentId = configService.getConfiguration().getSelf().getComponentId().toString();
+        componentId = configService.getComponentId();
 
         // Assert
         assertEquals("different-component-id", componentId);
@@ -164,7 +164,7 @@ class AppConfigServiceTest {
         configService.setFeatureSet(List.of("testFeature"));
 
         // Act
-        var param = configService.getConfiguration().getSelf().getComponentId().toString();
+        var param = configService.getComponentId();
 
         // Assert
         assertEquals("alternate-component-id", param);

@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -86,7 +85,7 @@ class UserReverificationHandlerTest {
 
     @BeforeEach
     void setUp() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);

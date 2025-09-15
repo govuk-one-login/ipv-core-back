@@ -185,11 +185,7 @@ public class CriStoringService {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_DWP_KBV_CRI_VC_ISSUED,
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString(),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                                 new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -197,7 +193,7 @@ public class CriStoringService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_VC_RECEIVED,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             auditEventUser,
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -248,7 +244,7 @@ public class CriStoringService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

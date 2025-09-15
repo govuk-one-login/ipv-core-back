@@ -156,8 +156,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @State("the audience is http://ipv/")
     public void setAudience() {
-        when(configService.getConfiguration().getSelf().getComponentId().toString())
-                .thenReturn("http://ipv/");
+        when(configService.getComponentId()).thenReturn("http://ipv/");
     }
 
     @TestTemplate

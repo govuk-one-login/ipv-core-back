@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -26,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
@@ -59,7 +57,6 @@ class DcmawAsyncCriServiceTest {
     public static final String CONNECTION = "connection";
 
     @Mock private ConfigService mockConfigService;
-    @Mock private Config mockConfig;
     @Mock private CriApiService mockCriApiService;
     @Mock private AuditService auditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
@@ -151,7 +148,7 @@ class DcmawAsyncCriServiceTest {
 
     @Test
     void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var journeyRequest =
                 JourneyRequest.builder()
                         .ipvSessionId("ipvSessionId")

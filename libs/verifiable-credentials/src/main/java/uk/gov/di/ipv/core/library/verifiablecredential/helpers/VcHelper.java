@@ -173,13 +173,8 @@ public class VcHelper {
             LOGGER.error("VC does not have a nbf claim");
             return true;
         }
-        var expiryPeriod =
-                Integer.parseInt(
-                        configService
-                                .getConfiguration()
-                                .getSelf()
-                                .getFraudCheckExpiryPeriodHours()
-                                .toString());
+        var expiryPeriod = configService.getFraudCheckExpiryPeriodHours();
+
         var now = Instant.now();
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }

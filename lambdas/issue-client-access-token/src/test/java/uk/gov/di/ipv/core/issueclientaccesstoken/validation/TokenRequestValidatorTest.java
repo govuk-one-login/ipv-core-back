@@ -21,11 +21,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -55,19 +53,16 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 class TokenRequestValidatorTest {
 
     private static final String CLIENT_ID = "di-ipv-orchestrator-stub";
-    private static final String AUDIENCE =
-            "https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token";
     private static final String TEST_JTI = "test-jti";
 
     @Mock private ConfigService mockConfigService;
-    @Mock private Config mockConfig;
     @Mock private ClientAuthJwtIdService mockClientAuthJwtIdService;
     @Mock private OAuthKeyService mockOAuthKeyService;
     @InjectMocks private TokenRequestValidator validator;
 
     @BeforeEach
     void setUp() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test
@@ -310,8 +305,7 @@ class TokenRequestValidatorTest {
 
     private Map<String, Object> getValidClaimsSetValues() {
         // Use the same audience the validator will check
-        String expectedAud =
-                mockConfigService.getConfiguration().getSelf().getComponentId().toString();
+        String expectedAud = mockConfigService.getComponentId();
 
         return Map.of(
                 JWTClaimNames.ISSUER, CLIENT_ID,
@@ -322,8 +316,7 @@ class TokenRequestValidatorTest {
     }
 
     private Map<String, Object> getClaimsSetValuesMissingJwtId() {
-        String expectedAud =
-                mockConfigService.getConfiguration().getSelf().getComponentId().toString();
+        String expectedAud = mockConfigService.getComponentId();
 
         return Map.of(
                 JWTClaimNames.ISSUER, CLIENT_ID,

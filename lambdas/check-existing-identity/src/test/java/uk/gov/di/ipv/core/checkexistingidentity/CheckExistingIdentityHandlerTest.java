@@ -65,7 +65,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
@@ -74,7 +73,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -246,7 +244,7 @@ class CheckExistingIdentityHandlerTest {
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
 
-        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -1402,10 +1400,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getConfiguration().getSelf().getComponentId())
-                    .thenReturn(URI.create("http://ipv/"));
-            when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours())
-                    .thenReturn(1);
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
             var journeyResponse =
                     toResponseClass(
@@ -1432,9 +1427,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getConfiguration().getSelf().getComponentId())
-                    .thenReturn(URI.create("http://ipv/"));
-            when(configService.getConfiguration().getSelf().getFraudCheckExpiryPeriodHours())
+            when(configService.getFraudCheckExpiryPeriodHours())
                     .thenReturn(100000000); // not the best way to test this
 
             var journeyResponse =

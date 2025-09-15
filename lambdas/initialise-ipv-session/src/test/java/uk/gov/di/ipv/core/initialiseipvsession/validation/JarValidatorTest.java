@@ -28,14 +28,11 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.library.config.domain.ClientConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
-import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -85,27 +82,19 @@ class JarValidatorTest {
     @Mock private JWEDecrypter jweDecrypter;
     @Mock private OAuthKeyService mockOAuthKeyService;
     @InjectMocks private JarValidator jarValidator;
-
     private Config mockConfig = mock(Config.class);
-    private InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
-    private ClientConfig mockClientCfg = mock(ClientConfig.class);
 
     private void stubComponentId() {
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelf);
-        when(mockSelf.getComponentId()).thenReturn(URI.create(AUDIENCE_CLAIM));
+        when(configService.getComponentId()).thenReturn(AUDIENCE_CLAIM);
     }
 
     private void stubInvalidClientId() {
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getClientConfig(CLIENT_ID_CLAIM)).thenReturn(mockClientCfg);
-        when(mockClientCfg.getIssuer()).thenThrow(ConfigParameterNotFoundException.class);
+        when(configService.getIssuer(CLIENT_ID_CLAIM))
+                .thenThrow(ConfigParameterNotFoundException.class);
     }
 
     private void stubClientIssuer() {
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getClientConfig(eq(CLIENT_ID_CLAIM))).thenReturn(mockClientCfg);
-        when(mockClientCfg.getIssuer()).thenReturn(ISSUER_CLAIM);
+        when(configService.getIssuer(CLIENT_ID_CLAIM)).thenReturn(ISSUER_CLAIM);
     }
 
     @Test
@@ -151,8 +140,7 @@ class JarValidatorTest {
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
         when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
         if (mfaResetEnabled) {
-            when(configService.getConfiguration().getClientConfig(CLIENT_ID_CLAIM).getValidScopes())
-                    .thenReturn("openid");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("openid");
         }
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -238,8 +226,7 @@ class JarValidatorTest {
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getConfiguration().getClientConfig(CLIENT_ID_CLAIM).getValidScopes())
-                    .thenReturn("reverification");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("reverification");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -294,8 +281,7 @@ class JarValidatorTest {
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getConfiguration().getClientConfig(CLIENT_ID_CLAIM).getValidScopes())
-                    .thenReturn("");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -322,7 +308,7 @@ class JarValidatorTest {
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getConfiguration().getClientConfig(CLIENT_ID_CLAIM).getValidScopes())
+            when(configService.getValidScopes(CLIENT_ID_CLAIM))
                     .thenThrow(ConfigParameterNotFoundException.class);
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -548,14 +534,11 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
             throws Exception {
-        stubClientIssuer();
         stubComponentId();
-        var differentClientId = "different-client-id";
-        ClientConfig otherClientCfg = mock(ClientConfig.class);
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getClientConfig(differentClientId)).thenReturn(otherClientCfg);
-        when(otherClientCfg.getIssuer()).thenReturn(ISSUER_CLAIM);
 
+        var differentClientId = "different-client-id";
+
+        when(configService.getIssuer(differentClientId)).thenReturn(ISSUER_CLAIM);
         when(mockOAuthKeyService.getClientSigningKey(eq(differentClientId), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
         when(configService.getClientValidRedirectUrls(differentClientId))

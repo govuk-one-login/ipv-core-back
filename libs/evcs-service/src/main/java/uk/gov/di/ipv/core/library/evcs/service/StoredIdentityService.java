@@ -69,13 +69,8 @@ public class StoredIdentityService {
                         userIdentityService.getUserClaims(vcs), new TypeReference<>() {});
 
         return new JWTClaimsSet.Builder()
-                .issuer(configService.getConfiguration().getSelf().getComponentId().toString())
-                .audience(
-                        configService
-                                .getConfiguration()
-                                .getStoredIdentityService()
-                                .getComponentId()
-                                .toString())
+                .issuer(configService.getComponentId())
+                .audience(configService.getSisComponentId())
                 .subject(userId)
                 .notBeforeTime(Date.from(now))
                 .issueTime(Date.from(now))

@@ -93,13 +93,7 @@ public class TokenRequestValidator {
             ConfigService configService) {
         return new ClientAuthenticationVerifier<>(
                 new OAuthKeyServiceClientCredentialsSelector(oAuthKeyService),
-                Set.of(
-                        new Audience(
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString())),
+                Set.of(new Audience(configService.getComponentId())),
                 JWTAudienceCheck.STRICT);
     }
 }

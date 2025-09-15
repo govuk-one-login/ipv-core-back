@@ -160,7 +160,7 @@ public class CheckCoiService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess),
                         restrictedData));

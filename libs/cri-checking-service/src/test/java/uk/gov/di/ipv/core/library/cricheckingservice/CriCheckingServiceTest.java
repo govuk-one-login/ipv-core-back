@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -100,7 +99,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyErrorByDefault() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -120,7 +119,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyAccessDeniedIfInCallbackRequest() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -140,7 +139,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyInvalidRequestIfInCallbackRequest() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -160,7 +159,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyTemporarilyAvailableIfInCallbackRequest() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -180,7 +179,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnSendCorrectAuditEvent() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -220,7 +219,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnSendDwpKbvAuditEvent() {
         // Arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(DWP_KBV.getId())

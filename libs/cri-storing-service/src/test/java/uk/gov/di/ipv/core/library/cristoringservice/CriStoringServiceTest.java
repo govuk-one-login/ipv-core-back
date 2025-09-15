@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -26,7 +25,6 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -55,7 +53,6 @@ class CriStoringServiceTest {
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private ConfigService mockConfigService;
-    @Mock private Config mockConfig;
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
@@ -72,7 +69,7 @@ class CriStoringServiceTest {
 
     @BeforeEach
     void setup() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test

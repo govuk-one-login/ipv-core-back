@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
@@ -29,7 +28,6 @@ import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
 
@@ -78,7 +76,6 @@ class StoreIdentityServiceTest {
 
     @Mock HttpResponse<String> httpResponse;
     @Mock ConfigService configService;
-    @Mock Config mockConfig;
     @Mock AuditService auditService;
     @Mock EvcsService evcsService;
     @InjectMocks StoreIdentityService storeIdentityService;
@@ -99,7 +96,7 @@ class StoreIdentityServiceTest {
     class StoreIdentityServiceSuccessfulStoreTest {
         @BeforeEach
         void setUp() {
-            ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
         }
 
         @Test
@@ -293,7 +290,7 @@ class StoreIdentityServiceTest {
         @Test
         void shouldStoreStoredIdentityRecordForCompletedIdentity() throws Exception {
             // Arrange
-            ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
             when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
@@ -325,7 +322,7 @@ class StoreIdentityServiceTest {
         @Test
         void shouldNotStoreStoredIdentityRecordForPendingIdentity() throws Exception {
             // Act
-            ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             storeIdentityService.storeIdentity(
                     USER_ID,
                     VCS,
@@ -363,7 +360,7 @@ class StoreIdentityServiceTest {
         @MethodSource("provideStoreStoredIdentityRecordExceptions")
         void shouldContinueIfStoreStoredIdentityRecordFails(Throwable exception) throws Exception {
             // Arrange
-            ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenThrow(exception);
 
@@ -394,7 +391,7 @@ class StoreIdentityServiceTest {
                 shouldSetSisRecordCreatedToFalseIfNonHttpResponseReturnedFromStoreStoredIdentityRecord()
                         throws Exception {
             // Arrange
-            ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
             when(httpResponse.statusCode()).thenReturn(HttpStatusCode.FORBIDDEN);
@@ -449,7 +446,7 @@ class StoreIdentityServiceTest {
     void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
             throws EvcsServiceException {
         // arrange
-        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
         when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
 
         // act

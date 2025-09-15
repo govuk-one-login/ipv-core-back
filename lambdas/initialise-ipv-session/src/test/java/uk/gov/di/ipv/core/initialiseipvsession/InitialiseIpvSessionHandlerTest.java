@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -50,7 +49,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
 import java.security.KeyFactory;
@@ -88,9 +86,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
-    public static final String TEST_COMPONENT_ID = "test-component-id";
-    public static final String TEST_SIGNING_KEY =
-            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"; // pragma: allowlist secret
     public static final String TEST_USER_ID = "test-user-id";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
@@ -118,7 +113,6 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private ConfigService mockConfigService;
-    @Mock private Config mockConfig;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
@@ -159,7 +153,7 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
         clientOAuthSessionItem.setReproveIdentity(false);
 
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

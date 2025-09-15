@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -73,7 +72,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @BeforeEach
     void setUp() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 

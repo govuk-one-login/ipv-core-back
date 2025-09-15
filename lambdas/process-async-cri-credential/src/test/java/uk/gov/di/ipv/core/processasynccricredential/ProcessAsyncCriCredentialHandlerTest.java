@@ -30,7 +30,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
@@ -109,7 +108,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @BeforeEach
     void setUp() {
         F2F_VC = vcF2fPassportPhotoM1a();
-        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

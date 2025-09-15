@@ -93,8 +93,7 @@ public class EvcsService {
 
         try {
             var issuerCris = configService.getIssuerCris();
-            var cimitComponentId =
-                    configService.getConfiguration().getCimit().getComponentId().toString();
+            var cimitComponentId = configService.getCimitComponentId();
 
             for (var vc : evcsUserVcs) {
                 var jwt = SignedJWT.parse(vc.vc());

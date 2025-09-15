@@ -219,7 +219,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_IDENTITY_ISSUED,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         extensions));
     }

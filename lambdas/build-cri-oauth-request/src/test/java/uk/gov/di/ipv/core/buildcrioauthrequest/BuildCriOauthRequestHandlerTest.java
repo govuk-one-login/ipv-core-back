@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.domain.Config;
-import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -59,7 +58,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
-import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -103,7 +101,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermi
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaimFailedWithCis;
-import static uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper.stubAllowedShareAttributes;
 
 @ExtendWith(MockitoExtension.class)
 class BuildCriOauthRequestHandlerTest {
@@ -140,7 +137,6 @@ class BuildCriOauthRequestHandlerTest {
 
     @Mock private Context context;
     @Mock private ConfigService configService;
-    @Mock private UserIdentityService userIdentityService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
@@ -213,11 +209,7 @@ class BuildCriOauthRequestHandlerTest {
                 .when(() -> SharedClaimsHelper.generateSharedClaims(any(), any(), any(), any()))
                 .thenReturn(TEST_SHARED_CLAIMS);
 
-        InternalOperationsConfig mockSelf = mock(InternalOperationsConfig.class);
-        URI mockComponentId = URI.create("https://core-component.example");
-        when(configService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelf);
-        when(mockSelf.getComponentId()).thenReturn(mockComponentId);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -275,7 +267,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
+        when(configService.getAllowedSharedAttributes(PASSPORT)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         List<VerifiableCredential> vcs =
@@ -357,7 +349,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
+        when(configService.getAllowedSharedAttributes(PASSPORT)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false, false);
 
@@ -441,7 +433,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
+        when(configService.getAllowedSharedAttributes(PASSPORT)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(any(), any()))
@@ -524,7 +516,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, PASSPORT.getId(), "");
+        when(configService.getAllowedSharedAttributes(PASSPORT)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -606,7 +598,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, DCMAW.getId(), "");
+        when(configService.getAllowedSharedAttributes(DCMAW)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -689,7 +681,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, DWP_KBV.getId(), "");
+        when(configService.getAllowedSharedAttributes(DWP_KBV)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -776,7 +768,9 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, F2F.getId(), "name,birthDate,address,emailAddress");
+        when(configService.getAllowedSharedAttributes(F2F))
+                .thenReturn("name,birthDate,address,emailAddress");
+
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -858,7 +852,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(EXPERIAN_FRAUD)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, EXPERIAN_FRAUD))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, EXPERIAN_FRAUD.getId(), "");
+        when(configService.getAllowedSharedAttributes(EXPERIAN_FRAUD)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -923,7 +917,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
                 .thenReturn(oauthCriConfig);
-        stubAllowedShareAttributes(mockConfig, CLAIMED_IDENTITY.getId(), "");
+        when(configService.getAllowedSharedAttributes(CLAIMED_IDENTITY)).thenReturn("");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

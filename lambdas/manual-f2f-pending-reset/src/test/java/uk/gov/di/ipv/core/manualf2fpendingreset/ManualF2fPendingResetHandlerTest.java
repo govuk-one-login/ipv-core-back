@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 
 import java.util.Map;
 
@@ -48,7 +47,7 @@ class ManualF2fPendingResetHandlerTest {
 
     @BeforeEach
     void setUp() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @ParameterizedTest

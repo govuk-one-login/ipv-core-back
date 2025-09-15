@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -72,7 +71,7 @@ class CheckMobileAppVcReceiptHandlerTest {
 
     @BeforeEach
     void setUpEach() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(configService, mockConfig);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test

@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationTyp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSubjourneyType;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -36,13 +35,11 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 
 import java.io.IOException;
-import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -107,11 +104,10 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
-    @Mock private Config mockConfig;
 
     @BeforeEach
     void setUp() {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -1322,8 +1318,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
-        when(mockConfigService.getConfiguration().getSelf().getComponentId())
-                .thenReturn(URI.create("core"));
+        when(mockConfigService.getComponentId()).thenReturn("core");
         when(mockConfigService.getBackendSessionTimeout()).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))

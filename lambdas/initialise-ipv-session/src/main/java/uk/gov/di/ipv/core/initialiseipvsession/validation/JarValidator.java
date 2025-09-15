@@ -155,18 +155,13 @@ public class JarValidator {
                             .with(LOG_COUNT.getFieldName(), requiredScopesInRequest.size()));
             return false;
         }
-        return Scope.parse(
-                        configService
-                                .getConfiguration()
-                                .getClientConfig(clientId)
-                                .getValidScopes()
-                                .toString())
+        return Scope.parse(configService.getValidScopes(clientId))
                 .contains(requiredScopesInRequest.get(0));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configService.getConfiguration().getClientConfig(clientId).getIssuer().toString();
+            configService.getIssuer(clientId);
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ConfigParameterNotFoundException e) {
             LOGGER.error(
@@ -229,9 +224,8 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configService.getConfiguration().getSelf().getComponentId().toString();
-        String clientIssuer =
-                configService.getConfiguration().getClientConfig(clientId).getIssuer().toString();
+        String criAudience = configService.getComponentId();
+        String clientIssuer = configService.getIssuer(clientId);
 
         var requiredClaims =
                 new HashSet<>(

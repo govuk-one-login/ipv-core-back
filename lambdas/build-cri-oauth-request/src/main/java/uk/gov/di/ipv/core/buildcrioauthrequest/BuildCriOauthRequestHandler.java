@@ -216,7 +216,7 @@ public class BuildCriOauthRequestHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -224,11 +224,7 @@ public class BuildCriOauthRequestHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_DWP_KBV_CRI_START,
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString(),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 new AuditRestrictedDeviceInformation(
                                         input.getDeviceInformation())));
@@ -476,13 +472,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
-        String allowedSharedAttributes =
-                configService
-                        .getConfiguration()
-                        .getCredentialIssuers()
-                        .getById(cri.getId())
-                        .getAllowedSharedAttributes()
-                        .toString();
+        String allowedSharedAttributes = configService.getAllowedSharedAttributes(cri);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));

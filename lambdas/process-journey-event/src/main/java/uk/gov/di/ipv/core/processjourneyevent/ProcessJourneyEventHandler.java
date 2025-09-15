@@ -449,7 +449,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         getAuditExtensions(auditEventType, auditContext),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -478,7 +478,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditExtensionSubjourneyType(journeyType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

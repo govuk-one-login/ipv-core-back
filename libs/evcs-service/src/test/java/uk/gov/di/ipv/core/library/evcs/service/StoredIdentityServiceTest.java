@@ -9,9 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.domain.Config;
-import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
-import uk.gov.di.ipv.core.library.config.domain.StoredIdentityServiceConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserClaims;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -24,7 +21,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.PassportDetails;
 
-import java.net.URI;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
@@ -61,9 +57,6 @@ class StoredIdentityServiceTest {
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Mock private Config mockConfig;
-    @Mock private InternalOperationsConfig mockSelfConfig;
-    @Mock private StoredIdentityServiceConfig mockSisConfig;
 
     private StoredIdentityService storedIdentityService;
 
@@ -81,12 +74,8 @@ class StoredIdentityServiceTest {
     }
 
     private void stubComponentIds() {
-        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelfConfig);
-        when(mockSelfConfig.getComponentId()).thenReturn(URI.create(MOCK_COMPONENT_ID));
-
-        when(mockConfig.getStoredIdentityService()).thenReturn(mockSisConfig);
-        when(mockSisConfig.getComponentId()).thenReturn(URI.create(MOCK_SIS_COMPONENT_ID));
+        when(mockConfigService.getComponentId()).thenReturn(MOCK_COMPONENT_ID);
+        when(mockConfigService.getSisComponentId()).thenReturn(MOCK_SIS_COMPONENT_ID);
     }
 
     @Test

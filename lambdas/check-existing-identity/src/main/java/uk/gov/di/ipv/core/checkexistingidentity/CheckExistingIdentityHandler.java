@@ -289,11 +289,7 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString(),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
             }
@@ -707,7 +703,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
@@ -720,7 +716,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         extension,
                         new AuditRestrictedDeviceInformation(deviceInformation)));

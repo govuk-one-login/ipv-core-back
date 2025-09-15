@@ -134,7 +134,7 @@ class EvcsClientTest {
     }
 
     private void stubEvcsBaseUrl(String url) {
-        when(mockEvcs.getApplicationUrl()).thenReturn(java.net.URI.create(url));
+        when(mockEvcs.getApplicationUrl()).thenReturn(URI.create(url));
     }
 
     @ParameterizedTest

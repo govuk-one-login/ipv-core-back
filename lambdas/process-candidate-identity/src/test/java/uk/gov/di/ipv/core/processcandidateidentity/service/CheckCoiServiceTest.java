@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -27,7 +26,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.testhelpers.unit.ConfigServiceHelper;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.domain.SharedAuditEventParameters;
@@ -63,7 +61,6 @@ class CheckCoiServiceTest {
     private SharedAuditEventParameters sharedAuditEventParameters;
 
     @Mock private ConfigService mockConfigService;
-    @Mock private Config mockConfig;
     @Mock private AuditService mockAuditService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -74,7 +71,7 @@ class CheckCoiServiceTest {
 
     @BeforeEach
     void setup() throws Exception {
-        ConfigServiceHelper.stubDefaultComponentIdConfig(mockConfigService, mockConfig);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
 
         testAuditEventUser =
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");

@@ -177,7 +177,7 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_END,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -190,11 +190,7 @@ public class BuildClientOauthResponseHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
-                                configService
-                                        .getConfiguration()
-                                        .getSelf()
-                                        .getComponentId()
-                                        .toString(),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity(
                                         ipvSessionItem.getErrorCode() == null

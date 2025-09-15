@@ -136,7 +136,7 @@ public class CriCheckingService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                        configService.getConfiguration().getSelf().getComponentId().toString(),
+                        configService.getComponentId(),
                         auditEventUser,
                         extensions,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -151,7 +151,7 @@ public class CriCheckingService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_DWP_KBV_CRI_ABANDONED,
-                            configService.getConfiguration().getSelf().getComponentId().toString(),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(deviceInformation)));
         }
