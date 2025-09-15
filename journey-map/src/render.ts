@@ -61,16 +61,6 @@ const getJourneyTransitions = async (
   return response.json();
 };
 
-const addSystemTimeZone = (dateTimeStr: string): string => {
-  const date = new Date(dateTimeStr);
-  const offset = date.getTimezoneOffset();
-  const sign = offset > 0 ? "-" : "+";
-  const absOffset = Math.abs(offset);
-  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
-  const offsetMinutes = String(absOffset % 60).padStart(2, "0");
-  return `${dateTimeStr}${sign}${offsetHours}:${offsetMinutes}`;
-};
-
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (
@@ -88,10 +78,7 @@ const getVisibleEdgesAndNodes = async (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
-  const body: JourneyTransitionRequestBody = {
-    fromDate: addSystemTimeZone(apiSettings.body.fromDate),
-    toDate: addSystemTimeZone(apiSettings.body.toDate),
-  };
+  const body: JourneyTransitionRequestBody = apiSettings.body;
 
   console.log(body);
 

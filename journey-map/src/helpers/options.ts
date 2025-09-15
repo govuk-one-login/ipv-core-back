@@ -18,6 +18,8 @@ export interface SystemSettings {
 export interface TransitionsApiRequestBody {
   fromDate: string;
   toDate: string;
+  sessionId: string;
+  journeyId: string;
 }
 
 export interface TransitionsApiSettings {
@@ -49,14 +51,31 @@ export const parseOptions = (formData: FormData): RenderOptions => ({
   onlyOrphanStates: formData.getAll("otherOption").includes("onlyOrphanStates"),
 });
 
+const addSystemTimeZone = (dateTimeStr: string): string => {
+  const date = new Date(dateTimeStr);
+  const offset = date.getTimezoneOffset();
+  const sign = offset > 0 ? "-" : "+";
+  const absOffset = Math.abs(offset);
+  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
+  const offsetMinutes = String(absOffset % 60).padStart(2, "0");
+  return `${dateTimeStr}${sign}${offsetHours}:${offsetMinutes}`;
+};
+
 export const parseApiSettings = (
   formData: FormData,
 ): TransitionsApiSettings => {
+  const selection = formData.get("sessionJourneySelection") as
+    | "journey"
+    | "session";
+  const typedInput = (formData.get("journeySession") as string) ?? "";
+
   return {
     isEnabled: formData.getAll("isEnabled").includes("enableTraffic"),
     body: {
-      fromDate: formData.get("fromDate") as string,
-      toDate: formData.get("toDate") as string,
+      fromDate: addSystemTimeZone(formData.get("fromDate") as string),
+      toDate: addSystemTimeZone(formData.get("toDate") as string),
+      sessionId: selection === "session" ? typedInput : "",
+      journeyId: selection === "journey" ? typedInput : "",
     },
   };
 };

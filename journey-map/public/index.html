@@ -53,9 +53,13 @@
               <label>
                 <input id="transitionsToInput" type="datetime-local" name="toDate"/>
               </label>
-              <span>Journey Id</span>
+              <label for="sessionJourneySelection">Fetch by</label>
+              <select id="sessionJourneySelection" name="sessionJourneySelection">
+                <option value="journey">Journey Id</option>
+                <option value="session">Session Id</option>
+              </select>
               <label>
-                <input placeholder="Leave blank to fetch all journeys" type="text"/>
+                <input placeholder="Leave blank to fetch all journeys" type="text" name="journeySession"/>
               </label>
             </fieldset>
             <fieldset id="disabledInput">
