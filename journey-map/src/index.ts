@@ -62,9 +62,6 @@ const headerContent = document.getElementById(
 const headerToggle = document.getElementById(
   "header-toggle",
 ) as HTMLButtonElement;
-const transitionsForm = document.getElementById(
-  "transitions-form",
-) as HTMLFormElement;
 const transitionsFromInput = document.getElementById(
   "transitionsFromInput",
 ) as HTMLInputElement;
@@ -496,10 +493,6 @@ const setupJourneyTransitionInput = (): void => {
       transitionsFromInput.value = transitionsToInput.value;
     }
     transitionsFromInput.max = transitionsToInput.value;
-  });
-
-  transitionsForm.addEventListener("change", () => {
-    // continue here
   });
 };
 

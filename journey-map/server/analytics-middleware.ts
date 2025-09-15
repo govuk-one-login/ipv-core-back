@@ -8,6 +8,14 @@ let cache: {
   expiresAt: number;
 } | null = null;
 
+const checkIfTimeWindowIsInRange = (from: string, to: string): boolean => {
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  return (
+    toDate.getTime() - fromDate.getTime() < Number(config.maximumTimeRangeMs)
+  );
+};
+
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
   res,
@@ -22,6 +30,13 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
     }
 
     const { fromDate, toDate } = req.body;
+    if (!checkIfTimeWindowIsInRange(fromDate, toDate)) {
+      res.status(400).json({
+        message: `Maximum time range for fetching transition is ${config.maximumTimeRangeMs} ms.`,
+      });
+      return;
+    }
+
     const query = new URLSearchParams({
       fromDate: fromDate,
       toDate: toDate,
