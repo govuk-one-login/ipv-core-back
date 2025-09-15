@@ -50,7 +50,7 @@ paths:
           schema:
             type: string
           description: "Session ID to filter journey transitions"
-        - name: journeyId
+        - name: govukJourneyId
           in: query
           required: false
           schema:

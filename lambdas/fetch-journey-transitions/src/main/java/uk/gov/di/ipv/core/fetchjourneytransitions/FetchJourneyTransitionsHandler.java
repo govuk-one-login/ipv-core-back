@@ -96,9 +96,10 @@ public class FetchJourneyTransitionsHandler
                 Optional.ofNullable(event.getQueryStringParameters()).orElse(Map.of());
         var fromDate = OffsetDateTime.parse(eventQueryParameters.get("fromDate")).toInstant();
         var toDate = OffsetDateTime.parse(eventQueryParameters.get("toDate")).toInstant();
-        int limit = parseIntOrDefault(eventQueryParameters.get("limit"), 100);
-        String ipvSessionId = eventQueryParameters.get("ipvSessionId");
-        return new Request(fromDate, toDate, limit, ipvSessionId);
+        var limit = parseIntOrDefault(eventQueryParameters.get("limit"), 100);
+        var ipvSessionId = eventQueryParameters.get("ipvSessionId");
+        var govukJourneyId = eventQueryParameters.get("govukJourneyId");
+        return new Request(fromDate, toDate, limit, ipvSessionId, govukJourneyId);
     }
 
     private int parseIntOrDefault(String value, int defaultVal) {
