@@ -30,14 +30,14 @@ paths:
           schema:
             type: string
             format: date-time
-          description: "Start date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00 format"
+          description: "Start date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00+HH:MM format"
         - name: toDate
           in: query
           required: true
           schema:
             type: string
             format: date-time
-          description: "End date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00 format"
+          description: "End date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00+HH:MM format"
         - name: limit
           in: query
           required: false
