@@ -148,7 +148,7 @@ core:
     dcmawAsync:
       id: dcmawAsync
       name: "Document Checking - Mobile App and Web - Async"
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
@@ -285,7 +285,7 @@ core:
     nino:
       id: nino
       name: NINO
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
