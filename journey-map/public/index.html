@@ -45,6 +45,14 @@
                 <input value="enableTraffic" type="checkbox" name="isEnabled">
                 <span>Enable transitions traffic</span>
               </label>
+              <label for="targetEnvironment">Target Environment</label>
+              <select id="targetEnvironment" name="targetEnvironment">
+                <option value="production">Production</option>
+                <option value="integration">Integration</option>
+                <option value="staging">Staging</option>
+                <option value="build">Build</option>
+                <option value="shared">Shared Dev</option>
+              </select>
               <span>From</span>
               <label>
                 <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>

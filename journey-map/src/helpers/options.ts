@@ -20,6 +20,7 @@ export interface TransitionsApiRequestBody {
   toDate: string;
   ipvSessionId?: string;
   govukJourneyId?: string;
+  environment: string;
 }
 
 export interface TransitionsApiSettings {
@@ -64,9 +65,7 @@ const addSystemTimeZone = (dateTimeStr: string): string => {
 export const parseApiSettings = (
   formData: FormData,
 ): TransitionsApiSettings => {
-  const selection = formData.get("sessionJourneySelection") as
-    | "journey"
-    | "session";
+  const selection = formData.get("sessionJourneySelection") as string;
   const typedInput = (formData.get("journeySession") as string) ?? "";
 
   return {
@@ -80,6 +79,7 @@ export const parseApiSettings = (
       ...(selection === "journey" && typedInput
         ? { govukJourneyId: typedInput }
         : {}),
+      environment: formData.get("targetEnvironment") as string,
     },
   };
 };

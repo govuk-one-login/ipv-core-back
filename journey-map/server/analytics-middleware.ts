@@ -37,18 +37,24 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       return;
     }
 
+    const filteredBody = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) => key === "environment"),
+    );
+
     const query = new URLSearchParams({
-      ...req.body,
+      ...filteredBody,
       limit: "200",
     });
 
-    const response = await fetch(
-      `${config.journeyTransitionsEndpoint}?${query.toString()}`,
-      {
-        method: "POST",
-        headers: { "x-api-key": config.analyticsApiKey },
-      },
-    );
+    const targetEnvironment = req.body.environment;
+    const endpoint =
+      config.environment[targetEnvironment].journeyTransitionsEndpoint;
+    const apiKey = config.environment[targetEnvironment].analyticsApiKey;
+
+    const response = await fetch(`${endpoint}?${query.toString()}`, {
+      method: "POST",
+      headers: { "x-api-key": apiKey },
+    });
     if (!response.ok) {
       throw new Error(
         `Failed to fetch journey transitions from analytics API: ${response.statusText}`,
@@ -75,10 +81,15 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const response = await fetch(config.systemSettingsEndpoint, {
-      method: "POST",
-      headers: { "x-api-key": config.analyticsApiKey },
-    });
+    const response = await fetch(
+      config.environment["production"].systemSettingsEndpoint,
+      {
+        method: "POST",
+        headers: {
+          "x-api-key": config.environment["production"].analyticsApiKey,
+        },
+      },
+    );
     if (!response.ok) {
       throw new Error(
         `Failed to fetch system settings from analytics API: ${response.statusText}`,
