@@ -181,7 +181,7 @@ class SisServiceTest {
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisExpiredResult);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
-                TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenThrow(new CredentialParseException("test exception"));
 
         // Act
@@ -241,7 +241,8 @@ class SisServiceTest {
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto("Not.a.JWT", true, false, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(
+                                "Not.a.JWT", true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisBadJwtResult);

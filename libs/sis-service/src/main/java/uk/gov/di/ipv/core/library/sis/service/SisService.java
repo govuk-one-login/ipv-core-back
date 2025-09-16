@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -295,11 +294,10 @@ public class SisService {
                             new Base64URL(storedJwtParts[1]),
                             new Base64URL(storedJwtParts[2]));
             return storedJwt.getJWTClaimsSet();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new SisMatchException(
-                        FailureCode.PARSE_ERROR,
-                        "Failed to parse stored identity JWT: " + e.getMessage());
+                    FailureCode.PARSE_ERROR,
+                    "Failed to parse stored identity JWT: " + e.getMessage());
         }
     }
 
