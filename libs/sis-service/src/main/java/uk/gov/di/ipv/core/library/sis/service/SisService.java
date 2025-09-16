@@ -101,7 +101,7 @@ public class SisService {
         SisGetStoredIdentityResult storedIdentityResult = null;
         List<String> sisVcSignatures = new ArrayList<>();
         List<String> evcsVcSignatures = new ArrayList<>();
-        Vot sisRequestedVot = null;
+        Vot sisMaxVot = null;
 
         try {
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -125,8 +125,9 @@ public class SisService {
 
             // Get stored signatures and calculated VoT
             var sisClaims = getSisClaims(storedIdentityResult.identityDetails());
-            sisRequestedVot = getSisRequestedVot(sisClaims);
+            var sisRequestedVot = getSisRequestedVot(sisClaims);
             sisVcSignatures = getSisSignatures(sisClaims);
+            sisMaxVot = storedIdentityResult.identityDetails().vot();
 
             // Get EVCS details
             var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
@@ -142,13 +143,13 @@ public class SisService {
                             evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
             var evcsMaxVotOptional = evcsVotMatches.strongestMatch();
             var evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
-            if (storedIdentityResult.identityDetails().vot() != evcsMaxVot) {
+            if (sisMaxVot != evcsMaxVot) {
                 throw new SisMatchException(
                         FailureCode.MAX_VOT_MISMATCH,
                         "Maximum EVCS ("
                                 + (evcsMaxVot == null ? "no VOT" : evcsMaxVot)
                                 + ") and SIS ("
-                                + storedIdentityResult.identityDetails().vot()
+                                + sisMaxVot
                                 + ") vots do not match");
             }
 
@@ -178,7 +179,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    sisRequestedVot,
+                    sisMaxVot,
                     VerificationOutcome.SUCCESS,
                     null,
                     null,
@@ -189,7 +190,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    sisRequestedVot,
+                    sisMaxVot,
                     VerificationOutcome.FAILURE,
                     e.getFailureCode(),
                     e.getMessage(),
@@ -202,7 +203,7 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
-                    sisRequestedVot,
+                    sisMaxVot,
                     VerificationOutcome.FAILURE,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),

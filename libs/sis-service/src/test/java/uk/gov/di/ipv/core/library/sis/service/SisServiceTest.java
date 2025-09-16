@@ -292,7 +292,7 @@ class SisServiceTest {
                 FailureCode.MAX_VOT_MISMATCH,
                 false,
                 true,
-                Vot.P2,
+                Vot.P1,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -326,7 +326,7 @@ class SisServiceTest {
                 FailureCode.REQUESTED_VOT_MISMATCH,
                 false,
                 true,
-                Vot.P1,
+                Vot.P2,
                 SIS_JWT_P1,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -446,7 +446,7 @@ class SisServiceTest {
                 null,
                 false,
                 false,
-                Vot.P0,
+                Vot.P2,
                 SIS_JWT_P0,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -459,7 +459,7 @@ class SisServiceTest {
             FailureCode expectedFailureCode,
             Boolean expectedExpired,
             Boolean expectedIsValid,
-            Vot expectedSisRequestedVot,
+            Vot expectedSisMaxVot,
             String expectedSisJwt,
             List<String> expectedSisSignatures,
             List<String> expectedEvcsSignatures,
@@ -475,7 +475,7 @@ class SisServiceTest {
         assertEquals(expectedFailureCode, extensionValues.getFailureCode());
         assertEquals(expectedExpired, extensionValues.getExpired());
         assertEquals(expectedIsValid, extensionValues.getIsValid());
-        assertEquals(expectedSisRequestedVot, extensionValues.getSisVot());
+        assertEquals(expectedSisMaxVot, extensionValues.getSisVot());
     }
 
     private static String getSignature(String jwt) {
