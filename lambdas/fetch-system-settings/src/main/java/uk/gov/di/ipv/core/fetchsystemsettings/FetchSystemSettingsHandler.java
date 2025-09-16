@@ -46,7 +46,6 @@ public class FetchSystemSettingsHandler
                                     Collectors.toMap(
                                             Map.Entry::getKey,
                                             entry -> Boolean.parseBoolean(entry.getValue())));
-            LOGGER.error("Fetched feature flag statuses: {}", featureFlagStatuses);
 
             // Fetch current CRI statuses
             Map<String, Boolean> criStatuses =
@@ -56,7 +55,6 @@ public class FetchSystemSettingsHandler
                                     Collectors.toMap(
                                             entry -> entry.getKey().split("/")[0],
                                             entry -> Boolean.parseBoolean(entry.getValue())));
-            LOGGER.error("Fetched credential issuer statuses: {}", criStatuses);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Map.of("Content-Type", "application/json"))
