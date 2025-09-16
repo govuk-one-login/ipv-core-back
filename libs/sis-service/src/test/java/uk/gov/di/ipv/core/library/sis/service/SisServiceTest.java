@@ -201,6 +201,37 @@ class SisServiceTest {
     }
 
     @Test
+    void shouldSendFailureAuditEventWhenStoredJwtCannotBeParsed() throws Exception {
+        // Arrange
+        var sisBadJwtResult =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto("Not.a.JWT", true, false, Vot.P2, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisBadJwtResult);
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FailureCode.PARSE_ERROR,
+                false,
+                true,
+                null,
+                "Not.a.JWT",
+                List.of(),
+                List.of(),
+                "Failed to parse stored identity JWT: Invalid JWS header: Invalid JSON object");
+    }
+
+    @Test
     void shouldSendFailureAuditEventWhenMaxVotComparisonFails() throws Exception {
         // Arrange
         var sisP1MaxResult =
@@ -322,38 +353,6 @@ class SisServiceTest {
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
-    }
-
-    @Test
-    void shouldSendFailureAuditEventWhenUnexpectedErrorOccurs() throws Exception {
-        // Arrange
-        var sisP2Result =
-                new SisGetStoredIdentityResult(
-                        true,
-                        true,
-                        new SisStoredIdentityCheckDto(
-                                "Not a valid JWT", true, false, Vot.P2, true, true));
-
-        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2Result);
-
-        // Act
-        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
-
-        // Assert
-        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        checkAuditEvent(
-                auditEventCaptor.getValue(),
-                VerificationOutcome.FAILURE,
-                FailureCode.UNEXPECTED_ERROR,
-                false,
-                true,
-                null,
-                "Not a valid JWT",
-                List.of(),
-                List.of(),
-                "Index 1 out of bounds for length 1");
     }
 
     @Test

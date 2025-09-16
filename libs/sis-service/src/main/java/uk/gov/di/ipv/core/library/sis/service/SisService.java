@@ -285,14 +285,21 @@ public class SisService {
     }
 
     private JWTClaimsSet getSisClaims(SisStoredIdentityCheckDto storedIdentity)
-            throws ParseException {
-        var storedJwtParts = storedIdentity.content().split("\\.");
-        var storedJwt =
-                new SignedJWT(
-                        new Base64URL(storedJwtParts[0]),
-                        new Base64URL(storedJwtParts[1]),
-                        new Base64URL(storedJwtParts[2]));
-        return storedJwt.getJWTClaimsSet();
+            throws SisMatchException {
+        try {
+            var storedJwtParts = storedIdentity.content().split("\\.");
+            var storedJwt =
+                    new SignedJWT(
+                            new Base64URL(storedJwtParts[0]),
+                            new Base64URL(storedJwtParts[1]),
+                            new Base64URL(storedJwtParts[2]));
+            return storedJwt.getJWTClaimsSet();
+        }
+        catch (Exception e) {
+            throw new SisMatchException(
+                        FailureCode.PARSE_ERROR,
+                        "Failed to parse stored identity JWT: " + e.getMessage());
+        }
     }
 
     private ArrayList<String> getSisSignatures(JWTClaimsSet sisClaims) {
