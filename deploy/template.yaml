@@ -395,6 +395,9 @@ Resources:
               Resource:
                 - 'execute-api:/*'
       StageName: !Sub ${Environment}
+      Tags:
+        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
+        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
@@ -628,6 +631,9 @@ Resources:
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
+      Tags:
+        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
+        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
         Format: >-
