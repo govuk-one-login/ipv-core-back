@@ -170,6 +170,40 @@ class SisServiceTest {
     }
 
     @Test
+    void shouldSendCorrectExpiredAndIsValidValues() throws Exception {
+        // Arrange
+        var sisExpiredResult =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto(SIS_JWT, false, true, Vot.P2, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisExpiredResult);
+        when(evcsService.fetchEvcsVerifiableCredentialsByState(
+                TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                .thenThrow(new CredentialParseException("test exception"));
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FailureCode.EVCS_ERROR,
+                true,
+                false,
+                Vot.P2,
+                SIS_JWT,
+                SUCCESSFUL_SIGNATURES,
+                List.of(),
+                "Exception caught retrieving VCs from EVCS");
+    }
+
+    @Test
     void shouldSendFailureAuditEventWhenVotCalculationFails() throws Exception {
         // Arrange
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
