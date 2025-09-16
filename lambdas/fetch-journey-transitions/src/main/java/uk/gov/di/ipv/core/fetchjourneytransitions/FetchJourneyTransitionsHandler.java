@@ -121,12 +121,10 @@ public class FetchJourneyTransitionsHandler
         var filter =
                 Optional.ofNullable(input.ipvSessionId())
                         .map(id -> String.format(ipvSessionIdQuery, id))
-                        .filter(id -> !id.isBlank())
                         .or(
                                 () ->
                                         Optional.ofNullable(input.govukJourneyId())
-                                                .map(id -> String.format(govukJourneyIdQuery, id))
-                                                .filter(id -> !id.isBlank()))
+                                                .map(id -> String.format(govukJourneyIdQuery, id)))
                         .orElse("");
 
         return String.format(
