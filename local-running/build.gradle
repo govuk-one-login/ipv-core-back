@@ -8,7 +8,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkSqs,
 			libs.lombok,
-			libs.awsSdkCrtClient,
+			libs.awsSdkUrlConnectionClient,
 			libs.bundles.awsLambda,
 			libs.bundles.log4j,
 			libs.jacksonDatabind,
