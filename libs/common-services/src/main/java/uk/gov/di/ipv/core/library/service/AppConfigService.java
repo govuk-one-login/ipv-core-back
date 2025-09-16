@@ -74,22 +74,13 @@ public class AppConfigService extends ConfigService {
         this.secretsProvider = secretsProvider;
     }
 
-    @Override
-    public String getParameter(String path) {
-        reloadParameters();
-        return super.getParameter(path);
-    }
-
-    private void reloadParameters() {
+    public void reloadParameters() {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            // Updates parameters
-            setParameters(updateParameters(paramsRaw));
 
-            // Update configuration in parallel
             setConfiguration(generateConfiguration(paramsRaw));
 
             paramsRawHash = retrievedParamsHash;

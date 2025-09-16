@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -19,7 +17,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -36,13 +33,11 @@ public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PATH_SEPARATOR = "/";
-    private static final String FEATURE_SETS = "features";
     private static final String CORE = "core";
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    private Map<String, String> parameters = new HashMap<>();
-    @Getter @Setter private Config configuration;
+    @Setter private Config configuration;
 
     @Getter @Setter private static boolean local;
 
@@ -54,15 +49,67 @@ public abstract class ConfigService {
         return new AppConfigService();
     }
 
-    protected void setParameters(Map<String, String> parameters) {
-        this.parameters = parameters;
+    public Config getConfiguration() {
+        reloadParameters();
+
+        var base = this.configuration;
+        if (base == null) return null;
+
+        var features = base.getFeatures();
+        var selected = getFeatureSet();
+        if (features == null || selected == null || selected.isEmpty()) {
+            return base;
+        }
+
+        var target =
+                OBJECT_MAPPER.convertValue(
+                        base,
+                        new com.fasterxml.jackson.core.type.TypeReference<
+                                Map<String, Object>>() {});
+
+        for (int i = selected.size() - 1; i >= 0; i--) {
+            var name = selected.get(i);
+            var overrides = features.get(name);
+            if (overrides == null) continue;
+
+            var src =
+                    OBJECT_MAPPER.convertValue(
+                            overrides,
+                            new com.fasterxml.jackson.core.type.TypeReference<
+                                    Map<String, Object>>() {});
+            mergeMaps(target, src);
+        }
+
+        return OBJECT_MAPPER.convertValue(target, Config.class);
     }
 
-    public abstract List<String> getFeatureSet();
+    @SuppressWarnings("unchecked")
+    private static void mergeMaps(Map<String, Object> dst, Map<String, Object> src) {
+        for (var e : src.entrySet()) {
+            var k = e.getKey();
+            var v = e.getValue();
+            var dv = dst.get(k);
+            if (v instanceof Map && dv instanceof Map) {
+                mergeMaps((Map<String, Object>) dv, (Map<String, Object>) v);
+            } else {
+                dst.put(k, v);
+            }
+        }
+    }
+
+    private List<String> featureSet = List.of();
+
+    public List<String> getFeatureSet() {
+        return featureSet;
+    }
+
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet = (featureSet == null) ? List.of() : List.copyOf(featureSet);
+    }
+
+    public abstract void reloadParameters();
 
     protected abstract String getSecret(String path);
-
-    public abstract void setFeatureSet(List<String> featureSet);
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -75,22 +122,6 @@ public abstract class ConfigService {
             return defaultValue;
         }
         return Integer.valueOf(value);
-    }
-
-    public String getParameter(String path) { // TO BE REMOVED
-        if (getFeatureSet() != null) {
-            for (String individualFeatureSet : getFeatureSet()) {
-                var featurePath =
-                        String.format("%s/%s/%s", FEATURE_SETS, individualFeatureSet, path);
-                if (parameters.containsKey(featurePath)) {
-                    return parameters.get(featurePath);
-                }
-            }
-        }
-        if (!parameters.containsKey(path)) {
-            throw new ConfigParameterNotFoundException(path);
-        }
-        return parameters.get(path);
     }
 
     public boolean isCredentialIssuerEnabled(String criId) {
@@ -211,20 +242,20 @@ public abstract class ConfigService {
         return getConfiguration().getCredentialIssuers().getById(cri.getId()).getActiveConnection();
     }
 
+    // ConfigService.java  (replace the whole method)
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
-        try {
-            var secretValue = getConfiguration().getSelf().getCiScoringConfig().toString();
-            List<ContraIndicatorConfig> configList =
-                    OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
-            Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
-            for (ContraIndicatorConfig config : configList) {
-                configMap.put(config.getCi(), config);
-            }
-            return configMap;
-        } catch (JsonProcessingException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to parse contra-indicator config"));
+        var list =
+                getConfiguration()
+                        .getSelf()
+                        .getCiScoringConfig(); // already a List<ContraIndicatorConfig>
+        if (list == null || list.isEmpty()) {
             return Collections.emptyMap();
         }
+        var map = new HashMap<String, ContraIndicatorConfig>(list.size());
+        for (var ci : list) {
+            map.put(ci.getCi(), ci);
+        }
+        return map;
     }
 
     public Map<String, List<CiRoutingConfig>> getCimitConfig() {

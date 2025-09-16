@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.config.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -20,6 +21,7 @@ public class CriConnectionWrapper<T extends CriConfig> {
     @NonNull final String activeConnection;
     @NonNull final Map<String, @NonNull T> connections;
 
+    @JsonIgnore
     public T getActiveConfig() {
         return connections.get(activeConnection);
     }

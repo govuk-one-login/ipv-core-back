@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class OauthCriConfig extends RestCriConfig {
     private boolean requiresAdditionalEvidence;
     private URI jwksUrl;
 
+    @JsonIgnore
     public RSAKey getParsedEncryptionKey() throws ParseException {
         return RSAKey.parse(encryptionKey);
     }

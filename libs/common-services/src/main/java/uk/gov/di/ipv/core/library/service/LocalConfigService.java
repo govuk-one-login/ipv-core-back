@@ -25,9 +25,7 @@ public class LocalConfigService extends ConfigService {
 
         // Update parameters
         var yaml = parseYamlFile(parametersFile);
-        setParameters(updateParameters(yaml));
 
-        // Update configuration in parallel
         setConfiguration(generateConfiguration(yaml));
     }
 
@@ -35,12 +33,11 @@ public class LocalConfigService extends ConfigService {
     public LocalConfigService(String parametersYaml, String secretsYaml) {
         secrets = updateParameters(secretsYaml);
 
-        // Update parameters
-        setParameters(updateParameters(parametersYaml));
-
-        // Update configuration in parallel
         setConfiguration(generateConfiguration(parametersYaml));
     }
+
+    public void reloadParameters() {}
+    ;
 
     public List<String> getFeatureSet() {
         return featureSet.get();
