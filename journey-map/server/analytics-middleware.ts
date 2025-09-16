@@ -38,7 +38,7 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
     }
 
     const filteredBody = Object.fromEntries(
-      Object.entries(req.body).filter(([key]) => key === "environment"),
+      Object.entries(req.body).filter(([key]) => key !== "environment"),
     );
 
     const query = new URLSearchParams({
