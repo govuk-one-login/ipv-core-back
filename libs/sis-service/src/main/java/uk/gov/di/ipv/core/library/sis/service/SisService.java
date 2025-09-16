@@ -100,7 +100,10 @@ public class SisService {
         SisGetStoredIdentityResult storedIdentityResult = null;
         List<String> sisVcSignatures = new ArrayList<>();
         List<String> evcsVcSignatures = new ArrayList<>();
+        Vot sisRequestedVot = null;
         Vot sisMaxVot = null;
+        Vot evcsRequestedVot = null;
+        Vot evcsMaxVot = null;
 
         try {
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -124,7 +127,7 @@ public class SisService {
 
             // Get stored signatures and calculated VoT
             var sisClaims = getSisClaims(storedIdentityResult.identityDetails());
-            var sisRequestedVot = getSisRequestedVot(sisClaims);
+            sisRequestedVot = getSisRequestedVot(sisClaims);
             sisVcSignatures = getSisSignatures(sisClaims);
             sisMaxVot = storedIdentityResult.identityDetails().vot();
 
@@ -141,7 +144,13 @@ public class SisService {
                     calculateVotMatches(
                             evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
             var evcsMaxVotOptional = evcsVotMatches.strongestMatch();
-            var evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
+            evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
+            var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
+            evcsRequestedVot =
+                    evcsRequestedVotOptional.isPresent()
+                            ? evcsRequestedVotOptional.get().vot()
+                            : null;
+
             if (sisMaxVot != evcsMaxVot) {
                 throw new SisMatchException(
                         FailureCode.MAX_VOT_MISMATCH,
@@ -152,11 +161,6 @@ public class SisService {
                                 + ") vots do not match");
             }
 
-            var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
-            var evcsRequestedVot =
-                    evcsRequestedVotOptional.isPresent()
-                            ? evcsRequestedVotOptional.get().vot()
-                            : null;
             // If SIS doesn't think it can provide a strong enough identity it will still return a
             // result with content.vot set to P0 and isValid set to false.
             if (!(evcsRequestedVot == null
@@ -178,7 +182,10 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.SUCCESS,
                     null,
                     null,
@@ -189,7 +196,10 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.FAILURE,
                     e.getFailureCode(),
                     e.getMessage(),
@@ -202,7 +212,10 @@ public class SisService {
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
+                    sisRequestedVot,
                     sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.FAILURE,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
@@ -216,6 +229,9 @@ public class SisService {
             AuditEventUser auditEventUser,
             SisGetStoredIdentityResult storedIdentityResult,
             Vot sisRequestedVot,
+            Vot sisMaxVot,
+            Vot evcsRequestedVot,
+            Vot evcsMaxVot,
             VerificationOutcome verificationOutcome,
             FailureCode failureCode,
             String failureDetails,
@@ -235,6 +251,9 @@ public class SisService {
                             auditEventUser,
                             new AuditExtensionsSisComparison(
                                     sisRequestedVot,
+                                    sisMaxVot,
+                                    evcsRequestedVot,
+                                    evcsMaxVot,
                                     sisIdFound
                                             ? storedIdentityResult.identityDetails().isValid()
                                             : null,

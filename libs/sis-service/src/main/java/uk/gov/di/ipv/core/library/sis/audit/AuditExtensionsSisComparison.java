@@ -11,6 +11,9 @@ import uk.gov.di.ipv.core.library.sis.enums.VerificationOutcome;
 @Getter
 public class AuditExtensionsSisComparison implements AuditExtensions {
     private final Vot vot;
+    private final Vot maxVot;
+    private final Vot reconstructedVot;
+    private final Vot reconstructedMaxVot;
     private final Boolean isValid;
     private final Boolean expired;
     private final VerificationOutcome verificationOutcome;
@@ -18,11 +21,17 @@ public class AuditExtensionsSisComparison implements AuditExtensions {
 
     public AuditExtensionsSisComparison(
             Vot vot,
+            Vot maxVot,
+            Vot reconstructedVot,
+            Vot reconstructedMaxVot,
             Boolean isValid,
             Boolean expired,
             VerificationOutcome verificationOutcome,
             FailureCode failureCode) {
         this.vot = vot;
+        this.maxVot = maxVot;
+        this.reconstructedVot = reconstructedVot;
+        this.reconstructedMaxVot = reconstructedMaxVot;
         this.isValid = isValid;
         this.expired = expired;
         this.verificationOutcome = verificationOutcome;
