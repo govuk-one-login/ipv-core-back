@@ -29,8 +29,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -52,10 +50,8 @@ class IpvSessionServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // Use the ctor that does not try to build its own datastore
         ipvSessionService = new IpvSessionService(mockDataStore, mockSleeper);
 
-        // Inject the mock ConfigService into the private field
         var field = IpvSessionService.class.getDeclaredField("configService");
         field.setAccessible(true);
         field.set(ipvSessionService, mockConfigService);
@@ -255,34 +251,6 @@ class IpvSessionServiceTest {
     }
 
     @Test
-<<<<<<< HEAD
-=======
-    void shouldCreateSessionItemWithInitialAccountState() {
-        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
-        IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.getInstance().generate(),
-                        null,
-                        null,
-                        false,
-                        ACCOUNT_INTERVENTION_STATE,
-                        AIS_NO_INTERVENTION);
-
-        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture(), eq(900L));
-        var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertNotNull(capturedSessionItem.getIpvSessionId());
-        assertNotNull(capturedSessionItem.getCreationDateTime());
-
-        assertEquals(capturedSessionItem.getIpvSessionId(), ipvSessionItem.getIpvSessionId());
-        assertEquals(INITIAL_START_JOURNEY_STATE, capturedSessionItem.getState());
-        assertEquals(
-                ACCOUNT_INTERVENTION_STATE,
-                capturedSessionItem.getInitialAccountInterventionState());
-        assertEquals(AIS_NO_INTERVENTION, capturedSessionItem.getAisInterventionType());
-    }
-
-    @Test
->>>>>>> be9286379 (PYIC-7878: Refactor TTL handling & fix tests: use typed config getters)
     void shouldCreateSessionItemWithReverificationJourney() {
         when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
         IpvSessionItem ipvSessionItem =

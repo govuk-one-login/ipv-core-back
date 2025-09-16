@@ -109,7 +109,6 @@ class ContractTest {
     void fetchContraIndicators_whenCalledWithUserIdAgainstCimitApi_receivesContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
 
-        // Arrange (stub only the leaf values actually used by the code under test)
         when(mockCimitConfig.getComponentId()).thenReturn(URI.create(TEST_ISSUER));
         when(mockCimitConfig.getSigningKey()).thenReturn(EC_PRIVATE_KEY_JWK);
         when(mockCimitConfig.getApiBaseUrl()).thenReturn(URI.create(getMockApiBaseUrl(mockServer)));

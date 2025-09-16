@@ -304,7 +304,6 @@ class TokenRequestValidatorTest {
     }
 
     private Map<String, Object> getValidClaimsSetValues() {
-        // Use the same audience the validator will check
         String expectedAud = mockConfigService.getComponentId();
 
         return Map.of(

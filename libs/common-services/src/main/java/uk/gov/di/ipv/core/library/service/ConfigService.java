@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -125,15 +126,16 @@ public abstract class ConfigService {
     }
 
     public boolean isCredentialIssuerEnabled(String criId) {
-        if (criId == null) return false;
-
-        var cfg = getConfiguration();
-        var wrapper = cfg.getCredentialIssuers().getById(criId);
+        var wrapper = getConfiguration().getCredentialIssuers().getById(criId);
         return wrapper != null && Boolean.parseBoolean(wrapper.getEnabled());
     }
 
     public long getBackendSessionTtl() {
         return getConfiguration().getSelf().getBackendSessionTtl();
+    }
+
+    public String getDcmawAsyncVcPendingReturnTtl() {
+        return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl().toString();
     }
 
     public long getCriResponseTtl() {
@@ -191,6 +193,10 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getFraudCheckExpiryPeriodHours();
     }
 
+    public URI getSisApplicationUrl() {
+        return getConfiguration().getSis().getApplicationUrl();
+    }
+
     public long getAuthCodeExpirySeconds() {
         return getConfiguration().getSelf().getAuthCodeExpirySeconds();
     }
@@ -242,12 +248,8 @@ public abstract class ConfigService {
         return getConfiguration().getCredentialIssuers().getById(cri.getId()).getActiveConnection();
     }
 
-    // ConfigService.java  (replace the whole method)
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
-        var list =
-                getConfiguration()
-                        .getSelf()
-                        .getCiScoringConfig(); // already a List<ContraIndicatorConfig>
+        var list = getConfiguration().getSelf().getCiScoringConfig();
         if (list == null || list.isEmpty()) {
             return Collections.emptyMap();
         }

@@ -63,12 +63,6 @@ class CriResponseServiceTest {
         criResponseService = new CriResponseService(mockDataStore, mockConfigService);
     }
 
-    private void stubDcmawPendingTtl(int ttlSeconds) {
-        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
-        when(mockConfig.getSelf()).thenReturn(mockSelf);
-        when(mockSelf.getDcmawAsyncVcPendingReturnTtl()).thenReturn(ttlSeconds);
-    }
-
     @Test
     void shouldReturnCredentialFromDataStoreForSpecificCri() {
         String ipvSessionId = "ipvSessionId";
@@ -227,7 +221,7 @@ class CriResponseServiceTest {
 
     @Test
     void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
-        stubDcmawPendingTtl(1000000000);
+        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn("1000000000");
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
         var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
@@ -242,7 +236,7 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
         // Arrange
-        stubDcmawPendingTtl(-1);
+        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn("-1");
 
         // Act
         var asyncCriStatus =

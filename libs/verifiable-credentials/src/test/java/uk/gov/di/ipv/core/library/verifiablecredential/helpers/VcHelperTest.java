@@ -177,7 +177,6 @@ class VcHelperTest {
     void shouldReturnTrueWhenVcIsExpired() {
         VcHelper.setConfigService(configService);
 
-        // Only this stub is needed
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         var vc = vcExperianFraudExpired();

@@ -140,9 +140,7 @@ class EvcsClientTest {
     @ParameterizedTest
     @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
     void getUserVCs(String appUrl) throws Exception {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(appUrl);
-    void testGetUserVCs(String appUrl) throws Exception {
+        when(mockEvcs.getApplicationUrl()).thenReturn(URI.create(appUrl));
         // Arrange
         stubEvcsBaseUrl(appUrl);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
@@ -651,7 +649,7 @@ class EvcsClientTest {
     @Test
     void invalidateStoredIdentityRecordShouldThrowIfBadUri() {
         when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
-        when(badUri.toString()).thenReturn("\\"); // forces URI building to fail
+        when(badUri.toString()).thenReturn("\\");
 
         assertThrows(
                 EvcsServiceException.class,

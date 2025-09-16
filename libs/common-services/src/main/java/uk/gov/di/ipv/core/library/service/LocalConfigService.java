@@ -23,7 +23,6 @@ public class LocalConfigService extends ConfigService {
     public LocalConfigService(File parametersFile, File secretsFile) {
         secrets = updateParameters(parseYamlFile(secretsFile));
 
-        // Update parameters
         var yaml = parseYamlFile(parametersFile);
 
         setConfiguration(generateConfiguration(yaml));

@@ -15,7 +15,6 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 
-	testImplementation project(':libs:test-helpers')
 	api project(":libs:cri-response-service")
 
 	testImplementation libs.junitJupiter,

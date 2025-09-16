@@ -90,7 +90,6 @@ class CimitServiceTest {
         when(configService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getCimit()).thenReturn(mockCimit);
 
-        // used by most tests
         when(mockCimit.getApiBaseUrl()).thenReturn(URI.create(CIMIT_API_BASE_URL));
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
     }

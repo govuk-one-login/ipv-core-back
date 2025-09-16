@@ -1427,8 +1427,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getFraudCheckExpiryPeriodHours())
-                    .thenReturn(100000000); // not the best way to test this
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(100000000);
 
             var journeyResponse =
                     toResponseClass(

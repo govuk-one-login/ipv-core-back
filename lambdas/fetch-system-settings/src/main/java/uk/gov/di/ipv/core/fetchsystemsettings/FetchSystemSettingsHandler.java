@@ -11,11 +11,12 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.service.AppConfigService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class FetchSystemSettingsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -39,32 +40,34 @@ public class FetchSystemSettingsHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
         try {
-            // Fetch current feature flag statuses
-            Map<String, Boolean> featureFlagStatuses =
-                    configService.getParametersByPrefix("featureFlags").entrySet().stream()
-                            .collect(
-                                    Collectors.toMap(
-                                            Map.Entry::getKey,
-                                            entry -> Boolean.parseBoolean(entry.getValue())));
+            // Pull the current, feature-overlaid configuration
+            var cfg = configService.getConfiguration();
 
-            // Fetch current CRI statuses
-            Map<String, Boolean> criStatuses =
-                    configService.getParametersByPrefix("credentialIssuers").entrySet().stream()
-                            .filter(entry -> entry.getKey().matches("([a-zA-Z0-9]*)/enabled"))
-                            .collect(
-                                    Collectors.toMap(
-                                            entry -> entry.getKey().split("/")[0],
-                                            entry -> Boolean.parseBoolean(entry.getValue())));
+            // Feature flags are already a Map<String, Boolean> in Config
+            Map<String, Boolean> featureFlagStatuses =
+                    cfg.getFeatureFlags() != null ? cfg.getFeatureFlags() : Map.of();
+
+            // Build CRI enabled/disabled map from typed config
+            var criStatuses = new HashMap<String, Boolean>();
+            var issuers = cfg.getCredentialIssuers();
+            for (var cri : Cri.values()) {
+                var wrapper = issuers.getById(cri.getId());
+                if (wrapper != null && wrapper.getEnabled() != null) {
+                    criStatuses.put(cri.getId(), Boolean.parseBoolean(wrapper.getEnabled()));
+                }
+            }
+
+            var body =
+                    OBJECT_MAPPER.writeValueAsString(
+                            Map.of(
+                                    "featureFlagStatuses", featureFlagStatuses,
+                                    "criStatuses", criStatuses));
+
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Map.of("Content-Type", "application/json"))
-                    .withBody(
-                            OBJECT_MAPPER.writeValueAsString(
-                                    Map.of(
-                                            "featureFlagStatuses",
-                                            featureFlagStatuses,
-                                            "criStatuses",
-                                            criStatuses)));
+                    .withBody(body);
+
         } catch (JsonProcessingException e) {
             LOGGER.error("Unhandled exception", e);
             return new APIGatewayProxyResponseEvent()
