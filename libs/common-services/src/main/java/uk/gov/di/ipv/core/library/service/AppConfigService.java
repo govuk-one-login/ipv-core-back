@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
@@ -24,7 +22,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.List;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -38,7 +35,6 @@ public class AppConfigService extends ConfigService {
     private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
     private static final String CORE_BASE_PATH = "/%s/core/";
 
-    @Getter @Setter private List<String> featureSet;
     private String paramsRawHash;
     private final BaseProvider appConfigProvider;
     private final SecretsProvider secretsProvider;
@@ -74,6 +70,7 @@ public class AppConfigService extends ConfigService {
         this.secretsProvider = secretsProvider;
     }
 
+    @Override
     public void reloadParameters() {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);

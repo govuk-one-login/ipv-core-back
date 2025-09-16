@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -462,8 +461,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (CredentialParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
-        } catch (ConfigException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         } catch (IpvSessionNotFoundException e) {
@@ -565,7 +562,6 @@ public class CheckExistingIdentityHandler
                     CiExtractionException,
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
-                    ConfigException,
                     CiRetrievalException,
                     MissingSecurityCheckCredential {
         var criResponseItem =

@@ -35,19 +35,28 @@ public class LocalConfigService extends ConfigService {
         setConfiguration(generateConfiguration(parametersYaml));
     }
 
-    public void reloadParameters() {}
-    ;
-
-    public List<String> getFeatureSet() {
-        return featureSet.get();
-    }
-
-    public void setFeatureSet(List<String> featureSet) {
-        this.featureSet.set(featureSet);
+    @Override
+    @SuppressWarnings("java:S1186") // Sonar: Methods should not be empty
+    public void reloadParameters() {
+        // Intentionally no-op for LocalConfigService:
+        // config is loaded from provided local/test YAML and does not change at runtime.
+        // AppConfigService overrides this to fetch fresh values.
     }
 
     public void removeFeatureSet() {
         this.featureSet.remove();
+    }
+
+    @Override
+    public List<String> getFeatureSet() {
+        // tests expect null when cleared
+        return featureSet.get();
+    }
+
+    @Override
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet.set(
+                (featureSet == null || featureSet.isEmpty()) ? null : List.copyOf(featureSet));
     }
 
     private Map<String, String> secrets = new HashMap<>();

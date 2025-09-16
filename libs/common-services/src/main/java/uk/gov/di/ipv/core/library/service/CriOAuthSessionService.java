@@ -37,6 +37,7 @@ public class CriOAuthSessionService {
 
     @ExcludeFromGeneratedCoverageReport
     public CriOAuthSessionService(ConfigService configService) {
+        this.configService = configService;
         dataStore =
                 DataStore.create(
                         CRI_OAUTH_SESSIONS_TABLE_NAME, CriOAuthSessionItem.class, configService);

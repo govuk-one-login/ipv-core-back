@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
@@ -260,7 +259,6 @@ public class CriCheckingService {
                     HttpResponseExceptionWithErrorBody,
                     CiExtractionException,
                     CredentialParseException,
-                    ConfigException,
                     MissingSecurityCheckCredential {
         var isReverification = clientOAuthSessionItem.isReverification();
         if (!isReverification) {

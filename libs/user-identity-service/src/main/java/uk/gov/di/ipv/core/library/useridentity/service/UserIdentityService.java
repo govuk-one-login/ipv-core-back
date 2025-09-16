@@ -81,7 +81,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody, UnrecognisedCiException {
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
-        var vtm = configService.getConfiguration().getSelf().getCoreVtmClaim().toString();
+        var vtm = configService.getCoreVtmClaim();
 
         var userIdentityBuilder =
                 UserIdentity.UserIdentityBuilder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);

@@ -20,6 +20,7 @@ public class ClientAuthJwtIdService {
 
     @ExcludeFromGeneratedCoverageReport
     public ClientAuthJwtIdService(ConfigService configService) {
+        this.configService = configService;
         this.dataStore =
                 DataStore.create(
                         CLIENT_AUTH_JWT_IDS_TABLE_NAME, ClientAuthJwtIdItem.class, configService);

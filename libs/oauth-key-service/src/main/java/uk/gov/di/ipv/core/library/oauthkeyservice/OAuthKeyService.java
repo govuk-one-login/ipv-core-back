@@ -91,8 +91,7 @@ public class OAuthKeyService {
                     configService
                             .getConfiguration()
                             .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify()
-                            .toString());
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         var jwksUrl = getClientJwksUrl(clientId);
@@ -104,8 +103,7 @@ public class OAuthKeyService {
                     configService
                             .getConfiguration()
                             .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify()
-                            .toString());
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         var keyByKeyId = getCachedJWKSet(jwksUrl).filter(SIG_USE_MATCHER).getKeyByKeyId(keyId);
@@ -119,8 +117,7 @@ public class OAuthKeyService {
                     configService
                             .getConfiguration()
                             .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify()
-                            .toString());
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         LOGGER.info(

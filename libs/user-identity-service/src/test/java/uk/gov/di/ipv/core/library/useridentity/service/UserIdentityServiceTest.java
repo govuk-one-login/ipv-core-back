@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.domain.CoiConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
@@ -60,8 +59,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -79,12 +76,6 @@ class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
 
     private final List<ContraIndicator> emptyContraIndicators = List.of();
-    private final Map<ConfigurationVariable, String> paramsToMockForP2 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
-    private final Map<ConfigurationVariable, String> paramsToMockForP0 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
-    private final Map<ConfigurationVariable, String> paramsToMockForP0WithNoCi =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", RETURN_CODES_NON_CI_BREACHING_P0, "🐧");
 
     public static OauthCriConfig claimedIdentityConfig;
 
@@ -123,7 +114,7 @@ class UserIdentityServiceTest {
         when(mockSelf.getCiScoringThresholdByVot()).thenReturn(mockThresholds);
 
         // Non-null VTM (URI!) — fixes URI.toString() NPE
-        when(mockSelf.getCoreVtmClaim()).thenReturn(java.net.URI.create("mock-vtm-claim"));
+        when(mockSelf.getCoreVtmClaim()).thenReturn(URI.create("mock-vtm-claim"));
 
         // Real Integers (NOT mocked Integers)
         when(mockCoi.getFamilyNameChars()).thenReturn(5);
@@ -1881,13 +1872,13 @@ class UserIdentityServiceTest {
     }
 
     private void useP2Defaults() {
-        when(mockSelf.getCoreVtmClaim()).thenReturn(java.net.URI.create("mock-vtm-claim"));
+        when(mockConfigService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
         returnCodes.put("nonCiBreachingP0", "");
         when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
     }
 
     private void useP0NonCiCode(String code) {
-        when(mockSelf.getCoreVtmClaim()).thenReturn(java.net.URI.create("mock-vtm-claim"));
+        when(mockConfigService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
         returnCodes.put("nonCiBreachingP0", code);
         when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
     }

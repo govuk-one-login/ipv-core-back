@@ -44,7 +44,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -461,7 +460,6 @@ class CheckExistingIdentityHandlerTest {
                         VerifiableCredentialException,
                         EvcsServiceException,
                         CiExtractionException,
-                        ConfigException,
                         CiRetrievalException,
                         MissingSecurityCheckCredential {
             // Arrange
@@ -639,8 +637,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-                throws Exception {
+        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(
                             new AsyncCriStatus(

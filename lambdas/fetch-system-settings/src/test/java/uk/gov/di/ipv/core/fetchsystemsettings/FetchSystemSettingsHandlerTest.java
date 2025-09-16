@@ -57,15 +57,14 @@ class FetchSystemSettingsHandlerTest {
 
         // Build expected feature flags from typed config
         var cfg = configService.getConfiguration();
-        Map<String, Object> expectedFeatureFlags =
-                (cfg.getFeatureFlags() != null) ? new HashMap<>(cfg.getFeatureFlags()) : Map.of();
+        Map<String, Boolean> expectedFeatureFlags = Map.copyOf(cfg.getFeatureFlags());
 
         // Build expected CRI statuses from typed config (enabled flags)
         var expectedCriStatuses = new HashMap<String, Object>();
         var issuers = cfg.getCredentialIssuers();
         for (var cri : Cri.values()) {
             var wrapper = issuers.getById(cri.getId());
-            if (wrapper != null && wrapper.getEnabled() != null) {
+            if (wrapper != null) {
                 expectedCriStatuses.put(cri.getId(), Boolean.parseBoolean(wrapper.getEnabled()));
             }
         }

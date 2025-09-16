@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
@@ -287,7 +286,7 @@ class CimitUtilityServiceTest {
     @MethodSource("ciScoresAndUnsurpassedThresholds")
     void
             getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiScoreNotBreachingAndNoExistingMitigations(
-                    int ciScore1, int ciScore2, int ciScoreThreshold) throws ConfigException {
+                    int ciScore1, int ciScore2, int ciScoreThreshold) {
 
         // Threshold stub (only what we need)
         stubThreshold(ciScoreThreshold);
@@ -408,8 +407,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable()
-                    throws Exception {
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -616,7 +614,7 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationEventIfBreachingOrActive_ReturnsEmpty_IfNoCis() throws Exception {
+    void getMitigationEventIfBreachingOrActive_ReturnsEmpty_IfNoCis() {
         // Arrange
         var code = "ci_code";
         Map<String, ContraIndicatorConfig> ciConfigMap =

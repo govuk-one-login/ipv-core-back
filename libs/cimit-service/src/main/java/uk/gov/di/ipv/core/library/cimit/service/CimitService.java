@@ -171,8 +171,7 @@ public class CimitService {
             String contraIndicatorsVC, String userId) throws CiRetrievalException {
         final String cimitComponentId =
                 configService.getConfiguration().getCimit().getComponentId().toString();
-        final String cimitSigningKey =
-                configService.getConfiguration().getCimit().getSigningKey().toString();
+        final String cimitSigningKey = configService.getConfiguration().getCimit().getSigningKey();
         try {
             LOGGER.info(
                     LogHelper.buildLogMessage(

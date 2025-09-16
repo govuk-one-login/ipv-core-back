@@ -43,16 +43,14 @@ public class FetchSystemSettingsHandler
             // Pull the current, feature-overlaid configuration
             var cfg = configService.getConfiguration();
 
-            // Feature flags are already a Map<String, Boolean> in Config
-            Map<String, Boolean> featureFlagStatuses =
-                    cfg.getFeatureFlags() != null ? cfg.getFeatureFlags() : Map.of();
+            Map<String, Boolean> featureFlagStatuses = Map.copyOf(cfg.getFeatureFlags());
 
             // Build CRI enabled/disabled map from typed config
             var criStatuses = new HashMap<String, Boolean>();
             var issuers = cfg.getCredentialIssuers();
             for (var cri : Cri.values()) {
                 var wrapper = issuers.getById(cri.getId());
-                if (wrapper != null && wrapper.getEnabled() != null) {
+                if (wrapper != null) {
                     criStatuses.put(cri.getId(), Boolean.parseBoolean(wrapper.getEnabled()));
                 }
             }

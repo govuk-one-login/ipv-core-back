@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 
@@ -25,25 +26,27 @@ public class CredentialIssuersConfig {
     @NonNull final CriConnectionWrapper<OauthCriConfig> dwpKbv;
     @NonNull final CriConnectionWrapper<RestCriConfig> ticf;
 
-    public CriConnectionWrapper<?> getById(String criId) {
+    @SuppressWarnings("unchecked")
+    public <T extends CriConfig> CriConnectionWrapper<T> getById(String criId) {
         if (criId == null) {
             return null;
         }
-        return switch (criId) {
-            case "address" -> address;
-            case "dcmaw" -> dcmaw;
-            case "dcmawAsync" -> dcmawAsync;
-            case "fraud" -> fraud;
-            case "experianKbv" -> experianKbv;
-            case "ukPassport" -> ukPassport;
-            case "drivingLicence" -> drivingLicence;
-            case "claimedIdentity" -> claimedIdentity;
-            case "f2f" -> f2f;
-            case "nino" -> nino;
-            case "bav" -> bav;
-            case "dwpKbv" -> dwpKbv;
-            case "ticf" -> ticf;
-            default -> null;
-        };
+        return (CriConnectionWrapper<T>)
+                switch (criId) {
+                    case "address" -> address;
+                    case "dcmaw" -> dcmaw;
+                    case "dcmawAsync" -> dcmawAsync;
+                    case "fraud" -> fraud;
+                    case "experianKbv" -> experianKbv;
+                    case "ukPassport" -> ukPassport;
+                    case "drivingLicence" -> drivingLicence;
+                    case "claimedIdentity" -> claimedIdentity;
+                    case "f2f" -> f2f;
+                    case "nino" -> nino;
+                    case "bav" -> bav;
+                    case "dwpKbv" -> dwpKbv;
+                    case "ticf" -> ticf;
+                    default -> null;
+                };
     }
 }

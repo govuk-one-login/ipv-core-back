@@ -17,8 +17,7 @@ public interface DataStore<T extends PersistenceItem> {
                 : new DynamoDataStore<>(
                         configService.getEnvironmentVariable(tableName),
                         klass,
-                        DynamoDataStore.getClient(),
-                        configService);
+                        DynamoDataStore.getClient());
     }
 
     void create(T item, long ttlSeconds);

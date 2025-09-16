@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -152,7 +151,6 @@ class BuildCriOauthRequestHandlerTest {
     private OauthCriConfig oauthCriConfig;
     private ClientOAuthSessionItem clientOAuthSessionItem;
     private final IpvSessionItem ipvSessionItem = new IpvSessionItem();
-    private final Config mockConfig = mock(Config.class);
 
     @BeforeAll
     static void setUpAll() throws JsonProcessingException {

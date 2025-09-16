@@ -80,6 +80,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @BeforeEach
     void pactSetup(PactVerificationContext context) throws IOException {
+        var clientOAuthSessionItem = new ClientOAuthSessionItem();
 
         var accessTokenService = new AccessTokenService(configService);
         var sessionService = new IpvSessionService(ipvSessionDataStore, mockSleeper);
@@ -90,7 +91,8 @@ class IssueClientAccessTokenHandlerTest {
                 new TokenRequestValidator(
                         configService, clientAuthJwtIdService, mockOauthKeyService);
         ipvSessionItem = new IpvSessionItem();
-        var clientOAuthSessionItem = new ClientOAuthSessionItem();
+        clientOAuthSessionItem.setClientId(TEST_CLIENT_ID);
+        when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         var authorizationCodeMetadata = new AuthorizationCodeMetadata();
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired

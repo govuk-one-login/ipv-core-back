@@ -1,7 +1,9 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +17,7 @@ import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -22,21 +25,28 @@ import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public abstract class ConfigService {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PATH_SEPARATOR = "/";
-    private static final String CORE = "core";
+
+    // JSON/YAML mappers
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
+
+    private static final String CORE = "core";
+    private static final String PATH_SEPARATOR = "/";
+
+    // Fields that may contain JSON-encoded JWKs as *strings* that arrive with escaped quotes
+    // e.g. "{\\\"kty\\\":\\\"EC\\\",...}" -> should become "{\"kty\":\"EC\",...}"
+    private static final Set<String> JWK_STRING_FIELDS =
+            Set.of("signingKey", "encryptionKey", "publicKeyMaterialForCoreToVerify");
 
     @Setter private Config configuration;
 
@@ -44,73 +54,128 @@ public abstract class ConfigService {
 
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
-        if (isLocal()) {
-            return new LocalConfigService();
-        }
-        return new AppConfigService();
+        return isLocal() ? new LocalConfigService() : new AppConfigService();
     }
 
-    public Config getConfiguration() {
-        reloadParameters();
+    // Feature overlays (kept simple; LocalConfigService can override with ThreadLocal if desired)
 
-        var base = this.configuration;
-        if (base == null) return null;
+    private List<String> featureSet;
 
-        var features = base.getFeatures();
-        var selected = getFeatureSet();
-        if (features == null || selected == null || selected.isEmpty()) {
-            return base;
-        }
-
-        var target =
-                OBJECT_MAPPER.convertValue(
-                        base,
-                        new com.fasterxml.jackson.core.type.TypeReference<
-                                Map<String, Object>>() {});
-
-        for (int i = selected.size() - 1; i >= 0; i--) {
-            var name = selected.get(i);
-            var overrides = features.get(name);
-            if (overrides == null) continue;
-
-            var src =
-                    OBJECT_MAPPER.convertValue(
-                            overrides,
-                            new com.fasterxml.jackson.core.type.TypeReference<
-                                    Map<String, Object>>() {});
-            mergeMaps(target, src);
-        }
-
-        return OBJECT_MAPPER.convertValue(target, Config.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void mergeMaps(Map<String, Object> dst, Map<String, Object> src) {
-        for (var e : src.entrySet()) {
-            var k = e.getKey();
-            var v = e.getValue();
-            var dv = dst.get(k);
-            if (v instanceof Map && dv instanceof Map) {
-                mergeMaps((Map<String, Object>) dv, (Map<String, Object>) v);
-            } else {
-                dst.put(k, v);
-            }
-        }
-    }
-
-    private List<String> featureSet = List.of();
-
+    /**
+     * May return {@code null} if no feature set has been set. (LocalConfigService tests expect null
+     * after removeFeatureSet().)
+     */
     public List<String> getFeatureSet() {
         return featureSet;
     }
 
     public void setFeatureSet(List<String> featureSet) {
-        this.featureSet = (featureSet == null) ? List.of() : List.copyOf(featureSet);
+        this.featureSet =
+                (featureSet == null || featureSet.isEmpty()) ? null : List.copyOf(featureSet);
     }
 
-    public abstract void reloadParameters();
+    // Config loading / overlay application
+
+    public Config getConfiguration() {
+        reloadParameters();
+        var cfg = configuration;
+        if (cfg == null) return null;
+
+        var selected = Optional.ofNullable(getFeatureSet()).orElseGet(Collections::emptyList);
+        if (selected.isEmpty()) return cfg;
+
+        var features = Optional.ofNullable(cfg.getFeatures()).orElseGet(Collections::emptyMap);
+        if (features.isEmpty()) return cfg;
+
+        var merged = OBJECT_MAPPER.convertValue(cfg, new TypeReference<Map<String, Object>>() {});
+
+        for (int i = selected.size() - 1; i >= 0; i--) {
+            var node = features.get(selected.get(i));
+            var overlay =
+                    OBJECT_MAPPER.convertValue(node, new TypeReference<Map<String, Object>>() {});
+            if (overlay != null && !overlay.isEmpty()) mergeMaps(merged, overlay);
+        }
+        return OBJECT_MAPPER.convertValue(merged, Config.class);
+    }
+
+    // ---- mergeMaps (kept small and predictable) ----
+    @SuppressWarnings("unchecked")
+    private static void mergeMaps(Map<String, Object> dst, Map<String, Object> src) {
+        for (var e : src.entrySet()) {
+            var k = e.getKey();
+            var sv = e.getValue();
+            var dv = dst.get(k);
+
+            if (dv instanceof Map && sv instanceof Map) {
+                mergeMaps((Map<String, Object>) dv, (Map<String, Object>) sv);
+            } else if (dv instanceof String && sv instanceof Map) {
+                dst.put(k, toJsonString(sv)); // preserve string-typed fields (e.g. JWK JSON)
+            } else {
+                dst.put(k, sv); // replace
+            }
+        }
+    }
+
+    private static String toJsonString(Object v) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(v);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+            return String.valueOf(v);
+        }
+    }
+
+    // ---- generateConfiguration ----
+    public static Config generateConfiguration(String yaml) {
+        try {
+            var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            if (core == null) throw new IllegalArgumentException("Missing Core config.");
+            var copy = core.deepCopy();
+            normalizeJwkStrings(copy); // fix \"-escaped JWK JSON
+            return OBJECT_MAPPER.treeToValue(copy, Config.class);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        }
+    }
+
+    // ---- normalizeJwkStrings (tight) ----
+    private static void normalizeJwkStrings(JsonNode node) {
+        if (node.isArray()) {
+            node.forEach(ConfigService::normalizeJwkStrings);
+            return;
+        }
+        if (!node.isObject()) return;
+
+        var obj = (ObjectNode) node;
+        for (var entry : obj.properties()) { // <- replaces obj.fields()
+            var key = entry.getKey();
+            var val = entry.getValue();
+
+            if (JWK_STRING_FIELDS.contains(key) && val.isTextual()) {
+                obj.put(key, fixJwk(val.asText()));
+            } else {
+                normalizeJwkStrings(val);
+            }
+        }
+    }
+
+    private static String fixJwk(String s) {
+        if (s.indexOf('\\') >= 0 && s.contains("\\\"")) s = s.replace("\\\"", "\"");
+        if ((s.startsWith("\"{") && s.endsWith("}\""))
+                || (s.startsWith("'{") && s.endsWith("}'"))) {
+            s = s.substring(1, s.length() - 1);
+        }
+        return s;
+    }
+
+    // Hooks overridden by AppConfigService/LocalConfigService
+
+    public void reloadParameters() {
+        // real fetch+reparse happens in AppConfigService; LocalConfigService is static
+    }
 
     protected abstract String getSecret(String path);
+
+    // Environment variables & common getters
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -197,6 +262,10 @@ public abstract class ConfigService {
         return getConfiguration().getSis().getApplicationUrl();
     }
 
+    public String getCoreVtmClaim() {
+        return getConfiguration().getSelf().getCoreVtmClaim().toString();
+    }
+
     public long getAuthCodeExpirySeconds() {
         return getConfiguration().getSelf().getAuthCodeExpirySeconds();
     }
@@ -205,15 +274,21 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getMaxAllowedAuthClientTtl();
     }
 
+    private static final Pattern COMMA = Pattern.compile(",");
+
     public List<String> getClientValidRedirectUrls(String clientId) {
-        var clientConfigValidRedirectUrs =
-                getConfiguration().getClientConfig(clientId).getValidRedirectUrls();
-        return Arrays.asList(clientConfigValidRedirectUrs.split("\\s*,\\s*"));
+        var urls = getConfiguration().getClientConfig(clientId).getValidRedirectUrls();
+        if (urls.isBlank()) {
+            return List.of();
+        }
+        return COMMA.splitAsStream(urls).map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
     }
+
+    // CRI Config helpers
 
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
         return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
@@ -248,21 +323,26 @@ public abstract class ConfigService {
         return getConfiguration().getCredentialIssuers().getById(cri.getId()).getActiveConnection();
     }
 
+    // CI / CIMIT
+
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
         var list = getConfiguration().getSelf().getCiScoringConfig();
-        if (list == null || list.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        var map = new HashMap<String, ContraIndicatorConfig>(list.size());
-        for (var ci : list) {
-            map.put(ci.getCi(), ci);
-        }
-        return map;
+        if (list.isEmpty()) return Map.of();
+
+        return list.stream()
+                .collect(
+                        Collectors.toMap(
+                                ContraIndicatorConfig::getCi,
+                                Function.identity(),
+                                (first, second) -> second,
+                                HashMap::new));
     }
 
     public Map<String, List<CiRoutingConfig>> getCimitConfig() {
         return getConfiguration().getCimit().getConfig();
     }
+
+    // Feature flags
 
     public boolean enabled(FeatureFlag flag) {
         return enabled(flag.getName());
@@ -274,26 +354,44 @@ public abstract class ConfigService {
         return flags != null && Boolean.TRUE.equals(flags.get(flagName));
     }
 
+    // Issuer -> CRI map
+
     public Map<String, Cri> getIssuerCris() {
         var issuerToCri = new HashMap<String, Cri>();
+        var issuers = getConfiguration().getCredentialIssuers();
+
         for (var cri : Cri.values()) {
-            if (cri.getId().equals(Cri.CIMIT.getId())) continue;
-            var wrapper = getConfiguration().getCredentialIssuers().getById(cri.getId());
+            if (Cri.CIMIT.getId().equals(cri.getId())) {
+                continue; // skip CIMIT early to avoid nesting
+            }
+
+            var wrapper = issuers.getById(cri.getId());
             var connections = (wrapper != null) ? wrapper.getConnections() : null;
-            if (connections == null || connections.isEmpty()) {
-                LOGGER.warn(
-                        LogHelper.buildLogMessage(
-                                "Issuer for CRI: %s not configured".formatted(cri.getId())));
-                continue;
-            }
-            for (var conn : connections.values()) {
-                var componentId = conn.getComponentId();
-                if (componentId != null && !componentId.isBlank())
-                    issuerToCri.put(componentId, cri);
-            }
+
+            addIssuerMappings(issuerToCri, cri, connections);
         }
         return issuerToCri;
     }
+
+    private void addIssuerMappings(
+            Map<String, Cri> out, Cri cri, Map<String, ? extends CriConfig> connections) {
+
+        if (connections == null || connections.isEmpty()) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Issuer for CRI: %s not configured".formatted(cri.getId())));
+            return;
+        }
+
+        for (var conn : connections.values()) {
+            var componentId = conn.getComponentId();
+            if (componentId != null && !componentId.isBlank()) {
+                out.put(componentId, cri);
+            }
+        }
+    }
+
+    // Parameter flattening for legacy helpers
 
     protected Map<String, String> updateParameters(String yaml) {
         var map = new HashMap<String, String>();
@@ -306,19 +404,6 @@ public abstract class ConfigService {
         }
     }
 
-    public static Config generateConfiguration(String yaml) {
-        try {
-            var coreConfig = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
-            if (coreConfig == null) {
-                throw new IllegalArgumentException("Missing Core config.");
-            }
-            return OBJECT_MAPPER.treeToValue(coreConfig, Config.class);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not load parameters yaml", e);
-        }
-    }
-
-    // Helper methods
     private void flattenParameters(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());

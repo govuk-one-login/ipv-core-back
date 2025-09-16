@@ -46,10 +46,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class AppConfigServiceTest {
-    // ---------------------------------------------------------------------
-    // Test wiring
-    // ---------------------------------------------------------------------
-    private static String TEST_RAW_PARAMETERS;
+
+    private static String testRawParameters;
 
     @Mock AppConfigProvider appConfigProvider;
     @Mock SecretsProvider secretsProvider;
@@ -60,8 +58,8 @@ class AppConfigServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        if (TEST_RAW_PARAMETERS == null) {
-            TEST_RAW_PARAMETERS =
+        if (testRawParameters == null) {
+            testRawParameters =
                     new String(
                             CommonData.class
                                     .getResourceAsStream("/test-parameters.yaml")
@@ -70,8 +68,8 @@ class AppConfigServiceTest {
         }
 
         configService = new AppConfigService(appConfigProvider, secretsProvider);
-        lenient().when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS);
-        configService.setConfiguration(ConfigService.generateConfiguration(TEST_RAW_PARAMETERS));
+        lenient().when(appConfigProvider.get(any())).thenReturn(testRawParameters);
+        configService.setConfiguration(ConfigService.generateConfiguration(testRawParameters));
     }
 
     // Core getters
