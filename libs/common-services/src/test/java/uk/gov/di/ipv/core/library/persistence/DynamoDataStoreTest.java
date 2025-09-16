@@ -33,7 +33,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
 class DynamoDataStoreTest {
@@ -72,7 +71,7 @@ class DynamoDataStoreTest {
 
     @Test
     void shouldPutItemIntoDynamoDbTable() {
-        dataStore.create(authorizationCodeItem, BACKEND_SESSION_TTL);
+        dataStore.create(authorizationCodeItem, mockConfigService.getBackendSessionTtl());
 
         ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
                 ArgumentCaptor.forClass(AuthorizationCodeItem.class);

@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.criresponse.service;
 
 import com.nimbusds.jwt.util.DateUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -80,7 +79,7 @@ public class CriResponseService {
                         .reproveIdentity(
                                 Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity()))
                         .build();
-        dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
+        dataStore.create(criResponseItem, configService.getCriResponseTtl());
     }
 
     public void deleteCriResponseItem(String userId, Cri credentialIssuer) {

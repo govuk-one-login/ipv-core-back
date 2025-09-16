@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.time.Instant;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
@@ -42,6 +41,7 @@ public class IpvSessionService {
 
     private final DataStore<IpvSessionItem> dataStore;
     private final Sleeper sleeper;
+    private ConfigService configService;
 
     public IpvSessionService(DataStore<IpvSessionItem> dataStore, Sleeper sleeper) {
         this.dataStore = dataStore;
@@ -154,7 +154,7 @@ public class IpvSessionService {
             ipvSessionItem.setEmailAddress(emailAddress);
         }
 
-        dataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);
+        dataStore.create(ipvSessionItem, configService.getBackendSessionTtl());
 
         return ipvSessionItem;
     }

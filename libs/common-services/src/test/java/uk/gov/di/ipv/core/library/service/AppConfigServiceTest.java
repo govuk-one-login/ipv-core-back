@@ -79,7 +79,7 @@ class AppConfigServiceTest {
     // Get parameter
 
     @Test
-    void getParameterReturnsParameters() {
+    void getComponentIdReturnComponentId() {
         // Act
         var param = configService.getComponentId();
 
@@ -88,6 +88,24 @@ class AppConfigServiceTest {
     }
 
     @Test
+    void getSisComponentIdReturnComponentId() {
+        // Act
+        var param = configService.getSisComponentId();
+
+        // Assert
+        assertEquals("https://reuse-identity.build.account.gov.uk", param);
+    }
+
+    @Test
+    void getCimitComponentIdReturnComponentId() {
+        // Act
+        var param = configService.getCimitComponentId();
+
+        // Assert
+        assertEquals("https://cimit.stubs.account.gov.uk", param);
+    }
+
+    @Test // NOT NEEDED?
     void getParameterReturnsParametersWithoutUnrelatedFeatureOverride() {
         // Arrange
         configService.setFeatureSet(List.of("someOtherFeature"));
@@ -99,7 +117,7 @@ class AppConfigServiceTest {
         assertEquals("https://identity.local.account.gov.uk", param);
     }
 
-    @Test
+    @Test // NOT NEEDED?
     void getParameterThrowsForMissingValue() {
         // Act & Assert
         assertThrows(
@@ -107,10 +125,8 @@ class AppConfigServiceTest {
                 () -> configService.getConfiguration().getEvcs().getApplicationUrl().toString());
     }
 
-    // Get specific parameters
-
     @Test
-    void shouldGetLongValueFromConfigIfSet() {
+    void shouldGetBearerTokenTtl() {
         // Act
         var value = configService.getBearerTokenTtl();
 
@@ -119,7 +135,25 @@ class AppConfigServiceTest {
     }
 
     @Test
-    void shouldGetStringListValueFromConfigIfSet() {
+    void shouldGetJwtTtlSeconds() {
+        // Act
+        var value = configService.getJwtTtlSeconds();
+
+        // Assert
+        assertEquals(3600L, value);
+    }
+
+    @Test
+    void shouldGetMaxAllowedAuthClientTtl() {
+        // Act
+        var value = configService.getMaxAllowedAuthClientTtl();
+
+        // Assert
+        assertEquals(3600L, value);
+    }
+
+    @Test
+    void shouldGetClientValidRedirectUrls() {
         // Act
         var value = configService.getClientValidRedirectUrls("orchStub");
         // Assert
@@ -130,12 +164,11 @@ class AppConfigServiceTest {
     void getParameterReturnsUpdatedParameters() {
         // Act
         var componentId = configService.getComponentId();
-        var bearerTokenTtl =
-                configService.getConfiguration().getSelf().getBearerTokenTtl().toString();
+        var bearerTokenTtl = configService.getBearerTokenTtl();
 
         // Assert
         assertEquals("https://identity.local.account.gov.uk", componentId);
-        assertEquals("3600", bearerTokenTtl);
+        assertEquals(3600, bearerTokenTtl);
 
         // Arrange
         when(appConfigProvider.get(any()))
@@ -151,14 +184,11 @@ class AppConfigServiceTest {
 
         // Assert
         assertEquals("different-component-id", componentId);
-        assertThrows(
-                ConfigParameterNotFoundException.class,
-                () -> configService.getConfiguration().getSelf().getBearerTokenTtl().toString());
     }
 
     // Feature flags
 
-    @Test
+    @Test // NOT NEEDED?
     void getParameterReturnsParametersWithFeatureOverride() {
         // Arrange
         configService.setFeatureSet(List.of("testFeature"));

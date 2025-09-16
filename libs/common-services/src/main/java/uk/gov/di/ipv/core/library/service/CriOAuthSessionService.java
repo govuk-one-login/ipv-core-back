@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.retry.Retry;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_OAUTH_SESSIONS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -29,6 +28,7 @@ public class CriOAuthSessionService {
 
     private final DataStore<CriOAuthSessionItem> dataStore;
     private final Sleeper sleeper;
+    private ConfigService configService;
 
     public CriOAuthSessionService(DataStore<CriOAuthSessionItem> dataStore, Sleeper sleeper) {
         this.dataStore = dataStore;
@@ -76,7 +76,7 @@ public class CriOAuthSessionService {
                         .connection(connection)
                         .build();
 
-        dataStore.create(criOAuthSessionItem, BACKEND_SESSION_TTL);
+        dataStore.create(criOAuthSessionItem, configService.getBackendSessionTtl());
         LOGGER.info(
                 new StringMapMessage()
                         .with(

@@ -77,11 +77,6 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
-    public String getParameter( // TO BE REMOVED
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
-    }
-
     public String getParameter(String path) { // TO BE REMOVED
         if (getFeatureSet() != null) {
             for (String individualFeatureSet : getFeatureSet()) {
@@ -106,9 +101,16 @@ public abstract class ConfigService {
         return wrapper != null && Boolean.parseBoolean(wrapper.getEnabled());
     }
 
-    public long getLongParameter( // TO BE REMOVED
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Long.parseLong(getParameter(configurationVariable, pathProperties));
+    public long getBackendSessionTtl() {
+        return getConfiguration().getSelf().getBackendSessionTtl();
+    }
+
+    public long getCriResponseTtl() {
+        return getConfiguration().getSelf().getCriResponseTtl();
+    }
+
+    public long getSessionCredentialTtl() {
+        return getConfiguration().getSelf().getSessionCredentialTtl();
     }
 
     public long getBackendSessionTimeout() {

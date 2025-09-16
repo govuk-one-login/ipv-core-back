@@ -7,11 +7,11 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_AUTH_JWT_IDS_TABLE_NAME;
 
 public class ClientAuthJwtIdService {
     private final DataStore<ClientAuthJwtIdItem> dataStore;
+    private ConfigService configService;
 
     // For tests
     public ClientAuthJwtIdService(DataStore<ClientAuthJwtIdItem> dataStore) {
@@ -32,6 +32,6 @@ public class ClientAuthJwtIdService {
     public void persistClientAuthJwtId(String jwtId) {
         String timestamp = Instant.now().toString();
         ClientAuthJwtIdItem clientAuthJwtIdItem = new ClientAuthJwtIdItem(jwtId, timestamp);
-        dataStore.create(clientAuthJwtIdItem, BACKEND_SESSION_TTL);
+        dataStore.create(clientAuthJwtIdItem, configService.getBackendSessionTtl());
     }
 }

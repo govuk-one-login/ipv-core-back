@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.util.ArrayList;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -29,6 +28,7 @@ public class SessionCredentialsService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String RECEIVED_THIS_SESSION = "receivedThisSession";
     private final DataStore<SessionCredentialItem> dataStore;
+    private ConfigService configService;
 
     public SessionCredentialsService(DataStore<SessionCredentialItem> dataStore) {
         this.dataStore = dataStore;
@@ -89,7 +89,7 @@ public class SessionCredentialsService {
             for (var credential : credentials) {
                 dataStore.create(
                         credential.toSessionCredentialItem(ipvSessionId, receivedThisSession),
-                        SESSION_CREDENTIALS_TTL);
+                        configService.getSessionCredentialTtl());
             }
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error persisting session credential", e));
