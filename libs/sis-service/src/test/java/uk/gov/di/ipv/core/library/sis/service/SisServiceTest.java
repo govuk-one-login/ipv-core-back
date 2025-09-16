@@ -472,11 +472,11 @@ class SisServiceTest {
         assertEquals(expectedEvcsSignatures, restrictedValues.getReconstructedSignatures());
 
         var extensionValues = (AuditExtensionsSisComparison) auditEvent.getExtensions();
-        assertEquals(expectedVerificationOutcome, extensionValues.getOutcome());
+        assertEquals(expectedVerificationOutcome, extensionValues.getVerificationOutcome());
         assertEquals(expectedFailureCode, extensionValues.getFailureCode());
         assertEquals(expectedExpired, extensionValues.getExpired());
         assertEquals(expectedIsValid, extensionValues.getIsValid());
-        assertEquals(expectedSisMaxVot, extensionValues.getSisVot());
+        assertEquals(expectedSisMaxVot, extensionValues.getVot());
     }
 
     private static String getSignature(String jwt) {

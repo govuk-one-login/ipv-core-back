@@ -10,22 +10,22 @@ import uk.gov.di.ipv.core.library.sis.enums.VerificationOutcome;
 @ExcludeFromGeneratedCoverageReport
 @Getter
 public class AuditExtensionsSisComparison implements AuditExtensions {
-    private final Vot sisVot;
+    private final Vot vot;
     private final Boolean isValid;
     private final Boolean expired;
-    private final VerificationOutcome outcome;
+    private final VerificationOutcome verificationOutcome;
     private final FailureCode failureCode;
 
     public AuditExtensionsSisComparison(
-            Vot sisVot,
+            Vot vot,
             Boolean isValid,
             Boolean expired,
-            VerificationOutcome outcome,
+            VerificationOutcome verificationOutcome,
             FailureCode failureCode) {
-        this.sisVot = sisVot;
+        this.vot = vot;
         this.isValid = isValid;
         this.expired = expired;
-        this.outcome = outcome;
+        this.verificationOutcome = verificationOutcome;
         this.failureCode = failureCode;
     }
 }
