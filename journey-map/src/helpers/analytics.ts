@@ -10,7 +10,7 @@ const addSystemTimeZone = (dateTimeStr: string): string => {
   return `${dateTimeStr}${sign}${offsetHours}:${offsetMinutes}`;
 };
 
-export const parseTrnasitionsApi = (
+export const parseTransitionsApiForm = (
   formData: FormData,
 ): TransitionsApiRequestBody => {
   const selection = formData.get("sessionJourneySelection") as string;

@@ -17,7 +17,7 @@ import {
   getJourneyTransitions,
   getSystemSettings,
 } from "./service/analyticsService.js";
-import { parseTrnasitionsApi } from "./helpers/analytics.js";
+import { parseTransitionsApiForm } from "./helpers/analytics.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -496,7 +496,7 @@ const setupJourneyTransitionInput = (): void => {
 
   transitionsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const requestBody = parseTrnasitionsApi(new FormData(transitionsForm));
+    const requestBody = parseTransitionsApiForm(new FormData(transitionsForm));
     const journeyTransitions: JourneyTransition[] =
       await getJourneyTransitions(requestBody);
     setJourneyTransitionsData(journeyTransitions);

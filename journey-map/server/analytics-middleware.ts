@@ -46,10 +46,11 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       limit: "200",
     });
 
-    const targetEnvironment = req.body.environment;
-    const endpoint =
+    const targetEnvironment: string = req.body.environment;
+    const endpoint: string =
       config.environment[targetEnvironment].journeyTransitionsEndpoint;
-    const apiKey = config.environment[targetEnvironment].analyticsApiKey;
+    const apiKey: string =
+      config.environment[targetEnvironment].analyticsApiKey;
 
     const response = await fetch(`${endpoint}?${query.toString()}`, {
       method: "POST",

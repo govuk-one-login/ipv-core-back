@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { parseTrnasitionsApi } from "./analytics.js";
+import { parseTransitionsApiForm } from "./analytics.js";
 
 describe("parseTransitionsApiSettings", () => {
   const createFormData = (entries: Record<string, string>): FormData => {
@@ -32,7 +32,7 @@ describe("parseTransitionsApiSettings", () => {
         targetEnvironment: "production",
       });
 
-      const result = parseTrnasitionsApi(formData);
+      const result = parseTransitionsApiForm(formData);
 
       assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
       assert.equal(result.toDate, "2025-09-16T12:00+02:00");
@@ -57,7 +57,7 @@ describe("parseTransitionsApiSettings", () => {
       });
 
       // Act
-      const result = parseTrnasitionsApi(formData);
+      const result = parseTransitionsApiForm(formData);
 
       // Assert
       assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
@@ -82,7 +82,7 @@ describe("parseTransitionsApiSettings", () => {
       });
 
       // Act
-      const result = parseTrnasitionsApi(formData);
+      const result = parseTransitionsApiForm(formData);
 
       // Assert
       assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
