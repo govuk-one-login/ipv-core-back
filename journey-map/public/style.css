@@ -88,10 +88,11 @@ form {
   gap: 8px;
 }
 form button {
-  padding: 4px 2px;
+  width: 100%;
 }
 
 #form-button {
+  padding: 4px 2px;
   background: black;
   color: white;
   width: 100%;
