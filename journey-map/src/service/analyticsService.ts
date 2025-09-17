@@ -32,9 +32,8 @@ export const getJourneyTransitions = async (
   });
 
   if (!response.ok) {
-    console.warn(
-      `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
-    );
+    const errorData = await response.json();
+    alert(`${errorData?.message}`);
     return [];
   }
   return response.json();

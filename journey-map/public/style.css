@@ -5,7 +5,6 @@
 h3 {
   padding-bottom: 8px;
 }
-
 h4 {
   padding: 12px 0 4px 0;
 }
@@ -90,40 +89,48 @@ form {
 }
 form button {
   padding: 4px 2px;
+}
+
+#form-button {
   background: black;
   color: white;
   width: 100%;
   cursor: pointer;
 }
-
+#form-button:hover {
+  background: #333;
+}
+#form-button:active {
+  transform: scale(0.98);
+}
+#form-button:disabled {
+  background: #444;
+  color: #aaa;
+  cursor: wait;
+  opacity: 0.6;
+}
 form select {
   width: 100%;
 }
-
 form input[type=text] {
   width: 100%;
   margin-bottom: 8px;
 }
-
 .date-input-row {
   display: flex;
   align-items: center;
 }
-
 .date-input-row > span {
   flex: 0 0 50px;
 }
-
 .date-input-row > label {
   margin-left: auto;
   max-width: 170px;
 }
-
 .date-input-row input[type="datetime-local"] {
   width: 100%;
   max-width: 200px;
 }
-
 form label {
   display: flex;
   gap: 8px;

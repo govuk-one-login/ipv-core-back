@@ -31,8 +31,11 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     const { fromDate, toDate } = req.body;
     if (!checkIfTimeWindowIsInRange(fromDate, toDate)) {
+      const days = Math.floor(
+        (config.maximumTimeRangeMs as number) / 1000 / 60 / 60 / 24,
+      );
       res.status(400).json({
-        message: `Maximum time range for fetching transition is ${config.maximumTimeRangeMs} ms.`,
+        message: `Maximum time range for fetching transition is ${days} days.`,
       });
       return;
     }

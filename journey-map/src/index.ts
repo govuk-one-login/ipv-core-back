@@ -71,6 +71,9 @@ const transitionsFromInput = document.getElementById(
 const transitionsToInput = document.getElementById(
   "transitionsToInput",
 ) as HTMLInputElement;
+const transitionsSubmitButton = document.getElementById(
+  "form-button",
+) as HTMLButtonElement;
 const form = document.getElementById("configuration-form") as HTMLFormElement;
 const disabledInput = document.getElementById(
   "disabledInput",
@@ -496,9 +499,14 @@ const setupJourneyTransitionInput = (): void => {
 
   transitionsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    transitionsSubmitButton.disabled = true;
     const requestBody = parseTransitionsApiForm(new FormData(transitionsForm));
-    const journeyTransitions: JourneyTransition[] =
-      await getJourneyTransitions(requestBody);
+
+    const journeyTransitions: JourneyTransition[] = await getJourneyTransitions(
+      requestBody,
+    ).finally(() => {
+      transitionsSubmitButton.disabled = false;
+    });
     setJourneyTransitionsData(journeyTransitions);
     await updateView();
   });

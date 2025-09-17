@@ -39,7 +39,6 @@
             <fieldset id="journeyTransitionsInput">
               <legend>Customise api</legend>
               <p>Customise transitions request to see traffic between states</p>
-
               <h4>Target Environment</h4>
               <label for="targetEnvironment"></label>
               <select id="targetEnvironment" name="targetEnvironment">
@@ -49,7 +48,6 @@
                 <option value="build">Build</option>
                 <option value="shared">Shared Dev</option>
               </select>
-
               <h4>Time Window</h4>
               <div class="date-input-row">
                 <span>From</span>
@@ -63,7 +61,6 @@
                   <input id="transitionsToInput" type="datetime-local" name="toDate"/>
                 </label>
               </div>
-
               <h4>Fetch By</h4>
               <label for="sessionJourneySelection"></label>
               <select id="sessionJourneySelection" name="sessionJourneySelection">
@@ -73,7 +70,7 @@
               <label>
                 <input placeholder="Leave blank to fetch all journeys" type="text" name="journeySession"/>
               </label>
-              <button>Search</button>
+              <button id="form-button">Search</button>
             </fieldset>
         </form>
         <form id="configuration-form">
