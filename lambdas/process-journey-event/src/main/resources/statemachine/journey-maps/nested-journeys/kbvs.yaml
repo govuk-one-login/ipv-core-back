@@ -41,6 +41,21 @@ nestedJourneyStates:
         exitEventToEmit: next
       fail-with-ci:
         exitEventToEmit: fail-with-ci
+      error:
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_EXPERIAN_KBV_CRI
+  SORRY_CRI_TECHNICAL_PROBLEM_EXPERIAN_KBV_CRI:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: PRE_EXPERIAN_PAGE
+      app:
+        exitEventToEmit: try-again-app
+      postOffice:
+        exitEventToEmit: try-again-post-office
+      returnToRp:
+        exitEventToEmit: return-to-rp
   PRE_EXPERIAN_PAGE:
     response:
       type: page
