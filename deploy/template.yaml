@@ -880,8 +880,8 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-analytics.yaml"
       Tags:
-        FMSRegionalPolicy: false
-        CustomPolicy: true
+        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
+        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
         Format: >-
