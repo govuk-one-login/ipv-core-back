@@ -2,7 +2,7 @@ import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import { resolveVisibleEventTargets } from "./helpers/event-resolver.js";
 import { expandNestedJourneys } from "./helpers/expand-nested.js";
 import { expandParents } from "./helpers/expand-parents.js";
-import { RenderOptions, TransitionsApiSettings } from "./helpers/options.js";
+import { RenderOptions } from "./helpers/options.js";
 import { findOrphanStates } from "./helpers/orphans.js";
 import { JourneyMap, JourneyState, NestedJourneyMap } from "./types.js";
 import { deepCloneJson } from "./helpers/deep-clone.js";
@@ -22,51 +22,18 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
+import { getJourneyTransitionsData } from "./data/data.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
   states: StateNode[];
 }
 
-interface JourneyTransitionRequestBody {
-  fromDate: string;
-  toDate: string;
-}
-
-interface JourneyTransition {
-  fromJourney: string;
-  from: string;
-  toJourney: string;
-  to: string;
-  count: number;
-}
-
-const getJourneyTransitions = async (
-  body: JourneyTransitionRequestBody,
-): Promise<JourneyTransition[]> => {
-  const response = await fetch("/journey-transitions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  console.log(response);
-
-  if (!response.ok) {
-    console.warn(
-      `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
-    );
-    return [];
-  }
-  return response.json();
-};
-
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (
   journeyStates: Record<string, JourneyState>,
   options: RenderOptions,
-  apiSettings: TransitionsApiSettings,
   journeyMapName: string,
   journeyMaps: Record<string, JourneyMap>,
 ): Promise<RenderableMap> => {
@@ -78,13 +45,7 @@ const getVisibleEdgesAndNodes = async (
   const states = [...initialStates];
   const transitions: TransitionEdge[] = [];
 
-  const body: JourneyTransitionRequestBody = apiSettings.body;
-
-  console.log(body);
-
-  const journeyTransitions: JourneyTransition[] = apiSettings.isEnabled
-    ? await getJourneyTransitions(body)
-    : [];
+  const journeyTransitions = getJourneyTransitionsData();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -224,7 +185,6 @@ export const render = async (
   journeyMap: JourneyMap,
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
-  apiSettings: TransitionsApiSettings,
   journeyMaps: Record<string, JourneyMap>,
 ): Promise<string> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
@@ -251,7 +211,6 @@ export const render = async (
     : await getVisibleEdgesAndNodes(
         journeyStates,
         options,
-        apiSettings,
         selectedJourney,
         journeyMaps,
       );

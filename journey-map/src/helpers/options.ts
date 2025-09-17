@@ -15,32 +15,6 @@ export interface SystemSettings {
   criStatuses: Record<string, boolean>;
 }
 
-export interface TransitionsApiRequestBody {
-  fromDate: string;
-  toDate: string;
-  ipvSessionId?: string;
-  govukJourneyId?: string;
-  environment: string;
-}
-
-export interface TransitionsApiSettings {
-  isEnabled: boolean;
-  body: TransitionsApiRequestBody;
-}
-
-export const getSystemSettings = async (): Promise<
-  SystemSettings | undefined
-> => {
-  const response = await fetch("/system-settings");
-  if (!response.ok) {
-    console.warn(
-      `Failed to fetch system settings from journey map server: ${response.statusText}`,
-    );
-    return undefined;
-  }
-  return await response.json();
-};
-
 export const parseOptions = (formData: FormData): RenderOptions => ({
   disabledCris: formData.getAll("disabledCri") as string[],
   featureFlags: formData.getAll("featureFlag") as string[],
@@ -51,35 +25,3 @@ export const parseOptions = (formData: FormData): RenderOptions => ({
     .includes("expandNestedJourneys"),
   onlyOrphanStates: formData.getAll("otherOption").includes("onlyOrphanStates"),
 });
-
-const addSystemTimeZone = (dateTimeStr: string): string => {
-  const date = new Date(dateTimeStr);
-  const offset = date.getTimezoneOffset();
-  const sign = offset > 0 ? "-" : "+";
-  const absOffset = Math.abs(offset);
-  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
-  const offsetMinutes = String(absOffset % 60).padStart(2, "0");
-  return `${dateTimeStr}${sign}${offsetHours}:${offsetMinutes}`;
-};
-
-export const parseApiSettings = (
-  formData: FormData,
-): TransitionsApiSettings => {
-  const selection = formData.get("sessionJourneySelection") as string;
-  const typedInput = (formData.get("journeySession") as string) ?? "";
-
-  return {
-    isEnabled: formData.getAll("isEnabled").includes("enableTraffic"),
-    body: {
-      fromDate: addSystemTimeZone(formData.get("fromDate") as string),
-      toDate: addSystemTimeZone(formData.get("toDate") as string),
-      ...(selection === "session" && typedInput
-        ? { ipvSessionId: typedInput }
-        : {}),
-      ...(selection === "journey" && typedInput
-        ? { govukJourneyId: typedInput }
-        : {}),
-      environment: formData.get("targetEnvironment") as string,
-    },
-  };
-};

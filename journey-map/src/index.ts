@@ -10,14 +10,14 @@ import {
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
-import {
-  getSystemSettings,
-  parseApiSettings,
-  parseOptions,
-  RenderOptions,
-  TransitionsApiSettings,
-} from "./helpers/options.js";
+import { parseOptions, RenderOptions } from "./helpers/options.js";
 import { getJourneyContexts } from "./helpers/journey-context.js";
+import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
+import {
+  getJourneyTransitions,
+  getSystemSettings,
+} from "./service/analyticsService.js";
+import { parseTrnasitionsApi } from "./helpers/analytics.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -62,6 +62,9 @@ const headerContent = document.getElementById(
 const headerToggle = document.getElementById(
   "header-toggle",
 ) as HTMLButtonElement;
+const transitionsForm = document.getElementById(
+  "transitions-traffic-form",
+) as HTMLFormElement;
 const transitionsFromInput = document.getElementById(
   "transitionsFromInput",
 ) as HTMLInputElement;
@@ -276,8 +279,6 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 
 const updateView = async (): Promise<void> => {
   const options = parseOptions(new FormData(form));
-  const apiSettings = parseApiSettings(new FormData(form));
-  console.log(apiSettings);
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
   );
@@ -301,7 +302,7 @@ const updateView = async (): Promise<void> => {
     journeyContextsList.innerText = "";
   }
 
-  await renderSvg(selectedJourney, selectedNestedJourney, options, apiSettings);
+  await renderSvg(selectedJourney, selectedNestedJourney, options);
 };
 
 // Render the journey map SVG
@@ -309,14 +310,12 @@ const renderSvg = async (
   selectedJourney: string,
   selectedNestedJourney: string | null,
   options: RenderOptions,
-  apiSettings: TransitionsApiSettings,
 ): Promise<void> => {
   const diagram = await render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
     options,
-    apiSettings,
     journeyMaps,
   );
   const { svg, bindFunctions } = await mermaid.render("diagramSvg", diagram);
@@ -493,6 +492,15 @@ const setupJourneyTransitionInput = (): void => {
       transitionsFromInput.value = transitionsToInput.value;
     }
     transitionsFromInput.max = transitionsToInput.value;
+  });
+
+  transitionsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const requestBody = parseTrnasitionsApi(new FormData(transitionsForm));
+    const journeyTransitions: JourneyTransition[] =
+      await getJourneyTransitions(requestBody);
+    setJourneyTransitionsData(journeyTransitions);
+    await updateView();
   });
 };
 

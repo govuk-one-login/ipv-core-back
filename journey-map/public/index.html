@@ -34,17 +34,11 @@
         </div>
       </div>
       <div id="header-content">
-        <form id="configuration-form">
-          <h2>Options</h2>
-          <div id="checkbox-controls">
+        <form id="transitions-traffic-form">
+            <h2>Transitions Traffic</h2>
             <fieldset id="journeyTransitionsInput">
-            <h2>Transitions Api</h2>
               <legend>Customise api</legend>
-              <p>Customise api calls</p>
-              <label>
-                <input value="enableTraffic" type="checkbox" name="isEnabled">
-                <span>Enable transitions traffic</span>
-              </label>
+              <p>Customise transitions request to see traffic between states</p>
               <label for="targetEnvironment">Target Environment</label>
               <select id="targetEnvironment" name="targetEnvironment">
                 <option value="production">Production</option>
@@ -69,7 +63,12 @@
               <label>
                 <input placeholder="Leave blank to fetch all journeys" type="text" name="journeySession"/>
               </label>
+              <button>Search</button>
             </fieldset>
+        </form>
+        <form id="configuration-form">
+          <h2>Options</h2>
+          <div id="checkbox-controls">
             <fieldset id="disabledInput">
               <legend>Turn off a CRI</legend>
               <p>See what happens when you turn off a service.</p>

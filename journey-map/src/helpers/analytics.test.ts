@@ -1,6 +1,6 @@
-import { parseApiSettings } from "./options.js";
 import { describe, it } from "node:test";
 import assert from "node:assert";
+import { parseTrnasitionsApi } from "./analytics.js";
 
 describe("parseTransitionsApiSettings", () => {
   const createFormData = (entries: Record<string, string>): FormData => {
@@ -25,7 +25,6 @@ describe("parseTransitionsApiSettings", () => {
     setTzOffset(-120); // UTC +02:00
     try {
       const formData = createFormData({
-        isEnabled: "enableTraffic",
         fromDate: "2025-09-16T10:00",
         toDate: "2025-09-16T12:00",
         sessionJourneySelection: "session",
@@ -33,14 +32,13 @@ describe("parseTransitionsApiSettings", () => {
         targetEnvironment: "production",
       });
 
-      const result = parseApiSettings(formData);
+      const result = parseTrnasitionsApi(formData);
 
-      assert.equal(result.isEnabled, true);
-      assert.equal(result.body.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.body.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.body.ipvSessionId, "test-session-id");
-      assert.equal(result.body.environment, "production");
-      assert.ok(!("govukJourneyId" in result.body));
+      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
+      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
+      assert.equal(result.ipvSessionId, "test-session-id");
+      assert.equal(result.environment, "production");
+      assert.ok(!("govukJourneyId" in result));
     } finally {
       restoreTzOffset();
     }
@@ -51,7 +49,6 @@ describe("parseTransitionsApiSettings", () => {
       // Arrange
       setTzOffset(-120); // UTC +02:00
       const formData = createFormData({
-        isEnabled: "enableTraffic",
         fromDate: "2025-09-16T10:00",
         toDate: "2025-09-16T12:00",
         sessionJourneySelection: "journey",
@@ -60,15 +57,14 @@ describe("parseTransitionsApiSettings", () => {
       });
 
       // Act
-      const result = parseApiSettings(formData);
+      const result = parseTrnasitionsApi(formData);
 
       // Assert
-      assert.equal(result.isEnabled, true);
-      assert.equal(result.body.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.body.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.body.govukJourneyId, "test-session-id");
-      assert.equal(result.body.environment, "production");
-      assert.ok(!("ipvSessionId" in result.body));
+      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
+      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
+      assert.equal(result.govukJourneyId, "test-session-id");
+      assert.equal(result.environment, "production");
+      assert.ok(!("ipvSessionId" in result));
     } finally {
       restoreTzOffset();
     }
@@ -79,7 +75,6 @@ describe("parseTransitionsApiSettings", () => {
       // Arrange
       setTzOffset(-120); // UTC +02:00
       const formData = createFormData({
-        isEnabled: "enableTraffic",
         fromDate: "2025-09-16T10:00",
         toDate: "2025-09-16T12:00",
         sessionJourneySelection: "journey",
@@ -87,15 +82,14 @@ describe("parseTransitionsApiSettings", () => {
       });
 
       // Act
-      const result = parseApiSettings(formData);
+      const result = parseTrnasitionsApi(formData);
 
       // Assert
-      assert.equal(result.isEnabled, true);
-      assert.equal(result.body.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.body.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.body.environment, "production");
-      assert.ok(!("ipvSessionId" in result.body));
-      assert.ok(!("govukJourneyId" in result.body));
+      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
+      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
+      assert.equal(result.environment, "production");
+      assert.ok(!("ipvSessionId" in result));
+      assert.ok(!("govukJourneyId" in result));
     } finally {
       restoreTzOffset();
     }
