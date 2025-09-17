@@ -299,6 +299,17 @@ states:
       return-to-rp:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
+      try-again-app:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
+      try-again-post-office:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      return-to-rp-cri-error:
+        targetState: RETURN_TO_RP
 
   PYI_ESCAPE:
     response:
@@ -369,6 +380,17 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+      try-again-app:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
+      try-again-post-office:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      return-to-rp:
+        targetState: RETURN_TO_RP
 
   # DCMAW journey (J1)
   POST_APP_DOC_CHECK_SUCCESS_PAGE:
@@ -469,6 +491,17 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+      try-again-app:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
+      try-again-post-office:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      return-to-rp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_KBV_FAIL_NO_PHOTO_ID:
     response:

@@ -38,6 +38,21 @@ nestedJourneyStates:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: invalid-passport
+      error:
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: CRI_UK_PASSPORT
+      app:
+        exitEventToEmit: try-again-app
+      postOffice:
+        exitEventToEmit: try-again-post-office
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
   ADDRESS_AND_FRAUD_AFTER_PASSPORT:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -81,6 +96,21 @@ nestedJourneyStates:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: invalid-dl
+      error:
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: CRI_DRIVING_LICENCE
+      app:
+        exitEventToEmit: try-again-app
+      postOffice:
+        exitEventToEmit: try-again-post-office
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
   ADDRESS_AND_FRAUD_AFTER_DL:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
