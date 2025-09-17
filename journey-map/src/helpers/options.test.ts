@@ -13,7 +13,7 @@ describe("parseTransitionsApiSettings", () => {
 
   const originalGetTz = Date.prototype.getTimezoneOffset;
   const setTzOffset = (minutes: number): void => {
-    Date.prototype.getTimezoneOffset = function () {
+    Date.prototype.getTimezoneOffset = () => {
       return minutes;
     };
   };
