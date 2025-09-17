@@ -39,7 +39,9 @@
             <fieldset id="journeyTransitionsInput">
               <legend>Customise api</legend>
               <p>Customise transitions request to see traffic between states</p>
-              <label for="targetEnvironment">Target Environment</label>
+
+              <h4>Target Environment</h4>
+              <label for="targetEnvironment"></label>
               <select id="targetEnvironment" name="targetEnvironment">
                 <option value="production">Production</option>
                 <option value="integration">Integration</option>
@@ -47,15 +49,23 @@
                 <option value="build">Build</option>
                 <option value="shared">Shared Dev</option>
               </select>
-              <span>From</span>
-              <label>
-                <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>
-              </label>
-              <span>To</span>
-              <label>
-                <input id="transitionsToInput" type="datetime-local" name="toDate"/>
-              </label>
-              <label for="sessionJourneySelection">Fetch by</label>
+
+              <h4>Time Window</h4>
+              <div class="date-input-row">
+                <span>From</span>
+                <label>
+                  <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>
+                </label>
+              </div>
+              <div class="date-input-row">
+                <span>To</span>
+                <label>
+                  <input id="transitionsToInput" type="datetime-local" name="toDate"/>
+                </label>
+              </div>
+
+              <h4>Fetch By</h4>
+              <label for="sessionJourneySelection"></label>
               <select id="sessionJourneySelection" name="sessionJourneySelection">
                 <option value="journey">Journey Id</option>
                 <option value="session">IPV Session Id</option>

@@ -5,6 +5,10 @@
 h3 {
   padding-bottom: 8px;
 }
+
+h4 {
+  padding: 12px 0 4px 0;
+}
 body {
   height: 100vh;
   display: flex;
@@ -42,7 +46,7 @@ body {
   display: flex;
   margin: 8px 0;
   overflow: auto;
-  max-height: 300px;
+  max-height: 500px;
   transition:
     max-height 0.15s ease-out,
     margin 0.15s ease-out;
@@ -85,8 +89,41 @@ form {
   gap: 8px;
 }
 form button {
-  width: 180px;
+  padding: 4px 2px;
+  background: black;
+  color: white;
+  width: 100%;
+  cursor: pointer;
 }
+
+form select {
+  width: 100%;
+}
+
+form input[type=text] {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.date-input-row {
+  display: flex;
+  align-items: center;
+}
+
+.date-input-row > span {
+  flex: 0 0 50px;
+}
+
+.date-input-row > label {
+  margin-left: auto;
+  max-width: 170px;
+}
+
+.date-input-row input[type="datetime-local"] {
+  width: 100%;
+  max-width: 200px;
+}
+
 form label {
   display: flex;
   gap: 8px;

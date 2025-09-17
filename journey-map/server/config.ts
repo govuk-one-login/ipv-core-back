@@ -52,4 +52,4 @@ export default {
       analyticsApiKey: process.env.ANALYTICS_API_KEY_SHARED_DEV ?? "",
     },
   },
-} as const;
+};
