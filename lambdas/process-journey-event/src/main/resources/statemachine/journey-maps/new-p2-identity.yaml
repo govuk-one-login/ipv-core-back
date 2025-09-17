@@ -47,6 +47,11 @@ states:
       next:
         targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
 
+  IDENTITY_DOCUMENT_START:
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+
   # Parent states
 
   CRI_STATE:
@@ -347,7 +352,7 @@ states:
             targetState: ERROR
       f2f:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -434,7 +439,7 @@ states:
     exitEvents:
       next:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -531,7 +536,7 @@ states:
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -598,7 +603,7 @@ states:
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -750,7 +755,7 @@ states:
             targetState: ERROR
       f2f:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -763,7 +768,7 @@ states:
     events:
       next:
         targetJourney: F2F_HAND_OFF
-        targetState: START
+        targetState: START_MEDIUM_CONFIDENCE
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
