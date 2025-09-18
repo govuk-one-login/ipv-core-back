@@ -65,7 +65,6 @@ class FetchSystemSettingsHandlerTest {
                             "drivingLicenceAuthCheck": true,
                             "sisVerificationEnabled": false,
                             "repeatFraudCheckEnabled": true,
-                            "p1JourneysEnabled": true,
                             "storedIdentityServiceEnabled": false,
                             "accountInterventionsEnabled": true,
                             "pendingF2FResetEnabled": false

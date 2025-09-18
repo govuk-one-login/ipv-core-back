@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -26,7 +25,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 @ExtendWith(MockitoExtension.class)
 class ClientOAuthSessionDetailsServiceTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockDataStore;
-    @Mock private ConfigService mockConfigService;
 
     @Test
     void shouldReturnClientOAuthSessionItem() throws Exception {
@@ -44,8 +42,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(clientOAuthSessionItem);
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         ClientOAuthSessionItem result =
                 clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
@@ -71,8 +68,7 @@ class ClientOAuthSessionDetailsServiceTest {
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(null);
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         assertThrows(
                 ClientOauthSessionNotFoundException.class,
@@ -81,8 +77,6 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(true);
-
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
         var testClaimSet =
@@ -97,8 +91,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .subject("test-user-id")
                         .build();
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
@@ -126,7 +119,7 @@ class ClientOAuthSessionDetailsServiceTest {
     void shouldUpdateClientOAuthSessionItem() {
         // Arrange
         var clientOAuthSessionItem = new ClientOAuthSessionItem();
-        var underTest = new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var underTest = new ClientOAuthSessionDetailsService(mockDataStore);
 
         // Act
         underTest.updateClientSessionDetails(clientOAuthSessionItem);
@@ -136,41 +129,9 @@ class ClientOAuthSessionDetailsServiceTest {
     }
 
     @Test
-    void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(false);
-
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        var testClaimSet =
-                new JWTClaimsSet.Builder()
-                        .claim("response_type", "test-type")
-                        .claim("redirect_uri", "http://example.com")
-                        .claim("state", "test-state")
-                        .claim("govuk_signin_journey_id", "test-journey-id")
-                        .claim("reprove_identity", false)
-                        .claim("scope", "test-scope")
-                        .claim("vtr", List.of("P1", "P2"))
-                        .subject("test-user-id")
-                        .build();
-
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
-
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId,
-                        testClaimSet,
-                        "test-client",
-                        "test-evcs-access-token");
-
-        assertEquals(clientOAuthSessionItem.getVtr(), List.of("P2"));
-    }
-
-    @Test
     void shouldCreateSessionItemWithErrorObject() {
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(

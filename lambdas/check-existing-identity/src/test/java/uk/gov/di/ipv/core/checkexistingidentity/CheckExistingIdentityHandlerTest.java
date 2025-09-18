@@ -18,7 +18,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -99,7 +98,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -385,7 +383,6 @@ class CheckExistingIdentityHandlerTest {
                                     false,
                                     true,
                                     false));
-            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -500,7 +497,6 @@ class CheckExistingIdentityHandlerTest {
                                     false,
                                     true,
                                     false));
-            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -1287,7 +1283,6 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnReproveP1JourneyIfReproveIdentityFlagSet() {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
-            lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
 

@@ -95,7 +95,7 @@ class BuildUserIdentityHandlerTest {
         var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
+                new ClientOAuthSessionDetailsService(mockOAuthSessionStore);
 
         // Configure CIMIT service to return VC and no CIs
         var jwtBuilder =
