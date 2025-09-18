@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.fetchjourneytransitions.domain;
 
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.RequestParseException;
-import uk.gov.di.ipv.core.fetchjourneytransitions.helper.ValidationHelper;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.helpers.ValidationHelper;
 
 import java.time.Instant;
 
@@ -25,7 +25,8 @@ public record Request(
         if (ipvSessionId != null && !ValidationHelper.isValidIpvSessionId(ipvSessionId)) {
             throw new RequestParseException("Invalid ipvSessionId format.");
         }
-        if (govukJourneyId != null && !ValidationHelper.isValidUUIDv4(govukJourneyId)) {
+        if (govukJourneyId != null
+                && !ValidationHelper.isValidGovukSigningJourneyId(govukJourneyId)) {
             throw new RequestParseException("Invalid govukJourneyId format.");
         }
         if (limit <= 0) {
