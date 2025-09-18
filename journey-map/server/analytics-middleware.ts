@@ -8,14 +8,6 @@ let cache: {
   expiresAt: number;
 } | null = null;
 
-const checkIfTimeWindowIsInRange = (from: string, to: string): boolean => {
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
-  return (
-    toDate.getTime() - fromDate.getTime() < Number(config.maximumTimeRangeMs)
-  );
-};
-
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
   res,
@@ -27,17 +19,6 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       // res.json(cache.data);
       // next();
       // return;
-    }
-
-    const { fromDate, toDate } = req.body;
-    if (!checkIfTimeWindowIsInRange(fromDate, toDate)) {
-      const days = Math.floor(
-        (config.maximumTimeRangeMs as number) / 1000 / 60 / 60 / 24,
-      );
-      res.status(400).json({
-        message: `Maximum time range for fetching transition is ${days} days.`,
-      });
-      return;
     }
 
     const filteredBody = Object.fromEntries(
@@ -59,20 +40,39 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       method: "POST",
       headers: { "x-api-key": apiKey },
     });
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch journey transitions from analytics API: ${response.statusText}`,
-      );
-    }
 
     const data = await response.json();
-    cache = {
-      data,
-      expiresAt: now + CACHE_TTL_MS,
-    };
 
-    res.set("Cache-Control", "public, max-age=60");
-    res.json(data);
+    switch (response.status) {
+      case 200:
+        cache = {
+          data,
+          expiresAt: now + CACHE_TTL_MS,
+        };
+        res.set("Cache-Control", "public, max-age=60");
+        res.json(data);
+        break;
+      case 400:
+        res.status(400).json({
+          message: data.message || "Bad Request",
+        });
+        break;
+      case 404:
+        res.status(404).json({
+          message: data.message || "Resource not found",
+        });
+        break;
+      case 500:
+        res.status(500).json({
+          message: "Internal Server Error",
+        });
+        break;
+      default:
+        res.status(response.status).json({
+          message: `Unexpected status: ${response.status}`,
+        });
+        break;
+    }
     next();
   } catch (err) {
     next(err);
