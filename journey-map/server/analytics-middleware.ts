@@ -13,7 +13,7 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     const query = new URLSearchParams({
       ...filteredBody,
-      limit: "200",
+      limit: "600",
     });
 
     const targetEnvironment = req.body
