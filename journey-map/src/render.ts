@@ -221,14 +221,12 @@ export const render = async (
   );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-      ? // ? `#000000${alphaFromCount(t.transitionCount, maxCount)}`
-
-        `#ff0000${alphaFromCount(t.transitionCount, maxCount)}`
+      ? `#ff0000${alphaFromCount(t.transitionCount, maxCount)}`
       : "#E5E4E2";
-
+    const strokeWidth = getStrokeWidth(t.transitionCount ?? 0, maxCount);
     return [
       renderTransition(t),
-      `linkStyle ${i} stroke:${colour}, stroke-width:2px;`,
+      `linkStyle ${i} stroke:${colour}, stroke-width:${strokeWidth}px;`,
     ];
   });
 
@@ -237,6 +235,14 @@ export const render = async (
     ${states.map(renderClickHandler).join("\n")}
     ${transitionStrings.join("\n")}
   `;
+};
+
+const getStrokeWidth = (count: number, maxCount: number): number => {
+  if (maxCount <= 0) return 1;
+  const minWidth = 1;
+  const maxWidth = 6;
+  const ratio = Math.min(1, Math.max(0, count / maxCount));
+  return minWidth + (maxWidth - minWidth) * ratio;
 };
 
 function alphaFromCount(count: number, maxCount: number) {
