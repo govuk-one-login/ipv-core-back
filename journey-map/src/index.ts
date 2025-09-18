@@ -12,11 +12,7 @@ import {
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
 import { parseOptions, RenderOptions } from "./helpers/options.js";
 import { getJourneyContexts } from "./helpers/journey-context.js";
-import {
-  getJourneyTransitionsData,
-  JourneyTransition,
-  setJourneyTransitionsData,
-} from "./data/data.js";
+import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
 import {
   getJourneyTransitions,
   getSystemSettings,
@@ -74,9 +70,6 @@ const transitionsFromInput = document.getElementById(
 ) as HTMLInputElement;
 const transitionsToInput = document.getElementById(
   "transitionsToInput",
-) as HTMLInputElement;
-const transitionSessionJourneyIdInput = document.getElementById(
-  "journeySessionIdInput",
 ) as HTMLInputElement;
 const transitionsSubmitButton = document.getElementById(
   "form-button",
@@ -313,7 +306,6 @@ const updateView = async (): Promise<void> => {
   }
 
   await renderSvg(selectedJourney, selectedNestedJourney, options);
-  highlightSelectedJourney(getJourneyTransitionsData());
 };
 
 // Render the journey map SVG
@@ -367,12 +359,6 @@ const highlightState = (state: string): void => {
   Array.from(document.getElementsByClassName("node"))
     .filter((node) => node.id.startsWith(`flowchart-${state}-`))
     .forEach((node) => node.classList.add("highlight"));
-};
-
-const highlightEdge = (from: string, to: string): void => {
-  document
-    .querySelector(`path[id="${from}-${to}"]`)
-    ?.classList.add("highlightSelectedJourney");
 };
 
 const createLink = (
@@ -532,41 +518,6 @@ const setupJourneyTransitionInput = (): void => {
     setJourneyTransitionsData(journeyTransitions);
     await updateView();
   });
-};
-
-const highlightSelectedJourney = (
-  journeyTransitions: JourneyTransition[],
-): void => {
-  if (!transitionSessionJourneyIdInput.value) {
-    return;
-  }
-
-  const journeyType = new URLSearchParams(window.location.search).get(
-    "journeyType",
-  );
-  const extractRootJourney = (s: string) =>
-    s.includes("/") ? s.slice(0, s.indexOf("/")) : s;
-
-  for (const transition of journeyTransitions) {
-    let { from, to } = transition;
-    const { fromJourney, toJourney } = transition;
-    if (
-      journeyType &&
-      journeyType !== fromJourney &&
-      journeyType !== toJourney
-    ) {
-      continue;
-    }
-
-    if (fromJourney !== toJourney) {
-      to = extractRootJourney(to);
-      from = extractRootJourney(from);
-      highlightEdge("START", to);
-      highlightEdge(from, `${toJourney}__START`);
-    }
-
-    highlightEdge(from, extractRootJourney(to));
-  }
 };
 
 const initialize = async (): Promise<void> => {
