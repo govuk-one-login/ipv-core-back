@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +100,9 @@ public class SisService {
         List<String> sisVcSignatures = new ArrayList<>();
         List<String> evcsVcSignatures = new ArrayList<>();
         Vot sisRequestedVot = null;
+        Vot sisMaxVot = null;
+        Vot evcsRequestedVot = null;
+        Vot evcsMaxVot = null;
 
         try {
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -126,6 +128,7 @@ public class SisService {
             var sisClaims = getSisClaims(storedIdentityResult.identityDetails());
             sisRequestedVot = getSisRequestedVot(sisClaims);
             sisVcSignatures = getSisSignatures(sisClaims);
+            sisMaxVot = storedIdentityResult.identityDetails().vot();
 
             // Get EVCS details
             var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
@@ -140,22 +143,23 @@ public class SisService {
                     calculateVotMatches(
                             evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
             var evcsMaxVotOptional = evcsVotMatches.strongestMatch();
-            var evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
-            if (storedIdentityResult.identityDetails().vot() != evcsMaxVot) {
+            evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
+            var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
+            evcsRequestedVot =
+                    evcsRequestedVotOptional.isPresent()
+                            ? evcsRequestedVotOptional.get().vot()
+                            : null;
+
+            if (sisMaxVot != evcsMaxVot) {
                 throw new SisMatchException(
                         FailureCode.MAX_VOT_MISMATCH,
                         "Maximum EVCS ("
                                 + (evcsMaxVot == null ? "no VOT" : evcsMaxVot)
                                 + ") and SIS ("
-                                + storedIdentityResult.identityDetails().vot()
+                                + sisMaxVot
                                 + ") vots do not match");
             }
 
-            var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
-            var evcsRequestedVot =
-                    evcsRequestedVotOptional.isPresent()
-                            ? evcsRequestedVotOptional.get().vot()
-                            : null;
             // If SIS doesn't think it can provide a strong enough identity it will still return a
             // result with content.vot set to P0 and isValid set to false.
             if (!(evcsRequestedVot == null
@@ -178,6 +182,9 @@ public class SisService {
                     auditEventUser,
                     storedIdentityResult,
                     sisRequestedVot,
+                    sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.SUCCESS,
                     null,
                     null,
@@ -189,6 +196,9 @@ public class SisService {
                     auditEventUser,
                     storedIdentityResult,
                     sisRequestedVot,
+                    sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.FAILURE,
                     e.getFailureCode(),
                     e.getMessage(),
@@ -202,6 +212,9 @@ public class SisService {
                     auditEventUser,
                     storedIdentityResult,
                     sisRequestedVot,
+                    sisMaxVot,
+                    evcsRequestedVot,
+                    evcsMaxVot,
                     VerificationOutcome.FAILURE,
                     FailureCode.UNEXPECTED_ERROR,
                     e.getMessage(),
@@ -215,6 +228,9 @@ public class SisService {
             AuditEventUser auditEventUser,
             SisGetStoredIdentityResult storedIdentityResult,
             Vot sisRequestedVot,
+            Vot sisMaxVot,
+            Vot evcsRequestedVot,
+            Vot evcsMaxVot,
             VerificationOutcome verificationOutcome,
             FailureCode failureCode,
             String failureDetails,
@@ -234,6 +250,9 @@ public class SisService {
                             auditEventUser,
                             new AuditExtensionsSisComparison(
                                     sisRequestedVot,
+                                    sisMaxVot,
+                                    evcsRequestedVot,
+                                    evcsMaxVot,
                                     sisIdFound
                                             ? storedIdentityResult.identityDetails().isValid()
                                             : null,
@@ -284,14 +303,20 @@ public class SisService {
     }
 
     private JWTClaimsSet getSisClaims(SisStoredIdentityCheckDto storedIdentity)
-            throws ParseException {
-        var storedJwtParts = storedIdentity.content().split("\\.");
-        var storedJwt =
-                new SignedJWT(
-                        new Base64URL(storedJwtParts[0]),
-                        new Base64URL(storedJwtParts[1]),
-                        new Base64URL(storedJwtParts[2]));
-        return storedJwt.getJWTClaimsSet();
+            throws SisMatchException {
+        try {
+            var storedJwtParts = storedIdentity.content().split("\\.");
+            var storedJwt =
+                    new SignedJWT(
+                            new Base64URL(storedJwtParts[0]),
+                            new Base64URL(storedJwtParts[1]),
+                            new Base64URL(storedJwtParts[2]));
+            return storedJwt.getJWTClaimsSet();
+        } catch (Exception e) {
+            throw new SisMatchException(
+                    FailureCode.PARSE_ERROR,
+                    "Failed to parse stored identity JWT: " + e.getMessage());
+        }
     }
 
     private ArrayList<String> getSisSignatures(JWTClaimsSet sisClaims) {

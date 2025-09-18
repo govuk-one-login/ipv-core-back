@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.sis.enums;
 
 public enum FailureCode {
     SIS_ERROR,
+    PARSE_ERROR,
     EVCS_VOT_CALCULATION_ERROR,
     EVCS_ERROR,
     MAX_VOT_MISMATCH,
