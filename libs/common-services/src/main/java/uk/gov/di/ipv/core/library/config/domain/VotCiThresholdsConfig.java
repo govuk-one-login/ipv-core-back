@@ -12,15 +12,15 @@ import lombok.extern.jackson.Jacksonized;
 public class VotCiThresholdsConfig {
     @NonNull
     @JsonProperty("P1")
-    final Integer p1;
+    Integer p1;
 
     @NonNull
     @JsonProperty("P2")
-    final Integer p2;
+    Integer p2;
 
     @NonNull
     @JsonProperty("P3")
-    final Integer p3;
+    Integer p3;
 
     public Integer getThreshold(String vot) {
         return switch (vot.toUpperCase()) {

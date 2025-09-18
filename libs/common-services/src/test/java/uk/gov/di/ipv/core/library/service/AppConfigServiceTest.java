@@ -249,26 +249,25 @@ class AppConfigServiceTest {
                                 .build()));
     }
 
-    // Feature overlays
-
     @Test
-    void featureOverride_changesOnlySpecifiedField() {
+    void featureSetsOverrideConfiguration() {
+        // Act & Assert
         assertEquals("https://identity.local.account.gov.uk", configService.getComponentId());
         assertEquals(3600L, configService.getBearerTokenTtl());
 
         configService.setFeatureSet(List.of("testFeature"));
-
         assertEquals("alternate-component-id", configService.getComponentId());
         assertEquals(3600L, configService.getBearerTokenTtl());
     }
 
     @Test
-    void featureOverride_precedence_firstWins() {
+    void featureSetsOverrideConfigurationInCorrectOrder() {
+        // Act & Assert
         configService.setFeatureSet(List.of("accountInterventions", "disableAccountInterventions"));
-        assertTrue(configService.enabled("accountInterventionsEnabled")); // first wins
+        assertFalse(configService.enabled("accountInterventionsEnabled"));
 
         configService.setFeatureSet(List.of("disableAccountInterventions", "accountInterventions"));
-        assertFalse(configService.enabled("accountInterventionsEnabled")); // first wins
+        assertTrue(configService.enabled("accountInterventionsEnabled"));
     }
 
     @Test

@@ -129,12 +129,11 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            return URI.create(
-                    configService
-                            .getConfiguration()
-                            .getClientConfig(clientId)
-                            .getJwksUrl()
-                            .toString());
+            var jwksUrl = configService.getConfiguration().getClientConfig(clientId).getJwksUrl();
+            if (jwksUrl == null) {
+                return null;
+            }
+            return URI.create(jwksUrl);
         } catch (ConfigParameterNotFoundException e) {
             return null;
         }

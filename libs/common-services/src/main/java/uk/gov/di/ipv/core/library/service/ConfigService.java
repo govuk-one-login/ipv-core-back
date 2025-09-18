@@ -1,9 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -74,100 +73,42 @@ public abstract class ConfigService {
                 (featureSet == null || featureSet.isEmpty()) ? null : List.copyOf(featureSet);
     }
 
-    // Config loading / overlay application
-
-    public Config getConfiguration() {
-        reloadParameters();
-        var cfg = configuration;
-        if (cfg == null) return null;
-
-        var selected = Optional.ofNullable(getFeatureSet()).orElseGet(Collections::emptyList);
-        if (selected.isEmpty()) return cfg;
-
-        var features = Optional.ofNullable(cfg.getFeatures()).orElseGet(Collections::emptyMap);
-        if (features.isEmpty()) return cfg;
-
-        var merged = OBJECT_MAPPER.convertValue(cfg, new TypeReference<Map<String, Object>>() {});
-
-        for (int i = selected.size() - 1; i >= 0; i--) {
-            var node = features.get(selected.get(i));
-            var overlay =
-                    OBJECT_MAPPER.convertValue(node, new TypeReference<Map<String, Object>>() {});
-            if (overlay != null && !overlay.isEmpty()) mergeMaps(merged, overlay);
-        }
-        return OBJECT_MAPPER.convertValue(merged, Config.class);
-    }
-
-    // ---- mergeMaps (kept small and predictable) ----
-    @SuppressWarnings("unchecked")
-    private static void mergeMaps(Map<String, Object> dst, Map<String, Object> src) {
-        for (var e : src.entrySet()) {
-            var k = e.getKey();
-            var sv = e.getValue();
-            var dv = dst.get(k);
-
-            if (dv instanceof Map && sv instanceof Map) {
-                mergeMaps((Map<String, Object>) dv, (Map<String, Object>) sv);
-            } else if (dv instanceof String && sv instanceof Map) {
-                dst.put(k, toJsonString(sv)); // preserve string-typed fields (e.g. JWK JSON)
-            } else {
-                dst.put(k, sv); // replace
-            }
-        }
-    }
-
-    private static String toJsonString(Object v) {
-        try {
-            return OBJECT_MAPPER.writeValueAsString(v);
-        } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
-            return String.valueOf(v);
-        }
-    }
-
-    // ---- generateConfiguration ----
     public static Config generateConfiguration(String yaml) {
         try {
             var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             if (core == null) throw new IllegalArgumentException("Missing Core config.");
-            var copy = core.deepCopy();
-            normalizeJwkStrings(copy); // fix \"-escaped JWK JSON
-            return OBJECT_MAPPER.treeToValue(copy, Config.class);
+            return OBJECT_MAPPER.treeToValue(core, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
     }
 
-    // ---- normalizeJwkStrings (tight) ----
-    private static void normalizeJwkStrings(JsonNode node) {
-        if (node.isArray()) {
-            node.forEach(ConfigService::normalizeJwkStrings);
-            return;
+    public Config getConfiguration() {
+        reloadParameters();
+
+        var featureSets = getFeatureSet();
+        if (featureSets != null) {
+            overrideConfiguration(featureSets);
         }
-        if (!node.isObject()) return;
 
-        var obj = (ObjectNode) node;
-        for (var entry : obj.properties()) { // <- replaces obj.fields()
-            var key = entry.getKey();
-            var val = entry.getValue();
+        return configuration;
+    }
 
-            if (JWK_STRING_FIELDS.contains(key) && val.isTextual()) {
-                obj.put(key, fixJwk(val.asText()));
-            } else {
-                normalizeJwkStrings(val);
+    private void overrideConfiguration(List<String> featureSets) {
+        var features = configuration.getFeatures();
+
+        var configNode = OBJECT_MAPPER.valueToTree(configuration);
+        var reader = OBJECT_MAPPER.readerForUpdating(configNode);
+        try {
+            for (var featureSet : featureSets) {
+                var override = OBJECT_MAPPER.valueToTree(features.get(featureSet));
+                reader.readValue(override);
             }
+            configuration = OBJECT_MAPPER.convertValue(configNode, Config.class);
+        } catch (IOException e) {
+            throw new ConfigParseException("Feature set overrides cannot be read", e);
         }
     }
-
-    private static String fixJwk(String s) {
-        if (s.indexOf('\\') >= 0 && s.contains("\\\"")) s = s.replace("\\\"", "\"");
-        if ((s.startsWith("\"{") && s.endsWith("}\""))
-                || (s.startsWith("'{") && s.endsWith("}'"))) {
-            s = s.substring(1, s.length() - 1);
-        }
-        return s;
-    }
-
-    // Hooks overridden by AppConfigService/LocalConfigService
 
     public void reloadParameters() {
         // real fetch+reparse happens in AppConfigService; LocalConfigService is static

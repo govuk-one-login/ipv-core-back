@@ -210,7 +210,7 @@ class OAuthKeyServiceTest {
 
         @Test
         void shouldReturnKeyByKeyId() throws Exception {
-            when(mockClientConfig.getJwksUrl()).thenReturn(URI.create(TEST_JWKS_ENDPOINT));
+            when(mockClientConfig.getJwksUrl()).thenReturn(TEST_JWKS_ENDPOINT);
             when(mockHttpResponse.body())
                     .thenReturn(
                             String.format(
@@ -238,7 +238,7 @@ class OAuthKeyServiceTest {
 
         @Test
         void shouldReturnConfigKeyWhenKeyIdNotFoundInJwkSet() throws Exception {
-            when(mockClientConfig.getJwksUrl()).thenReturn(URI.create(TEST_JWKS_ENDPOINT));
+            when(mockClientConfig.getJwksUrl()).thenReturn(TEST_JWKS_ENDPOINT);
             when(mockHttpResponse.body()).thenReturn("{\"keys\":[]}");
             when(mockClientConfig.getPublicKeyMaterialForCoreToVerify())
                     .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
