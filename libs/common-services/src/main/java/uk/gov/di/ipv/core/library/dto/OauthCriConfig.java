@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.annotations.RemoveEscapedQuotationMarks;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -23,7 +24,7 @@ public class OauthCriConfig extends RestCriConfig {
     @NonNull private URI tokenUrl;
     @NonNull private String clientId;
     private URI authorizeUrl;
-    private String encryptionKey;
+    @RemoveEscapedQuotationMarks private String encryptionKey;
     private URI clientCallbackUrl;
     private boolean requiresAdditionalEvidence;
     private URI jwksUrl;

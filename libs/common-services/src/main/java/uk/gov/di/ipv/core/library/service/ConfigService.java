@@ -42,11 +42,6 @@ public abstract class ConfigService {
     private static final String CORE = "core";
     private static final String PATH_SEPARATOR = "/";
 
-    // Fields that may contain JSON-encoded JWKs as *strings* that arrive with escaped quotes
-    // e.g. "{\\\"kty\\\":\\\"EC\\\",...}" -> should become "{\"kty\":\"EC\",...}"
-    private static final Set<String> JWK_STRING_FIELDS =
-            Set.of("signingKey", "encryptionKey", "publicKeyMaterialForCoreToVerify");
-
     @Setter private Config configuration;
 
     @Getter @Setter private static boolean local;
@@ -100,8 +95,8 @@ public abstract class ConfigService {
         var configNode = OBJECT_MAPPER.valueToTree(configuration);
         var reader = OBJECT_MAPPER.readerForUpdating(configNode);
         try {
-            for (var featureSet : featureSets) {
-                var override = OBJECT_MAPPER.valueToTree(features.get(featureSet));
+            for (var featureSetName : featureSets) {
+                var override = OBJECT_MAPPER.valueToTree(features.get(featureSetName));
                 reader.readValue(override);
             }
             configuration = OBJECT_MAPPER.convertValue(configNode, Config.class);

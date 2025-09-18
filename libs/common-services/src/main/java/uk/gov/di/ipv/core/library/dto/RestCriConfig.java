@@ -7,7 +7,6 @@ import lombok.experimental.SuperBuilder;
 import java.net.URI;
 
 @SuperBuilder
-@Setter
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
