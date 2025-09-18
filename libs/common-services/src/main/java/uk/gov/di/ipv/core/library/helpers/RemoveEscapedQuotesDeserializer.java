@@ -14,11 +14,9 @@ public class RemoveEscapedQuotesDeserializer extends JsonDeserializer<String> {
             return null;
         }
 
-        // If the string is like {\"kty\":\"EC\"...}, unescape it
-        if (raw.contains("\\\"")) {
-            return raw.replace("\\\"", "\"");
+        if (raw.contains("\\")) {
+            return raw.replace("\\", "");
         }
-
         return raw;
     }
 }
