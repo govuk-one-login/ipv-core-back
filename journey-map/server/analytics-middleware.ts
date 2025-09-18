@@ -1,26 +1,12 @@
 import { RequestHandler } from "express";
 import config from "./config.js";
 
-const CACHE_TTL_MS = 60 * 1000;
-
-let cache: {
-  data: object;
-  expiresAt: number;
-} | null = null;
-
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
   res,
   next,
 ) => {
   try {
-    const now = Date.now();
-    if (cache && cache.expiresAt > now) {
-      // res.json(cache.data);
-      // next();
-      // return;
-    }
-
     const filteredBody = Object.fromEntries(
       Object.entries(req.body).filter(([key]) => key !== "environment"),
     );
@@ -45,10 +31,6 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     switch (response.status) {
       case 200:
-        cache = {
-          data,
-          expiresAt: now + CACHE_TTL_MS,
-        };
         res.set("Cache-Control", "public, max-age=60");
         res.json(data);
         break;
