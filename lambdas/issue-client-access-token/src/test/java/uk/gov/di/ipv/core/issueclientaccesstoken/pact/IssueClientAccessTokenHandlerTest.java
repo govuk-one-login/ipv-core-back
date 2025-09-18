@@ -86,8 +86,7 @@ class IssueClientAccessTokenHandlerTest {
 
         var accessTokenService = new AccessTokenService(configService);
         var sessionService = new IpvSessionService(ipvSessionDataStore, mockSleeper);
-        var clientOAuthSessionService =
-                new ClientOAuthSessionDetailsService(oAuthDataStore, configService);
+        var clientOAuthSessionService = new ClientOAuthSessionDetailsService(oAuthDataStore);
         var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);
         var tokenRequestValidator =
                 new TokenRequestValidator(
