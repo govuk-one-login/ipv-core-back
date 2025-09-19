@@ -91,8 +91,6 @@ class IssueClientAccessTokenHandlerTest {
                 new TokenRequestValidator(
                         configService, clientAuthJwtIdService, mockOauthKeyService);
         ipvSessionItem = new IpvSessionItem();
-        clientOAuthSessionItem.setClientId(TEST_CLIENT_ID);
-        when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         var authorizationCodeMetadata = new AuthorizationCodeMetadata();
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired
