@@ -48,35 +48,15 @@ public abstract class ConfigService {
 
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
-        return isLocal() ? new LocalConfigService() : new AppConfigService();
-    }
-
-    // Feature overlays (kept simple; LocalConfigService can override with ThreadLocal if desired)
-
-    private List<String> featureSet;
-
-    /**
-     * May return {@code null} if no feature set has been set. (LocalConfigService tests expect null
-     * after removeFeatureSet().)
-     */
-    public List<String> getFeatureSet() {
-        return featureSet;
-    }
-
-    public void setFeatureSet(List<String> featureSet) {
-        this.featureSet =
-                (featureSet == null || featureSet.isEmpty()) ? null : List.copyOf(featureSet);
-    }
-
-    public static Config generateConfiguration(String yaml) {
-        try {
-            var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
-            if (core == null) throw new IllegalArgumentException("Missing Core config.");
-            return OBJECT_MAPPER.treeToValue(core, Config.class);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        if (isLocal()) {
+            return new LocalConfigService();
         }
+        return new AppConfigService();
     }
+
+    public abstract List<String> getFeatureSet();
+
+    public abstract void setFeatureSet(List<String> featureSet);
 
     public Config getConfiguration() {
         reloadParameters();
@@ -110,8 +90,6 @@ public abstract class ConfigService {
     }
 
     protected abstract String getSecret(String path);
-
-    // Environment variables & common getters
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -224,8 +202,6 @@ public abstract class ConfigService {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
     }
 
-    // CRI Config helpers
-
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
         return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
     }
@@ -259,8 +235,6 @@ public abstract class ConfigService {
         return getConfiguration().getCredentialIssuers().getById(cri.getId()).getActiveConnection();
     }
 
-    // CI / CIMIT
-
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
         var list = getConfiguration().getSelf().getCiScoringConfig();
         if (list.isEmpty()) return Map.of();
@@ -278,8 +252,6 @@ public abstract class ConfigService {
         return getConfiguration().getCimit().getConfig();
     }
 
-    // Feature flags
-
     public boolean enabled(FeatureFlag flag) {
         return enabled(flag.getName());
     }
@@ -289,8 +261,6 @@ public abstract class ConfigService {
         var flags = (cfg != null) ? cfg.getFeatureFlags() : null;
         return flags != null && Boolean.TRUE.equals(flags.get(flagName));
     }
-
-    // Issuer -> CRI map
 
     public Map<String, Cri> getIssuerCris() {
         var issuerToCri = new HashMap<String, Cri>();
@@ -327,14 +297,22 @@ public abstract class ConfigService {
         }
     }
 
-    // Parameter flattening for legacy helpers
-
     protected Map<String, String> updateParameters(String yaml) {
         var map = new HashMap<String, String>();
         try {
             var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             flattenParameters(map, yamlParsed, "");
             return map;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        }
+    }
+
+    public static Config generateConfiguration(String yaml) {
+        try {
+            var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            if (core == null) throw new IllegalArgumentException("Missing Core config.");
+            return OBJECT_MAPPER.treeToValue(core, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }

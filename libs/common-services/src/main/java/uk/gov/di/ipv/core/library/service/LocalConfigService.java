@@ -47,16 +47,12 @@ public class LocalConfigService extends ConfigService {
         this.featureSet.remove();
     }
 
-    @Override
     public List<String> getFeatureSet() {
-        // tests expect null when cleared
         return featureSet.get();
     }
 
-    @Override
     public void setFeatureSet(List<String> featureSet) {
-        this.featureSet.set(
-                (featureSet == null || featureSet.isEmpty()) ? null : List.copyOf(featureSet));
+        this.featureSet.set(featureSet);
     }
 
     private Map<String, String> secrets = new HashMap<>();

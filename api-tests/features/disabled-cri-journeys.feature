@@ -99,6 +99,7 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
+    @MikeC
     Scenario: No photo ID leads to ineligible
       Given I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
