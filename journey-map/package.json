@@ -9,7 +9,7 @@
   "scripts": {
     "build": "esbuild src/index.ts --bundle --minify --sourcemap --target=chrome135,firefox137,safari18,edge135 --outfile=public/application.js",
     "build-server": "tsc --project tsconfig.server.json",
-    "start": "NODE_ENV=development NODE_OPTIONS=--import=dotenv/config tsx watch --clear-screen=false server/app.ts",
+    "start": "NODE_ENV=development tsx watch --clear-screen=false server/app.ts",
     "start-build": "node --enable-source-maps build/app.js",
     "dev": "npm run build -- --watch=forever & npm run start; wait",
     "tsc": "tsc && tsc --project tsconfig.server.json --noEmit",
@@ -18,7 +18,6 @@
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "dotenv": "^17.2.2",
     "express": "5.0.1",
     "mermaid": "11.10.0",
     "svg-pan-zoom": "3.6.2",
