@@ -26,12 +26,8 @@ class ClientAuthJwtIdServiceTest {
     private ClientAuthJwtIdService clientAuthJwtIdService;
 
     @BeforeEach
-    void setUp() throws Exception {
-        clientAuthJwtIdService = new ClientAuthJwtIdService(mockDataStore);
-
-        var field = ClientAuthJwtIdService.class.getDeclaredField("configService");
-        field.setAccessible(true);
-        field.set(clientAuthJwtIdService, mockConfigService);
+    void setUp() {
+        clientAuthJwtIdService = new ClientAuthJwtIdService(mockDataStore, mockConfigService);
     }
 
     @Test

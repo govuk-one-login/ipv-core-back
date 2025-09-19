@@ -86,7 +86,7 @@ class IssueClientAccessTokenHandlerTest {
         var sessionService = new IpvSessionService(ipvSessionDataStore, mockSleeper);
         var clientOAuthSessionService =
                 new ClientOAuthSessionDetailsService(oAuthDataStore, configService);
-        var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);
+        var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore, configService);
         var tokenRequestValidator =
                 new TokenRequestValidator(
                         configService, clientAuthJwtIdService, mockOauthKeyService);
@@ -98,7 +98,7 @@ class IssueClientAccessTokenHandlerTest {
         when(configService.getMaxAllowedAuthClientTtl()).thenReturn(3153600000L); // 100 years
         when(configService.getAuthCodeExpirySeconds()).thenReturn(3153600000L); // 100 years
         when(configService.getBearerTokenTtl()).thenReturn(3153600000L); // 100 years
-        when(configService.getBackendSessionTtl()).thenReturn(3600L); // 100 years
+        when(configService.getBackendSessionTtl()).thenReturn(3600L); // 1 hour
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);

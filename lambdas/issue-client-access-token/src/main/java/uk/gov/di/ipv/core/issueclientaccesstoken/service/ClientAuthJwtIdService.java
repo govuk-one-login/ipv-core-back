@@ -11,11 +11,13 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_AUTH_
 
 public class ClientAuthJwtIdService {
     private final DataStore<ClientAuthJwtIdItem> dataStore;
-    private ConfigService configService;
+    private final ConfigService configService;
 
     // For tests
-    public ClientAuthJwtIdService(DataStore<ClientAuthJwtIdItem> dataStore) {
+    public ClientAuthJwtIdService(
+            DataStore<ClientAuthJwtIdItem> dataStore, ConfigService configService) {
         this.dataStore = dataStore;
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
