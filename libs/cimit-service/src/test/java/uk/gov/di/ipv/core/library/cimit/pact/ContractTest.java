@@ -12,6 +12,7 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,6 +21,8 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.CimitConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -28,6 +31,7 @@ import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.model.SecurityCheck;
 import uk.gov.di.model.SecurityCheckCredential;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +49,6 @@ import static uk.gov.di.ipv.core.library.cimit.service.CimitService.GOVUK_SIGNIN
 import static uk.gov.di.ipv.core.library.cimit.service.CimitService.IP_ADDRESS_HEADER;
 import static uk.gov.di.ipv.core.library.cimit.service.CimitService.POST_CI_ENDPOINT;
 import static uk.gov.di.ipv.core.library.cimit.service.CimitService.POST_MITIGATIONS_ENDPOINT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_SIGNING_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
@@ -57,6 +58,14 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 class ContractTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock ConfigService mockConfigService;
+    @Mock Config mockConfig;
+    @Mock CimitConfig mockCimitConfig;
+
+    @BeforeEach
+    void setUp() {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getCimit()).thenReturn(mockCimitConfig);
+    }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact getCisUserIdReturnsContraIndicators(PactDslWithProvider builder) {
@@ -99,11 +108,11 @@ class ContractTest {
     @PactTestFor(pactMethod = "getCisUserIdReturnsContraIndicators")
     void fetchContraIndicators_whenCalledWithUserIdAgainstCimitApi_receivesContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
-        when(mockConfigService.getParameter(CIMIT_SIGNING_KEY)).thenReturn(EC_PRIVATE_KEY_JWK);
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        when(mockCimitConfig.getComponentId()).thenReturn(URI.create(TEST_ISSUER));
+        when(mockCimitConfig.getSigningKey()).thenReturn(EC_PRIVATE_KEY_JWK);
+        when(mockCimitConfig.getApiBaseUrl()).thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
+
         var underTest = new CimitService(mockConfigService);
         var ipvSessionItem =
                 IpvSessionItem.builder().securityCheckCredential(VALID_CI_VC_JWT).build();
@@ -167,10 +176,10 @@ class ContractTest {
     void fetchContraIndicators_whenCalledWithUserIdAgainstCimitApi_receivesEmptyContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
-        when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
-        when(mockConfigService.getParameter(CIMIT_SIGNING_KEY)).thenReturn(EC_PRIVATE_KEY_JWK);
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+        when(mockCimitConfig.getComponentId()).thenReturn(URI.create(TEST_ISSUER));
+        when(mockCimitConfig.getSigningKey()).thenReturn(EC_PRIVATE_KEY_JWK);
+        when(mockConfigService.getConfiguration().getCimit().getApiBaseUrl())
+                .thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
         var underTest = new CimitService(mockConfigService);
         var ipvSessionItem =
                 IpvSessionItem.builder().securityCheckCredential(VALID_NO_CI_VC_JWT).build();
@@ -225,8 +234,8 @@ class ContractTest {
     void successfullyPostCis_whenCalledWithSignedJwtAgainstCimitApi_returns200(
             MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+        when(mockConfigService.getConfiguration().getCimit().getApiBaseUrl())
+                .thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
 
         var testVc =
                 VerifiableCredential.fromValidJwt(
@@ -273,8 +282,8 @@ class ContractTest {
     void failsToPostCis_whenCalledWithInvalidIssuerAgainstCimitApi_returns400(MockServer mockServer)
             throws ParseException, CredentialParseException {
         // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+        when(mockConfigService.getConfiguration().getCimit().getApiBaseUrl())
+                .thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
 
         var testVc =
                 spy(
@@ -333,8 +342,8 @@ class ContractTest {
     void successfullyPostsMitigations_whenCalledWithSignedJwtAgainstCimitApi_returns200(
             MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+        when(mockConfigService.getConfiguration().getCimit().getApiBaseUrl())
+                .thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
 
         var testVc =
                 VerifiableCredential.fromValidJwt(
@@ -387,8 +396,8 @@ class ContractTest {
     void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimitApi_returns400(
             MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
+        when(mockConfigService.getConfiguration().getCimit().getApiBaseUrl())
+                .thenReturn(URI.create(getMockApiBaseUrl(mockServer)));
 
         var testVc =
                 VerifiableCredential.fromValidJwt(

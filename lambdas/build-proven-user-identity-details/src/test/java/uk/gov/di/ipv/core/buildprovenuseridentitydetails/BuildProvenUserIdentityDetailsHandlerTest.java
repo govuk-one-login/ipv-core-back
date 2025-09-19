@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -40,9 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
@@ -66,6 +65,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Mock private Context context;
+    @Mock Config mockConfig;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
@@ -96,6 +96,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .when(mockIpvSessionItem.getClientOAuthSessionId())
                 .thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         Mockito.lenient().when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test

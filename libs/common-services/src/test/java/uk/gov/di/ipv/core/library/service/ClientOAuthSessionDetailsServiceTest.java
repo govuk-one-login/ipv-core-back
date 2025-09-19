@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
 class ClientOAuthSessionDetailsServiceTest {
@@ -107,7 +106,8 @@ class ClientOAuthSessionDetailsServiceTest {
                         "test-client",
                         "test-evcs-access-token");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItem, mockConfigService.getBackendSessionTtl());
 
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals("test-client", clientOAuthSessionItem.getClientId());
@@ -180,7 +180,8 @@ class ClientOAuthSessionDetailsServiceTest {
                         "test-state",
                         "test-journey-id");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItem, mockConfigService.getBackendSessionTtl());
 
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals("test-client", clientOAuthSessionItem.getClientId());

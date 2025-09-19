@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtI
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -42,8 +41,6 @@ import java.io.IOException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
@@ -83,27 +80,25 @@ class IssueClientAccessTokenHandlerTest {
 
     @BeforeEach
     void pactSetup(PactVerificationContext context) throws IOException {
+        var clientOAuthSessionItem = new ClientOAuthSessionItem();
 
         var accessTokenService = new AccessTokenService(configService);
         var sessionService = new IpvSessionService(ipvSessionDataStore, mockSleeper);
         var clientOAuthSessionService =
                 new ClientOAuthSessionDetailsService(oAuthDataStore, configService);
-        var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);
+        var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore, configService);
         var tokenRequestValidator =
                 new TokenRequestValidator(
                         configService, clientAuthJwtIdService, mockOauthKeyService);
         ipvSessionItem = new IpvSessionItem();
-        var clientOAuthSessionItem = new ClientOAuthSessionItem();
         var authorizationCodeMetadata = new AuthorizationCodeMetadata();
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired
 
-        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(3153600000L); // 100 years
-        when(configService.getLongParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
-                .thenReturn(3153600000L); // 100 years
-        when(configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL))
-                .thenReturn(3153600000L); // 100 years
+        when(configService.getMaxAllowedAuthClientTtl()).thenReturn(3153600000L); // 100 years
+        when(configService.getAuthCodeExpirySeconds()).thenReturn(3153600000L); // 100 years
+        when(configService.getBearerTokenTtl()).thenReturn(3153600000L); // 100 years
+        when(configService.getBackendSessionTtl()).thenReturn(3600L); // 1 hour
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
@@ -162,7 +157,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @State("the audience is http://ipv/")
     public void setAudience() {
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getComponentId()).thenReturn("http://ipv/");
     }
 
     @TestTemplate

@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -51,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
@@ -138,7 +136,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             vcs, userId, achievedVot, thresholdVot, contraIndicators);
             userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
-            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
+            if (configService.isCredentialIssuerEnabled(TICF.getId())
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
                 userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
             }
@@ -221,7 +219,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_IDENTITY_ISSUED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         extensions));
     }

@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -91,6 +92,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @Captor private ArgumentCaptor<VerifiableCredential> vcArgumentCaptor;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private AuditService auditService;
     @Mock private CimitService cimitService;
@@ -106,6 +108,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @BeforeEach
     void setUp() {
         F2F_VC = vcF2fPassportPhotoM1a();
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

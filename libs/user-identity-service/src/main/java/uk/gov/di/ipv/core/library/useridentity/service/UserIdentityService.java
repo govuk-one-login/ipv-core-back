@@ -47,11 +47,6 @@ import java.util.stream.Collectors;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
@@ -86,7 +81,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody, UnrecognisedCiException {
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
-        var vtm = configService.getParameter(CORE_VTM_CLAIM);
+        var vtm = configService.getCoreVtmClaim();
 
         var userIdentityBuilder =
                 UserIdentity.UserIdentityBuilder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
@@ -350,7 +345,13 @@ public class UserIdentityService {
             List<IdentityClaim> identityClaims) {
         return getShortenedNamesForCoiCheck(
                 identityClaims,
-                Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
+                Integer.parseInt(
+                        configService
+                                .getConfiguration()
+                                .getSelf()
+                                .getCoi()
+                                .getFamilyNameChars()
+                                .toString()),
                 NamePart.NamePartType.FAMILY_NAME);
     }
 
@@ -358,7 +359,13 @@ public class UserIdentityService {
             List<IdentityClaim> identityClaims) {
         return getShortenedNamesForCoiCheck(
                 identityClaims,
-                Integer.parseInt(configService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)),
+                Integer.parseInt(
+                        configService
+                                .getConfiguration()
+                                .getSelf()
+                                .getCoi()
+                                .getGivenNameChars()
+                                .toString()),
                 NamePart.NamePartType.GIVEN_NAME);
     }
 
@@ -395,7 +402,11 @@ public class UserIdentityService {
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(
-                                configService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
+                                configService
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getReturnCodes()
+                                        .get("nonCiBreachingP0")));
     }
 
     private List<ReturnCode> getSuccessReturnCode(List<ContraIndicator> contraIndicators)
@@ -404,7 +415,10 @@ public class UserIdentityService {
                 .filter(
                         returnCode ->
                                 configService
-                                        .getParameter(RETURN_CODES_ALWAYS_REQUIRED)
+                                        .getConfiguration()
+                                        .getSelf()
+                                        .getReturnCodes()
+                                        .get("alwaysRequired")
                                         .contains(returnCode.code()))
                 .toList();
     }

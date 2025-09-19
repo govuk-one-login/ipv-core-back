@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -42,8 +41,7 @@ class AccessTokenServiceTest {
     @Test
     void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() {
         long testTokenTtl = 2400L;
-        when(mockConfigService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL))
-                .thenReturn(testTokenTtl);
+        when(mockConfigService.getBearerTokenTtl()).thenReturn(testTokenTtl);
 
         TokenResponse response = accessTokenService.generateAccessToken();
 

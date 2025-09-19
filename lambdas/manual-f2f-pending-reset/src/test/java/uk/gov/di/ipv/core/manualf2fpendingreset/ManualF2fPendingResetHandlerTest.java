@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.manualf2fpendingreset;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -37,11 +39,16 @@ class ManualF2fPendingResetHandlerTest {
     @Mock private Context mockContext;
     @Mock private CriResponseService mockCriResponseService;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private AuditService auditService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
-    @Mock ConfigService configService;
 
     @InjectMocks private ManualF2fPendingResetHandler handler;
+
+    @BeforeEach
+    void setUp() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+    }
 
     @ParameterizedTest
     @NullAndEmptySource

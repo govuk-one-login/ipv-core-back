@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
@@ -291,7 +290,15 @@ public class EvcsClient {
             String subPath, String userId, List<EvcsVCState> vcStatesToQueryFor, String afterKey)
             throws URISyntaxException {
 
-        var baseUri = "%s/%s".formatted(configService.getParameter(EVCS_APPLICATION_URL), subPath);
+        var baseUri =
+                "%s/%s"
+                        .formatted(
+                                configService
+                                        .getConfiguration()
+                                        .getEvcs()
+                                        .getApplicationUrl()
+                                        .toString(),
+                                subPath);
 
         if (userId != null) {
             baseUri =

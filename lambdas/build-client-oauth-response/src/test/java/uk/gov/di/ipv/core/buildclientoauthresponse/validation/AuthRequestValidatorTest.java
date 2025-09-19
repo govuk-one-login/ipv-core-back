@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -50,8 +49,7 @@ class AuthRequestValidatorTest {
 
     @Test
     void validateRequestReturnsValidResultForValidRequest() {
-        when(mockConfigService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "12345"))
+        when(mockConfigService.getClientValidRedirectUrls("12345"))
                 .thenReturn(List.of("http://example.com"));
 
         var validationResult =
@@ -116,8 +114,7 @@ class AuthRequestValidatorTest {
 
     @Test
     void validateRequestReturnValidResultForBlankIpvSessionId() {
-        when(mockConfigService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "12345"))
+        when(mockConfigService.getClientValidRedirectUrls("12345"))
                 .thenReturn(List.of("http://example.com"));
         var validationResult =
                 validator.validateRequest(
@@ -154,8 +151,7 @@ class AuthRequestValidatorTest {
                         "https://wrong.example.com",
                         "https://nope.example.com",
                         "https://whoops.example.com");
-        when(mockConfigService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "12345"))
+        when(mockConfigService.getClientValidRedirectUrls("12345"))
                 .thenReturn(registeredRedirectUrls);
 
         var validationResult =

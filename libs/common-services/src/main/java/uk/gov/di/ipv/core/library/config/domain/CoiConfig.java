@@ -9,6 +9,6 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class CoiConfig {
-    @NonNull final Integer familyNameChars;
-    @NonNull final Integer givenNameChars;
+    @NonNull Integer familyNameChars;
+    @NonNull Integer givenNameChars;
 }

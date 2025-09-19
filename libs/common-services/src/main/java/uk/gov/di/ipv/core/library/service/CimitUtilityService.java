@@ -3,13 +3,12 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -23,7 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 
 public class CimitUtilityService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -82,8 +80,14 @@ public class CimitUtilityService {
 
     public boolean isBreachingCiThreshold(
             List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
-        return isScoreBreachingCiThreshold(
-                getContraIndicatorScore(contraIndicators), confidenceRequested);
+        int score = getContraIndicatorScore(contraIndicators);
+        int threshold =
+                configService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getThreshold(confidenceRequested.name());
+        return score > threshold;
     }
 
     public boolean isBreachingCiThresholdIfMitigated(
@@ -99,18 +103,24 @@ public class CimitUtilityService {
 
     private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD, vot.name()));
+                > Integer.parseInt(
+                        configService
+                                .getConfiguration()
+                                .getSelf()
+                                .getCiScoringThresholdByVot()
+                                .getThreshold(vot.name())
+                                .toString());
     }
 
     public Optional<String> getMitigationEventIfBreachingOrActive(
             String securityCheckCredential, String userID, Vot confidenceRequested)
-            throws CiExtractionException, ConfigException, CredentialParseException {
+            throws CiExtractionException, CredentialParseException {
         var cis = getContraIndicatorsFromVc(securityCheckCredential, userID);
         return getMitigationEventIfBreachingOrActive(cis, confidenceRequested);
     }
 
     public Optional<String> getMitigationEventIfBreachingOrActive(
-            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
+            List<ContraIndicator> cis, Vot confidenceRequested) {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
             return getCiMitigationEvent(cis, confidenceRequested);
         } else {
@@ -130,8 +140,7 @@ public class CimitUtilityService {
     }
 
     public Optional<String> getCiMitigationEvent(
-            List<ContraIndicator> contraIndicators, Vot confidenceRequested)
-            throws ConfigException {
+            List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators) {
@@ -154,21 +163,21 @@ public class CimitUtilityService {
         return contraIndicators.stream().filter(this::isMitigated).findFirst();
     }
 
-    private Optional<String> getMitigationEvent(
-            List<MitigationRoute> mitigationRoute, String document) {
+    private Optional<String> getMitigationEvent(List<CiRoutingConfig> routes, String document) {
         String documentType = document != null ? document.split("/")[0] : null;
-        return mitigationRoute.stream()
-                .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
+        if (routes == null) return Optional.empty();
+        return routes.stream()
+                .filter(r -> r.getDocument() == null || r.getDocument().equals(documentType))
+                .map(CiRoutingConfig::getEvent)
                 .findFirst()
-                .map(MitigationRoute::event)
-                .map(event -> event.substring(event.lastIndexOf("/") + 1));
+                .map(event -> event.substring(event.lastIndexOf('/') + 1));
     }
 
     private boolean isMitigated(ContraIndicator ci) {
         return ci.getMitigation() != null && !ci.getMitigation().isEmpty();
     }
 
-    private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
+    private boolean isCiMitigatable(ContraIndicator ci) {
         var cimitConfig = configService.getCimitConfig();
         return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
     }

@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionSuccessful;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUpdateSelected;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -64,7 +63,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
@@ -423,9 +421,7 @@ public class ProcessJourneyEventHandler
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
-                                        .minusSeconds(
-                                                configService.getLongParameter(
-                                                        BACKEND_SESSION_TIMEOUT)));
+                                        .minusSeconds(configService.getBackendSessionTimeout()));
     }
 
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
@@ -453,7 +449,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         getAuditExtensions(auditEventType, auditContext),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -482,7 +478,7 @@ public class ProcessJourneyEventHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditExtensionSubjourneyType(journeyType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

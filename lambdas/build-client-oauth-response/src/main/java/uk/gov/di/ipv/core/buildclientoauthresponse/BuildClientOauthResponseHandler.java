@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -178,7 +177,7 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_END,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -191,7 +190,7 @@ public class BuildClientOauthResponseHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity(
                                         ipvSessionItem.getErrorCode() == null

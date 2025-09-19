@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.exception.CimitHttpRequestException;
 import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -171,9 +170,8 @@ public class CimitService {
     private VerifiableCredential extractAndValidateContraIndicatorsJwt(
             String contraIndicatorsVC, String userId) throws CiRetrievalException {
         final String cimitComponentId =
-                configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
-        final String cimitSigningKey =
-                configService.getParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
+                configService.getConfiguration().getCimit().getComponentId().toString();
+        final String cimitSigningKey = configService.getConfiguration().getCimit().getSigningKey();
         try {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -264,7 +262,8 @@ public class CimitService {
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
         var baseUri =
-                configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL) + endpointUrl;
+                configService.getConfiguration().getCimit().getApiBaseUrl().toString()
+                        + endpointUrl;
 
         return new URIBuilder(baseUri);
     }

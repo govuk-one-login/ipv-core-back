@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -53,8 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -66,7 +65,6 @@ class AuthorizationRequestHelperTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CLIENT_ID_FIELD = "client_id";
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
-    private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
     private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
@@ -91,6 +89,7 @@ class AuthorizationRequestHelperTest {
                     Set.of(new DrivingPermitDetails()));
 
     @Mock CoreSigner jwsSigner;
+    @Mock Config mockConfig;
     @Mock OauthCriConfig oauthCriConfig;
     @Mock ConfigService configService;
     private LocalECDSASigner signer;
@@ -127,7 +126,7 @@ class AuthorizationRequestHelperTest {
                         null);
 
         assertEquals("test-fixtures-ec-key", result.getHeader().getKeyID());
-        assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
+        assertEquals("https://core-component.example", result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(
                 TEST_JOURNEY_ID,
@@ -335,8 +334,8 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getJwtTtlSeconds()).thenReturn(IPV_TOKEN_TTL);
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     private PrivateKey getEncryptionPrivateKey()

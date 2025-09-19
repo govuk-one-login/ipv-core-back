@@ -18,7 +18,6 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -61,7 +60,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 @ExtendWith(MockitoExtension.class)
 class StoreIdentityServiceTest {
     private static final String CLIENT_SESSION_ID = "client-session-id";
-    private static final String COMPONENT_ID = "https://component-id.example";
+    private static final String COMPONENT_ID = "https://core-component.example";
     private static final String GOVUK_JOURNEY_ID = "govuk-journey-id";
     private static final String IP_ADDRESS = "1.2.3.4";
     private static final String SESSION_ID = "session-id";
@@ -97,8 +96,7 @@ class StoreIdentityServiceTest {
     class StoreIdentityServiceSuccessfulStoreTest {
         @BeforeEach
         void setUp() {
-            when(configService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                    .thenReturn(COMPONENT_ID);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
         }
 
         @Test
@@ -292,6 +290,7 @@ class StoreIdentityServiceTest {
         @Test
         void shouldStoreStoredIdentityRecordForCompletedIdentity() throws Exception {
             // Arrange
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
             when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
@@ -323,6 +322,7 @@ class StoreIdentityServiceTest {
         @Test
         void shouldNotStoreStoredIdentityRecordForPendingIdentity() throws Exception {
             // Act
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             storeIdentityService.storeIdentity(
                     USER_ID,
                     VCS,
@@ -360,6 +360,7 @@ class StoreIdentityServiceTest {
         @MethodSource("provideStoreStoredIdentityRecordExceptions")
         void shouldContinueIfStoreStoredIdentityRecordFails(Throwable exception) throws Exception {
             // Arrange
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenThrow(exception);
 
@@ -390,6 +391,7 @@ class StoreIdentityServiceTest {
                 shouldSetSisRecordCreatedToFalseIfNonHttpResponseReturnedFromStoreStoredIdentityRecord()
                         throws Exception {
             // Arrange
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
             when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
                     .thenReturn(httpResponse);
             when(httpResponse.statusCode()).thenReturn(HttpStatusCode.FORBIDDEN);
@@ -444,6 +446,7 @@ class StoreIdentityServiceTest {
     void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
             throws EvcsServiceException {
         // arrange
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
         when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
 
         // act

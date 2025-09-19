@@ -11,5 +11,5 @@ import java.net.URI;
 @Builder
 @Jacksonized
 public class AisConfig {
-    @NonNull final URI apiBaseUrl;
+    @NonNull URI apiBaseUrl;
 }

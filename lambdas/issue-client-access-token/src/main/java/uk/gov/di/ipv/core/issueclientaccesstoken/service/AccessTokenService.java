@@ -10,7 +10,6 @@ import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -24,9 +23,7 @@ public class AccessTokenService {
 
     public TokenResponse generateAccessToken() {
         AccessToken accessToken =
-                new BearerAccessToken(
-                        configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL),
-                        DEFAULT_SCOPE);
+                new BearerAccessToken(configService.getBearerTokenTtl(), DEFAULT_SCOPE);
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 

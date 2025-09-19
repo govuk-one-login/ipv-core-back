@@ -30,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 
@@ -102,10 +101,8 @@ public class EventResolverTest {
             BasicState alternativeTargetState = new BasicState();
             alternativeEvent.setTargetStateObj(alternativeTargetState);
 
-            when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "anEnabledCri"))
-                    .thenReturn(true);
-            when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aDisabledCri"))
-                    .thenReturn(false);
+            when(mockConfigService.isCredentialIssuerEnabled("anEnabledCri")).thenReturn(true);
+            when(mockConfigService.isCredentialIssuerEnabled("aDisabledCri")).thenReturn(false);
             LinkedHashMap<String, Event> checkIfDisabled = new LinkedHashMap<>();
             checkIfDisabled.put("anEnabledCri", new BasicEvent());
             checkIfDisabled.put("aDisabledCri", alternativeEvent);

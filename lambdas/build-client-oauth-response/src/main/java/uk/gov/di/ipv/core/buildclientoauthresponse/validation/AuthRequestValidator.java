@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -81,9 +80,7 @@ public class AuthRequestValidator {
             String clientId =
                     getOnlyValueOrThrow(
                             queryStringParameters.getOrDefault(CLIENT_ID_PARAM, List.of()));
-            List<String> clientRedirectUrls =
-                    configService.getStringListParameter(
-                            ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
+            List<String> clientRedirectUrls = configService.getClientValidRedirectUrls(clientId);
 
             if (!clientRedirectUrls.contains(redirectUrl)) {
                 LOGGER.error(

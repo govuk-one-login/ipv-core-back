@@ -21,14 +21,23 @@ public class LocalConfigService extends ConfigService {
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(File parametersFile, File secretsFile) {
-        setParameters(parseParameters(parametersFile));
-        secrets = parseParameters(secretsFile);
+        var yaml = parseYamlFile(parametersFile);
+        setConfiguration(generateConfiguration(yaml));
+        secrets = updateParameters(parseYamlFile(secretsFile));
     }
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(String parametersYaml, String secretsYaml) {
-        setParameters(updateParameters(parametersYaml));
+        setConfiguration(generateConfiguration(parametersYaml));
         secrets = updateParameters(secretsYaml);
+    }
+
+    @Override
+    @SuppressWarnings("java:S1186") // Sonar: Methods should not be empty
+    public void reloadParameters() {
+        // Intentionally no-op for LocalConfigService:
+        // config is loaded from provided local/test YAML and does not change at runtime.
+        // AppConfigService overrides this to fetch fresh values.
     }
 
     public List<String> getFeatureSet() {
@@ -45,10 +54,9 @@ public class LocalConfigService extends ConfigService {
 
     private Map<String, String> secrets = new HashMap<>();
 
-    private Map<String, String> parseParameters(File yamlFile) {
+    private String parseYamlFile(File yamlFile) {
         try {
-            String yamlContent = Files.readString(yamlFile.toPath());
-            return updateParameters(yamlContent);
+            return Files.readString(yamlFile.toPath());
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read parameters yaml file", e);
         }

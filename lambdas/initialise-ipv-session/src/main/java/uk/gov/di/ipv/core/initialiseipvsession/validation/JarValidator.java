@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -32,10 +31,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
@@ -160,13 +155,13 @@ public class JarValidator {
                             .with(LOG_COUNT.getFieldName(), requiredScopesInRequest.size()));
             return false;
         }
-        return Scope.parse(configService.getParameter(CLIENT_VALID_SCOPES, clientId))
+        return Scope.parse(configService.getValidScopes(clientId))
                 .contains(requiredScopesInRequest.get(0));
     }
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configService.getParameter(CLIENT_ISSUER, clientId);
+            configService.getIssuer(clientId);
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ConfigParameterNotFoundException e) {
             LOGGER.error(
@@ -229,8 +224,8 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configService.getParameter(COMPONENT_ID);
-        String clientIssuer = configService.getParameter(CLIENT_ISSUER, clientId);
+        String criAudience = configService.getComponentId();
+        String clientIssuer = configService.getIssuer(clientId);
 
         var requiredClaims =
                 new HashSet<>(
@@ -273,8 +268,7 @@ public class JarValidator {
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
         Instant maximumExpirationTime =
-                Instant.now()
-                        .plusSeconds(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+                Instant.now().plusSeconds(configService.getMaxAllowedAuthClientTtl());
         Instant expirationTime = claimsSet.getExpirationTime().toInstant();
 
         if (expirationTime.isAfter(maximumExpirationTime)) {
@@ -290,9 +284,7 @@ public class JarValidator {
             throws JarValidationException {
         try {
             URI redirectUri = claimsSet.getURIClaim(REDIRECT_URI_CLAIM);
-            List<String> allowedRedirectUris =
-                    configService.getStringListParameter(
-                            ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
+            List<String> allowedRedirectUris = configService.getClientValidRedirectUrls(clientId);
 
             if (redirectUri == null || !allowedRedirectUris.contains(redirectUri.toString())) {
                 LOGGER.error(

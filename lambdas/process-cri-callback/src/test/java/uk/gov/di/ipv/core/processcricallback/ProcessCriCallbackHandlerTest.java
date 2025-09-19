@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
@@ -74,6 +76,7 @@ class ProcessCriCallbackHandlerTest {
     private static final String TEST_USER_ID = "test_user_id";
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
     @Mock private VerifiableCredentialValidator mockVerifiableCredentialValidator;
@@ -84,6 +87,11 @@ class ProcessCriCallbackHandlerTest {
     @Mock private AuditService mockAuditService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
+
+    @BeforeEach
+    void setUp() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+    }
 
     @AfterEach
     void checkAuditEventWait() {

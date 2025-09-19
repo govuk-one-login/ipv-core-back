@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.testdata.CommonData;
 
 import java.io.IOException;
@@ -10,8 +12,8 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class ConfigServiceTest {
-
     @Test
     void generateConfigurationCreatesValidConfig() throws IOException, URISyntaxException {
         // Arrange

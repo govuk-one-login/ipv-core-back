@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -247,7 +246,7 @@ public class SisService {
             var auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_STORED_IDENTITY_CHECKED,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditExtensionsSisComparison(
                                     sisRequestedVot,

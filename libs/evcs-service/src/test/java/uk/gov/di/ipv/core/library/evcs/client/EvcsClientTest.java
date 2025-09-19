@@ -16,6 +16,8 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.EvcsConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
@@ -31,6 +33,7 @@ import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -116,22 +119,30 @@ class EvcsClientTest {
     @Captor ArgumentCaptor<HttpRequest> httpRequestCaptor;
     @Captor private ArgumentCaptor<String> stringCaptor;
     @InjectMocks private EvcsClient evcsClient;
+    @Mock private Config mockConfig;
+    @Mock private EvcsConfig mockEvcs;
+    @Mock URI badUri;
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(EVCS_APPLICATION_URL);
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getEvcs()).thenReturn(mockEvcs);
+        stubEvcsBaseUrl(EVCS_APPLICATION_URL);
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);
     }
 
+    private void stubEvcsBaseUrl(String url) {
+        when(mockEvcs.getApplicationUrl()).thenReturn(URI.create(url));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
     void getUserVCs(String appUrl) throws Exception {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(appUrl);
+        when(mockEvcs.getApplicationUrl()).thenReturn(URI.create(appUrl));
         // Arrange
+        stubEvcsBaseUrl(appUrl);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
@@ -267,8 +278,8 @@ class EvcsClientTest {
     @Test
     void getUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("\\");
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
         // Act
         // Assert
         assertThrows(
@@ -289,8 +300,6 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
                 .thenReturn(HttpStatusCode.OK)
@@ -355,8 +364,6 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
                 .thenReturn(HttpStatusCode.OK)
@@ -390,8 +397,6 @@ class EvcsClientTest {
                                         EvcsVCState.CURRENT,
                                         TEST_METADATA)),
                         "some-afterKey");
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn(EVCS_APPLICATION_URL);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode())
                 .thenReturn(HttpStatusCode.OK)
@@ -475,8 +480,8 @@ class EvcsClientTest {
     @Test
     void testCreateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("\\");
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
         // Act
         // Assert
         assertThrows(
@@ -516,8 +521,8 @@ class EvcsClientTest {
     @Test
     void testUpdateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("\\");
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
         // Act
         // Assert
         assertThrows(
@@ -643,10 +648,9 @@ class EvcsClientTest {
 
     @Test
     void invalidateStoredIdentityRecordShouldThrowIfBadUri() {
-        // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("\\");
-        // Act/Assert
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
+
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));

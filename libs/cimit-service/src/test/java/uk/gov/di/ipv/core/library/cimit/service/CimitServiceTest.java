@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.cimit.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +20,8 @@ import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.CimitConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -29,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -73,18 +76,32 @@ class CimitServiceTest {
     @Captor private ArgumentCaptor<HttpRequest> httpRequestCaptor;
     @Captor private ArgumentCaptor<String> stringCaptor;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
+    @Mock private CimitConfig mockCimit;
+
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private HttpClient mockHttpClient;
     @Mock private HttpResponse<String> mockHttpResponse;
     @Mock private IpvSessionService ipvSessionService;
     @InjectMocks CimitService cimitService;
 
+    @BeforeEach
+    void setUp() {
+        when(configService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getCimit()).thenReturn(mockCimit);
+
+        when(mockCimit.getApiBaseUrl()).thenReturn(URI.create(CIMIT_API_BASE_URL));
+        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
+    }
+
+    private void stubFetchPrereqs() {
+        when(mockCimit.getComponentId()).thenReturn(URI.create(CIMIT_COMPONENT_ID));
+        when(mockCimit.getSigningKey()).thenReturn(TEST_EC_PUBLIC_JWK);
+    }
+
     @Test
     void submitVcSendsHttpRequestToApi() throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_POST_HTTP_RESPONSE));
@@ -116,9 +133,6 @@ class CimitServiceTest {
     @Test
     void submitVCThrowsIfHttpRequestReturnsFailResponse() throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(FAILED_CIMIT_HTTP_RESPONSE));
@@ -135,9 +149,6 @@ class CimitServiceTest {
 
     @Test
     void submitMitigationVCListSendsHttpRequestToApi() throws Exception {
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_POST_HTTP_RESPONSE));
@@ -171,9 +182,6 @@ class CimitServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful());
 
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(FAILED_CIMIT_HTTP_RESPONSE));
@@ -224,9 +232,7 @@ class CimitServiceTest {
             boolean hasSecurityCheckCredentialBeenUpdated)
             throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
+        stubFetchPrereqs();
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
@@ -239,10 +245,6 @@ class CimitServiceTest {
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
                 .thenReturn(vcFromCimit);
-        when(configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
-                .thenReturn(CIMIT_COMPONENT_ID);
-        when(configService.getParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
-                .thenReturn(TEST_EC_PUBLIC_JWK);
 
         // Act
         cimitService.fetchContraIndicatorsVc(
@@ -269,9 +271,6 @@ class CimitServiceTest {
     void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestReturnsFailedResponse()
             throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
         when(mockHttpResponse.body())
@@ -291,9 +290,6 @@ class CimitServiceTest {
     @Test
     void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestIsInterrupted() throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(), any())).thenThrow(new InterruptedException());
 
         // Act/Assert
@@ -310,9 +306,6 @@ class CimitServiceTest {
     @Test
     void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestThrowsIOException() throws Exception {
         // Arrange
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(), any())).thenThrow(new IOException());
 
         // Act/Assert
@@ -328,9 +321,7 @@ class CimitServiceTest {
 
     @Test
     void fetchContraIndicatorsVcVcThrowsErrorForInvalidJWT() throws Exception {
-        when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
-                .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
+        stubFetchPrereqs();
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())

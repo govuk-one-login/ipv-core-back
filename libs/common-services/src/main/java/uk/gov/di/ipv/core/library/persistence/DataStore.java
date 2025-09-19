@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.persistence;
 
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
@@ -18,11 +17,10 @@ public interface DataStore<T extends PersistenceItem> {
                 : new DynamoDataStore<>(
                         configService.getEnvironmentVariable(tableName),
                         klass,
-                        DynamoDataStore.getClient(),
-                        configService);
+                        DynamoDataStore.getClient());
     }
 
-    void create(T item, ConfigurationVariable tableTtl);
+    void create(T item, long ttlSeconds);
 
     void create(T item);
 

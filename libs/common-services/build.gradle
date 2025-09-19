@@ -10,6 +10,7 @@ configurations {
 }
 
 dependencies {
+	testImplementation project(path: ':libs:test-helpers')
 	api libs.nimbusdsOauth2OidcSdk,
 			libs.diVocab
 	implementation platform(libs.awsSdkBom),

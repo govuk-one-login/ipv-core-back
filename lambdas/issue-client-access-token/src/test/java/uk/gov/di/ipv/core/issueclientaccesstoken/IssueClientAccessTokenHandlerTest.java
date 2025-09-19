@@ -25,6 +25,7 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -49,7 +50,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS;
 
 @ExtendWith(MockitoExtension.class)
 class IssueClientAccessTokenHandlerTest {
@@ -61,6 +61,7 @@ class IssueClientAccessTokenHandlerTest {
     private IpvSessionItem sessionItem;
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private AccessTokenService mockAccessTokenService;
     @Mock private IpvSessionService mockSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
@@ -71,13 +72,12 @@ class IssueClientAccessTokenHandlerTest {
 
     @BeforeEach
     void setUp() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 
         lenient().when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
-        lenient()
-                .when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS))
-                .thenReturn(3600L);
+        lenient().when(mockConfigService.getAuthCodeExpirySeconds()).thenReturn(3600L);
 
         handler =
                 new IssueClientAccessTokenHandler(
@@ -244,7 +244,7 @@ class IssueClientAccessTokenHandlerTest {
                         + "&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
-        when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn(0L);
+        when(mockConfigService.getAuthCodeExpirySeconds()).thenReturn(0L);
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))

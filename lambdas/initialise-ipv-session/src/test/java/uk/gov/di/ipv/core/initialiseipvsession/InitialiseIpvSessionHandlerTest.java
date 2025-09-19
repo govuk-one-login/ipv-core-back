@@ -75,11 +75,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
@@ -90,9 +86,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
-    public static final String TEST_COMPONENT_ID = "test-component-id";
-    public static final String TEST_SIGNING_KEY =
-            "{\"kty\":\"EC\",\"d\":\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"; // pragma: allowlist secret
     public static final String TEST_USER_ID = "test-user-id";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
@@ -159,6 +152,8 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2"));
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
         clientOAuthSessionItem.setReproveIdentity(false);
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

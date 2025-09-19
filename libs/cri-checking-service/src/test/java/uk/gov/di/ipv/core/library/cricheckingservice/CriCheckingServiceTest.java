@@ -15,7 +15,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
 import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -77,7 +78,6 @@ class CriCheckingServiceTest {
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_ERROR_DESCRIPTION = "test_error_description";
-    private static final String TEST_COMPONENT_ID = "component_id";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
@@ -93,10 +93,13 @@ class CriCheckingServiceTest {
     @Mock private MockedStatic<VcHelper> mockedVcHelper;
     @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private CriCheckingService criCheckingService;
+    @Mock private Config mockConfig;
+    @Mock private InternalOperationsConfig mockSelf;
 
     @Test
     void handleCallbackErrorShouldReturnJourneyErrorByDefault() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -104,8 +107,6 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
@@ -118,6 +119,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyAccessDeniedIfInCallbackRequest() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -125,8 +127,6 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
@@ -139,6 +139,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyInvalidRequestIfInCallbackRequest() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -146,8 +147,6 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
@@ -160,6 +159,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnJourneyTemporarilyAvailableIfInCallbackRequest() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -167,8 +167,6 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
 
         // Act
         var journeyResponse =
@@ -181,6 +179,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnSendCorrectAuditEvent() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(F2F.getId())
@@ -193,8 +192,6 @@ class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 
         // Act
@@ -205,7 +202,6 @@ class CriCheckingServiceTest {
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
         assertEquals(
                 AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, capturedAuditEvent.getEventName());
-        assertEquals(TEST_COMPONENT_ID, capturedAuditEvent.getComponentId());
         assertEquals(TEST_USER_ID, capturedAuditEvent.getUser().getUserId());
         assertEquals(TEST_IPV_SESSION_ID, capturedAuditEvent.getUser().getSessionId());
         assertEquals(
@@ -223,6 +219,7 @@ class CriCheckingServiceTest {
     @Test
     void handleCallbackErrorShouldReturnSendDwpKbvAuditEvent() {
         // Arrange
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var callbackRequest =
                 CriCallbackRequest.builder()
                         .credentialIssuerId(DWP_KBV.getId())
@@ -235,8 +232,6 @@ class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 
         // Act

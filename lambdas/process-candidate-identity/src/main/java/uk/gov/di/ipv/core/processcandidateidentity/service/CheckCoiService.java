@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
@@ -161,7 +160,7 @@ public class CheckCoiService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess),
                         restrictedData));

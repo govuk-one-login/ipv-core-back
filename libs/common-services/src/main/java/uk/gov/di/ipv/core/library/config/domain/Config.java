@@ -11,17 +11,17 @@ import java.util.Map;
 @Builder
 @Jacksonized
 public class Config {
-    @NonNull final InternalOperationsConfig self;
-    @NonNull final Map<String, @NonNull ClientConfig> clients;
-    @NonNull final AisConfig ais;
-    @NonNull final CimitConfig cimit;
-    @NonNull final EvcsConfig evcs;
-    final SisConfig sis;
-    @NonNull final StoredIdentityServiceConfig storedIdentityService;
-    @NonNull final CredentialIssuersConfig credentialIssuers;
-    final Map<String, Map<String, String>> local;
-    final Map<String, @NonNull Boolean> featureFlags;
-    final Map<String, @NonNull Map<String, ?>> features;
+    @NonNull InternalOperationsConfig self;
+    @NonNull Map<String, @NonNull ClientConfig> clients;
+    @NonNull AisConfig ais;
+    @NonNull CimitConfig cimit;
+    @NonNull EvcsConfig evcs;
+    SisConfig sis;
+    @NonNull StoredIdentityServiceConfig storedIdentityService;
+    @NonNull CredentialIssuersConfig credentialIssuers;
+    Map<String, Map<String, String>> local;
+    Map<String, @NonNull Boolean> featureFlags;
+    Map<String, @NonNull Map<String, ?>> features;
 
     public ClientConfig getClientConfig(String clientId) {
         return clients.get(clientId);

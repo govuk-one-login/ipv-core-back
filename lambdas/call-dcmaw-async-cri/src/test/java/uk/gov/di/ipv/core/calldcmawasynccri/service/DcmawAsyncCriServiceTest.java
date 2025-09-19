@@ -35,8 +35,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
@@ -59,10 +58,9 @@ class DcmawAsyncCriServiceTest {
 
     @Mock private ConfigService mockConfigService;
     @Mock private CriApiService mockCriApiService;
-    @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService auditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
-
+    @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
     @ParameterizedTest
@@ -150,6 +148,7 @@ class DcmawAsyncCriServiceTest {
 
     @Test
     void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var journeyRequest =
                 JourneyRequest.builder()
                         .ipvSessionId("ipvSessionId")
