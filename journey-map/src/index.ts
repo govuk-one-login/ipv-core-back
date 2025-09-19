@@ -508,6 +508,7 @@ const setupJourneyTransitionInput = (): void => {
       transitionsSubmitButton.disabled = false;
     });
     setJourneyTransitionsData(journeyTransitions);
+    console.log(journeyTransitions);
     await updateView();
   });
 };

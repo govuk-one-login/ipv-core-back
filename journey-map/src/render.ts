@@ -174,6 +174,51 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
+  const params = new URLSearchParams(window.location.search);
+  const journeyTypeUrlParam = params.get("journeyType");
+  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+
+  const getBeforeLastSegment = (str: string): string => {
+    const parts = str.split("/");
+    return parts.length >= 2 ? parts[parts.length - 2] : str;
+  };
+
+  for (const journeyTransition of journeyTransitions) {
+    if (journeyTransition.fromJourney !== journeyTypeUrlParam) continue;
+    if (!nestedJourneyTypeUrlParam) continue;
+    const nestedJourney = getBeforeLastSegment(journeyTransition.to);
+    if (nestedJourneyTypeUrlParam !== nestedJourney) continue;
+    const fromState = journeyTransition.from.substring(
+      journeyTransition.from.lastIndexOf("/") + 1,
+    );
+    console.log(fromState);
+    const toState = journeyTransition.to.substring(
+      journeyTransition.to.lastIndexOf("/") + 1,
+    );
+
+    const edge = transitions.find(
+      (transition) =>
+        transition.sourceState === fromState &&
+        transition.targetState === toState,
+    );
+    if (edge) {
+      edge.transitionCount = journeyTransition.count;
+      continue;
+    }
+
+    console.log(journeyTransition);
+    const entryEdges = transitions.filter((transition) =>
+      transition.sourceState.startsWith("ENTRY_"),
+    );
+    const entryEdge = entryEdges.find((edge) =>
+      edge.sourceState.endsWith(journeyTransition.event.toUpperCase()),
+    );
+    console.log(entryEdge);
+    if (entryEdge) {
+      entryEdge.transitionCount = journeyTransition.count;
+    }
+  }
+
   return {
     transitions,
     states: states.map((name) => ({ name, definition: journeyStates[name] })),
@@ -238,8 +283,8 @@ export const render = async (
 };
 
 const getStrokeWidth = (count: number, maxCount: number): number => {
-  if (maxCount <= 0) return 1;
-  const minWidth = 1;
+  if (maxCount <= 0) return 2;
+  const minWidth = 2;
   const maxWidth = 6;
   const ratio = Math.min(1, Math.max(0, count / maxCount));
   return minWidth + (maxWidth - minWidth) * ratio;
