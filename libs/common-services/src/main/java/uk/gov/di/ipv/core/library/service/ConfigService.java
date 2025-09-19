@@ -32,10 +32,10 @@ import java.util.stream.Collectors;
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public abstract class ConfigService {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PATH_SEPARATOR = "/";
     private static final String CORE = "core";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
@@ -62,13 +62,13 @@ public abstract class ConfigService {
 
         var featureSets = getFeatureSet();
         if (featureSets != null) {
-            overrideConfiguration(featureSets);
+            return overrideConfiguration(featureSets);
         }
 
         return configuration;
     }
 
-    private void overrideConfiguration(List<String> featureSets) {
+    private Config overrideConfiguration(List<String> featureSets) {
         var features = configuration.getFeatures();
 
         var configNode = OBJECT_MAPPER.valueToTree(configuration);
@@ -78,14 +78,14 @@ public abstract class ConfigService {
                 var override = OBJECT_MAPPER.valueToTree(features.get(featureSetName));
                 reader.readValue(override);
             }
-            configuration = OBJECT_MAPPER.convertValue(configNode, Config.class);
+            return OBJECT_MAPPER.convertValue(configNode, Config.class);
         } catch (IOException e) {
             throw new ConfigParseException("Feature set overrides cannot be read", e);
         }
     }
 
     public void reloadParameters() {
-        // real fetch+reparse happens in AppConfigService; LocalConfigService is static
+        // Real fetch & parse happens in AppConfigService, while LocalConfigService is static.
     }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {

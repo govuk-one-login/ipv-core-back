@@ -21,18 +21,15 @@ public class LocalConfigService extends ConfigService {
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(File parametersFile, File secretsFile) {
-        secrets = updateParameters(parseYamlFile(secretsFile));
-
         var yaml = parseYamlFile(parametersFile);
-
         setConfiguration(generateConfiguration(yaml));
+        secrets = updateParameters(parseYamlFile(secretsFile));
     }
 
     @ExcludeFromGeneratedCoverageReport
     public LocalConfigService(String parametersYaml, String secretsYaml) {
-        secrets = updateParameters(secretsYaml);
-
         setConfiguration(generateConfiguration(parametersYaml));
+        secrets = updateParameters(secretsYaml);
     }
 
     @Override
@@ -43,16 +40,16 @@ public class LocalConfigService extends ConfigService {
         // AppConfigService overrides this to fetch fresh values.
     }
 
-    public void removeFeatureSet() {
-        this.featureSet.remove();
-    }
-
     public List<String> getFeatureSet() {
         return featureSet.get();
     }
 
     public void setFeatureSet(List<String> featureSet) {
         this.featureSet.set(featureSet);
+    }
+
+    public void removeFeatureSet() {
+        this.featureSet.remove();
     }
 
     private Map<String, String> secrets = new HashMap<>();
