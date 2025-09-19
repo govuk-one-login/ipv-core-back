@@ -133,8 +133,9 @@ public class FetchJourneyTransitionsHandler
             | parse @message '"to":"*"' as to
             | parse @message '"toJourney":"*"' as toJourney
             | parse @message '"journeyEngine":"*"' as journeyEngine
+            | parse @message '"event":"*"' as event
             | filter journeyEngine = "State transition"
-            %s| stats count() as transitions by fromJourney, from, toJourney, to
+            %s| stats count() as transitions by fromJourney, from, toJourney, to, event
             | limit %d
         """,
                 filter, input.limit());
@@ -187,6 +188,7 @@ public class FetchJourneyTransitionsHandler
                     fields.get("from"),
                     fields.get("toJourney"),
                     fields.get("to"),
+                    fields.get("event"),
                     Integer.parseInt(fields.get("transitions")));
         } catch (Exception e) {
             LOGGER.warn("Skipping row due to missing/invalid data: {}", fields);

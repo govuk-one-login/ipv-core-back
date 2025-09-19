@@ -38,7 +38,8 @@ class FetchJourneyTransitionHandlerTest {
                     new ResultField().withField("from").withValue("IPV_SUCCESS_PAGE"),
                     new ResultField().withField("toJourney").withValue("NEW_P2_IDENTITY"),
                     new ResultField().withField("to").withValue("RETURN_TO_RP"),
-                    new ResultField().withField("transitions").withValue("231"));
+                    new ResultField().withField("transitions").withValue("231"),
+                    new ResultField().withField("event").withValue("next"));
 
     public static final String TEST_GOVUK_JOURNEY_ID = "40a89427-71f2-4ad5-ac65-41a6b641d308";
     private static final String TEST_IPV_SESSION_ID = "u7zeydbeSw6vnxBttMRPj-cmlEb4HGc4YxTQR8ORiOo";
@@ -48,7 +49,8 @@ class FetchJourneyTransitionHandlerTest {
                     new ResultField().withField("from").withValue("IPV_SUCCESS_PAGE"),
                     new ResultField().withField("toJourney").withValue("NEW_P2_IDENTITY"),
                     new ResultField().withField("to").withValue("RETURN_TO_RP"),
-                    new ResultField().withField("transitions").withValue("1"));
+                    new ResultField().withField("transitions").withValue("1"),
+                    new ResultField().withField("event").withValue("next"));
 
     @Mock private AWSLogs mockLogsClient;
     @Mock private Context mockContext;
@@ -88,11 +90,12 @@ class FetchJourneyTransitionHandlerTest {
         // Assert
         assertEquals(200, response.getStatusCode());
         assertEquals(1, transitionCounts.size());
-        TransitionCount transitionCount = transitionCounts.get(0);
+        TransitionCount transitionCount = transitionCounts.getFirst();
         assertEquals("NEW_P2_IDENTITY", transitionCount.fromJourney());
         assertEquals("IPV_SUCCESS_PAGE", transitionCount.from());
         assertEquals("NEW_P2_IDENTITY", transitionCount.toJourney());
         assertEquals("RETURN_TO_RP", transitionCount.to());
+        assertEquals("next", transitionCount.event());
         assertEquals(231, transitionCount.count());
     }
 
@@ -127,6 +130,7 @@ class FetchJourneyTransitionHandlerTest {
         assertEquals("IPV_SUCCESS_PAGE", transitionCount.from());
         assertEquals("NEW_P2_IDENTITY", transitionCount.toJourney());
         assertEquals("RETURN_TO_RP", transitionCount.to());
+        assertEquals("next", transitionCount.event());
         assertEquals(1, transitionCount.count());
     }
 
