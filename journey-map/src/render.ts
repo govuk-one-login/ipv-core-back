@@ -192,21 +192,21 @@ const getBeforeLastSegment = (str: string): string => {
 };
 
 const handleOutcomingTrafficInNestedJourney = (
-  journeyTransitions: JourneyTransition[],
-  transitions: TransitionEdge[],
+  journeyTransitionsTraffic: JourneyTransition[],
+  transitionsEdges: TransitionEdge[],
 ) => {
   const params = new URLSearchParams(window.location.search);
   const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
   if (!nestedJourneyTypeUrlParam) {
     return;
   }
-  for (const journeyTransition of journeyTransitions) {
+  for (const journeyTransition of journeyTransitionsTraffic) {
     const fromState = journeyTransition.from.substring(
       journeyTransition.from.lastIndexOf("/") + 1,
     );
 
     const event = journeyTransition.event.toUpperCase();
-    const edge = transitions.find(
+    const edge = transitionsEdges.find(
       (edge) =>
         edge.sourceState === fromState &&
         edge.targetState.startsWith(`EXIT_${event}`),
