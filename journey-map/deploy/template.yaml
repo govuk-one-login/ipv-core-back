@@ -345,11 +345,11 @@ Resources:
             - Name: ANALYTICS_API_KEY_BUILD
               Value: '{{resolve:ssm:/journey-map/env/build/ANALYTICS_API_KEY}}'
             - Name: JOURNEY_TRANSITIONS_ENDPOINT_SHARED_DEV
-              Value: '{{resolve:ssm:/journey-map/env/dev01/JOURNEY_TRANSITIONS_ENDPOINT}}'
+              Value: '{{resolve:ssm:/journey-map/env/shared/JOURNEY_TRANSITIONS_ENDPOINT}}'
             - Name: SYSTEM_SETTINGS_ENDPOINT_SHARED_DEV
-              Value: '{{resolve:ssm:/journey-map/env/dev01/SYSTEM_SETTINGS_ENDPOINT}}'
+              Value: '{{resolve:ssm:/journey-map/env/shared/SYSTEM_SETTINGS_ENDPOINT}}'
             - Name: ANALYTICS_API_KEY_SHARED_DEV
-              Value: '{{resolve:ssm:/journey-map/env/dev01/ANALYTICS_API_KEY}}'
+              Value: '{{resolve:ssm:/journey-map/env/shared/ANALYTICS_API_KEY}}'
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
