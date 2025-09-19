@@ -12,7 +12,7 @@ configurations {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.apacheHttpCore,
-			libs.awsSdkCrtClient,
+			libs.awsSdkUrlConnectionClient,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
