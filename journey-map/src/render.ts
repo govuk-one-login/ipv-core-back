@@ -22,7 +22,7 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
-import { getJourneyTransitionsData } from "./data/data.js";
+import { getJourneyTransitionsData, JourneyTransition } from "./data/data.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -43,9 +43,9 @@ const getVisibleEdgesAndNodes = async (
   );
 
   const states = [...initialStates];
-  const transitions: TransitionEdge[] = [];
+  const transitionEdges: TransitionEdge[] = [];
 
-  const journeyTransitions = getJourneyTransitionsData();
+  const journeyTransitionsTraffic = getJourneyTransitionsData();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -105,7 +105,7 @@ const getVisibleEdgesAndNodes = async (
         targetStateDefinition.response?.type === "nestedJourney";
 
       let count = 0;
-      for (const transition of journeyTransitions) {
+      for (const transition of journeyTransitionsTraffic) {
         // Source condition
         if (sourceIsNestedJourney) {
           if (
@@ -165,7 +165,7 @@ const getVisibleEdgesAndNodes = async (
         count += transition.count;
       }
 
-      transitions.push({
+      transitionEdges.push({
         sourceState,
         targetState,
         transitionCount: count,
@@ -174,24 +174,72 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  handleTrafficInNestedJourney(journeyTransitionsTraffic, transitionEdges);
+  handleOutcomingTrafficInNestedJourney(
+    journeyTransitionsTraffic,
+    transitionEdges,
+  );
 
-  const getBeforeLastSegment = (str: string): string => {
-    const parts = str.split("/");
-    return parts.length >= 2 ? parts[parts.length - 2] : str;
+  return {
+    transitions: transitionEdges,
+    states: states.map((name) => ({ name, definition: journeyStates[name] })),
   };
+};
 
+const getBeforeLastSegment = (str: string): string => {
+  const parts = str.split("/");
+  return parts.length >= 2 ? parts[parts.length - 2] : str;
+};
+
+const handleOutcomingTrafficInNestedJourney = (
+  journeyTransitions: JourneyTransition[],
+  transitions: TransitionEdge[],
+) => {
+  const params = new URLSearchParams(window.location.search);
+  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  if (!nestedJourneyTypeUrlParam) {
+    return;
+  }
   for (const journeyTransition of journeyTransitions) {
-    if (journeyTransition.fromJourney !== journeyTypeUrlParam) continue;
-    if (!nestedJourneyTypeUrlParam) continue;
-    const nestedJourney = getBeforeLastSegment(journeyTransition.to);
-    if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) continue;
     const fromState = journeyTransition.from.substring(
       journeyTransition.from.lastIndexOf("/") + 1,
     );
-    console.log(fromState);
+
+    const event = journeyTransition.event.toUpperCase();
+    const edge = transitions.find(
+      (edge) =>
+        edge.sourceState === fromState &&
+        edge.targetState.startsWith(`EXIT_${event}`),
+    );
+    if (!edge) {
+      continue;
+    }
+    edge.transitionCount = journeyTransition.count;
+  }
+};
+
+const handleTrafficInNestedJourney = (
+  journeyTransitions: JourneyTransition[],
+  transitions: TransitionEdge[],
+) => {
+  const params = new URLSearchParams(window.location.search);
+  const journeyTypeUrlParam = params.get("journeyType");
+  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  if (!nestedJourneyTypeUrlParam) {
+    return;
+  }
+
+  for (const journeyTransition of journeyTransitions) {
+    if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
+      continue;
+    }
+    const nestedJourney = getBeforeLastSegment(journeyTransition.to);
+    if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) {
+      continue;
+    }
+    const fromState = journeyTransition.from.substring(
+      journeyTransition.from.lastIndexOf("/") + 1,
+    );
     const toState = journeyTransition.to.substring(
       journeyTransition.to.lastIndexOf("/") + 1,
     );
@@ -206,23 +254,16 @@ const getVisibleEdgesAndNodes = async (
       continue;
     }
 
-    console.log(journeyTransition);
     const entryEdges = transitions.filter((transition) =>
       transition.sourceState.startsWith("ENTRY_"),
     );
     const entryEdge = entryEdges.find((edge) =>
       edge.sourceState.endsWith(journeyTransition.event.toUpperCase()),
     );
-    console.log(entryEdge);
     if (entryEdge) {
       entryEdge.transitionCount = journeyTransition.count;
     }
   }
-
-  return {
-    transitions,
-    states: states.map((name) => ({ name, definition: journeyStates[name] })),
-  };
 };
 
 export const render = async (
