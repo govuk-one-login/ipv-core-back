@@ -66,5 +66,7 @@ api-tests/.env*
 !api-tests/.env.local
 !api-tests/.env.devShared
 !api-tests/.env.build
+journey-map/.env*
+!journey-map/.env.template
 
 journey-map/public/application.js*

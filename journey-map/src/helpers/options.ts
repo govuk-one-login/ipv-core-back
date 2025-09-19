@@ -15,19 +15,6 @@ export interface SystemSettings {
   criStatuses: Record<string, boolean>;
 }
 
-export const getSystemSettings = async (): Promise<
-  SystemSettings | undefined
-> => {
-  const response = await fetch("/system-settings");
-  if (!response.ok) {
-    console.warn(
-      `Failed to fetch system settings from journey map server: ${response.statusText}`,
-    );
-    return undefined;
-  }
-  return await response.json();
-};
-
 export const parseOptions = (formData: FormData): RenderOptions => ({
   disabledCris: formData.getAll("disabledCri") as string[],
   featureFlags: formData.getAll("featureFlag") as string[],
