@@ -343,18 +343,10 @@ const highlightState = (state: string): void => {
 
   // Add new highlights
   Array.from(document.querySelectorAll(`path[id^="${state}-"]`)).forEach(
-    (edge) => {
-      if (!edge.classList.contains("highlightSelectedJourney")) {
-        edge.classList.add("highlight", "outgoingEdge");
-      }
-    },
+    (edge) => edge.classList.add("highlight", "outgoingEdge"),
   );
   Array.from(document.querySelectorAll(`path[id$="-${state}"]`)).forEach(
-    (edge) => {
-      if (!edge.classList.contains("highlightSelectedJourney")) {
-        edge.classList.add("highlight", "incomingEdge");
-      }
-    },
+    (edge) => edge.classList.add("highlight", "incomingEdge"),
   );
   Array.from(document.getElementsByClassName("node"))
     .filter((node) => node.id.startsWith(`flowchart-${state}-`))

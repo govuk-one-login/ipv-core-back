@@ -221,7 +221,7 @@ export const render = async (
   );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-      ? `#ff0000${alphaFromCount(t.transitionCount, maxCount)}`
+      ? `#FF8888${alphaFromCount(t.transitionCount, maxCount)}`
       : "#E5E4E2";
     const strokeWidth = getStrokeWidth(t.transitionCount ?? 0, maxCount);
     return [
