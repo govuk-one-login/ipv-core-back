@@ -187,7 +187,7 @@ const getVisibleEdgesAndNodes = async (
     if (journeyTransition.fromJourney !== journeyTypeUrlParam) continue;
     if (!nestedJourneyTypeUrlParam) continue;
     const nestedJourney = getBeforeLastSegment(journeyTransition.to);
-    if (nestedJourneyTypeUrlParam !== nestedJourney) continue;
+    if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) continue;
     const fromState = journeyTransition.from.substring(
       journeyTransition.from.lastIndexOf("/") + 1,
     );
@@ -198,8 +198,8 @@ const getVisibleEdgesAndNodes = async (
 
     const edge = transitions.find(
       (transition) =>
-        transition.sourceState === fromState &&
-        transition.targetState === toState,
+        fromState.startsWith(transition.sourceState) &&
+        toState.startsWith(transition.targetState),
     );
     if (edge) {
       edge.transitionCount = journeyTransition.count;
