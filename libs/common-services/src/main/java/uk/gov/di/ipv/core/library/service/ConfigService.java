@@ -33,14 +33,11 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DET
 
 public abstract class ConfigService {
     private static final Logger LOGGER = LogManager.getLogger();
-
-    // JSON/YAML mappers
+    private static final String PATH_SEPARATOR = "/";
+    private static final String CORE = "core";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
-
-    private static final String CORE = "core";
-    private static final String PATH_SEPARATOR = "/";
 
     @Setter private Config configuration;
 
@@ -55,6 +52,8 @@ public abstract class ConfigService {
     }
 
     public abstract List<String> getFeatureSet();
+
+    protected abstract String getSecret(String path);
 
     public abstract void setFeatureSet(List<String> featureSet);
 
@@ -88,8 +87,6 @@ public abstract class ConfigService {
     public void reloadParameters() {
         // real fetch+reparse happens in AppConfigService; LocalConfigService is static
     }
-
-    protected abstract String getSecret(String path);
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
