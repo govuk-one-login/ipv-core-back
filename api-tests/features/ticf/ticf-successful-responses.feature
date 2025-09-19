@@ -35,7 +35,6 @@ Feature: TICF successful responses
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
 
-    @MikeC
     Scenario: New P2 identity via F2F - TICF request returns a CI
       Given TICF CRI will respond with default parameters
         | cis  | BREACHING                    |
