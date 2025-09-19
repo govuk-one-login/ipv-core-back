@@ -98,6 +98,7 @@ class IssueClientAccessTokenHandlerTest {
         when(configService.getMaxAllowedAuthClientTtl()).thenReturn(3153600000L); // 100 years
         when(configService.getAuthCodeExpirySeconds()).thenReturn(3153600000L); // 100 years
         when(configService.getBearerTokenTtl()).thenReturn(3153600000L); // 100 years
+        when(configService.getBackendSessionTtl()).thenReturn(3600L); // 100 years
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
