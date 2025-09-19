@@ -4,6 +4,7 @@ export interface JourneyTransition {
   toJourney: string;
   to: string;
   count: number;
+  event: string;
 }
 
 let journeyTransitions: JourneyTransition[] = [];
