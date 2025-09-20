@@ -174,11 +174,14 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
-  handleTrafficInNestedJourney(journeyTransitionsTraffic, transitionEdges);
-  handleOutcomingTrafficInNestedJourney(
+  console.log(journeyTransitionsTraffic);
+  console.log(transitionEdges);
+  // handleTrafficInNestedJourney(journeyTransitionsTraffic, transitionEdges);
+  handleIncomingNestedJourneyTraffic(
     journeyTransitionsTraffic,
     transitionEdges,
   );
+  handleNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
 
   return {
     transitions: transitionEdges,
@@ -191,36 +194,53 @@ const getBeforeLastSegment = (str: string): string => {
   return parts.length >= 2 ? parts[parts.length - 2] : str;
 };
 
-const handleOutcomingTrafficInNestedJourney = (
+const handleIncomingNestedJourneyTraffic = (
   journeyTransitionsTraffic: JourneyTransition[],
   transitionsEdges: TransitionEdge[],
 ) => {
   const params = new URLSearchParams(window.location.search);
+  const journeyTypeUrlParam = params.get("journeyType");
   const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
   if (!nestedJourneyTypeUrlParam) {
     return;
   }
   for (const journeyTransition of journeyTransitionsTraffic) {
-    const fromState = journeyTransition.from.substring(
-      journeyTransition.from.lastIndexOf("/") + 1,
+    if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
+      continue;
+    }
+
+    if (
+      !getBeforeLastSegment(journeyTransition.to).startsWith(
+        nestedJourneyTypeUrlParam,
+      )
+    ) {
+      continue;
+    }
+    console.log(journeyTransition.to);
+    const toState = journeyTransition.to.substring(
+      journeyTransition.to.lastIndexOf("/") + 1,
     );
 
-    const event = journeyTransition.event.toUpperCase();
-    const edge = transitionsEdges.find(
-      (edge) =>
-        edge.sourceState === fromState &&
-        edge.targetState.startsWith(`EXIT_${event}`),
+    const edges = transitionsEdges.filter((edge) =>
+      edge.sourceState.startsWith("ENTRY_"),
     );
+    const edge = edges.find((edge) => edge.targetState === toState);
+    console.log(edge);
     if (!edge) {
       continue;
     }
-    edge.transitionCount = journeyTransition.count;
+
+    if (edge.transitionCount) {
+      edge.transitionCount += journeyTransition.count;
+    } else {
+      edge.transitionCount = journeyTransition.count;
+    }
   }
 };
 
-const handleTrafficInNestedJourney = (
-  journeyTransitions: JourneyTransition[],
-  transitions: TransitionEdge[],
+const handleNestedJourneyTraffic = (
+  journeyTransitionsTraffic: JourneyTransition[],
+  transitionsEdges: TransitionEdge[],
 ) => {
   const params = new URLSearchParams(window.location.search);
   const journeyTypeUrlParam = params.get("journeyType");
@@ -229,39 +249,33 @@ const handleTrafficInNestedJourney = (
     return;
   }
 
-  for (const journeyTransition of journeyTransitions) {
+  for (const journeyTransition of journeyTransitionsTraffic) {
     if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
       continue;
     }
-    const nestedJourney = getBeforeLastSegment(journeyTransition.to);
+    const nestedJourney = getBeforeLastSegment(journeyTransition.from);
     if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) {
       continue;
     }
+
     const fromState = journeyTransition.from.substring(
       journeyTransition.from.lastIndexOf("/") + 1,
     );
-    const toState = journeyTransition.to.substring(
-      journeyTransition.to.lastIndexOf("/") + 1,
-    );
 
-    const edge = transitions.find(
-      (transition) =>
-        fromState.startsWith(transition.sourceState) &&
-        toState.startsWith(transition.targetState),
+    const event = journeyTransition.event;
+    const edges = transitionsEdges.filter(
+      (edge) => edge.sourceState === fromState,
     );
-    if (edge) {
-      edge.transitionCount = journeyTransition.count;
+    const edge = edges.find((edge) =>
+      edge.transitionEvents.find((te) => te.eventName === event),
+    );
+    if (!edge) {
       continue;
     }
-
-    const entryEdges = transitions.filter((transition) =>
-      transition.sourceState.startsWith("ENTRY_"),
-    );
-    const entryEdge = entryEdges.find((edge) =>
-      edge.sourceState.endsWith(journeyTransition.event.toUpperCase()),
-    );
-    if (entryEdge) {
-      entryEdge.transitionCount = journeyTransition.count;
+    if (edge.transitionCount) {
+      edge.transitionCount += journeyTransition.count;
+    } else {
+      edge.transitionCount = journeyTransition.count;
     }
   }
 };
