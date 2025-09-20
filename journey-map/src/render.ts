@@ -174,14 +174,12 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
-  console.log(journeyTransitionsTraffic);
-  console.log(transitionEdges);
-  // handleTrafficInNestedJourney(journeyTransitionsTraffic, transitionEdges);
-  handleIncomingNestedJourneyTraffic(
+  handleEntryNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
+  handleNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
+  handleOutFromNestedJourneysInNestedJourneys(
     journeyTransitionsTraffic,
     transitionEdges,
   );
-  handleNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
 
   return {
     transitions: transitionEdges,
@@ -194,7 +192,35 @@ const getBeforeLastSegment = (str: string): string => {
   return parts.length >= 2 ? parts[parts.length - 2] : str;
 };
 
-const handleIncomingNestedJourneyTraffic = (
+const handleOutFromNestedJourneysInNestedJourneys = (
+  journeyTransitionsTraffic: JourneyTransition[],
+  transitionsEdges: TransitionEdge[],
+) => {
+  const params = new URLSearchParams(window.location.search);
+  const journeyTypeUrlParam = params.get("journeyType");
+  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  if (!nestedJourneyTypeUrlParam) {
+    return;
+  }
+
+  for (const edge of transitionsEdges) {
+    const prefix = `${nestedJourneyTypeUrlParam}/${edge.sourceState}/`;
+    const filteredTransitions = journeyTransitionsTraffic
+      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
+      .filter((transition) => transition.from.startsWith(prefix))
+      .filter((transition) => !transition.to.startsWith(prefix));
+
+    for (const transition of filteredTransitions) {
+      if (edge.transitionCount) {
+        edge.transitionCount += transition.count;
+      } else {
+        edge.transitionCount = transition.count;
+      }
+    }
+  }
+};
+
+const handleEntryNestedJourneyTraffic = (
   journeyTransitionsTraffic: JourneyTransition[],
   transitionsEdges: TransitionEdge[],
 ) => {
@@ -208,7 +234,6 @@ const handleIncomingNestedJourneyTraffic = (
     if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
       continue;
     }
-
     if (
       !getBeforeLastSegment(journeyTransition.to).startsWith(
         nestedJourneyTypeUrlParam,
@@ -216,20 +241,16 @@ const handleIncomingNestedJourneyTraffic = (
     ) {
       continue;
     }
-    console.log(journeyTransition.to);
     const toState = journeyTransition.to.substring(
       journeyTransition.to.lastIndexOf("/") + 1,
     );
-
     const edges = transitionsEdges.filter((edge) =>
       edge.sourceState.startsWith("ENTRY_"),
     );
     const edge = edges.find((edge) => edge.targetState === toState);
-    console.log(edge);
     if (!edge) {
       continue;
     }
-
     if (edge.transitionCount) {
       edge.transitionCount += journeyTransition.count;
     } else {
@@ -248,7 +269,6 @@ const handleNestedJourneyTraffic = (
   if (!nestedJourneyTypeUrlParam) {
     return;
   }
-
   for (const journeyTransition of journeyTransitionsTraffic) {
     if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
       continue;
@@ -257,11 +277,9 @@ const handleNestedJourneyTraffic = (
     if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) {
       continue;
     }
-
     const fromState = journeyTransition.from.substring(
       journeyTransition.from.lastIndexOf("/") + 1,
     );
-
     const event = journeyTransition.event;
     const edges = transitionsEdges.filter(
       (edge) => edge.sourceState === fromState,
