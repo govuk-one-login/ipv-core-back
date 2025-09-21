@@ -22,7 +22,8 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
-import { getJourneyTransitionsData, JourneyTransition } from "./data/data.js";
+import { getJourneyTransitionsData } from "./data/data.js";
+import { attachTransitionTrafficToNestedJourneys } from "./helpers/journey-traffic.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -174,9 +175,7 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
-  handleEntryNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
-  handleNestedJourneyMidOutTraffic(journeyTransitionsTraffic, transitionEdges);
-  handleOutFromNestedJourneysInNestedJourneys(
+  attachTransitionTrafficToNestedJourneys(
     journeyTransitionsTraffic,
     transitionEdges,
   );
@@ -185,112 +184,6 @@ const getVisibleEdgesAndNodes = async (
     transitions: transitionEdges,
     states: states.map((name) => ({ name, definition: journeyStates[name] })),
   };
-};
-
-const getBeforeLastSegment = (str: string): string => {
-  const parts = str.split("/");
-  return parts.length >= 2 ? parts[parts.length - 2] : str;
-};
-
-const handleOutFromNestedJourneysInNestedJourneys = (
-  journeyTransitionsTraffic: JourneyTransition[],
-  transitionsEdges: TransitionEdge[],
-) => {
-  const params = new URLSearchParams(window.location.search);
-  const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
-  if (!nestedJourneyTypeUrlParam) {
-    return;
-  }
-
-  for (const edge of transitionsEdges) {
-    const prefix = `${nestedJourneyTypeUrlParam}/${edge.sourceState}/`;
-    const count = journeyTransitionsTraffic
-      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
-      .filter((transition) => transition.from.startsWith(prefix))
-      .filter((transition) => !transition.to.startsWith(prefix))
-      .filter((transition) =>
-        edge.transitionEvents.find((te) => te.eventName === transition.event),
-      )
-      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
-
-    if (count > 0) {
-      edge.transitionCount = count;
-    }
-  }
-};
-
-const handleNestedJourneyMidOutTraffic = (
-  journeyTransitionsTraffic: JourneyTransition[],
-  transitionsEdges: TransitionEdge[],
-) => {
-  const params = new URLSearchParams(window.location.search);
-  const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
-  if (!nestedJourneyTypeUrlParam) {
-    return;
-  }
-
-  for (const edge of transitionsEdges) {
-    const count = journeyTransitionsTraffic
-      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
-      .filter((transition) =>
-        getBeforeLastSegment(transition.from).startsWith(
-          nestedJourneyTypeUrlParam,
-        ),
-      )
-      .map((transition) => ({
-        ...transition,
-        from: transition.from.substring(transition.from.lastIndexOf("/") + 1),
-      }))
-      .filter((transition) => edge.sourceState === transition.from)
-      .filter((transition) =>
-        edge.transitionEvents.find((te) => te.eventName === transition.event),
-      )
-      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
-
-    if (count > 0) {
-      edge.transitionCount = count;
-    }
-  }
-};
-
-const handleEntryNestedJourneyTraffic = (
-  journeyTransitionsTraffic: JourneyTransition[],
-  transitionsEdges: TransitionEdge[],
-) => {
-  const params = new URLSearchParams(window.location.search);
-  const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
-  if (!nestedJourneyTypeUrlParam) {
-    return;
-  }
-
-  for (const edge of transitionsEdges) {
-    if (!edge.sourceState.startsWith("ENTRY_")) {
-      continue;
-    }
-    const count = journeyTransitionsTraffic
-      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
-      .filter((transition) =>
-        getBeforeLastSegment(transition.to).startsWith(
-          nestedJourneyTypeUrlParam,
-        ),
-      )
-      .map((transition) => ({
-        ...transition,
-        toState: transition.to.substring(transition.to.lastIndexOf("/") + 1),
-      }))
-      .filter((transition) => transition.toState === edge.targetState)
-      .filter((transition) =>
-        edge.transitionEvents.find((te) => te.eventName === transition.event),
-      )
-      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
-
-    if (count > 0) {
-      edge.transitionCount = count;
-    }
-  }
 };
 
 export const render = async (
