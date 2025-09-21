@@ -175,7 +175,7 @@ const getVisibleEdgesAndNodes = async (
   }
 
   handleEntryNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
-  handleNestedJourneyTraffic(journeyTransitionsTraffic, transitionEdges);
+  handleNestedJourneyMidOutTraffic(journeyTransitionsTraffic, transitionEdges);
   handleOutFromNestedJourneysInNestedJourneys(
     journeyTransitionsTraffic,
     transitionEdges,
@@ -205,17 +205,52 @@ const handleOutFromNestedJourneysInNestedJourneys = (
 
   for (const edge of transitionsEdges) {
     const prefix = `${nestedJourneyTypeUrlParam}/${edge.sourceState}/`;
-    const filteredTransitions = journeyTransitionsTraffic
+    const count = journeyTransitionsTraffic
       .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
       .filter((transition) => transition.from.startsWith(prefix))
-      .filter((transition) => !transition.to.startsWith(prefix));
+      .filter((transition) => !transition.to.startsWith(prefix))
+      .filter((transition) =>
+        edge.transitionEvents.find((te) => te.eventName === transition.event),
+      )
+      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
 
-    for (const transition of filteredTransitions) {
-      if (edge.transitionCount) {
-        edge.transitionCount += transition.count;
-      } else {
-        edge.transitionCount = transition.count;
-      }
+    if (count > 0) {
+      edge.transitionCount = count;
+    }
+  }
+};
+
+const handleNestedJourneyMidOutTraffic = (
+  journeyTransitionsTraffic: JourneyTransition[],
+  transitionsEdges: TransitionEdge[],
+) => {
+  const params = new URLSearchParams(window.location.search);
+  const journeyTypeUrlParam = params.get("journeyType");
+  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  if (!nestedJourneyTypeUrlParam) {
+    return;
+  }
+
+  for (const edge of transitionsEdges) {
+    const count = journeyTransitionsTraffic
+      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
+      .filter((transition) =>
+        getBeforeLastSegment(transition.from).startsWith(
+          nestedJourneyTypeUrlParam,
+        ),
+      )
+      .map((transition) => ({
+        ...transition,
+        from: transition.from.substring(transition.from.lastIndexOf("/") + 1),
+      }))
+      .filter((transition) => edge.sourceState === transition.from)
+      .filter((transition) =>
+        edge.transitionEvents.find((te) => te.eventName === transition.event),
+      )
+      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
+
+    if (count > 0) {
+      edge.transitionCount = count;
     }
   }
 };
@@ -230,70 +265,30 @@ const handleEntryNestedJourneyTraffic = (
   if (!nestedJourneyTypeUrlParam) {
     return;
   }
-  for (const journeyTransition of journeyTransitionsTraffic) {
-    if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
-      continue;
-    }
-    if (
-      !getBeforeLastSegment(journeyTransition.to).startsWith(
-        nestedJourneyTypeUrlParam,
-      )
-    ) {
-      continue;
-    }
-    const toState = journeyTransition.to.substring(
-      journeyTransition.to.lastIndexOf("/") + 1,
-    );
-    const edges = transitionsEdges.filter((edge) =>
-      edge.sourceState.startsWith("ENTRY_"),
-    );
-    const edge = edges.find((edge) => edge.targetState === toState);
-    if (!edge) {
-      continue;
-    }
-    if (edge.transitionCount) {
-      edge.transitionCount += journeyTransition.count;
-    } else {
-      edge.transitionCount = journeyTransition.count;
-    }
-  }
-};
 
-const handleNestedJourneyTraffic = (
-  journeyTransitionsTraffic: JourneyTransition[],
-  transitionsEdges: TransitionEdge[],
-) => {
-  const params = new URLSearchParams(window.location.search);
-  const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
-  if (!nestedJourneyTypeUrlParam) {
-    return;
-  }
-  for (const journeyTransition of journeyTransitionsTraffic) {
-    if (journeyTransition.fromJourney !== journeyTypeUrlParam) {
+  for (const edge of transitionsEdges) {
+    if (!edge.sourceState.startsWith("ENTRY_")) {
       continue;
     }
-    const nestedJourney = getBeforeLastSegment(journeyTransition.from);
-    if (!nestedJourney.startsWith(nestedJourneyTypeUrlParam)) {
-      continue;
-    }
-    const fromState = journeyTransition.from.substring(
-      journeyTransition.from.lastIndexOf("/") + 1,
-    );
-    const event = journeyTransition.event;
-    const edges = transitionsEdges.filter(
-      (edge) => edge.sourceState === fromState,
-    );
-    const edge = edges.find((edge) =>
-      edge.transitionEvents.find((te) => te.eventName === event),
-    );
-    if (!edge) {
-      continue;
-    }
-    if (edge.transitionCount) {
-      edge.transitionCount += journeyTransition.count;
-    } else {
-      edge.transitionCount = journeyTransition.count;
+    const count = journeyTransitionsTraffic
+      .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
+      .filter((transition) =>
+        getBeforeLastSegment(transition.to).startsWith(
+          nestedJourneyTypeUrlParam,
+        ),
+      )
+      .map((transition) => ({
+        ...transition,
+        toState: transition.to.substring(transition.to.lastIndexOf("/") + 1),
+      }))
+      .filter((transition) => transition.toState === edge.targetState)
+      .filter((transition) =>
+        edge.transitionEvents.find((te) => te.eventName === transition.event),
+      )
+      .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
+
+    if (count > 0) {
+      edge.transitionCount = count;
     }
   }
 };
