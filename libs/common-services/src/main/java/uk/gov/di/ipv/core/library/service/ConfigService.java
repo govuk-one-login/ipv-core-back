@@ -24,7 +24,9 @@ import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;

@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.Authenticator;
