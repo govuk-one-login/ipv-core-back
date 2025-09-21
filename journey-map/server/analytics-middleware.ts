@@ -31,7 +31,6 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     switch (response.status) {
       case 200:
-        res.set("Cache-Control", "public, max-age=60");
         res.json(data);
         break;
       case 400:
