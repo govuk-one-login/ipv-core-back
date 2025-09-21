@@ -19,7 +19,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -65,6 +64,7 @@ class AuthorizationRequestHelperTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CLIENT_ID_FIELD = "client_id";
     private static final String IPV_CLIENT_ID_VALUE = "testClientId";
+    private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
     private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
@@ -89,7 +89,6 @@ class AuthorizationRequestHelperTest {
                     Set.of(new DrivingPermitDetails()));
 
     @Mock CoreSigner jwsSigner;
-    @Mock Config mockConfig;
     @Mock OauthCriConfig oauthCriConfig;
     @Mock ConfigService configService;
     private LocalECDSASigner signer;
@@ -126,7 +125,7 @@ class AuthorizationRequestHelperTest {
                         null);
 
         assertEquals("test-fixtures-ec-key", result.getHeader().getKeyID());
-        assertEquals("https://core-component.example", result.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(
                 TEST_JOURNEY_ID,
@@ -335,7 +334,7 @@ class AuthorizationRequestHelperTest {
 
     private void setupConfigurationServiceMock() {
         when(configService.getJwtTtlSeconds()).thenReturn(IPV_TOKEN_TTL);
-        when(configService.getComponentId()).thenReturn("https://core-component.example");
+        when(configService.getComponentId()).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()

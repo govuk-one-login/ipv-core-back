@@ -81,10 +81,8 @@ class OAuthKeyServiceTest {
         @BeforeEach
         void beforeEach() throws Exception {
             when(mockConfigService.getOauthKeyCacheDurationMins()).thenReturn(5L);
-
             when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
-
             when(mockHttpResponse.body())
                     .thenReturn(String.format("{\"keys\":[%s]}", RSA_ENCRYPTION_PUBLIC_JWK));
         }

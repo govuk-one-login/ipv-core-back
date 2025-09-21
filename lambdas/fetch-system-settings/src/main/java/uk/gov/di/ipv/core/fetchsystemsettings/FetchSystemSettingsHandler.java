@@ -40,12 +40,10 @@ public class FetchSystemSettingsHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
         try {
-            // Pull the current, feature-overlaid configuration
             var cfg = configService.getConfiguration();
 
             Map<String, Boolean> featureFlagStatuses = Map.copyOf(cfg.getFeatureFlags());
 
-            // Build CRI enabled/disabled map from typed config
             var criStatuses = new HashMap<String, Boolean>();
             var issuers = cfg.getCredentialIssuers();
             for (var cri : Cri.values()) {

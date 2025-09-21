@@ -136,24 +136,20 @@ class UserIdentityServiceTest {
 
     @BeforeEach
     void wireConfig() {
-        // Top-level graph
         when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getSelf()).thenReturn(mockSelf);
         when(mockSelf.getCoi()).thenReturn(mockCoi);
         when(mockSelf.getCiScoringThresholdByVot()).thenReturn(mockThresholds);
 
-        // Non-null VTM (URI!) — fixes URI.toString() NPE
         when(mockSelf.getCoreVtmClaim()).thenReturn(URI.create("mock-vtm-claim"));
 
-        // Real Integers (NOT mocked Integers)
         when(mockCoi.getFamilyNameChars()).thenReturn(5);
         when(mockCoi.getGivenNameChars()).thenReturn(1);
         when(mockThresholds.getP2()).thenReturn(10);
 
-        // Real Map for return codes + safe defaults — fixes .contains(...) NPE
         returnCodes.clear();
-        returnCodes.put("alwaysRequired", ""); // safe default
-        returnCodes.put("nonCiBreachingP0", ""); // safe default
+        returnCodes.put("alwaysRequired", "");
+        returnCodes.put("nonCiBreachingP0", "");
         when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
     }
 
@@ -163,7 +159,6 @@ class UserIdentityServiceTest {
 
     private void setReturnCodes(Map<String, String> map) {
         returnCodes.clear();
-        // keep safe defaults unless overwritten
         returnCodes.put("alwaysRequired", "");
         returnCodes.put("nonCiBreachingP0", "");
         returnCodes.putAll(map);
@@ -1553,19 +1548,15 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
-        // Make the threshold high so any CI score is non-breaching
         setP2Threshold(10); // if code uses getP2()
-        when(mockThresholds.getThreshold("P2")).thenReturn(10); // if code uses getThreshold("P2")
-        when(mockThresholds.getThreshold("P0")).thenReturn(10); // defensive
+        when(mockThresholds.getThreshold("P2")).thenReturn(10);
+        when(mockThresholds.getThreshold("P0")).thenReturn(10);
 
-        // Drive the non-breaching P0 code via the real map returned by getReturnCodes()
-        // Also set a different 'alwaysRequired' so we could detect if the wrong branch was used.
         setReturnCodes(
                 Map.of(
                         "nonCiBreachingP0", "🐧",
                         "alwaysRequired", "🦆"));
 
-        // CI that would map to "1" *if* the breaching/mapping branch were taken
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1576,7 +1567,7 @@ class UserIdentityServiceTest {
                 userIdentityService.generateUserIdentity(
                         List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
-        // Assert – proves we took the non-breaching P0 path (uses 'nonCiBreachingP0')
+        // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
     }
 

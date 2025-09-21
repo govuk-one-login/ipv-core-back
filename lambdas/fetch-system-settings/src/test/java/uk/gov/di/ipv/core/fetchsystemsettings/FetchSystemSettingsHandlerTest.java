@@ -41,7 +41,6 @@ class FetchSystemSettingsHandlerTest {
                         CommonData.class.getResourceAsStream("/test-secrets.yaml").readAllBytes(),
                         StandardCharsets.UTF_8);
 
-        // Keep a reference so we can build expectations from the same typed config
         configService = new LocalConfigService(parametersYaml, secretsYaml);
         handler = new FetchSystemSettingsHandler(configService);
     }
@@ -55,11 +54,9 @@ class FetchSystemSettingsHandlerTest {
                         response.getBody(),
                         new TypeReference<HashMap<String, Map<String, Object>>>() {});
 
-        // Build expected feature flags from typed config
         var cfg = configService.getConfiguration();
         Map<String, Boolean> expectedFeatureFlags = Map.copyOf(cfg.getFeatureFlags());
 
-        // Build expected CRI statuses from typed config (enabled flags)
         var expectedCriStatuses = new HashMap<String, Object>();
         var issuers = cfg.getCredentialIssuers();
         for (var cri : Cri.values()) {

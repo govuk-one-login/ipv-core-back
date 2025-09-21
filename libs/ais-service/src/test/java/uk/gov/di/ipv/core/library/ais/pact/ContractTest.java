@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.net.URI;
 import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
@@ -46,8 +47,7 @@ class ContractTest {
     void setUp(MockServer mockServer) {
         when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getAis()).thenReturn(mockAis);
-        when(mockAis.getApiBaseUrl())
-                .thenReturn(java.net.URI.create(getMockAisBaseUrl(mockServer)));
+        when(mockAis.getApiBaseUrl()).thenReturn(URI.create(getMockAisBaseUrl(mockServer)));
     }
 
     @Pact(provider = "AccountInterventionServiceProvider", consumer = "IpvCoreBack")

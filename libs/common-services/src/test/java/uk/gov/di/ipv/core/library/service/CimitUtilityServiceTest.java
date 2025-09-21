@@ -71,7 +71,6 @@ class CimitUtilityServiceTest {
 
     @BeforeEach
     void setup() {
-
         lenient()
                 .when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(CONTRA_INDICATOR_CONFIG_MAP);
@@ -157,7 +156,6 @@ class CimitUtilityServiceTest {
     void isBreachingCiThreshold_ShouldReturnTrue_IfCiScoreBreaching(
             int ciScore1, int ciScore2, int ciScoreThreshold) {
 
-        // Arrange only what this test needs
         stubThreshold(ciScoreThreshold);
 
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
@@ -191,7 +189,6 @@ class CimitUtilityServiceTest {
     void isBreachingCiThreshold_ShouldReturnFalse_IfCiScoreNotBreaching(
             int ciScore1, int ciScore2, int ciScoreThreshold) {
 
-        // Only stub what this test uses
         stubThreshold(ciScoreThreshold);
 
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
@@ -288,10 +285,8 @@ class CimitUtilityServiceTest {
             getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiScoreNotBreachingAndNoExistingMitigations(
                     int ciScore1, int ciScore2, int ciScoreThreshold) {
 
-        // Threshold stub (only what we need)
         stubThreshold(ciScoreThreshold);
 
-        // CI score config used by the service
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
         ciConfigMap.put("ci_1", new ContraIndicatorConfig(null, ciScore1, null, null));
         ciConfigMap.put("ci_2", new ContraIndicatorConfig(null, ciScore2, null, null));

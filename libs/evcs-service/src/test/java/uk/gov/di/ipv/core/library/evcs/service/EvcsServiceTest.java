@@ -10,8 +10,6 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.domain.CimitConfig;
-import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -116,8 +114,6 @@ class EvcsServiceTest {
     @Mock ConfigService mockConfigService;
     @Mock StoredIdentityService mockStoredIdentityService;
     @InjectMocks EvcsService evcsService;
-    @Mock Config mockConfig;
-    @Mock CimitConfig mockCimit;
 
     @BeforeEach
     void setUp() {
