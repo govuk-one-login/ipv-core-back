@@ -23,7 +23,7 @@ import {
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
 import { getJourneyTransitionsData } from "./data/data.js";
-import { attachTransitionTrafficToNestedJourneys } from "./helpers/journey-traffic.js";
+import { attachTransitionTrafficToNestedJourneys } from "./helpers/nested-journey-traffic.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];

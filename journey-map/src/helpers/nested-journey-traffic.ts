@@ -7,10 +7,16 @@ export const attachTransitionTrafficToNestedJourneys = (
 ) => {
   const params = new URLSearchParams(window.location.search);
   const journeyTypeUrlParam = params.get("journeyType");
-  const nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
+  let nestedJourneyTypeUrlParam = params.get("nestedJourneyType");
   if (!nestedJourneyTypeUrlParam || !journeyTypeUrlParam) {
     return;
   }
+
+  // Nested journey is called KBVs but state transitions events 'from' starting with KBV_
+  if (nestedJourneyTypeUrlParam === "KBVS") {
+    nestedJourneyTypeUrlParam = "KBV";
+  }
+
   handleOutFromNestedJourneysInNestedJourneys(
     journeyTransitionsTraffic,
     transitionsEdges,
@@ -36,6 +42,22 @@ const getBeforeLastSegment = (str: string): string => {
   return parts.length >= 2 ? parts[parts.length - 2] : str;
 };
 
+const getBeforeFirstSlash = (str: string): string => {
+  return str.split("/")[0];
+};
+
+const createPrefix = (
+  from: string,
+  nestedJourneyUrlParam: string,
+  edge: TransitionEdge,
+): string => {
+  const firstPrefix = getBeforeFirstSlash(from);
+  if (!firstPrefix.startsWith(nestedJourneyUrlParam)) {
+    return "invalid-nested-journey";
+  }
+  return `${firstPrefix}/${edge.sourceState}/`;
+};
+
 const handleOutFromNestedJourneysInNestedJourneys = (
   journeyTransitionsTraffic: JourneyTransition[],
   transitionsEdges: TransitionEdge[],
@@ -43,11 +65,19 @@ const handleOutFromNestedJourneysInNestedJourneys = (
   nestedJourneyTypeUrlParam: string,
 ) => {
   for (const edge of transitionsEdges) {
-    const prefix = `${nestedJourneyTypeUrlParam}/${edge.sourceState}/`;
     const count = journeyTransitionsTraffic
       .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
-      .filter((transition) => transition.from.startsWith(prefix))
-      .filter((transition) => !transition.to.startsWith(prefix))
+      .filter((transition) =>
+        transition.from.startsWith(
+          createPrefix(transition.from, nestedJourneyTypeUrlParam, edge),
+        ),
+      )
+      .filter(
+        (transition) =>
+          !transition.to.startsWith(
+            createPrefix(transition.from, nestedJourneyTypeUrlParam, edge),
+          ),
+      )
       .filter((transition) =>
         edge.transitionEvents.find((te) => te.eventName === transition.event),
       )
