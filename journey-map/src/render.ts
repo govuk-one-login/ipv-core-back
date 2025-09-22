@@ -244,9 +244,9 @@ export const render = async (
 };
 
 const getStrokeWidth = (count: number, maxCount: number): number => {
-  if (maxCount <= 0) return 2;
-  const minWidth = 2;
-  const maxWidth = 6;
+  if (maxCount <= 0) return 1;
+  const minWidth = 1;
+  const maxWidth = 8;
   const ratio = Math.min(1, Math.max(0, count / maxCount));
   return minWidth + (maxWidth - minWidth) * ratio;
 };
