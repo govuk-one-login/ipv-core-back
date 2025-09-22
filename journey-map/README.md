@@ -31,10 +31,11 @@ In production, the journey map uses `../journey-map.Dockerfile` to run these ste
 ### Visualising real data
 
 Run the map locally, but set the following environment variables, for the deployment of your choice! Check API Gateway for the endpoint and API key info.
+Find possible environment variable list in .env.template file. See example below how to import variable for shared dev environment.
 ```bash
-export JOURNEY_TRANSITIONS_ENDPOINT=...
-export SYSTEM_SETTINGS_ENDPOINT=...
-export ANALYTICS_API_KEY=...
+export JOURNEY_TRANSITIONS_ENDPOINT_SHARED_DEV=...
+export SYSTEM_SETTINGS_ENDPOINT_SHARED_DEV=...
+export ANALYTICS_API_KEY_SHARED_DEV=...
 npm run dev
 ```
 This allows the user to see user traffic over journey edges and real system settings for disabled CRIs and feature flags.
@@ -43,6 +44,16 @@ This allows the user to see user traffic over journey edges and real system sett
 
 You should be able to pan and zoom using the mouse and scroll wheel,
 as well as viewing the differences when a CRI is marked as disabled, or a particular feature flag is enabled.
+
+You can customise analytics api request to fetch journey transitions. Currently available options are:
+- Target environment:
+   - Production
+   - Integration
+   - Staging
+   - Build
+   - Shared Dev
+- Date and time window
+- Fetch by journey id, session id or all journeys
 
 N.B. for clarity, the map only displays states that are accessible via preconfigured entry states.
 
