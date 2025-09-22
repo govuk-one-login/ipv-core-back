@@ -1345,7 +1345,7 @@ Resources:
                 - 'kms:Decrypt'
                 - 'kms:GenerateDataKey'
               Resource:
-                - !ImportValue CoreEncryptionKeyArn
+                - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
