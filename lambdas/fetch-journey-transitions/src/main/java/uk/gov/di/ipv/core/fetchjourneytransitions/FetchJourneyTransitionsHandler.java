@@ -21,7 +21,11 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.RequestParseExcepti
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FetchJourneyTransitionsHandler
