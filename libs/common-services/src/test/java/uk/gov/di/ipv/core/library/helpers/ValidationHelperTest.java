@@ -58,13 +58,13 @@ public class ValidationHelperTest {
         @Test
         void acceptsValidV4() {
             var valid = "40a89427-71f2-4ad5-ac65-41a6b641d308";
-            assertTrue(ValidationHelper.isValidGovukSigningJourneyId(valid));
+            assertTrue(ValidationHelper.isValidGovukSigninJourneyId(valid));
         }
 
         @Test
         void rejectsUppercase() {
             assertFalse(
-                    ValidationHelper.isValidGovukSigningJourneyId(
+                    ValidationHelper.isValidGovukSigninJourneyId(
                             "40A89427-71F2-4AD5-AC65-41A6B641D308"));
         }
 
@@ -77,7 +77,7 @@ public class ValidationHelperTest {
                     "40a89427-71f2-4ad5-ac654-1a6b641d308"
                 })
         void rejectsInvalidPartsLength(String input) {
-            assertFalse(ValidationHelper.isValidGovukSigningJourneyId(input));
+            assertFalse(ValidationHelper.isValidGovukSigninJourneyId(input));
         }
 
         @ParameterizedTest
@@ -90,12 +90,12 @@ public class ValidationHelperTest {
                     "40a89427-71f2-4ad5-ac65-41a6b641d30g"
                 })
         void rejectsNoHexCharacters(String input) {
-            assertFalse(ValidationHelper.isValidGovukSigningJourneyId(input));
+            assertFalse(ValidationHelper.isValidGovukSigninJourneyId(input));
         }
 
         @Test
         void rejectNullValues() {
-            assertFalse(ValidationHelper.isValidGovukSigningJourneyId(null));
+            assertFalse(ValidationHelper.isValidGovukSigninJourneyId(null));
         }
     }
 }

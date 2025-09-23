@@ -38,12 +38,6 @@ paths:
             type: string
             format: date-time
           description: "End date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00+HH:MM format"
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-          description: "Maximum number of results to return"
         - name: ipvSessionId
           in: query
           required: false

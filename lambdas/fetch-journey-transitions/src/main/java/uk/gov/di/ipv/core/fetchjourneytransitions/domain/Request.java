@@ -7,11 +7,11 @@ import uk.gov.di.ipv.core.library.helpers.ValidationHelper;
 import java.time.Instant;
 
 public record Request(
-        Instant fromDate, Instant toDate, int limit, String ipvSessionId, String govukJourneyId) {
+        Instant fromDate, Instant toDate, String ipvSessionId, String govukJourneyId) {
 
     @ExcludeFromGeneratedCoverageReport
     public static Request create(
-            Instant fromDate, Instant toDate, int limit, String ipvSessionId, String govukJourneyId)
+            Instant fromDate, Instant toDate, String ipvSessionId, String govukJourneyId)
             throws RequestParseException {
         if (fromDate == null || toDate == null) {
             throw new RequestParseException("fromDate and toDate are required.");
@@ -26,13 +26,10 @@ public record Request(
             throw new RequestParseException("Invalid ipvSessionId format.");
         }
         if (govukJourneyId != null
-                && !ValidationHelper.isValidGovukSigningJourneyId(govukJourneyId)) {
+                && !ValidationHelper.isValidGovukSigninJourneyId(govukJourneyId)) {
             throw new RequestParseException("Invalid govukJourneyId format.");
         }
-        if (limit <= 0) {
-            throw new RequestParseException("limit must be a positive integer.");
-        }
 
-        return new Request(fromDate, toDate, limit, ipvSessionId, govukJourneyId);
+        return new Request(fromDate, toDate, ipvSessionId, govukJourneyId);
     }
 }

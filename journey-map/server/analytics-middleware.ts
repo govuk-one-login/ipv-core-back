@@ -1,31 +1,40 @@
 import { RequestHandler } from "express";
 import config from "./config.js";
 
+const createURLSearchParams = (body): URLSearchParams => {
+  const query = new URLSearchParams({
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+  });
+  if (body.govukJourneyId) {
+    query.set("govukJourneyId", body.govukJourneyId);
+  }
+
+  if (body.ipvSessionId) {
+    query.set("ipvSessionId", body.ipvSessionId);
+  }
+  return query;
+};
+
 export const fetchJourneyTransitionsHandler: RequestHandler = async (
   req,
   res,
   next,
 ) => {
   try {
-    const filteredBody = Object.fromEntries(
-      Object.entries(req.body).filter(([key]) => key !== "environment"),
+    const [environment, ...options] = req.body;
+    const query = createURLSearchParams(options);
+
+    const endpoint = config.environment[environment].journeyTransitionsEndpoint;
+    const apiKey = config.environment[environment].analyticsApiKey;
+
+    const response = await fetch(
+      endpoint + query ? `?${query.toString()}` : "",
+      {
+        method: "POST",
+        headers: { "x-api-key": apiKey },
+      },
     );
-
-    const query = new URLSearchParams({
-      ...filteredBody,
-      limit: "600",
-    });
-
-    const targetEnvironment = req.body
-      .environment as keyof typeof config.environment;
-    const endpoint =
-      config.environment[targetEnvironment].journeyTransitionsEndpoint;
-    const apiKey = config.environment[targetEnvironment].analyticsApiKey;
-
-    const response = await fetch(`${endpoint}?${query.toString()}`, {
-      method: "POST",
-      headers: { "x-api-key": apiKey },
-    });
 
     const data = await response.json();
 

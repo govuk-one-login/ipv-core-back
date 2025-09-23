@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.RequestParseException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.helpers.NumberHelper;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -106,10 +105,9 @@ public class FetchJourneyTransitionsHandler
                 Optional.ofNullable(event.getQueryStringParameters()).orElse(Map.of());
         var fromDate = OffsetDateTime.parse(eventQueryParameters.get("fromDate")).toInstant();
         var toDate = OffsetDateTime.parse(eventQueryParameters.get("toDate")).toInstant();
-        var limit = NumberHelper.parseIntOrDefault(eventQueryParameters.get("limit"), 100);
         var ipvSessionId = eventQueryParameters.get("ipvSessionId");
         var govukJourneyId = eventQueryParameters.get("govukJourneyId");
-        return Request.create(fromDate, toDate, limit, ipvSessionId, govukJourneyId);
+        return Request.create(fromDate, toDate, ipvSessionId, govukJourneyId);
     }
 
     private String buildQuery(Request input) {
@@ -136,9 +134,8 @@ public class FetchJourneyTransitionsHandler
             | parse @message '"event":"*"' as event
             | filter journeyEngine = "State transition"
             %s| stats count() as transitions by fromJourney, from, toJourney, to, event
-            | limit %d
         """,
-                filter, input.limit());
+                filter);
     }
 
     private List<TransitionCount> executeCloudWatchQuery(String query, long start, long end)

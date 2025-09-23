@@ -9,7 +9,6 @@ const port = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV === "development";
 
 const app = express();
-app.use(express.json());
 
 app.get("/healthcheck", (req, res) => {
   res.status(200).send("OK");
