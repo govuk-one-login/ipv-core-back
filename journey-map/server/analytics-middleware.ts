@@ -1,7 +1,17 @@
 import { RequestHandler } from "express";
 import config from "./config.js";
 
-const createURLSearchParams = (body): URLSearchParams => {
+interface JourneyTransitionsRequestBody {
+  fromDate: string;
+  toDate: string;
+  govukJourneyId?: string;
+  ipvSessionId?: string;
+  environment: string;
+}
+
+const createURLSearchParams = (
+  body: JourneyTransitionsRequestBody,
+): URLSearchParams => {
   const query = new URLSearchParams({
     fromDate: body.fromDate,
     toDate: body.toDate,
