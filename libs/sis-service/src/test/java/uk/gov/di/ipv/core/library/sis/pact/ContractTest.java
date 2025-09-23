@@ -14,13 +14,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -65,8 +65,8 @@ class ContractTest {
 
     @BeforeEach
     void setup(MockServer mockServer) {
-        when(mockConfigService.getParameter(ConfigurationVariable.SIS_APPLICATION_URL))
-                .thenReturn("http://localhost:" + mockServer.getPort());
+        when(mockConfigService.getSisApplicationUrl())
+                .thenReturn(URI.create("http://localhost:" + mockServer.getPort()));
         sisClient = new SisClient(mockConfigService);
     }
 

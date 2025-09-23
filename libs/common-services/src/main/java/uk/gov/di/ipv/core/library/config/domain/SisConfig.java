@@ -11,5 +11,5 @@ import java.net.URI;
 @Builder
 @Jacksonized
 public class SisConfig {
-    @NonNull final URI applicationUrl;
+    @NonNull URI applicationUrl;
 }

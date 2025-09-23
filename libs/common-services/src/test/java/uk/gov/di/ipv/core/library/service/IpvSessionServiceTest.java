@@ -3,11 +3,11 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
@@ -29,7 +29,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -46,7 +45,17 @@ class IpvSessionServiceTest {
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
     @Mock private Sleeper mockSleeper;
-    @InjectMocks private IpvSessionService ipvSessionService;
+    private IpvSessionService ipvSessionService;
+    @Mock private ConfigService mockConfigService;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        ipvSessionService = new IpvSessionService(mockDataStore, mockSleeper);
+
+        var field = IpvSessionService.class.getDeclaredField("configService");
+        field.setAccessible(true);
+        field.set(ipvSessionService, mockConfigService);
+    }
 
     @Test
     void shouldReturnSessionItem() throws IpvSessionNotFoundException {
@@ -191,12 +200,12 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
+        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, null, false);
 
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture(), eq(900L));
         var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());
@@ -207,12 +216,12 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemWithEmail() {
+        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, "test@test.com", false);
 
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture(), eq(900L));
         var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());
@@ -224,13 +233,13 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
+        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), testErrorObject, null, false);
 
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture(), eq(900L));
         var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());
@@ -243,12 +252,12 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemWithReverificationJourney() {
+        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.getInstance().generate(), null, null, true);
 
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture(), eq(900L));
         var capturedSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertNotNull(capturedSessionItem.getIpvSessionId());
         assertNotNull(capturedSessionItem.getCreationDateTime());

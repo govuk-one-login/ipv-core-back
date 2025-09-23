@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchie
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -43,7 +44,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -96,8 +96,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -199,6 +197,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CimitService cimitService;
@@ -249,6 +248,8 @@ class CheckExistingIdentityHandlerTest {
                         .vtr(List.of(P2.name()))
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
+
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -465,7 +466,6 @@ class CheckExistingIdentityHandlerTest {
                         VerifiableCredentialException,
                         EvcsServiceException,
                         CiExtractionException,
-                        ConfigException,
                         CiRetrievalException,
                         MissingSecurityCheckCredential {
             // Arrange
@@ -643,8 +643,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-                throws Exception {
+        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -1213,28 +1212,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
-        when(configService.enabled(AIS_ENABLED)).thenReturn(false);
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenThrow(new ConfigException("Failed to get cimit config"));
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(configService.enabled(AIS_ENABLED)).thenReturn(false);
         when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
@@ -1426,8 +1403,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
             var journeyResponse =
                     toResponseClass(
@@ -1454,9 +1430,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
-                    .thenReturn("100000000"); // not the best way to test this
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(100000000);
 
             var journeyResponse =
                     toResponseClass(

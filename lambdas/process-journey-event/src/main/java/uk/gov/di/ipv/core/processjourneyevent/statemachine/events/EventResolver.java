@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 
 public class EventResolver {
@@ -67,10 +65,7 @@ public class EventResolver {
                 var checkIfDisabled = event.getCheckIfDisabled();
                 Optional<String> firstDisabledCri =
                         checkIfDisabled.keySet().stream()
-                                .filter(
-                                        id ->
-                                                !configService.getBooleanParameter(
-                                                        CREDENTIAL_ISSUER_ENABLED, id))
+                                .filter(id -> !configService.isCredentialIssuerEnabled(id))
                                 .findFirst();
                 if (firstDisabledCri.isPresent()) {
                     String disabledCriId = firstDisabledCri.get();
@@ -139,8 +134,7 @@ public class EventResolver {
                     journeyContextsToUnset);
         } catch (MissingSecurityCheckCredential
                 | CiExtractionException
-                | CredentialParseException
-                | ConfigException e) {
+                | CredentialParseException e) {
             throw new JourneyEngineException("Failed to resolve event", e);
         }
     }
@@ -152,10 +146,7 @@ public class EventResolver {
 
     private Optional<String> getMitigationEvent(
             BasicEvent event, EventResolveParameters resolveParameters)
-            throws MissingSecurityCheckCredential,
-                    CiExtractionException,
-                    CredentialParseException,
-                    ConfigException {
+            throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException {
         var ipvSessionItem = resolveParameters.ipvSessionItem();
         var clientOAuthSessionItem = resolveParameters.clientOAuthSessionItem();
         var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();

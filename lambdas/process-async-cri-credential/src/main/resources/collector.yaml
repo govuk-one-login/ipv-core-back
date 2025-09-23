@@ -6,16 +6,23 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
+processors:
+  batch:
+  decouple:
+
 exporters:
   otlphttp:
     endpoint: "${env:DT_CONNECTION_BASE_URL}/api/v2/otlp"
     headers:
       Authorization: "Api-Token ${env:DT_CONNECTION_AUTH_TOKEN_OTLP}"
+
 service:
   pipelines:
     traces:
       receivers: [otlp]
+      processors: [batch, decouple]
       exporters: [otlphttp]
     metrics:
       receivers: [otlp]
+      processors: [batch, decouple]
       exporters: [otlphttp]

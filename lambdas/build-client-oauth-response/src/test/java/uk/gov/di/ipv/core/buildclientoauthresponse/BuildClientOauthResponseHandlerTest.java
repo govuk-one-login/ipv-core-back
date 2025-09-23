@@ -84,6 +84,8 @@ class BuildClientOauthResponseHandlerTest {
     @BeforeEach
     void setUp() {
         authorizationCode = new AuthorizationCode().getValue();
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

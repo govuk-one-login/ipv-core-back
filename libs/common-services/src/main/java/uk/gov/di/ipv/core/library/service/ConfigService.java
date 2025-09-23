@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -13,24 +11,24 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
@@ -39,12 +37,11 @@ public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PATH_SEPARATOR = "/";
-    private static final String FEATURE_SETS = "features";
     private static final String CORE = "core";
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
-    private Map<String, String> parameters = new HashMap<>();
+    @Setter private Config configuration;
 
     @Getter @Setter private static boolean local;
 
@@ -56,15 +53,42 @@ public abstract class ConfigService {
         return new AppConfigService();
     }
 
-    protected void setParameters(Map<String, String> parameters) {
-        this.parameters = parameters;
-    }
-
     public abstract List<String> getFeatureSet();
 
     protected abstract String getSecret(String path);
 
     public abstract void setFeatureSet(List<String> featureSet);
+
+    public Config getConfiguration() {
+        reloadParameters();
+
+        var featureSets = getFeatureSet();
+        if (featureSets != null) {
+            return overrideConfiguration(featureSets);
+        }
+
+        return configuration;
+    }
+
+    private Config overrideConfiguration(List<String> featureSets) {
+        var features = configuration.getFeatures();
+
+        var configNode = OBJECT_MAPPER.valueToTree(configuration);
+        var reader = OBJECT_MAPPER.readerForUpdating(configNode);
+        try {
+            for (var featureSetName : featureSets) {
+                var override = OBJECT_MAPPER.valueToTree(features.get(featureSetName));
+                reader.readValue(override);
+            }
+            return OBJECT_MAPPER.convertValue(configNode, Config.class);
+        } catch (IOException e) {
+            throw new ConfigParseException("Feature set overrides cannot be read", e);
+        }
+    }
+
+    public void reloadParameters() {
+        // Real fetch & parse happens in AppConfigService, while LocalConfigService is static.
+    }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
@@ -79,61 +103,98 @@ public abstract class ConfigService {
         return Integer.valueOf(value);
     }
 
-    public String getParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return getParameter(formatPath(configurationVariable.getPath(), pathProperties));
+    public boolean isCredentialIssuerEnabled(String criId) {
+        var wrapper = getConfiguration().getCredentialIssuers().getById(criId);
+        return wrapper != null && Boolean.parseBoolean(wrapper.getEnabled());
     }
 
-    public String getParameter(String path) {
-        if (getFeatureSet() != null) {
-            for (String individualFeatureSet : getFeatureSet()) {
-                var featurePath =
-                        String.format("%s/%s/%s", FEATURE_SETS, individualFeatureSet, path);
-                if (parameters.containsKey(featurePath)) {
-                    return parameters.get(featurePath);
-                }
-            }
+    public long getBackendSessionTtl() {
+        return getConfiguration().getSelf().getBackendSessionTtl();
+    }
+
+    public String getDcmawAsyncVcPendingReturnTtl() {
+        return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl().toString();
+    }
+
+    public long getCriResponseTtl() {
+        return getConfiguration().getSelf().getCriResponseTtl();
+    }
+
+    public long getSessionCredentialTtl() {
+        return getConfiguration().getSelf().getSessionCredentialTtl();
+    }
+
+    public long getBackendSessionTimeout() {
+        return getConfiguration().getSelf().getBackendSessionTimeout();
+    }
+
+    public long getOauthKeyCacheDurationMins() {
+        return getConfiguration().getSelf().getOauthKeyCacheDurationMins();
+    }
+
+    public long getBearerTokenTtl() {
+        return getConfiguration().getSelf().getBearerTokenTtl();
+    }
+
+    public long getJwtTtlSeconds() {
+        return getConfiguration().getSelf().getJwtTtlSeconds();
+    }
+
+    public String getComponentId() {
+        return getConfiguration().getSelf().getComponentId().toString();
+    }
+
+    public String getSisComponentId() {
+        return getConfiguration().getStoredIdentityService().getComponentId().toString();
+    }
+
+    public String getCimitComponentId() {
+        return getConfiguration().getCimit().getComponentId().toString();
+    }
+
+    public String getAllowedSharedAttributes(Cri cri) {
+        return getConfiguration()
+                .getCredentialIssuers()
+                .getById(cri.getId())
+                .getAllowedSharedAttributes();
+    }
+
+    public String getValidScopes(String clientId) {
+        return getConfiguration().getClientConfig(clientId).getValidScopes();
+    }
+
+    public String getIssuer(String clientId) {
+        return getConfiguration().getClientConfig(clientId).getIssuer();
+    }
+
+    public Integer getFraudCheckExpiryPeriodHours() {
+        return getConfiguration().getSelf().getFraudCheckExpiryPeriodHours();
+    }
+
+    public URI getSisApplicationUrl() {
+        return getConfiguration().getSis().getApplicationUrl();
+    }
+
+    public String getCoreVtmClaim() {
+        return getConfiguration().getSelf().getCoreVtmClaim().toString();
+    }
+
+    public long getAuthCodeExpirySeconds() {
+        return getConfiguration().getSelf().getAuthCodeExpirySeconds();
+    }
+
+    public long getMaxAllowedAuthClientTtl() {
+        return getConfiguration().getSelf().getMaxAllowedAuthClientTtl();
+    }
+
+    private static final Pattern COMMA = Pattern.compile(",");
+
+    public List<String> getClientValidRedirectUrls(String clientId) {
+        var urls = getConfiguration().getClientConfig(clientId).getValidRedirectUrls();
+        if (urls.isBlank()) {
+            return List.of();
         }
-        if (!parameters.containsKey(path)) {
-            throw new ConfigParameterNotFoundException(path);
-        }
-        return parameters.get(path);
-    }
-
-    public Map<String, String> getParametersByPrefix(String path) {
-        var lookupParams =
-                parameters.entrySet().stream()
-                        .filter(e -> e.getKey().startsWith(path))
-                        .collect(
-                                Collectors.toMap(
-                                        entry -> entry.getKey().substring(path.length() + 1),
-                                        Map.Entry::getValue));
-
-        if (lookupParams.isEmpty()) {
-            throw new ConfigParameterNotFoundException(path);
-        }
-        return lookupParams;
-    }
-
-    public boolean getBooleanParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Boolean.parseBoolean(getParameter(configurationVariable, pathProperties));
-    }
-
-    public long getLongParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Long.parseLong(getParameter(configurationVariable, pathProperties));
-    }
-
-    public List<String> getHistoricSigningKeys(String criId) {
-        return Arrays.asList(
-                getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS, criId)
-                        .split("/"));
-    }
-
-    public List<String> getStringListParameter(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
+        return COMMA.splitAsStream(urls).map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
@@ -150,117 +211,89 @@ public abstract class ConfigService {
     }
 
     public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(cri, connection, OauthCriConfig.class);
+        return OBJECT_MAPPER.convertValue(
+                getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(cri.getId())
+                        .getConnections()
+                        .get(connection),
+                OauthCriConfig.class);
     }
 
     public RestCriConfig getRestCriConfigForConnection(String connection, Cri cri) {
-        return getCriConfigForType(cri, connection, RestCriConfig.class);
-    }
-
-    public CriConfig getCriConfig(Cri cri) {
-        return getCriConfigForType(cri, getActiveConnection(cri), CriConfig.class);
-    }
-
-    private <T extends CriConfig> T getCriConfigForType(
-            Cri cri, String connection, Class<T> configType) {
-        var path =
-                formatPath(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG.getPath(),
-                        cri.getId(),
-                        connection);
-        return getParametersByPrefix(path).entrySet().stream()
-                .collect(
-                        Collectors.collectingAndThen(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        entry ->
-                                                unescapeSigEncKey(
-                                                        entry.getKey(), entry.getValue())),
-                                params -> OBJECT_MAPPER.convertValue(params, configType)));
-    }
-
-    private String unescapeSigEncKey(String key, String value) {
-        return (key.equals("signingKey") || key.equals("encryptionKey"))
-                ? value.replace("\\", "")
-                : value;
+        return OBJECT_MAPPER.convertValue(
+                getConfiguration()
+                        .getCredentialIssuers()
+                        .getById(cri.getId())
+                        .getConnections()
+                        .get(connection),
+                RestCriConfig.class);
     }
 
     public String getActiveConnection(Cri cri) {
-        return getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_ACTIVE_CONNECTION, cri.getId());
+        return getConfiguration().getCredentialIssuers().getById(cri.getId()).getActiveConnection();
     }
 
     public Map<String, ContraIndicatorConfig> getContraIndicatorConfigMap() {
-        try {
-            var secretValue = getParameter(ConfigurationVariable.CI_SCORING_CONFIG);
-            List<ContraIndicatorConfig> configList =
-                    OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
-            Map<String, ContraIndicatorConfig> configMap = new HashMap<>();
-            for (ContraIndicatorConfig config : configList) {
-                configMap.put(config.getCi(), config);
-            }
-            return configMap;
-        } catch (JsonProcessingException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Failed to parse contra-indicator config"));
-            return Collections.emptyMap();
-        }
+        var list = getConfiguration().getSelf().getCiScoringConfig();
+        if (list.isEmpty()) return Map.of();
+
+        return list.stream()
+                .collect(
+                        Collectors.toMap(
+                                ContraIndicatorConfig::getCi,
+                                Function.identity(),
+                                (first, second) -> second,
+                                HashMap::new));
     }
 
-    public Map<String, List<MitigationRoute>> getCimitConfig() throws ConfigException {
-        var params = getParametersByPrefix(ConfigurationVariable.CIMIT_CONFIG.getPath());
-        var parsedData = new HashMap<String, List<MitigationRoute>>();
-        for (var entry : params.entrySet()) {
-            try {
-                var list =
-                        OBJECT_MAPPER.readValue(
-                                entry.getValue(), new TypeReference<List<MitigationRoute>>() {});
-                parsedData.put(entry.getKey(), list);
-            } catch (JsonProcessingException e) {
-                throw new ConfigException("Failed to parse route for cimit: " + e);
-            }
-        }
-        return parsedData;
+    public Map<String, List<CiRoutingConfig>> getCimitConfig() {
+        return getConfiguration().getCimit().getConfig();
     }
 
-    public boolean enabled(FeatureFlag featureFlag) {
-        return enabled(featureFlag.getName());
+    public boolean enabled(FeatureFlag flag) {
+        return enabled(flag.getName());
     }
 
-    public boolean enabled(String featureFlagValue) {
-        try {
-            return getBooleanParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue);
-        } catch (ConfigParameterNotFoundException ex) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "SSM parameter not found for feature flag: " + featureFlagValue));
-            return false;
-        }
+    public boolean enabled(String flagName) {
+        var cfg = getConfiguration();
+        var flags = (cfg != null) ? cfg.getFeatureFlags() : null;
+        return flags != null && Boolean.TRUE.equals(flags.get(flagName));
     }
 
     public Map<String, Cri> getIssuerCris() {
         var issuerToCri = new HashMap<String, Cri>();
+        var issuers = getConfiguration().getCredentialIssuers();
+
         for (var cri : Cri.values()) {
-            if (cri.getId().equals(Cri.CIMIT.getId())) {
-                continue;
+            if (Cri.CIMIT.getId().equals(cri.getId())) {
+                continue; // skip CIMIT early to avoid nesting
             }
 
-            var connectionsPath =
-                    String.format(
-                            ConfigurationVariable.CREDENTIAL_ISSUER_CONNECTION_PREFIX.getPath(),
-                            cri.getId());
+            var wrapper = issuers.getById(cri.getId());
+            var connections = (wrapper != null) ? wrapper.getConnections() : null;
 
-            try {
-                var connections =
-                        getParametersByPrefix(connectionsPath).entrySet().stream()
-                                .filter(entry -> entry.getKey().endsWith("/componentId"))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                connections.values().forEach(value -> issuerToCri.put(value, cri));
-            } catch (ConfigParameterNotFoundException e) {
-                LOGGER.warn(
-                        LogHelper.buildLogMessage(
-                                String.format("Issuer for CRI: %s not configured", cri.getId())));
-            }
+            addIssuerMappings(issuerToCri, cri, connections);
         }
         return issuerToCri;
+    }
+
+    private void addIssuerMappings(
+            Map<String, Cri> out, Cri cri, Map<String, ? extends CriConfig> connections) {
+
+        if (connections == null || connections.isEmpty()) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Issuer for CRI: %s not configured".formatted(cri.getId())));
+            return;
+        }
+
+        for (var conn : connections.values()) {
+            var componentId = conn.getComponentId();
+            if (componentId != null && !componentId.isBlank()) {
+                out.put(componentId, cri);
+            }
+        }
     }
 
     protected Map<String, String> updateParameters(String yaml) {
@@ -276,17 +309,14 @@ public abstract class ConfigService {
 
     public static Config generateConfiguration(String yaml) {
         try {
-            var coreConfig = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
-            if (coreConfig == null) {
-                throw new IllegalArgumentException("Missing Core config.");
-            }
-            return OBJECT_MAPPER.treeToValue(coreConfig, Config.class);
+            var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            if (core == null) throw new IllegalArgumentException("Missing Core config.");
+            return OBJECT_MAPPER.treeToValue(core, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
         }
     }
 
-    // Helper methods
     private void flattenParameters(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());

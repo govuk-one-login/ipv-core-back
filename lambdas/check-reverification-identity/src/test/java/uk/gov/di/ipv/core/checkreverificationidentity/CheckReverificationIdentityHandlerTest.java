@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -77,6 +78,7 @@ class CheckReverificationIdentityHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientSessionService;
     @Mock private EvcsService mockEvcsService;
@@ -105,6 +107,8 @@ class CheckReverificationIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
                         .build();
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Nested

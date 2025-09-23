@@ -4,8 +4,10 @@
 core:
   self:
     componentId: "https://identity.local.account.gov.uk"
-    signingKeyId: "some-signin-id"
-    sisSigningKeyId: "dummy-value"
+    signingKeyId: "00000000-0000-0000-0000-000000000000"
+    sisSigningKeyId: "00000000-0000-0000-0000-000000000000"
+    clientJarKmsEncryptionKeyAliasPrimary: "CoreEncryptionKey1"
+    clientJarKmsEncryptionKeyAliasSecondary: "CoreEncryptionKey2"
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
@@ -148,7 +150,7 @@ core:
     dcmawAsync:
       id: dcmawAsync
       name: "Document Checking - Mobile App and Web - Async"
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
@@ -285,7 +287,7 @@ core:
     nino:
       id: nino
       name: NINO
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"

@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AIS_API_BASE_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
@@ -81,7 +80,11 @@ public class AisClient {
             var baseUri =
                     "%s/ais/%s"
                             .formatted(
-                                    configService.getParameter(AIS_API_BASE_URL),
+                                    configService
+                                            .getConfiguration()
+                                            .getAis()
+                                            .getApiBaseUrl()
+                                            .toString(),
                                     URLEncoder.encode(userId, StandardCharsets.UTF_8));
             var uriBuilder = new URIBuilder(baseUri);
             return uriBuilder.build();

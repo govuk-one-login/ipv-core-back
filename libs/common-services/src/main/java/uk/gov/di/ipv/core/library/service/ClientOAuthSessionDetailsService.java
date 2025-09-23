@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import java.text.ParseException;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
 
 public class ClientOAuthSessionDetailsService {
@@ -69,7 +68,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
 
-        dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
+        dataStore.create(clientOAuthSessionItem, configService.getBackendSessionTtl());
 
         return clientOAuthSessionItem;
     }
@@ -91,7 +90,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionErrorItem.setReproveIdentity(null);
         clientOAuthSessionErrorItem.setErrorClientSession(true);
 
-        dataStore.create(clientOAuthSessionErrorItem, BACKEND_SESSION_TTL);
+        dataStore.create(clientOAuthSessionErrorItem, configService.getBackendSessionTtl());
 
         return clientOAuthSessionErrorItem;
     }

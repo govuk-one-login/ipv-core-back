@@ -53,14 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -86,6 +80,19 @@ class JarValidatorTest {
     @Mock private JWEDecrypter jweDecrypter;
     @Mock private OAuthKeyService mockOAuthKeyService;
     @InjectMocks private JarValidator jarValidator;
+
+    private void stubComponentId() {
+        when(configService.getComponentId()).thenReturn(AUDIENCE_CLAIM);
+    }
+
+    private void stubInvalidClientId() {
+        when(configService.getIssuer(CLIENT_ID_CLAIM))
+                .thenThrow(ConfigParameterNotFoundException.class);
+    }
+
+    private void stubClientIssuer() {
+        when(configService.getIssuer(CLIENT_ID_CLAIM)).thenReturn(ISSUER_CLAIM);
+    }
 
     @Test
     void decryptJWEShouldReturnSignedJwtOnSuccessfulDecryption() throws Exception {
@@ -121,18 +128,16 @@ class JarValidatorTest {
     @ValueSource(booleans = {true, false})
     void validateRequestJwtShouldPassValidationChecksOnValidJARRequest(boolean mfaResetEnabled)
             throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getMaxAllowedAuthClientTtl()).thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
         when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
         if (mfaResetEnabled) {
-            when(configService.getParameter(CLIENT_VALID_SCOPES, CLIENT_ID_CLAIM))
-                    .thenReturn("openid");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("openid");
         }
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -142,8 +147,7 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidClientId() throws Exception {
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                .thenThrow(ConfigParameterNotFoundException.class);
+        stubInvalidClientId();
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -168,12 +172,11 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldThrowRecoverableExceptionIfScopeClaimMissing()
                 throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -193,14 +196,13 @@ class JarValidatorTest {
 
         @Test
         void validateRequestJwtShouldPassIfNoRequiredScopeProvided() throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -213,17 +215,15 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnInvalidScopeForClient()
                 throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getParameter(CLIENT_VALID_SCOPES, CLIENT_ID_CLAIM))
-                    .thenReturn("reverification");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("reverification");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -242,14 +242,13 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksIfOpenIdAndReverificationScopesProvided()
                 throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -271,16 +270,15 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnEmptyValidScopesForClient()
                 throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getParameter(CLIENT_VALID_SCOPES, CLIENT_ID_CLAIM)).thenReturn("");
+            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -299,16 +297,15 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnScopeNotDefinedForClient()
                 throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-            when(configService.getParameter(CLIENT_VALID_SCOPES, CLIENT_ID_CLAIM))
+            when(configService.getValidScopes(CLIENT_ID_CLAIM))
                     .thenThrow(ConfigParameterNotFoundException.class);
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -327,14 +324,13 @@ class JarValidatorTest {
 
         @Test
         void validateRequestJwtShouldFailValidationCheckIfScopeCanNotBeParsed() throws Exception {
+            stubClientIssuer();
+            stubComponentId();
             when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                     .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-            when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getMaxAllowedAuthClientTtl())
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                    .thenReturn(ISSUER_CLAIM);
-            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+            when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                     .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -355,7 +351,7 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnValidJWTalgHeader() throws Exception {
-
+        stubClientIssuer();
         RSASSASigner signer = new RSASSASigner(getRsaPrivateKey());
 
         SignedJWT signedJWT =
@@ -380,9 +376,9 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidJWTSignature() throws Exception {
+        stubClientIssuer();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(EC_PUBLIC_JWK_2));
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -400,9 +396,9 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidPublicJwk() throws Exception {
+        stubClientIssuer();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenThrow(new ParseException("beep", 1));
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
         JarValidationException thrown =
@@ -421,10 +417,10 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnMissingRequiredClaim() throws Exception {
+        stubClientIssuer();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
@@ -453,11 +449,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidAudienceClaim() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> invalidAudienceClaims = getValidClaimsSetValues();
@@ -480,11 +476,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidIssuerClaim() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> invalidIssuerClaims = getValidClaimsSetValues();
@@ -507,11 +503,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidResponseTypeClaim() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> invalidResponseTypeClaim = getValidClaimsSetValues();
@@ -535,12 +531,14 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
             throws Exception {
+        stubComponentId();
+
         var differentClientId = "different-client-id";
+
+        when(configService.getIssuer(differentClientId)).thenReturn(ISSUER_CLAIM);
         when(mockOAuthKeyService.getClientSigningKey(eq(differentClientId), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, differentClientId))
+        when(configService.getClientValidRedirectUrls(differentClientId))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -560,11 +558,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnExpiredJWT() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> expiredClaims = getValidClaimsSetValues();
@@ -585,11 +583,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnFutureNbfClaim() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> notValidYet = getValidClaimsSetValues();
@@ -610,13 +608,12 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnExpiryClaimToFarInFuture() throws Exception {
+        stubClientIssuer();
+        stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE_CLAIM);
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getMaxAllowedAuthClientTtl()).thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
 
         Map<String, Object> futureClaims = getValidClaimsSetValues();
@@ -640,10 +637,10 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidRedirectUriClaim() throws Exception {
+        stubClientIssuer();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
-        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, CLIENT_ID_CLAIM))
+        when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList("test-redirect-uri"));
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -664,9 +661,9 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksOnParseFailureOfRedirectUri()
             throws Exception {
+        stubClientIssuer();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(ISSUER_CLAIM);
 
         Map<String, Object> badRedirectClaims = getValidClaimsSetValues();
         badRedirectClaims.put("redirect_uri", "({[]})./sd-234345////invalid-redirect-uri");

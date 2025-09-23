@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -72,15 +71,14 @@ class CheckCoiServiceTest {
 
     @BeforeEach
     void setup() throws Exception {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+
         testAuditEventUser =
                 new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
         sharedAuditEventParameters =
                 new SharedAuditEventParameters(testAuditEventUser, "device-info");
         when(mockEvcsService.getVerifiableCredentials(USER_ID, List.of(), EvcsVCState.CURRENT))
                 .thenReturn(List.of(ADDRESS_VC));
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn("some-component-id");
-
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(getMockIdentityClaim());
 
         PostalAddress address = new PostalAddress();

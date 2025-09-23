@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.cristoringservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -68,6 +70,11 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
     @Captor private ArgumentCaptor<VerifiableCredential> vcCaptor;
     @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
+
+    @BeforeEach
+    void setup() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+    }
 
     @Test
     void storeCriResponseShouldStoreResponseAndSendAuditEvent() throws JsonProcessingException {

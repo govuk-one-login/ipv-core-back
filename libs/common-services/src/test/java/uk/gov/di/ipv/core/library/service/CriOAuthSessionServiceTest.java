@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.library.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -16,14 +16,20 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 
 @ExtendWith(MockitoExtension.class)
 class CriOAuthSessionServiceTest {
     @Mock private DataStore<CriOAuthSessionItem> mockDataStore;
     @Mock private Sleeper mockSleeper;
-    @InjectMocks private CriOAuthSessionService criOauthSessionService;
+    @Mock private ConfigService mockConfigService;
+
+    private CriOAuthSessionService criOauthSessionService;
+
+    @BeforeEach
+    void setUp() {
+        criOauthSessionService = new CriOAuthSessionService(mockDataStore, mockSleeper);
+    }
 
     @Test
     void shouldReturnCriOAuthSessionItem() {
@@ -41,7 +47,6 @@ class CriOAuthSessionServiceTest {
                         criOAuthSessionItem.getCriOAuthSessionId());
 
         verify(mockDataStore).getItem(criOAuthSessionItem.getCriOAuthSessionId());
-
         assertEquals(criOAuthSessionItem, result);
     }
 
@@ -62,7 +67,6 @@ class CriOAuthSessionServiceTest {
                         criOAuthSessionItem.getCriOAuthSessionId());
 
         verify(mockDataStore, times(2)).getItem(criOAuthSessionItem.getCriOAuthSessionId());
-
         assertEquals(criOAuthSessionItem, result);
     }
 
@@ -84,7 +88,13 @@ class CriOAuthSessionServiceTest {
     }
 
     @Test
-    void shouldCreateCriOAuthSessionItem() {
+    void shouldCreateCriOAuthSessionItem() throws Exception {
+        var field = CriOAuthSessionService.class.getDeclaredField("configService");
+        field.setAccessible(true);
+        field.set(criOauthSessionService, mockConfigService);
+
+        when(mockConfigService.getBackendSessionTtl()).thenReturn(900L);
+
         var criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
@@ -99,9 +109,8 @@ class CriOAuthSessionServiceTest {
                         criOAuthSessionItem.getClientOAuthSessionId(),
                         criOAuthSessionItem.getConnection());
 
-        var criOAuthSessionItemArgumentCaptor = ArgumentCaptor.forClass(CriOAuthSessionItem.class);
-        verify(mockDataStore)
-                .create(criOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        var captor = ArgumentCaptor.forClass(CriOAuthSessionItem.class);
+        verify(mockDataStore).create(captor.capture(), eq(900L));
 
         assertEquals(criOAuthSessionItem.getCriOAuthSessionId(), result.getCriOAuthSessionId());
         assertEquals(criOAuthSessionItem.getCriId(), result.getCriId());

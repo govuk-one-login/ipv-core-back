@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import uk.gov.di.ipv.core.library.annotations.RemoveEscapedQuotationMarks;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,5 +16,5 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CriConfig {
     private String componentId;
-    private String signingKey;
+    @RemoveEscapedQuotationMarks private String signingKey;
 }

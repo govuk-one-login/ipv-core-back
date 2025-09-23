@@ -6,7 +6,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -114,9 +113,7 @@ public class LogHelper {
     }
 
     public static void attachComponentId(ConfigService configService) {
-        attachFieldToLogs(
-                LogField.LOG_COMPONENT_ID,
-                configService.getParameter(ConfigurationVariable.COMPONENT_ID));
+        attachFieldToLogs(LogField.LOG_COMPONENT_ID, configService.getComponentId());
     }
 
     public static void attachClientIdToLogs(String clientId) {

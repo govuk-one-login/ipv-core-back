@@ -1,12 +1,15 @@
-package uk.gov.di.ipv.core.fetchjourneytransitions;
-
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
-import com.amazonaws.services.logs.model.*;
+import com.amazonaws.services.logs.model.GetQueryResultsRequest;
+import com.amazonaws.services.logs.model.GetQueryResultsResult;
+import com.amazonaws.services.logs.model.ResultField;
+import com.amazonaws.services.logs.model.StartQueryRequest;
+import com.amazonaws.services.logs.model.StartQueryResult;
+package uk.gov.di.ipv.core.fetchjourneytransitions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
