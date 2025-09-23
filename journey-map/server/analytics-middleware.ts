@@ -32,19 +32,18 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const [environment, ...options] = req.body;
+    const { environment, ...options } = req.body;
+    const env = environment as keyof typeof config.environment;
     const query = createURLSearchParams(options);
 
-    const endpoint = config.environment[environment].journeyTransitionsEndpoint;
-    const apiKey = config.environment[environment].analyticsApiKey;
+    const endpoint = config.environment[env].journeyTransitionsEndpoint;
+    const apiKey = config.environment[env].analyticsApiKey;
+    const url = endpoint + (query ? `?${query.toString()}` : "");
 
-    const response = await fetch(
-      endpoint + query ? `?${query.toString()}` : "",
-      {
-        method: "POST",
-        headers: { "x-api-key": apiKey },
-      },
-    );
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "x-api-key": apiKey },
+    });
 
     const data = await response.json();
 
