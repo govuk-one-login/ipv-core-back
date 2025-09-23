@@ -4,7 +4,6 @@ Feature: P1 app journey
     Given I activate the 'disableStrategicApp' feature set
 
   Scenario: P1 App Journey
-    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event

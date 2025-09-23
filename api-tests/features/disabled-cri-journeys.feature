@@ -6,7 +6,7 @@ Feature: Disabled CRI journeys
   Rule: DCMAW is disabled
 
     Scenario: A P1 journey takes the user on a no photo ID journey
-      Given I activate the 'dcmawOffTest,p1Journeys' feature sets
+      Given I activate the 'dcmawOffTest' feature sets
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -91,7 +91,7 @@ Feature: Disabled CRI journeys
   Rule: F2F is disabled
 
     Scenario: A P1 journey for a user without a NINO routes to the escape page
-      Given I activate the 'f2fDisabled,p1Journeys' feature sets
+      Given I activate the 'f2fDisabled' feature sets
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
