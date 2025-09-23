@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -13,8 +11,6 @@ import java.text.ParseException;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
 
 public class ClientOAuthSessionDetailsService {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final DataStore<ClientOAuthSessionItem> dataStore;
     private final ConfigService configService;
 
