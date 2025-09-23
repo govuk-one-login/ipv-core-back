@@ -53,10 +53,10 @@ public class ValidationHelperTest {
     }
 
     @Nested
-    class GovukSigningJourneyIdTests {
+    class GovukSigninJourneyIdTests {
 
         @Test
-        void acceptsValidV4() {
+        void acceptsValid() {
             var valid = "40a89427-71f2-4ad5-ac65-41a6b641d308";
             assertTrue(ValidationHelper.isValidGovukSigninJourneyId(valid));
         }
