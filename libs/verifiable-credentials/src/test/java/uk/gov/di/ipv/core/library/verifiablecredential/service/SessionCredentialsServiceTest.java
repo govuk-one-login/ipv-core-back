@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,13 +13,13 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -60,22 +62,29 @@ class SessionCredentialsServiceTest {
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
     @InjectMocks private SessionCredentialsService sessionCredentialService;
+    @Mock private ConfigService mockConfigService;
 
     @Nested
     class Writes {
+        @BeforeEach
+        void setUpWrites() throws Exception {
+            var f = SessionCredentialsService.class.getDeclaredField("configService");
+            f.setAccessible(true);
+            f.set(sessionCredentialService, mockConfigService);
+
+            when(mockConfigService.getSessionCredentialTtl()).thenReturn(900L);
+        }
+
         @Test
         void persistCredentialsShouldStoreAllCredentials() throws Exception {
-            List<VerifiableCredential> credentialsToStore =
-                    List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
+            var credentialsToStore = List.of(CREDENTIAL_1, CREDENTIAL_2, CREDENTIAL_3);
+
             sessionCredentialService.persistCredentials(credentialsToStore, SESSION_ID, false);
 
             verify(mockDataStore, times(3))
-                    .create(
-                            sessionCredentialItemArgumentCaptor.capture(),
-                            eq(ConfigurationVariable.SESSION_CREDENTIALS_TTL));
-            List<SessionCredentialItem> createdItems =
-                    sessionCredentialItemArgumentCaptor.getAllValues();
+                    .create(sessionCredentialItemArgumentCaptor.capture(), eq(900L));
 
+            var createdItems = sessionCredentialItemArgumentCaptor.getAllValues();
             IntStream.range(0, 3)
                     .forEach(
                             i -> {
@@ -89,7 +98,9 @@ class SessionCredentialsServiceTest {
 
         @Test
         void persistCredentialsShouldThrowVerifiableCredentialExceptionIfProblemStoring() {
-            doThrow(IllegalStateException.class).when(mockDataStore).create(any(), any());
+            doThrow(new IllegalStateException())
+                    .when(mockDataStore)
+                    .create(any(SessionCredentialItem.class), anyLong());
 
             assertThrows(
                     VerifiableCredentialException.class,

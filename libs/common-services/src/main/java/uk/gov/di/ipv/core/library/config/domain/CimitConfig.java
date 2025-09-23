@@ -13,8 +13,8 @@ import java.util.Map;
 @Builder
 @Jacksonized
 public class CimitConfig {
-    @NonNull final URI componentId;
-    @NonNull final String signingKey;
-    @NonNull final Map<String, @NonNull List<@NonNull CiRoutingConfig>> config;
-    @NonNull final URI apiBaseUrl;
+    @NonNull URI componentId;
+    @NonNull String signingKey;
+    @NonNull Map<String, @NonNull List<@NonNull CiRoutingConfig>> config;
+    @NonNull URI apiBaseUrl;
 }

@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -59,6 +60,7 @@ class CallDcmawAsyncCriHandlerTest {
                     .build();
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private DcmawAsyncCriService mockDcmawAsyncCriService;
@@ -70,6 +72,8 @@ class CallDcmawAsyncCriHandlerTest {
     @BeforeEach
     public void setUp() {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach

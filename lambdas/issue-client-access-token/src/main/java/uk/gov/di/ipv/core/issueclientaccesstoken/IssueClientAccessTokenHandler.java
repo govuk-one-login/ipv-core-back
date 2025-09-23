@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
@@ -131,9 +130,7 @@ public class IssueClientAccessTokenHandler
             AuthorizationCodeMetadata authorizationCodeMetadata =
                     ipvSessionItem.getAuthorizationCodeMetadata();
 
-            if (authorizationCodeMetadata.isExpired(
-                    configService.getLongParameter(
-                            ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))) {
+            if (authorizationCodeMetadata.isExpired(configService.getAuthCodeExpirySeconds())) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
                 LOGGER.error(

@@ -25,7 +25,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -76,24 +75,15 @@ public class AppConfigService extends ConfigService {
     }
 
     @Override
-    public String getParameter(String path) {
-        reloadParameters();
-        return super.getParameter(path);
-    }
-
-    @Override
-    public Map<String, String> getParametersByPrefix(String path) {
-        reloadParameters();
-        return super.getParametersByPrefix(path);
-    }
-
-    private void reloadParameters() {
+    public void reloadParameters() {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            setParameters(updateParameters(paramsRaw));
+
+            setConfiguration(generateConfiguration(paramsRaw));
+
             paramsRawHash = retrievedParamsHash;
         }
     }

@@ -12,12 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -52,18 +52,18 @@ class SisClientTest {
     @Captor ArgumentCaptor<HttpRequest> httpRequestCaptor;
     @Captor private ArgumentCaptor<String> stringCaptor;
     @InjectMocks private SisClient sisClient;
+    @Mock private URI badUri;
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(ConfigurationVariable.SIS_APPLICATION_URL))
-                .thenReturn(SIS_APPLICATION_URL);
+        when(mockConfigService.getSisApplicationUrl()).thenReturn(URI.create(SIS_APPLICATION_URL));
     }
 
     @Test
     void getStoredIdentity_returnsEmptyResult_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getParameter(ConfigurationVariable.SIS_APPLICATION_URL))
-                .thenReturn("\\");
+        when(mockConfigService.getSisApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
 
         // Act
         var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);

@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.EvcsConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
@@ -93,11 +95,15 @@ class ContractTest {
             new EvcsStoredIdentityDto(SI_JWT_STRING, null);
 
     @Mock ConfigService mockConfigService;
+    @Mock Config mockConfig;
+    @Mock EvcsConfig mockEvcs;
 
     @BeforeEach
     void setUp(MockServer mockServer) {
-        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
-                .thenReturn("http://localhost:" + mockServer.getPort());
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getEvcs()).thenReturn(mockEvcs);
+        when(mockEvcs.getApplicationUrl())
+                .thenReturn(java.net.URI.create("http://localhost:" + mockServer.getPort()));
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);

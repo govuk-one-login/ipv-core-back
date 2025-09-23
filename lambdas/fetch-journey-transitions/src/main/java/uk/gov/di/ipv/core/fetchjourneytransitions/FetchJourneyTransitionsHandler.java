@@ -6,7 +6,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsClientBuilder;
-import com.amazonaws.services.logs.model.*;
+import com.amazonaws.services.logs.model.GetQueryResultsRequest;
+import com.amazonaws.services.logs.model.GetQueryResultsResult;
+import com.amazonaws.services.logs.model.ResultField;
+import com.amazonaws.services.logs.model.StartQueryRequest;
+import com.amazonaws.services.logs.model.StartQueryResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +23,11 @@ import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransit
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 

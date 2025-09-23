@@ -21,12 +21,10 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.List;
@@ -38,17 +36,12 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final int MAX_ITEMS_IN_WRITE_BATCH = 25;
     private final Class<T> typeParameterClass;
-    private final ConfigService configService;
 
     private final DynamoDbTable<T> table;
 
     public DynamoDataStore(
-            String tableName,
-            Class<T> typeParameterClass,
-            DynamoDbEnhancedClient client,
-            ConfigService configService) {
+            String tableName, Class<T> typeParameterClass, DynamoDbEnhancedClient client) {
         this.typeParameterClass = typeParameterClass;
-        this.configService = configService;
         this.table = client.table(tableName, TableSchema.fromBean(this.typeParameterClass));
     }
 
@@ -69,11 +62,8 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     }
 
     @Override
-    public void create(T item, ConfigurationVariable tableTtl) {
-        item.setTtl(
-                Instant.now()
-                        .plusSeconds(configService.getLongParameter(tableTtl))
-                        .getEpochSecond());
+    public void create(T item, long ttlSeconds) {
+        item.setTtl(Instant.now().plusSeconds(ttlSeconds).getEpochSecond());
         create(item);
     }
 

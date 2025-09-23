@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
@@ -174,8 +173,8 @@ public class VcHelper {
             LOGGER.error("VC does not have a nbf claim");
             return true;
         }
-        var expiryPeriod =
-                Integer.parseInt(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
+        var expiryPeriod = configService.getFraudCheckExpiryPeriodHours();
+
         var now = Instant.now();
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }

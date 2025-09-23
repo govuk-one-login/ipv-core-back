@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -22,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
@@ -137,7 +135,7 @@ public class CriCheckingService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         extensions,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -152,7 +150,7 @@ public class CriCheckingService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_DWP_KBV_CRI_ABANDONED,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getComponentId(),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(deviceInformation)));
         }
@@ -261,7 +259,6 @@ public class CriCheckingService {
                     HttpResponseExceptionWithErrorBody,
                     CiExtractionException,
                     CredentialParseException,
-                    ConfigException,
                     MissingSecurityCheckCredential {
         var isReverification = clientOAuthSessionItem.isReverification();
         if (!isReverification) {

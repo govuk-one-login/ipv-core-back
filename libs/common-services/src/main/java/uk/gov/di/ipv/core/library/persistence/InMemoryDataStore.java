@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.persistence;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
@@ -51,7 +50,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     @Override
-    public void create(T item, ConfigurationVariable tableTtl) {
+    public void create(T item, long ttlSeconds) {
         create(item);
     }
 

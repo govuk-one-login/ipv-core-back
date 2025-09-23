@@ -186,10 +186,7 @@ public class CriApiService {
                             .expirationTime(
                                     Date.from(
                                             Instant.now(clock)
-                                                    .plusSeconds(
-                                                            configService.getLongParameter(
-                                                                    ConfigurationVariable
-                                                                            .JWT_TTL_SECONDS))))
+                                                    .plusSeconds(configService.getJwtTtlSeconds())))
                             .jwtID(secureTokenHelper.generate())
                             .build();
 

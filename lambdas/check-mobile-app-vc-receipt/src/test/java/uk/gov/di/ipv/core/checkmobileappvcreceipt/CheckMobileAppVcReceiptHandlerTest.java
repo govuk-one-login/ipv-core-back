@@ -7,12 +7,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -61,6 +63,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private Context mockContext;
     @Mock private SignedJWT mockSignedJwt;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CriResponseService criResponseService;
@@ -68,6 +71,11 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private EvcsService evcsService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
+
+    @BeforeEach
+    void setUpEach() {
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
+    }
 
     @Test
     void shouldReturnErrorWhenCallbackRequestMissingIpvSessionId() throws JsonProcessingException {

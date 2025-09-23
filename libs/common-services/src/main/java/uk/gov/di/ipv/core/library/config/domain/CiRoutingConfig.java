@@ -9,6 +9,6 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class CiRoutingConfig {
-    @NonNull final String event;
-    final String document;
+    @NonNull String event;
+    String document;
 }

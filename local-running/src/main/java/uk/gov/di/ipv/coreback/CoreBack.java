@@ -62,7 +62,8 @@ public class CoreBack {
 
     private void startAsyncPoller() throws URISyntaxException {
         var configService = new LocalConfigService();
-        var asyncQueueUrl = configService.getParameter("local/asyncQueue/apiBaseUrl");
+        String asyncQueueUrl =
+                configService.getConfiguration().getLocal().get("asyncQueue").get("apiBaseUrl");
         var asyncQueueApiKey = configService.getSecret("local/asyncQueue/apiKey");
         var asyncQueueName = configService.getSecret("local/asyncQueue/queueName");
 
