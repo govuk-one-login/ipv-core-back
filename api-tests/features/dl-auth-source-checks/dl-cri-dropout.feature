@@ -1,7 +1,7 @@
 @Build
 Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to incorrect details)
   Background: Activate the featureSet
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys,disableStrategicApp' feature sets
+    Given I activate the 'drivingLicenceAuthCheck,disableStrategicApp' feature sets
 
   Scenario: User backs out of driving licence CRI is able to return to DCMAW and re-scan their DL low-confidence
     When I start a new 'low-confidence' journey

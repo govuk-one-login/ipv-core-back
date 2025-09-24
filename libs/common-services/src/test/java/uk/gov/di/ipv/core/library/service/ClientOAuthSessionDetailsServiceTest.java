@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -80,7 +79,6 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
@@ -133,37 +131,6 @@ class ClientOAuthSessionDetailsServiceTest {
 
         // Assert
         verify(mockDataStore).update(clientOAuthSessionItem);
-    }
-
-    @Test
-    void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(false);
-
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        var testClaimSet =
-                new JWTClaimsSet.Builder()
-                        .claim("response_type", "test-type")
-                        .claim("redirect_uri", "http://example.com")
-                        .claim("state", "test-state")
-                        .claim("govuk_signin_journey_id", "test-journey-id")
-                        .claim("reprove_identity", false)
-                        .claim("scope", "test-scope")
-                        .claim("vtr", List.of("P1", "P2"))
-                        .subject("test-user-id")
-                        .build();
-
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
-
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId,
-                        testClaimSet,
-                        "test-client",
-                        "test-evcs-access-token");
-
-        assertEquals(clientOAuthSessionItem.getVtr(), List.of("P2"));
     }
 
     @Test
