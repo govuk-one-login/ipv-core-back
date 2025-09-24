@@ -255,10 +255,10 @@ function alphaFromCount(count: number, maxCount: number) {
   if (maxCount === 0) return "00";
   const ratio = count / maxCount;
 
-  const exponent = 0.3;
+  const exponent = 0.8;
   const powerScaled = Math.pow(ratio, exponent);
 
-  const minAlpha = 0.1;
+  const minAlpha = 0.8;
   const scaled = minAlpha + (1 - minAlpha) * powerScaled;
 
   const alpha = Math.round(scaled * 255);
