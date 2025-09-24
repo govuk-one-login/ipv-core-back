@@ -4,7 +4,7 @@ const sharedDevSystemSettingsEndpoint =
   "https://analytics-api-dev.01.dev.identity.account.gov.uk/system-settings";
 
 export default {
-  maximumTimeRangeMs: process.env.MAXIMUM_TIME_RANGE_MS ?? 2678400000, // 31 days
+  maximumTimeRangeMs: process.env.MAXIMUM_TIME_RANGE_MS ?? 1209600000, // 14 days
   environment: {
     production: {
       journeyTransitionsEndpoint:

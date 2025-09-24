@@ -32,6 +32,18 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
   next,
 ) => {
   try {
+    const { fromDate, toDate } = req.body;
+    const to = new Date(toDate).getTime();
+    const from = new Date(fromDate).getTime();
+    const maximumTimeRange = config.maximumTimeRangeMs as number;
+    if (to - from > maximumTimeRange) {
+      res.status(400).json({
+        message: `Maximum time window is ${maximumTimeRange / 1000 / 60 / 60 / 24} days.`,
+      });
+      next();
+      return;
+    }
+
     const { environment, ...options } = req.body;
     const env = environment as keyof typeof config.environment;
     const query = createURLSearchParams(options);
