@@ -146,7 +146,7 @@ paths:
         httpMethod: GET
         uri:
           Fn::Sub:
-            - arn:aws:apigateway:eu-west-2:s3:path/ipv-core-well-known-jwks-${env}/well-known-v2.json
+            - arn:aws:apigateway:eu-west-2:s3:path/ipv-core-well-known-jwks-${env}/well-known-v3.json
             - env:
                 Fn::If:
                   - IsDevelopment
