@@ -34,12 +34,51 @@
         </div>
       </div>
       <div id="header-content">
+        <form id="transitions-traffic-form">
+            <h2>Users Traffic</h2>
+            <fieldset id="journeyTransitionsInput">
+              <legend>Define request</legend>
+              <p>Customise transitions request to see traffic between states</p>
+              <h4>Target Environment</h4>
+              <label for="targetEnvironment"></label>
+              <select id="targetEnvironment" name="targetEnvironment">
+                <option value="production">Production</option>
+                <option value="integration">Integration</option>
+                <option value="staging">Staging</option>
+                <option value="build">Build</option>
+                <option value="shared">Shared Dev</option>
+              </select>
+              <h4>Time Window</h4>
+              <div class="date-input-row">
+                <span>From</span>
+                <label>
+                  <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>
+                </label>
+              </div>
+              <div class="date-input-row">
+                <span>To</span>
+                <label>
+                  <input id="transitionsToInput" type="datetime-local" name="toDate"/>
+                </label>
+              </div>
+              <h4>Fetch By</h4>
+              <label for="sessionJourneySelection"></label>
+              <select id="sessionJourneySelection" name="sessionJourneySelection">
+                <option value="journey">Journey Id</option>
+                <option value="session">IPV Session Id</option>
+              </select>
+              <label>
+                <input placeholder="Leave blank to fetch all journeys" type="text" id="journeySessionIdInput" name="journeySession"/>
+              </label>
+              <button id="form-button">Search</button>
+            </fieldset>
+        </form>
         <form id="configuration-form">
           <h2>Options</h2>
           <div id="checkbox-controls">
             <fieldset id="disabledInput">
               <legend>Turn off a CRI</legend>
-              <p>See what happens when you turn off a service.</p>
+              <p>Note not all CRIs have disabled routing configured.</p>
             </fieldset>
             <fieldset id="featureFlagInput">
               <legend>Turn on a feature flag</legend>

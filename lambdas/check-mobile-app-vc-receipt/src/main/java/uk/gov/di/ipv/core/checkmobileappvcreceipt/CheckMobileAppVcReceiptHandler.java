@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -140,9 +139,6 @@ public class CheckMobileAppVcReceiptHandler
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (EvcsServiceException e) {
             return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
-        } catch (ConfigException e) {
-            return buildErrorResponse(
-                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(
                     e,
@@ -184,7 +180,6 @@ public class CheckMobileAppVcReceiptHandler
                     InvalidCriResponseException,
                     CredentialParseException,
                     VerifiableCredentialException,
-                    ConfigException,
                     CiRetrievalException,
                     EvcsServiceException,
                     CiExtractionException,

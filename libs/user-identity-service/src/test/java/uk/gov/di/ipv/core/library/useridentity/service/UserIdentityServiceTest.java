@@ -14,7 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.domain.CoiConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
+import uk.gov.di.ipv.core.library.config.domain.InternalOperationsConfig;
+import uk.gov.di.ipv.core.library.config.domain.VotCiThresholdsConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -54,22 +57,43 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressEmpty;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressNoCredentialSubject;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fDrivingPermitDvaPhotoM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckEmptySocialSecurityRecord;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckMissingSocialSecurityRecord;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckUnsuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoInvalidVcType;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcP2Vot;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvlaValid;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitEmptyDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitFailedChecks;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitIncorrectType;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitMissingDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportClaimInvalidType;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportEmptyPassportDetails;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingBirthDate;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingName;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportMissingPassportDetails;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
@@ -81,12 +105,6 @@ class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
 
     private final List<ContraIndicator> emptyContraIndicators = List.of();
-    private final Map<ConfigurationVariable, String> paramsToMockForP2 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
-    private final Map<ConfigurationVariable, String> paramsToMockForP0 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
-    private final Map<ConfigurationVariable, String> paramsToMockForP0WithNoCi =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", RETURN_CODES_NON_CI_BREACHING_P0, "🐧");
 
     public static OauthCriConfig claimedIdentityConfig;
 
@@ -110,6 +128,50 @@ class UserIdentityServiceTest {
                         .build();
     }
 
+    @Mock private Config mockConfig;
+    @Mock private InternalOperationsConfig mockSelf;
+    @Mock private CoiConfig mockCoi;
+    @Mock private VotCiThresholdsConfig mockThresholds;
+    private final Map<String, String> returnCodes = new java.util.HashMap<>();
+
+    @BeforeEach
+    void wireConfig() {
+        when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        when(mockConfig.getSelf()).thenReturn(mockSelf);
+        when(mockSelf.getCoi()).thenReturn(mockCoi);
+        when(mockSelf.getCiScoringThresholdByVot()).thenReturn(mockThresholds);
+
+        when(mockSelf.getCoreVtmClaim()).thenReturn(URI.create("mock-vtm-claim"));
+
+        when(mockCoi.getFamilyNameChars()).thenReturn(5);
+        when(mockCoi.getGivenNameChars()).thenReturn(1);
+        when(mockThresholds.getP2()).thenReturn(10);
+
+        returnCodes.clear();
+        returnCodes.put("alwaysRequired", "");
+        returnCodes.put("nonCiBreachingP0", "");
+        when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
+    }
+
+    private void setP2Threshold(int value) {
+        when(mockThresholds.getP2()).thenReturn(value);
+    }
+
+    private void setReturnCodes(Map<String, String> map) {
+        returnCodes.clear();
+        returnCodes.put("alwaysRequired", "");
+        returnCodes.put("nonCiBreachingP0", "");
+        returnCodes.putAll(map);
+    }
+
+    private void setFamilyNameChars(int v) {
+        when(mockCoi.getFamilyNameChars()).thenReturn(v);
+    }
+
+    private void setGivenNameChars(int v) {
+        when(mockCoi.getGivenNameChars()).thenReturn(v);
+    }
+
     @Test
     void shouldReturnCredentialsFromDataStore() throws Exception {
         // Arrange
@@ -117,7 +179,7 @@ class UserIdentityServiceTest {
         var fraudVc = vcWebPassportSuccessful();
         var vcs = List.of(passportVc, fraudVc);
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -135,7 +197,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -567,7 +629,7 @@ class UserIdentityServiceTest {
 
         @BeforeEach
         void setup() {
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
+            setFamilyNameChars(5);
         }
 
         @Test
@@ -593,7 +655,7 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
             // Arrange
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
+            setFamilyNameChars(500);
             var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
 
             // Act & Assert
@@ -710,7 +772,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -736,7 +798,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -757,8 +819,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
 
         // Act
         var credentials =
@@ -801,8 +863,6 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportMissingName(), vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -821,8 +881,6 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportMissingBirthDate(), vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -839,7 +897,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetPassportClaimWhenVotIsP2() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
@@ -860,7 +918,7 @@ class UserIdentityServiceTest {
     void shouldSetPassportClaimWhenVotIsP2(VerifiableCredential vcWithPassportClaim)
             throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         var vcs = List.of(vcWithPassportClaim, vcExperianFraudScoreTwo(), vcAddressOne());
 
@@ -885,8 +943,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreOne());
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
 
         // Act
         var credentials =
@@ -906,7 +964,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -926,7 +984,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -955,7 +1013,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetNinoClaimWhenVotIsP2() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         var vcs =
                 List.of(
@@ -983,8 +1041,8 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreOne(),
                         vcNinoIdentityCheckSuccessful());
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
 
         // Act
         var credentials =
@@ -1005,7 +1063,7 @@ class UserIdentityServiceTest {
                         vcAddressOne(),
                         vcNinoIdentityCheckMissingSocialSecurityRecord());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1021,7 +1079,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreTwo(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1042,7 +1100,7 @@ class UserIdentityServiceTest {
                         vcAddressOne(),
                         vcNinoIdentityCheckUnsuccessful());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1063,7 +1121,7 @@ class UserIdentityServiceTest {
                         vcAddressOne(),
                         vcNinoIdentityCheckEmptySocialSecurityRecord());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1084,7 +1142,7 @@ class UserIdentityServiceTest {
                         vcAddressOne(),
                         vcNinoInvalidVcType());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1098,7 +1156,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetSubClaimOnUserIdentity() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1112,7 +1170,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1128,7 +1186,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var userIdentity =
@@ -1150,8 +1208,6 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowIfNoAddressesInAddressVC() {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressEmpty());
-
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
@@ -1175,8 +1231,6 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressNoCredentialSubject());
 
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -1195,8 +1249,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcExperianFraudScoreOne(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
 
         // Act
         var credentials =
@@ -1212,7 +1266,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebDrivingPermitDvlaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1234,7 +1288,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWithDrivingPermitClaim, vcExperianFraudScoreOne(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1257,8 +1311,8 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebDrivingPermitDvaValid(), vcExperianFraudScoreOne(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP0WithNoCi);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
 
         // Act
         var credentials =
@@ -1276,7 +1330,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebPassportSuccessful(), vcExperianFraudScoreTwo(), vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1299,7 +1353,7 @@ class UserIdentityServiceTest {
                         vcAddressOne(),
                         vcExperianFraudScoreTwo());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1317,7 +1371,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebDrivingPermitMissingDrivingPermit());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1333,7 +1387,7 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs = List.of(vcWebDrivingPermitEmptyDrivingPermit());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1354,7 +1408,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressOne());
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var credentials =
@@ -1368,8 +1422,8 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
-        when(mockConfigService.getParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("🦆,🐧");
+        useP2Defaults();
+        setReturnCodes(Map.of("alwaysRequired", "🦆,🐧"));
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1392,7 +1446,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetEmptyExitCodeWhenP2AndAlwaysRequiredCiNotPresent()
             throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         // Act
         var userIdentity =
@@ -1406,7 +1460,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1423,8 +1477,8 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1451,7 +1505,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1467,8 +1521,8 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
         // Arrange
-        mockParamStoreCalls(paramsToMockForP0);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
+        useP0NonCiCode("🐧");
+        setP2Threshold(0);
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1494,10 +1548,14 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
-        // Arrange
-        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("10");
-        when(mockConfigService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
+        setP2Threshold(10); // if code uses getP2()
+        when(mockThresholds.getThreshold("P2")).thenReturn(10);
+        when(mockThresholds.getThreshold("P0")).thenReturn(10);
+
+        setReturnCodes(
+                Map.of(
+                        "nonCiBreachingP0", "🐧",
+                        "alwaysRequired", "🦆"));
 
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
@@ -1511,7 +1569,6 @@ class UserIdentityServiceTest {
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
-        verify(mockConfigService, never()).getParameter(RETURN_CODES_ALWAYS_REQUIRED);
     }
 
     @Test
@@ -1600,7 +1657,7 @@ class UserIdentityServiceTest {
         var fraudVc = vcExperianFraudScoreOne();
         var vcs = List.of(passportVc, fraudVc);
 
-        mockParamStoreCalls(paramsToMockForP2);
+        useP2Defaults();
 
         var credentials =
                 userIdentityService.generateUserIdentity(
@@ -1702,8 +1759,8 @@ class UserIdentityServiceTest {
     class AreNamesAndDobCorrelatedForReverification {
         @BeforeEach
         void setup() {
-            when(mockConfigService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)).thenReturn("1");
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("3");
+            setGivenNameChars(1);
+            setFamilyNameChars(3);
         }
 
         @Test
@@ -1834,8 +1891,16 @@ class UserIdentityServiceTest {
         }
     }
 
-    private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
-        params.forEach((key, value) -> when(mockConfigService.getParameter(key)).thenReturn(value));
+    private void useP2Defaults() {
+        when(mockConfigService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+        returnCodes.put("nonCiBreachingP0", "");
+        when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
+    }
+
+    private void useP0NonCiCode(String code) {
+        when(mockConfigService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+        returnCodes.put("nonCiBreachingP0", code);
+        when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
     }
 
     private IdentityCheckCredential createCredentialWithNameAndBirthDate(

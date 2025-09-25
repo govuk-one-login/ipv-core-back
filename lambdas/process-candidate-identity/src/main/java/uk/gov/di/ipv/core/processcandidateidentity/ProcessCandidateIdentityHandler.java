@@ -21,9 +21,9 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -81,7 +80,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
@@ -439,7 +437,7 @@ public class ProcessCandidateIdentityHandler
             }
         }
 
-        if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())) {
+        if (configService.isCredentialIssuerEnabled(Cri.TICF.getId())) {
             LOGGER.info(LogHelper.buildLogMessage("Performing TICF CRI call"));
             var journey =
                     getJourneyResponseFromTicfCall(
@@ -685,7 +683,6 @@ public class ProcessCandidateIdentityHandler
                 | CiPutException
                 | CiRetrievalException
                 | CiExtractionException
-                | ConfigException
                 | CredentialParseException
                 | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
@@ -724,7 +721,7 @@ public class ProcessCandidateIdentityHandler
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         sharedAuditEventParameters.auditEventUser(),
                         new AuditExtensionGpg45ProfileMatched(
                                 matchedProfile,

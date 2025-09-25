@@ -22,30 +22,13 @@ import {
   TOP_DOWN_JOURNEYS,
 } from "./constants.js";
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
+import { getJourneyTransitionsData } from "./data/data.js";
+import { attachTransitionTrafficToNestedJourneys } from "./helpers/nested-journey-traffic.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
   states: StateNode[];
 }
-
-interface JourneyTransition {
-  fromJourney: string;
-  from: string;
-  toJourney: string;
-  to: string;
-  count: number;
-}
-
-const getJourneyTransitions = async (): Promise<JourneyTransition[]> => {
-  const response = await fetch("/journey-transitions");
-  if (!response.ok) {
-    console.warn(
-      `Failed to fetch journey transitions from journey map server: ${response.statusText}`,
-    );
-    return [];
-  }
-  return response.json();
-};
 
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
@@ -61,9 +44,9 @@ const getVisibleEdgesAndNodes = async (
   );
 
   const states = [...initialStates];
-  const transitions: TransitionEdge[] = [];
+  const transitionEdges: TransitionEdge[] = [];
 
-  const journeyTransitions: JourneyTransition[] = await getJourneyTransitions();
+  const journeyTransitionsTraffic = getJourneyTransitionsData();
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -123,7 +106,7 @@ const getVisibleEdgesAndNodes = async (
         targetStateDefinition.response?.type === "nestedJourney";
 
       let count = 0;
-      for (const transition of journeyTransitions) {
+      for (const transition of journeyTransitionsTraffic) {
         // Source condition
         if (sourceIsNestedJourney) {
           if (
@@ -183,7 +166,7 @@ const getVisibleEdgesAndNodes = async (
         count += transition.count;
       }
 
-      transitions.push({
+      transitionEdges.push({
         sourceState,
         targetState,
         transitionCount: count,
@@ -192,8 +175,13 @@ const getVisibleEdgesAndNodes = async (
     }
   }
 
+  attachTransitionTrafficToNestedJourneys(
+    journeyTransitionsTraffic,
+    transitionEdges,
+  );
+
   return {
-    transitions,
+    transitions: transitionEdges,
     states: states.map((name) => ({ name, definition: journeyStates[name] })),
   };
 };
@@ -239,12 +227,12 @@ export const render = async (
   );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-      ? `#000000${alphaFromCount(t.transitionCount, maxCount)}`
+      ? `#FF8888${alphaFromCount(t.transitionCount, maxCount)}`
       : "#E5E4E2";
-
+    const strokeWidth = getStrokeWidth(t.transitionCount ?? 0, maxCount);
     return [
       renderTransition(t),
-      `linkStyle ${i} stroke:${colour}, stroke-width:2px;`,
+      `linkStyle ${i} stroke:${colour}, stroke-width:${strokeWidth}px;`,
     ];
   });
 
@@ -255,14 +243,22 @@ export const render = async (
   `;
 };
 
+const getStrokeWidth = (count: number, maxCount: number): number => {
+  if (maxCount <= 0) return 1;
+  const minWidth = 1;
+  const maxWidth = 8;
+  const ratio = Math.min(1, Math.max(0, count / maxCount));
+  return minWidth + (maxWidth - minWidth) * ratio;
+};
+
 function alphaFromCount(count: number, maxCount: number) {
   if (maxCount === 0) return "00";
   const ratio = count / maxCount;
 
-  const exponent = 0.1;
+  const exponent = 0.8;
   const powerScaled = Math.pow(ratio, exponent);
 
-  const minAlpha = 0.1;
+  const minAlpha = 0.8;
   const scaled = minAlpha + (1 - minAlpha) * powerScaled;
 
   const alpha = Math.round(scaled * 255);

@@ -24,24 +24,32 @@ paths:
     post:
       description: "Endpoint for fetching journey transitions for journey map analysis"
       parameters:
-        - name: minutes
+        - name: fromDate
           in: query
-          required: false
+          required: true
           schema:
-            type: integer
-          description: "Number of minutes to look back"
-        - name: limit
+            type: string
+            format: date-time
+          description: "Start date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00+HH:MM format"
+        - name: toDate
           in: query
-          required: false
+          required: true
           schema:
-            type: integer
-          description: "Maximum number of results to return"
+            type: string
+            format: date-time
+          description: "End date and time from which result should be fetched. Must be in YYYY-MM-DDT00:00+HH:MM format"
         - name: ipvSessionId
           in: query
           required: false
           schema:
             type: string
           description: "Session ID to filter journey transitions"
+        - name: govukJourneyId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Govuk Journey ID to filter journey transitions"
       responses:
         200:
           description: "State journey transitions"

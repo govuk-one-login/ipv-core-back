@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -36,7 +35,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -280,7 +278,7 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService.getComponentId(),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
             }
@@ -453,8 +451,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (CredentialParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
-        } catch (ConfigException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         } catch (IpvSessionNotFoundException e) {
@@ -556,7 +552,6 @@ public class CheckExistingIdentityHandler
                     CiExtractionException,
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
-                    ConfigException,
                     CiRetrievalException,
                     MissingSecurityCheckCredential {
         var criResponseItem =
@@ -694,7 +689,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
@@ -707,7 +702,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getComponentId(),
                         auditEventUser,
                         extension,
                         new AuditRestrictedDeviceInformation(deviceInformation)));

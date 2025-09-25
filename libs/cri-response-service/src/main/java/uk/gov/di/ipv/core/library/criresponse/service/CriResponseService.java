@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.criresponse.service;
 
 import com.nimbusds.jwt.util.DateUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -81,7 +79,7 @@ public class CriResponseService {
                         .reproveIdentity(
                                 Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity()))
                         .build();
-        dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
+        dataStore.create(criResponseItem, configService.getCriResponseTtl());
     }
 
     public void deleteCriResponseItem(String userId, Cri credentialIssuer) {
@@ -119,9 +117,7 @@ public class CriResponseService {
                 var now = DateUtils.toSecondsSinceEpoch(new Date());
                 var expiry =
                         DateUtils.toSecondsSinceEpoch(issuedAt)
-                                + Integer.parseInt(
-                                        configService.getParameter(
-                                                DCMAW_ASYNC_VC_PENDING_RETURN_TTL));
+                                + Integer.parseInt(configService.getDcmawAsyncVcPendingReturnTtl());
                 if (now < expiry) {
                     var criResponse = getCriResponseItem(userId, DCMAW_ASYNC);
                     return new AsyncCriStatus(

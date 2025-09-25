@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processjourneyevent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -28,7 +29,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -64,9 +64,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -111,6 +108,11 @@ class ProcessJourneyEventHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
+
+    @BeforeEach
+    void setUp() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+    }
 
     @AfterEach
     void checkAuditEventWait(TestInfo testInfo) {
@@ -285,8 +287,7 @@ class ProcessJourneyEventHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aCriId"))
-                .thenReturn(true);
+        when(mockConfigService.isCredentialIssuerEnabled("aCriId")).thenReturn(true);
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
 
@@ -392,7 +393,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("CRI_STATE");
         IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession(TEST_IP);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(99L);
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(99L);
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -1089,7 +1090,6 @@ class ProcessJourneyEventHandlerTest {
     private static Stream<Arguments> getMitigationEventIfBreachingOrActiveErrors() {
         return Stream.of(
                 Arguments.of(new CredentialParseException("Unable to parse credentials")),
-                Arguments.of(new ConfigException("Unable to get config")),
                 Arguments.of(new CiExtractionException("Unable to extract CIs from VC")));
     }
 
@@ -1322,8 +1322,8 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
-        when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
+        when(mockConfigService.getComponentId()).thenReturn("core");
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(7200L);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());

@@ -9,7 +9,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -30,8 +29,6 @@ import static com.nimbusds.jose.jwk.KeyUse.ENCRYPTION;
 import static com.nimbusds.jose.jwk.KeyUse.SIGNATURE;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JWKS_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWKS_URL;
@@ -91,7 +88,10 @@ public class OAuthKeyService {
                                     "No key ID found in header, returning key from config")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         var jwksUrl = getClientJwksUrl(clientId);
@@ -100,7 +100,10 @@ public class OAuthKeyService {
                     LogHelper.buildLogMessage("JWKS URL not configured, returning key from config")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         var keyByKeyId = getCachedJWKSet(jwksUrl).filter(SIG_USE_MATCHER).getKeyByKeyId(keyId);
@@ -111,7 +114,10 @@ public class OAuthKeyService {
                             .with(LOG_CLIENT_ID.getFieldName(), clientId)
                             .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
             return ECKey.parse(
-                    configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId));
+                    configService
+                            .getConfiguration()
+                            .getClientConfig(clientId)
+                            .getPublicKeyMaterialForCoreToVerify());
         }
 
         LOGGER.info(
@@ -123,7 +129,11 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            return URI.create(configService.getParameter(CLIENT_JWKS_URL, clientId));
+            var jwksUrl = configService.getConfiguration().getClientConfig(clientId).getJwksUrl();
+            if (jwksUrl == null) {
+                return null;
+            }
+            return URI.create(jwksUrl);
         } catch (ConfigParameterNotFoundException e) {
             return null;
         }
@@ -145,11 +155,7 @@ public class OAuthKeyService {
     private CachedJWKSet createCachedJWKSet(URI jwksEndpoint) {
         return new CachedJWKSet(
                 getJWKSetFromJwksEndpoint(jwksEndpoint),
-                Instant.now()
-                        .plus(
-                                configService.getLongParameter(
-                                        ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS),
-                                MINUTES));
+                Instant.now().plus(configService.getOauthKeyCacheDurationMins(), MINUTES));
     }
 
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {

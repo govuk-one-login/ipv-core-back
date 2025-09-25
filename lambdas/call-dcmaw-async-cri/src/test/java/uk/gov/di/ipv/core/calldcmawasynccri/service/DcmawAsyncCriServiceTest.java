@@ -59,10 +59,9 @@ class DcmawAsyncCriServiceTest {
 
     @Mock private ConfigService mockConfigService;
     @Mock private CriApiService mockCriApiService;
-    @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService auditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
-
+    @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
     @ParameterizedTest
@@ -150,6 +149,7 @@ class DcmawAsyncCriServiceTest {
 
     @Test
     void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
         var journeyRequest =
                 JourneyRequest.builder()
                         .ipvSessionId("ipvSessionId")

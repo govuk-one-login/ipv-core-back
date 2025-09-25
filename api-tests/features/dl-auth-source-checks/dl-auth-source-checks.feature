@@ -4,7 +4,7 @@ Feature: Authoritative source checks with driving licence CRI
     Given I activate the 'disableStrategicApp' feature set
 
   Scenario: Journey through DCMAW with driving licence requires authoritative source check low-confidence
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -17,7 +17,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-dcmaw-success' page response
 
   Scenario: Journey through DCMAW with driving licence requires authoritative source check medium-confidence
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck' feature sets
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -32,7 +32,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-dcmaw-success' page response
 
   Scenario: Journey with auth source check that attracts a CI leads to a mitigation journey low-confidence
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -49,7 +49,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'P0' identity
 
   Scenario: Journey with auth source check that attracts a CI leads to a mitigation journey medium-confidence
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    Given I activate the 'drivingLicenceAuthCheck' feature sets
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

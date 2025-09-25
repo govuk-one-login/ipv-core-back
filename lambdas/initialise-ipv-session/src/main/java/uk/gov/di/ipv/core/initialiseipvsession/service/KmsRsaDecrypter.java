@@ -12,7 +12,7 @@ import com.nimbusds.jose.util.Base64URL;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import software.amazon.awssdk.services.kms.model.DecryptResponse;
@@ -28,8 +28,6 @@ import java.util.Set;
 import static com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256;
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 import static software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec.RSAES_OAEP_SHA_256;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY;
 
 public class KmsRsaDecrypter implements JWEDecrypter {
     private static final Set<JWEAlgorithm> SUPPORTED_ALGORITHMS = Set.of(JWEAlgorithm.RSA_OAEP_256);
@@ -47,7 +45,7 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         this.kmsClient =
                 KmsClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(AwsCrtHttpClient.builder())
+                        .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
     }
 
@@ -85,9 +83,15 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         }
 
         var primaryKeyAlias =
-                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY);
+                configService
+                        .getConfiguration()
+                        .getSelf()
+                        .getClientJarKmsEncryptionKeyAliasPrimary();
         var secondaryKeyAlias =
-                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY);
+                configService
+                        .getConfiguration()
+                        .getSelf()
+                        .getClientJarKmsEncryptionKeyAliasSecondary();
 
         var encryptedKeyDecryptRequestPrimary =
                 DecryptRequest.builder()

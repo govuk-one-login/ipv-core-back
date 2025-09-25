@@ -22,8 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
@@ -81,9 +83,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -132,6 +132,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
+    @Mock private Config mockConfig;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private CimitUtilityService mockCimitUtilityService;
@@ -185,6 +186,8 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
         clientOAuthSessionItem = getClientAuthSessionItemWithScope(OPENID_SCOPE);
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -487,8 +490,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(CONTRA_INDICATORS);
-        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId()))
-                .thenReturn(true);
+        when(mockConfigService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
         APIGatewayProxyResponseEvent response =

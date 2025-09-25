@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 
 public class AisService {
     private static final Logger LOGGER = LogManager.getLogger();

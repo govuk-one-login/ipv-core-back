@@ -34,7 +34,6 @@ import java.util.Optional;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
@@ -112,7 +111,7 @@ public class SisClient {
     }
 
     private URI getUri(String subPath) throws URISyntaxException {
-        var baseUri = "%s/%s".formatted(configService.getParameter(SIS_APPLICATION_URL), subPath);
+        var baseUri = "%s/%s".formatted(configService.getSisApplicationUrl(), subPath);
 
         var uriBuilder = new URIBuilder(baseUri);
 

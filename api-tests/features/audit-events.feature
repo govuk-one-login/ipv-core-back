@@ -203,7 +203,6 @@ Feature: Audit Events
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
   Scenario: No photo ID
-    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event

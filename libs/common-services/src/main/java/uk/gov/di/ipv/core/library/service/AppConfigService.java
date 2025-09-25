@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
@@ -25,7 +25,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -55,7 +54,7 @@ public class AppConfigService extends ConfigService {
         appConfigProvider =
                 ParamManager.getAppConfigProvider(
                                 AppConfigDataClient.builder()
-                                        .httpClientBuilder(AwsCrtHttpClient.builder())
+                                        .httpClientBuilder(UrlConnectionHttpClient.builder())
                                         .build(),
                                 environmentId,
                                 applicationId)
@@ -64,7 +63,7 @@ public class AppConfigService extends ConfigService {
         secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
-                                        .httpClient(AwsCrtHttpClient.create())
+                                        .httpClient(UrlConnectionHttpClient.create())
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
     }
@@ -76,24 +75,15 @@ public class AppConfigService extends ConfigService {
     }
 
     @Override
-    public String getParameter(String path) {
-        reloadParameters();
-        return super.getParameter(path);
-    }
-
-    @Override
-    public Map<String, String> getParametersByPrefix(String path) {
-        reloadParameters();
-        return super.getParametersByPrefix(path);
-    }
-
-    private void reloadParameters() {
+    public void reloadParameters() {
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
         var paramsRaw = appConfigProvider.get(profileId);
 
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            setParameters(updateParameters(paramsRaw));
+
+            setConfiguration(generateConfiguration(paramsRaw));
+
             paramsRawHash = retrievedParamsHash;
         }
     }

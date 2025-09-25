@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.service;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.testdata.CommonData;
 
 import java.nio.charset.StandardCharsets;
@@ -11,7 +10,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LocalConfigServiceTest {
 
@@ -36,7 +34,7 @@ class LocalConfigServiceTest {
     void getParameterReturnsParameters() throws Exception {
         var configService = getConfigService();
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getComponentId();
 
         assertEquals("https://identity.local.account.gov.uk", param);
     }
@@ -46,7 +44,7 @@ class LocalConfigServiceTest {
         var configService = getConfigService();
         configService.setFeatureSet(List.of("testFeature"));
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getComponentId();
 
         assertEquals("alternate-component-id", param);
         configService.removeFeatureSet();
@@ -57,19 +55,10 @@ class LocalConfigServiceTest {
         var configService = getConfigService();
         configService.setFeatureSet(List.of("someOtherFeature"));
 
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+        var param = configService.getComponentId();
 
         assertEquals("https://identity.local.account.gov.uk", param);
         configService.removeFeatureSet();
-    }
-
-    @Test
-    void getParameterThrowsForMissingValue() throws Exception {
-        var configService = getConfigService();
-
-        assertThrows(
-                ConfigParameterNotFoundException.class,
-                () -> configService.getParameter("evcs/invalidPath"));
     }
 
     @Test

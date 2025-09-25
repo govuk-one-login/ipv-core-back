@@ -364,7 +364,6 @@ core:
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
-    p1JourneysEnabled: true
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
@@ -405,9 +404,6 @@ core:
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodHours: 0
-    p1Journeys:
-      featureFlags:
-        p1JourneysEnabled: true
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:

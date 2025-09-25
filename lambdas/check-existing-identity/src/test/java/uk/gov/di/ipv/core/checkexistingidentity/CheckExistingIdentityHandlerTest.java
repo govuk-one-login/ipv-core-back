@@ -18,7 +18,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -30,6 +29,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchie
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
@@ -97,9 +97,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -201,6 +198,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ConfigService configService;
+    @Mock private Config mockConfig;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CimitService cimitService;
@@ -251,6 +249,8 @@ class CheckExistingIdentityHandlerTest {
                         .vtr(List.of(P2.name()))
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
+
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @AfterEach
@@ -387,7 +387,6 @@ class CheckExistingIdentityHandlerTest {
                                     false,
                                     true,
                                     false));
-            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -467,7 +466,6 @@ class CheckExistingIdentityHandlerTest {
                         VerifiableCredentialException,
                         EvcsServiceException,
                         CiExtractionException,
-                        ConfigException,
                         CiRetrievalException,
                         MissingSecurityCheckCredential {
             // Arrange
@@ -502,7 +500,6 @@ class CheckExistingIdentityHandlerTest {
                                     false,
                                     true,
                                     false));
-            Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
@@ -645,8 +642,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-                throws Exception {
+        void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -1291,7 +1287,6 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnReproveP1JourneyIfReproveIdentityFlagSet() {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
             clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
-            lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1472,8 +1467,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
             var journeyResponse =
                     toResponseClass(
@@ -1500,9 +1494,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-            when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
-                    .thenReturn("100000000"); // not the best way to test this
+            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(100000000);
 
             var journeyResponse =
                     toResponseClass(

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
 class ClientOAuthSessionDetailsServiceTest {
@@ -80,7 +78,6 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
@@ -105,7 +102,8 @@ class ClientOAuthSessionDetailsServiceTest {
                         "test-client",
                         "test-evcs-access-token");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItem, mockConfigService.getBackendSessionTtl());
 
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals("test-client", clientOAuthSessionItem.getClientId());
@@ -134,8 +132,6 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(false);
-
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
         var testClaimSet =
@@ -176,7 +172,8 @@ class ClientOAuthSessionDetailsServiceTest {
                         "test-state",
                         "test-journey-id");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItem, mockConfigService.getBackendSessionTtl());
 
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals("test-client", clientOAuthSessionItem.getClientId());

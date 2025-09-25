@@ -52,9 +52,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
@@ -65,6 +63,7 @@ public class CriApiService {
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final String HEADER_ACCEPT = "Accept";
     private static final String MIME_TYPE_APPLICATION_JSON = "application/json";
+    private static final String MIME_TYPE_APPLICATION_JWT = "application/jwt";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final SignerFactory signerFactory;
@@ -187,10 +186,7 @@ public class CriApiService {
                             .expirationTime(
                                     Date.from(
                                             Instant.now(clock)
-                                                    .plusSeconds(
-                                                            configService.getLongParameter(
-                                                                    ConfigurationVariable
-                                                                            .JWT_TTL_SECONDS))))
+                                                    .plusSeconds(configService.getJwtTtlSeconds())))
                             .jwtID(secureTokenHelper.generate())
                             .build();
 
@@ -340,22 +336,14 @@ public class CriApiService {
         var apiKey = getApiKey(criConfig, criOAuthSessionItem);
 
         var request = new HTTPRequest(HTTPRequest.Method.POST, criConfig.getCredentialUrl());
+        request.setHeader(
+                HEADER_ACCEPT,
+                String.join(", ", MIME_TYPE_APPLICATION_JWT, MIME_TYPE_APPLICATION_JSON));
 
         if (requestBody != null) {
             var bodyString = OBJECT_MAPPER.writeValueAsString(requestBody);
             request.setBody(bodyString);
             request.setHeader(HEADER_CONTENT_TYPE, MIME_TYPE_APPLICATION_JSON);
-        } else {
-            // Temporary for DWP integration testing
-            if (configService.getEnvironmentVariable(ENVIRONMENT) != null
-                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
-                    && cri.equals(DWP_KBV)) {
-                request.setHeader(HEADER_ACCEPT, "application/jwt");
-            } else {
-                request.setHeader(
-                        HEADER_CONTENT_TYPE,
-                        ""); // remove the default, no request body so we don't need a content type
-            }
         }
 
         if (apiKey != null) {

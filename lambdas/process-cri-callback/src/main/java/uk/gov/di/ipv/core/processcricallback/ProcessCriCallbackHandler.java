@@ -30,7 +30,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -237,12 +236,6 @@ public class ProcessCriCallbackHandler
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_STORED_CIS,
                     Level.ERROR);
-        } catch (ConfigException e) {
-            return buildErrorResponse(
-                    e,
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_CONFIG,
-                    Level.ERROR);
         } catch (CriApiException e) {
             if (DCMAW.equals(callbackRequest.getCredentialIssuer())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
@@ -303,7 +296,6 @@ public class ProcessCriCallbackHandler
     private JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
             throws JsonProcessingException,
                     HttpResponseExceptionWithErrorBody,
-                    ConfigException,
                     CiRetrievalException,
                     CriApiException,
                     VerifiableCredentialException,

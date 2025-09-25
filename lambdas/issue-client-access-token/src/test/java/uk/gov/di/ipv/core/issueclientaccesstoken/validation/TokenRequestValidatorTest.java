@@ -47,16 +47,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 class TokenRequestValidatorTest {
 
     private static final String CLIENT_ID = "di-ipv-orchestrator-stub";
-    private static final String AUDIENCE =
-            "https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token";
     private static final String TEST_JTI = "test-jti";
 
     @Mock private ConfigService mockConfigService;
@@ -66,12 +62,12 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE);
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test
     void shouldNotThrowForValidJwt() throws Exception {
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
 
@@ -169,7 +165,7 @@ class TokenRequestValidatorTest {
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -223,7 +219,7 @@ class TokenRequestValidatorTest {
     void shouldThrowIfJwtIdIsMissingOrEmpty() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertion(claimsSetValues);
 
@@ -248,7 +244,7 @@ class TokenRequestValidatorTest {
     void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
         when(mockOAuthKeyService.getClientSigningKey(any(), any()))
                 .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockConfigService.getMaxAllowedAuthClientTtl()).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
         String clientAssertion = generateClientAssertion(claimsSetValues);
 
@@ -308,29 +304,24 @@ class TokenRequestValidatorTest {
     }
 
     private Map<String, Object> getValidClaimsSetValues() {
+        String expectedAud = mockConfigService.getComponentId();
+
         return Map.of(
-                JWTClaimNames.ISSUER,
-                CLIENT_ID,
-                JWTClaimNames.SUBJECT,
-                CLIENT_ID,
-                JWTClaimNames.AUDIENCE,
-                AUDIENCE,
-                JWTClaimNames.EXPIRATION_TIME,
-                fifteenMinutesFromNow(),
-                JWTClaimNames.JWT_ID,
-                TEST_JTI);
+                JWTClaimNames.ISSUER, CLIENT_ID,
+                JWTClaimNames.SUBJECT, CLIENT_ID,
+                JWTClaimNames.AUDIENCE, expectedAud,
+                JWTClaimNames.EXPIRATION_TIME, fifteenMinutesFromNow(),
+                JWTClaimNames.JWT_ID, TEST_JTI);
     }
 
     private Map<String, Object> getClaimsSetValuesMissingJwtId() {
+        String expectedAud = mockConfigService.getComponentId();
+
         return Map.of(
-                JWTClaimNames.ISSUER,
-                CLIENT_ID,
-                JWTClaimNames.SUBJECT,
-                CLIENT_ID,
-                JWTClaimNames.AUDIENCE,
-                AUDIENCE,
-                JWTClaimNames.EXPIRATION_TIME,
-                fifteenMinutesFromNow());
+                JWTClaimNames.ISSUER, CLIENT_ID,
+                JWTClaimNames.SUBJECT, CLIENT_ID,
+                JWTClaimNames.AUDIENCE, expectedAud,
+                JWTClaimNames.EXPIRATION_TIME, fifteenMinutesFromNow());
     }
 
     private static long fifteenMinutesFromNow() {

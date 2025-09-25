@@ -11,5 +11,5 @@ import java.net.URI;
 @Builder
 @Jacksonized
 public class StoredIdentityServiceConfig {
-    @NonNull final URI componentId;
+    @NonNull URI componentId;
 }

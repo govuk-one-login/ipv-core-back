@@ -135,6 +135,9 @@ class SisServiceTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 "",
                 List.of(),
                 List.of(),
@@ -163,6 +166,46 @@ class SisServiceTest {
                 false,
                 true,
                 Vot.P2,
+                Vot.P2,
+                null,
+                null,
+                SIS_JWT,
+                SUCCESSFUL_SIGNATURES,
+                List.of(),
+                "Exception caught retrieving VCs from EVCS");
+    }
+
+    @Test
+    void shouldSendCorrectExpiredAndIsValidValues() throws Exception {
+        // Arrange
+        var sisExpiredResult =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto(SIS_JWT, false, true, Vot.P2, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisExpiredResult);
+        when(evcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                .thenThrow(new CredentialParseException("test exception"));
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FailureCode.EVCS_ERROR,
+                true,
+                false,
+                Vot.P2,
+                Vot.P2,
+                null,
+                null,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
@@ -194,10 +237,48 @@ class SisServiceTest {
                 false,
                 true,
                 Vot.P2,
+                Vot.P2,
+                null,
+                null,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Exception caught calculating VOT from EVCS VCs");
+    }
+
+    @Test
+    void shouldSendFailureAuditEventWhenStoredJwtCannotBeParsed() throws Exception {
+        // Arrange
+        var sisBadJwtResult =
+                new SisGetStoredIdentityResult(
+                        true,
+                        true,
+                        new SisStoredIdentityCheckDto(
+                                "Not.a.JWT", true, false, Vot.P2, true, true));
+
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(sisBadJwtResult);
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FailureCode.PARSE_ERROR,
+                false,
+                true,
+                null,
+                null,
+                null,
+                null,
+                "Not.a.JWT",
+                List.of(),
+                List.of(),
+                "Failed to parse stored identity JWT: Invalid JWS header: Invalid JSON object");
     }
 
     @Test
@@ -227,6 +308,9 @@ class SisServiceTest {
                 FailureCode.MAX_VOT_MISMATCH,
                 false,
                 true,
+                Vot.P2,
+                Vot.P1,
+                Vot.P2,
                 Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
@@ -262,6 +346,9 @@ class SisServiceTest {
                 false,
                 true,
                 Vot.P1,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
                 SIS_JWT_P1,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -289,6 +376,9 @@ class SisServiceTest {
                 FailureCode.EXTRA_SIGNATURE,
                 false,
                 true,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
                 Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
@@ -318,42 +408,13 @@ class SisServiceTest {
                 false,
                 true,
                 Vot.P2,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
-    }
-
-    @Test
-    void shouldSendFailureAuditEventWhenUnexpectedErrorOccurs() throws Exception {
-        // Arrange
-        var sisP2Result =
-                new SisGetStoredIdentityResult(
-                        true,
-                        true,
-                        new SisStoredIdentityCheckDto(
-                                "Not a valid JWT", true, false, Vot.P2, true, true));
-
-        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisP2Result);
-
-        // Act
-        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
-
-        // Assert
-        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        checkAuditEvent(
-                auditEventCaptor.getValue(),
-                VerificationOutcome.FAILURE,
-                FailureCode.UNEXPECTED_ERROR,
-                false,
-                true,
-                null,
-                "Not a valid JWT",
-                List.of(),
-                List.of(),
-                "Index 1 out of bounds for length 1");
     }
 
     @Test
@@ -377,6 +438,9 @@ class SisServiceTest {
                 null,
                 false,
                 true,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
                 Vot.P2,
                 SIS_JWT,
                 SUCCESSFUL_SIGNATURES,
@@ -414,6 +478,9 @@ class SisServiceTest {
                 false,
                 false,
                 Vot.P0,
+                Vot.P2,
+                null,
+                Vot.P2,
                 SIS_JWT_P0,
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
@@ -427,6 +494,9 @@ class SisServiceTest {
             Boolean expectedExpired,
             Boolean expectedIsValid,
             Vot expectedSisRequestedVot,
+            Vot expectedSisMaxVot,
+            Vot expectedEvcsRequestedVot,
+            Vot expectedEvcsMaxVot,
             String expectedSisJwt,
             List<String> expectedSisSignatures,
             List<String> expectedEvcsSignatures,
@@ -438,11 +508,14 @@ class SisServiceTest {
         assertEquals(expectedEvcsSignatures, restrictedValues.getReconstructedSignatures());
 
         var extensionValues = (AuditExtensionsSisComparison) auditEvent.getExtensions();
-        assertEquals(expectedVerificationOutcome, extensionValues.getOutcome());
+        assertEquals(expectedVerificationOutcome, extensionValues.getVerificationOutcome());
         assertEquals(expectedFailureCode, extensionValues.getFailureCode());
         assertEquals(expectedExpired, extensionValues.getExpired());
         assertEquals(expectedIsValid, extensionValues.getIsValid());
-        assertEquals(expectedSisRequestedVot, extensionValues.getSisVot());
+        assertEquals(expectedSisRequestedVot, extensionValues.getVot());
+        assertEquals(expectedSisMaxVot, extensionValues.getMaxVot());
+        assertEquals(expectedEvcsRequestedVot, extensionValues.getReconstructedVot());
+        assertEquals(expectedEvcsMaxVot, extensionValues.getReconstructedMaxVot());
     }
 
     private static String getSignature(String jwt) {

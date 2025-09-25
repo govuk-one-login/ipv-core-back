@@ -10,12 +10,14 @@ import {
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
 import { JourneyMap, JourneyResponse, NestedJourneyMap } from "./types.js";
-import {
-  getSystemSettings,
-  parseOptions,
-  RenderOptions,
-} from "./helpers/options.js";
+import { parseOptions, RenderOptions } from "./helpers/options.js";
 import { getJourneyContexts } from "./helpers/journey-context.js";
+import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
+import {
+  getJourneyTransitions,
+  getSystemSettings,
+} from "./service/analyticsService.js";
+import { parseTransitionsApiForm } from "./helpers/analytics.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -59,6 +61,18 @@ const headerContent = document.getElementById(
 ) as HTMLDivElement;
 const headerToggle = document.getElementById(
   "header-toggle",
+) as HTMLButtonElement;
+const transitionsForm = document.getElementById(
+  "transitions-traffic-form",
+) as HTMLFormElement;
+const transitionsFromInput = document.getElementById(
+  "transitionsFromInput",
+) as HTMLInputElement;
+const transitionsToInput = document.getElementById(
+  "transitionsToInput",
+) as HTMLInputElement;
+const transitionsSubmitButton = document.getElementById(
+  "form-button",
 ) as HTMLButtonElement;
 const form = document.getElementById("configuration-form") as HTMLFormElement;
 const disabledInput = document.getElementById(
@@ -453,7 +467,53 @@ const setupHeaderToggleClickHandlers = (): void => {
   });
 };
 
+const toDateTimeLocalString = (date: Date): string => {
+  const pad = (n: number): string => n.toString().padStart(2, "0");
+  // Converts date to YYYY-MM-DDTHH:MM format
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const setupJourneyTransitionInput = (): void => {
+  const now = toDateTimeLocalString(new Date());
+  const nowMinus30Min = toDateTimeLocalString(
+    new Date(Date.now() - 30 * 60 * 1000),
+  );
+  transitionsToInput.value = now;
+  transitionsFromInput.value = nowMinus30Min;
+  transitionsToInput.min = nowMinus30Min;
+  transitionsFromInput.max = now;
+
+  transitionsFromInput.addEventListener("change", () => {
+    if (transitionsFromInput.value > transitionsToInput.value) {
+      transitionsToInput.value = transitionsFromInput.value;
+    }
+    transitionsToInput.min = transitionsFromInput.value;
+  });
+
+  transitionsToInput.addEventListener("change", () => {
+    if (transitionsToInput.value < transitionsFromInput.value) {
+      transitionsFromInput.value = transitionsToInput.value;
+    }
+    transitionsFromInput.max = transitionsToInput.value;
+  });
+
+  transitionsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    transitionsSubmitButton.disabled = true;
+    const requestBody = parseTransitionsApiForm(new FormData(transitionsForm));
+
+    const journeyTransitions: JourneyTransition[] = await getJourneyTransitions(
+      requestBody,
+    ).finally(() => {
+      transitionsSubmitButton.disabled = false;
+    });
+    setJourneyTransitionsData(journeyTransitions);
+    await updateView();
+  });
+};
+
 const initialize = async (): Promise<void> => {
+  setupJourneyTransitionInput();
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
   nestedJourneys = await loadJourneyMaps(

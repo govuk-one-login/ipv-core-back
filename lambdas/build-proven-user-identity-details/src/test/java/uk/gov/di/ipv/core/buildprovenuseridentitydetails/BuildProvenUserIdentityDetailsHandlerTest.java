@@ -96,6 +96,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .when(mockIpvSessionItem.getClientOAuthSessionId())
                 .thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         Mockito.lenient().when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
+
+        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
     }
 
     @Test

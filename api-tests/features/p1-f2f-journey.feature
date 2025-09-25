@@ -4,7 +4,6 @@ Feature: P1 F2F journey
     Given I activate the 'disableStrategicApp' feature set
 
   Scenario: P1 Face to Face after DCMAW dropout
-    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -29,7 +28,6 @@ Feature: P1 F2F journey
     Then I get a 'page-face-to-face-handoff' page response
 
   Scenario: P1 F2F Support low strength F2F documents for thin fraud file users
-    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -55,7 +53,6 @@ Feature: P1 F2F journey
 
   Rule: F2F journey after no NI
     Background: Route to F2F
-      Given I activate the 'p1Journeys' feature set
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event

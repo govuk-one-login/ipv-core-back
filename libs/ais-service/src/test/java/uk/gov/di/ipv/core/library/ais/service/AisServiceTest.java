@@ -11,7 +11,7 @@ import uk.gov.di.ipv.core.library.ais.exception.AisClientException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.*;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 
 @ExtendWith(MockitoExtension.class)
 class AisServiceTest {

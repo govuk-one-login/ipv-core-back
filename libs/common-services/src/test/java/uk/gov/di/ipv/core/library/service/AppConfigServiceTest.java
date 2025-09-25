@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,19 +20,17 @@ import software.amazon.lambda.powertools.parameters.AppConfigProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
+import uk.gov.di.ipv.core.library.testdata.CommonData;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,220 +45,187 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class AppConfigServiceTest {
-    private static final String TEST_RAW_PARAMETERS =
-            """
-        core:
-          self:
-            componentId: "test-component-id"
-            bearerTokenTtl: 1800
-            someStringList: "a,list,of,strings"
-          credentialIssuers:
-            address:
-              activeConnection: main
-              connections:
-                main:
-                  componentId: main-issuer
-                  authorizeUrl: https://testAuthoriseUrl
-                  tokenUrl: https://testTokenUrl
-                  credentialUrl: https://testCredentialUrl
-                  clientId: ipv-core-test
-                  signingKey: '{\\"kty\\":\\"EC\\",\\"kid\\":\\"test-fixtures-ec-key\\",\\"use\\":\\"sig\\",\\"d\\":\\"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU\\",\\"crv\\":\\"P-256\\",\\"x\\":\\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\\",\\"y\\":\\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\\"}' # pragma: allowlist secret
-                  encryptionKey: '{\\"kty\\":\\"RSA\\",\\"e\\":\\"AQAB\\",\\"use\\":\\"enc\\",\\"kid\\":\\"nfwejnfwefcojwnk\\",\\"n\\":\\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\\"}' # pragma: allowlist secret
-                  clientCallbackUrl: https://testClientCallBackUrl
-                  requiresApiKey: true
-                  requiresAdditionalEvidence: false
-                  jwksUrl: https://testWellKnownUrl
-                stub:
-                  componentId: stub-issuer
-              historicSigningKeys: '{"kty":"EC","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}/{"kty":"EC","crv":"P-256","x":"MjTFSolNjla11Dl8Zk9UpcpnMyWumfjIbO1E-0c8v-E","y":"xTdKNukh5sOvMgNTKjo0hVYNNcAS-N7X1R1S0cjllTo"}' # pragma: allowlist secret
-            dcmaw:
-              activeConnection: test
-              connections:
-                test:
-                  componentId: dcmaw-issuer
-          featureFlags:
-            testFeatureFlag: false
-            anotherFeatureFlag: true
-          features:
-            testFeature:
-              featureFlags:
-                testFeatureFlag: true
-              self:
-                componentId: "alternate-component-id"
-          cimit:
-            config:
-              NEEDS-ALTERNATE-DOC:
-                - event: /journey/alternate-doc-invalid-dl
-                  document: drivingPermit
-          clients:
-            testClient:
-              validRedirectUrls: a,list,of,strings
-    """;
-    @Mock Cri criMock;
+
+    private static String testRawParameters;
+
     @Mock AppConfigProvider appConfigProvider;
     @Mock SecretsProvider secretsProvider;
+
     AppConfigService configService;
 
+    @SystemStub private EnvironmentVariables env = new EnvironmentVariables();
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        if (testRawParameters == null) {
+            testRawParameters =
+                    new String(
+                            CommonData.class
+                                    .getResourceAsStream("/test-parameters.yaml")
+                                    .readAllBytes(),
+                            StandardCharsets.UTF_8);
+        }
+
         configService = new AppConfigService(appConfigProvider, secretsProvider);
-        lenient().when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS);
+        lenient().when(appConfigProvider.get(any())).thenReturn(testRawParameters);
+        configService.setConfiguration(ConfigService.generateConfiguration(testRawParameters));
     }
 
-    // Get parameter
+    // Core getters
 
     @Test
-    void getParameterReturnsParameters() {
-        // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-
-        // Assert
-        assertEquals("test-component-id", param);
+    void getComponentIdReturnComponentId() {
+        var param = configService.getComponentId();
+        assertEquals("https://identity.local.account.gov.uk", param);
     }
 
     @Test
-    void getParameterReturnsParametersWithoutUnrelatedFeatureOverride() {
-        // Arrange
-        configService.setFeatureSet(List.of("someOtherFeature"));
-
-        // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-
-        // Assert
-        assertEquals("test-component-id", param);
+    void getSisComponentIdReturnComponentId() {
+        var param = configService.getSisComponentId();
+        assertEquals("https://reuse-identity.build.account.gov.uk", param);
     }
 
     @Test
-    void getParameterThrowsForMissingValue() {
-        // Act & Assert
-        assertThrows(
-                ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL));
-    }
-
-    // Get specific parameters
-
-    @Test
-    void shouldReturnSlashSeparatedHistoricSigningKeys() {
-        var result = configService.getHistoricSigningKeys(ADDRESS.getId());
-
-        assertEquals(TEST_EC_PUBLIC_JWK, result.get(0));
-        assertEquals(EC_PUBLIC_JWK_2, result.get(1));
+    void getCimitComponentIdReturnComponentId() {
+        var param = configService.getCimitComponentId();
+        assertEquals("https://cimit.stubs.account.gov.uk", param);
     }
 
     @Test
-    void shouldGetLongValueFromConfigIfSet() {
-        // Act
-        var value = configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
-
-        // Assert
-        assertEquals(1800L, value);
+    void getBackendSessionTtl_returnsYamlValue() {
+        assertEquals(3600L, configService.getBackendSessionTtl());
     }
 
     @Test
-    void shouldGetStringListValueFromConfigIfSet() {
-        // Act
-        var value =
-                configService.getStringListParameter(
-                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "testClient");
-
-        // Assert
-        assertEquals(List.of("a", "list", "of", "strings"), value);
-    }
-
-    // Updated config
-
-    @Test
-    void getParameterReturnsUpdatedParameters() {
-        // Act
-        var componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-        var bearerTokenTtl = configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL);
-
-        // Assert
-        assertEquals("test-component-id", componentId);
-        assertEquals("1800", bearerTokenTtl);
-
-        // Arrange
-        when(appConfigProvider.get(any()))
-                .thenReturn(
-                        """
-          core:
-            self:
-              componentId: "different-component-id"
-        """);
-
-        // Act
-        componentId = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-
-        // Assert
-        assertEquals("different-component-id", componentId);
-        assertThrows(
-                ConfigParameterNotFoundException.class,
-                () -> configService.getParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
-    }
-
-    // Feature flags
-
-    @Test
-    void getParameterReturnsParametersWithFeatureOverride() {
-        // Arrange
-        configService.setFeatureSet(List.of("testFeature"));
-
-        // Act
-        var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
-
-        // Assert
-        assertEquals("alternate-component-id", param);
+    void getCriResponseTtl_returnsYamlValue() {
+        assertEquals(3600L, configService.getCriResponseTtl());
     }
 
     @Test
-    void enabledFalseIfFeatureFlagNotEnabled() {
-        // Act & Assert
-        assertFalse(configService.enabled("testFeatureFlag"));
+    void getSessionCredentialTtl_returnsYamlValue() {
+        assertEquals(3600L, configService.getSessionCredentialTtl());
     }
 
     @Test
-    void enabledTrueIfFeatureFlagEnabled() {
-        // Act & Assert
-        assertTrue(configService.enabled("anotherFeatureFlag"));
+    void getBackendSessionTimeout_returnsYamlValue() {
+        assertEquals(3600L, configService.getBackendSessionTimeout());
     }
 
     @Test
-    void enabledTrueIfFeatureFlagSetEnabled() {
-        // Arrange
-        configService.setFeatureSet(List.of("testFeature"));
-
-        // Act & Assert
-        assertTrue(configService.enabled("testFeatureFlag"));
+    void getOauthKeyCacheDurationMins_returnsYamlValue() {
+        assertEquals(5L, configService.getOauthKeyCacheDurationMins());
     }
 
     @Test
-    void enabledFalseForMissingValue() {
-        // Act & Assert
-        assertFalse(configService.enabled("not a feature flag"));
+    void shouldGetBearerTokenTtl() {
+        var value = configService.getBearerTokenTtl();
+        assertEquals(3600L, value);
     }
 
-    // Secrets
+    @Test
+    void shouldGetJwtTtlSeconds() {
+        var value = configService.getJwtTtlSeconds();
+        assertEquals(3600L, value);
+    }
+
+    @Test
+    void shouldGetMaxAllowedAuthClientTtl() {
+        var value = configService.getMaxAllowedAuthClientTtl();
+        assertEquals(3600L, value);
+    }
+
+    @Test
+    void getFraudCheckExpiryPeriodHours_returnsYamlValue() {
+        assertEquals(720, configService.getFraudCheckExpiryPeriodHours());
+    }
+
+    @Test
+    void getAuthCodeExpirySeconds_returnsYamlValue() {
+        assertEquals(3600L, configService.getAuthCodeExpirySeconds());
+    }
+
+    // Client getters
+
+    @Test
+    void shouldGetClientValidRedirectUrls() {
+        var value = configService.getClientValidRedirectUrls("orchStub");
+        assertEquals(List.of("http://localhost:4500/callback"), value);
+    }
+
+    @Test
+    void getValidScopes_returnsClientScopes() {
+        assertEquals("openid", configService.getValidScopes("orchStub"));
+    }
+
+    @Test
+    void getIssuer_returnsClientIssuer() {
+        assertEquals("orchStub", configService.getIssuer("orchStub"));
+    }
+
+    // CRI getters
+
+    @Test
+    void getActiveConnection_returnsStubForAddress() {
+        assertEquals("stub", configService.getActiveConnection(ADDRESS));
+    }
+
+    @Test
+    void getAllowedSharedAttributes_returnsConfiguredList() {
+        assertEquals("name,birthDate,address", configService.getAllowedSharedAttributes(ADDRESS));
+    }
+
+    @Test
+    void isCredentialIssuerEnabledReadsFlag() {
+        assertTrue(configService.isCredentialIssuerEnabled(ADDRESS.getId()));
+    }
+
+    @Test
+    void getOauthCriConfigForConnection_unknownReturnsNull() {
+        assertNull(configService.getOauthCriConfigForConnection("nope", ADDRESS));
+    }
+
+    @Test
+    void getRestCriConfigForConnection_unknownReturnsNull() {
+        assertNull(configService.getRestCriConfigForConnection("nope", ADDRESS));
+    }
+
+    // Environment variables & secrets
+
+    @Test
+    void getEnvironmentVariable_readsValue() {
+        env.set("ENVIRONMENT", "dev123");
+        assertEquals(
+                "dev123", configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT));
+    }
+
+    @Test
+    void getIntegerEnvironmentVariable_readsValue() {
+        env.set("ENVIRONMENT", "7");
+        assertEquals(
+                7, configService.getIntegerEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 1));
+    }
+
+    @Test
+    void getIntegerEnvironmentVariableDefault() {
+        var result =
+                configService.getIntegerEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 1);
+        assertEquals(1, result);
+    }
 
     @ParameterizedTest
     @MethodSource("SecretsManagerExceptions")
     void shouldReturnNullOnExceptionFromSecretsManager(Exception exception) {
-        // Arrange
         when(secretsProvider.get(any())).thenThrow(exception);
 
-        // Act
         var apiKey =
                 configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
-        // Assert
         assertNull(apiKey);
     }
 
@@ -287,104 +253,115 @@ class AppConfigServiceTest {
                                 .build()));
     }
 
-    // CI config
+    @Test
+    void featureSetsOverrideConfiguration() {
+        // Act & Assert
+        assertEquals("https://identity.local.account.gov.uk", configService.getComponentId());
+        assertEquals(3600L, configService.getBearerTokenTtl());
+
+        configService.setFeatureSet(List.of("testFeature"));
+        assertEquals("alternate-component-id", configService.getComponentId());
+        assertEquals(3600L, configService.getBearerTokenTtl());
+    }
+
+    @Test
+    void featureSetsOverrideConfigurationInCorrectOrder() {
+        // Act & Assert
+        configService.setFeatureSet(List.of("accountInterventions", "disableAccountInterventions"));
+        assertFalse(configService.enabled("accountInterventionsEnabled"));
+
+        configService.setFeatureSet(List.of("disableAccountInterventions", "accountInterventions"));
+        assertTrue(configService.enabled("accountInterventionsEnabled"));
+    }
+
+    @Test
+    void getParameterReturnsParametersWithFeatureOverride() {
+        configService.setFeatureSet(List.of("testFeature"));
+        var param = configService.getComponentId();
+        assertEquals("alternate-component-id", param);
+    }
+
+    @Test
+    void enabledTrueIfFeatureFlagEnabled() {
+        assertTrue(configService.enabled("strategicAppEnabled"));
+    }
+
+    @Test
+    void enabledFalseIfFeatureFlagNotEnabled() {
+        assertFalse(configService.enabled("resetIdentity"));
+    }
+
+    @Test
+    void enabledTrueIfFeatureFlagSetEnabled() {
+        configService.setFeatureSet(List.of("accountInterventions"));
+        assertTrue(configService.enabled("accountInterventionsEnabled"));
+    }
+
+    @Test
+    void enabledFalseForMissingValue() {
+        assertFalse(configService.enabled("not a feature flag"));
+    }
+
+    // Serialization sanity checks
+
+    @Test
+    void shouldNotSerializeDerivedProperties() throws Exception {
+        var json = new ObjectMapper().writeValueAsString(configService.getConfiguration());
+        assertFalse(json.contains("\"activeConfig\""), "derived getter must be ignored");
+        assertFalse(json.contains("\"parsedEncryptionKey\""), "computed getter must be ignored");
+    }
+
+    // CI & CIMIT config
 
     @Test
     void shouldGetContraIndicatorConfigMap() {
-        // Arrange
-        var testRawParametersCiConfig =
-                """
-            core:
-              self:
-                  ciScoringConfig:
-                    - ci: "X01"
-                      detectedScore: 3
-                      checkedScore: -3
-                      returnCode: "1"
-                    - ci: "Z03"
-                      detectedScore: 5
-                      checkedScore: -3
-                      returnCode: "1"
-        """;
-        when(appConfigProvider.get(any())).thenReturn(testRawParametersCiConfig);
+        var map = configService.getContraIndicatorConfigMap();
 
-        // Act
-        var configMap = configService.getContraIndicatorConfigMap();
+        assertTrue(map.containsKey("NEEDS-ALTERNATE-DOC"));
+        assertEquals(20, map.get("NEEDS-ALTERNATE-DOC").getDetectedScore());
+        assertEquals(-20, map.get("NEEDS-ALTERNATE-DOC").getCheckedScore());
+        assertEquals("needs-alternate-doc", map.get("NEEDS-ALTERNATE-DOC").getReturnCode());
 
-        // Assert
-        assertEquals(2, configMap.size());
-        assertTrue(configMap.containsKey("X01"));
-        assertTrue(configMap.containsKey("Z03"));
-        assertEquals("X01", configMap.get("X01").getCi());
-        assertEquals(3, configMap.get("X01").getDetectedScore());
-        assertEquals(-3, configMap.get("X01").getCheckedScore());
-        assertEquals("1", configMap.get("X01").getReturnCode());
+        assertTrue(map.containsKey("ALWAYS-REQUIRED"));
+        assertEquals(1, map.get("ALWAYS-REQUIRED").getDetectedScore());
+        assertEquals(-1, map.get("ALWAYS-REQUIRED").getCheckedScore());
+        assertEquals("always-required", map.get("ALWAYS-REQUIRED").getReturnCode());
     }
 
     @Test
-    void shouldReturnEmptyCollectionOnInvalidContraIndicatorConfigsMap() {
-        // Arrange
-        var testRawParametersInvalidCiConfig =
-                """
-            core:
-              self:
-                  ciScoringConfig:
-                    - ci: "SomeCi"
-                      invalidKey: "invalidValue"
-        """;
-        when(appConfigProvider.get(any())).thenReturn(testRawParametersInvalidCiConfig);
-
-        // Act
-        var configMap = configService.getContraIndicatorConfigMap();
-
-        // Assert
-        assertTrue(configMap.isEmpty());
-    }
-
-    // CIMIT config
-
-    @Test
-    void shouldFetchCimitConfig() throws ConfigException {
-        // Act
+    void shouldFetchCimitConfig() {
         var cimitConfig = configService.getCimitConfig();
 
-        // Assert
-        assertEquals(
-                "/journey/alternate-doc-invalid-dl",
-                cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0).event());
-        assertEquals("drivingPermit", cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0).document());
+        var route = cimitConfig.get("NEEDS-ALTERNATE-DOC").get(0);
+        assertEquals("/journey/alternate-doc-invalid-dl", route.getEvent());
+        assertEquals("drivingPermit", route.getDocument());
     }
 
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
-        // Arrange
-        var testRawParametersInvalidCimit =
+        var bad =
                 """
-            core:
-              cimit:
-                config:
-                  notvalid: at-all
-              credentialIssuers:
-                address:
-                  connections:
-                    main:
-                      componentId: main-issuer
-        """;
-        when(appConfigProvider.get(any())).thenReturn(testRawParametersInvalidCimit);
+                core:
+                  cimit:
+                    config:
+                      notvalid: at-all
+                """;
+        when(appConfigProvider.get(any())).thenReturn(bad);
         configService = new AppConfigService(appConfigProvider, secretsProvider);
 
-        // Act & Assert
-        assertThrows(ConfigException.class, () -> configService.getCimitConfig());
+        assertThrows(IllegalArgumentException.class, () -> configService.getCimitConfig());
     }
 
-    // Get CRI by issuer
+    // Issuer map
 
     @Test
     void shouldReturnIssuerCris() {
-        // Act & Assert
-        assertEquals(
-                Map.of("stub-issuer", ADDRESS, "main-issuer", ADDRESS, "dcmaw-issuer", DCMAW),
-                configService.getIssuerCris());
+        var issuerCris = configService.getIssuerCris();
+
+        assertEquals(ADDRESS, issuerCris.get("https://address-cri.stubs.account.gov.uk"));
+        assertEquals(DCMAW, issuerCris.get("https://dcmaw-cri.stubs.account.gov.uk"));
+        assertEquals(PASSPORT, issuerCris.get("https://passport-cri.stubs.account.gov.uk"));
+        assertTrue(issuerCris.size() > 3);
     }
 
     // OAuth CRI config
@@ -392,6 +369,7 @@ class AppConfigServiceTest {
     @Nested
     @DisplayName("credential issuer config")
     class ActiveOauthCriConfig {
+        @SuppressWarnings("unused")
         private final OauthCriConfig expectedOauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(URI.create("https://testTokenUrl"))
@@ -409,84 +387,75 @@ class AppConfigServiceTest {
 
         @Test
         void getOauthCriActiveConnectionConfigShouldGetCredentialIssuerFromParameterStore() {
-            // Act
+            var expected =
+                    (OauthCriConfig)
+                            configService
+                                    .getConfiguration()
+                                    .getCredentialIssuers()
+                                    .getById(ADDRESS.getId())
+                                    .getConnections()
+                                    .get("stub");
+
             var result = configService.getOauthCriActiveConnectionConfig(ADDRESS);
 
-            // Assert
-            assertEquals(expectedOauthCriConfig, result);
+            assertEquals(expected, result);
         }
 
         @Test
         void getOauthCriConfigShouldGetConfigForCriOauthSessionItem() {
-            // Act
+            var expected =
+                    (OauthCriConfig)
+                            configService
+                                    .getConfiguration()
+                                    .getCredentialIssuers()
+                                    .getById(ADDRESS.getId())
+                                    .getConnections()
+                                    .get("stub");
+
             var result =
                     configService.getOauthCriConfig(
                             CriOAuthSessionItem.builder()
                                     .criId(ADDRESS.getId())
-                                    .connection("main")
+                                    .connection("stub")
                                     .build());
 
-            // Assert
-            assertEquals(expectedOauthCriConfig, result);
+            assertEquals(expected, result);
         }
 
         @Test
         void getOauthCriConfigForConnectionShouldGetOauthCriConfig() {
-            // Act
+            var expected =
+                    new ObjectMapper()
+                            .convertValue(
+                                    configService
+                                            .getConfiguration()
+                                            .getCredentialIssuers()
+                                            .getById(ADDRESS.getId())
+                                            .getConnections()
+                                            .get("main"),
+                                    OauthCriConfig.class);
+
             var result = configService.getOauthCriConfigForConnection("main", ADDRESS);
 
-            // Assert
-            assertEquals(expectedOauthCriConfig, result);
+            assertEquals(expected, result);
         }
 
         @Test
-        void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
-            // Act & Assert
-            assertThrows(
-                    ConfigParameterNotFoundException.class,
-                    () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
-        }
+        void getRestCriConfigShouldReturnARestCriConfig() {
+            var expected =
+                    new ObjectMapper()
+                            .convertValue(
+                                    configService
+                                            .getConfiguration()
+                                            .getCredentialIssuers()
+                                            .getById(ADDRESS.getId())
+                                            .getConnections()
+                                            .get("main"),
+                                    RestCriConfig.class);
 
-        @Test
-        void getRestCriConfigShouldReturnARestCriConfig() throws URISyntaxException {
-            // Act
             var result = configService.getRestCriConfigForConnection("main", ADDRESS);
 
-            // Assert
-            assertEquals(
-                    RestCriConfig.builder()
-                            .credentialUrl(new URI("https://testCredentialUrl"))
-                            .requiresApiKey(true)
-                            .signingKey(EC_PRIVATE_KEY_JWK)
-                            .componentId("main-issuer")
-                            .build(),
-                    result);
+            assertEquals(expected, result);
         }
-
-        @Test
-        void getCriConfigShouldReturnACriConfig() {
-            // Act
-            var result = configService.getCriConfig(ADDRESS);
-
-            // Assert
-            assertEquals(
-                    CriConfig.builder()
-                            .signingKey(EC_PRIVATE_KEY_JWK)
-                            .componentId("main-issuer")
-                            .build(),
-                    result);
-        }
-    }
-
-    // Environment variables
-
-    @Test
-    void getIntegerEnvironmentVariableDefault() {
-        // Act
-        var result =
-                configService.getIntegerEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 1);
-
-        // Assert
-        assertEquals(1, result);
     }
 }

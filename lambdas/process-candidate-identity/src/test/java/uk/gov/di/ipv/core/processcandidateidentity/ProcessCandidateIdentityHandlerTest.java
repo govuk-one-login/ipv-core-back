@@ -69,7 +69,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
@@ -138,9 +137,9 @@ class ProcessCandidateIdentityHandlerTest {
     @Mock private ConfigService configService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    @Mock private AuditService auditService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @Mock private CheckCoiService checkCoiService;
+    @Mock private AuditService auditService;
     @Mock private VotMatcher votMatcher;
     @Mock private StoreIdentityService storeIdentityService;
     @Mock private UserIdentityService userIdentityService;
@@ -154,6 +153,7 @@ class ProcessCandidateIdentityHandlerTest {
 
     @BeforeEach
     void setUp() {
+        when(configService.getComponentId()).thenReturn("https://core-component.example");
         requestBuilder =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(SESSION_ID)
@@ -203,8 +203,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -264,8 +263,7 @@ class ProcessCandidateIdentityHandlerTest {
                             any(),
                             any()))
                     .thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             // The first time we call this, we get the mitigations for the old CIs
@@ -334,8 +332,7 @@ class ProcessCandidateIdentityHandlerTest {
                             any(),
                             any()))
                     .thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
@@ -399,8 +396,7 @@ class ProcessCandidateIdentityHandlerTest {
                             any(),
                             any()))
                     .thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(evcsService.getUserVCs(
@@ -443,8 +439,7 @@ class ProcessCandidateIdentityHandlerTest {
         void shouldHandleCandidateIdentityTypeExistingAndReturnJourneyNext() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -478,8 +473,7 @@ class ProcessCandidateIdentityHandlerTest {
                 throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -521,8 +515,7 @@ class ProcessCandidateIdentityHandlerTest {
         void shouldHandleCandidateIdentityTypeIncompleteAndReturnJourneyNext() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
@@ -555,8 +548,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             ipvSessionItem.setSecurityCheckCredential(null);
             var ticfVcs = List.of(vcTicf());
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
@@ -601,8 +593,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -673,8 +664,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -753,8 +743,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -865,8 +854,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -921,8 +909,7 @@ class ProcessCandidateIdentityHandlerTest {
         @Test
         void shouldNotCallTicfIfDisabled() throws Exception {
             // Arrange
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(false);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(false);
 
             var request =
                     requestBuilder
@@ -1068,8 +1055,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
@@ -1119,8 +1105,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
@@ -1174,8 +1159,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(reproveIdentityClientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -1341,8 +1325,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -1388,8 +1371,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
@@ -1482,8 +1464,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -1536,8 +1517,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                    .thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
@@ -1583,8 +1563,7 @@ class ProcessCandidateIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(testClientOAuthSessionItem);
-        when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
-                .thenReturn(true);
+        when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
 
         var request =
                 requestBuilder
