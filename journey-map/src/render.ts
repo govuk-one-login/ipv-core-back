@@ -117,8 +117,13 @@ const getVisibleEdgesAndNodes = async (
           ) {
             continue;
           }
-        } else if (!sourceStateDefinition.response) {
-          // Entry state, so the source does not matter
+        } else if (!sourceStateDefinition.response) { // Entry event
+          if (!(
+              transition.fromJourney != journeyMapName &&
+              sourceStateDefinition.events?.next?.targetState === targetState
+          )) {
+            continue;
+          }
         } else {
           if (
             !(
