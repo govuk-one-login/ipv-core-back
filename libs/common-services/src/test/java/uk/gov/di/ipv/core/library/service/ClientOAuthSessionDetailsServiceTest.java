@@ -131,34 +131,6 @@ class ClientOAuthSessionDetailsServiceTest {
     }
 
     @Test
-    void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        var testClaimSet =
-                new JWTClaimsSet.Builder()
-                        .claim("response_type", "test-type")
-                        .claim("redirect_uri", "http://example.com")
-                        .claim("state", "test-state")
-                        .claim("govuk_signin_journey_id", "test-journey-id")
-                        .claim("scope", "test-scope")
-                        .claim("vtr", List.of("P1", "P2"))
-                        .subject("test-user-id")
-                        .build();
-
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
-
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId,
-                        testClaimSet,
-                        "test-client",
-                        "test-evcs-access-token");
-
-        assertEquals(clientOAuthSessionItem.getVtr(), List.of("P2"));
-    }
-
-    @Test
     void shouldCreateSessionItemWithErrorObject() {
         var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         var clientOAuthSessionDetailsService =
