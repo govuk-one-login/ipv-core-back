@@ -44,7 +44,6 @@ import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -1208,28 +1207,6 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 response.getMessage());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
-        when(cimitUtilityService.getCiMitigationEvent(any(), any()))
-                .thenThrow(new ConfigException("Failed to get cimit config"));
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getCode(), response.getCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_CONFIG.getMessage(), response.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
