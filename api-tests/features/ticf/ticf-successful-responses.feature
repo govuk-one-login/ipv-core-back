@@ -82,7 +82,7 @@ Feature: TICF successful responses
 
   Rule: TICF responds with intervention
     Scenario: No intervention
-      And The AIS stub will return an 'AIS_NO_INTERVENTION' result
+      Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
       And TICF CRI will respond with default parameters and
         | interventionCode | 00 |
       When I start a new 'medium-confidence' journey
