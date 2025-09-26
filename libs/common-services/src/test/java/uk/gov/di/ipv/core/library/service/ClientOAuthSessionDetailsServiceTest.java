@@ -15,7 +15,6 @@ import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -88,7 +87,6 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("redirect_uri", "http://example.com")
                         .claim("state", "test-state")
                         .claim("govuk_signin_journey_id", "test-journey-id")
-                        .claim("reprove_identity", false)
                         .claim("scope", "test-scope")
                         .claim("vtr", List.of("P1", "P2"))
                         .subject("test-user-id")
@@ -116,7 +114,6 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals("test-evcs-access-token", clientOAuthSessionItem.getEvcsAccessToken());
         assertEquals("test-journey-id", clientOAuthSessionItem.getGovukSigninJourneyId());
         assertEquals("test-scope", clientOAuthSessionItem.getScope());
-        assertFalse(clientOAuthSessionItem.getReproveIdentity());
         assertEquals(List.of("P1", "P2"), clientOAuthSessionItem.getVtr());
     }
 

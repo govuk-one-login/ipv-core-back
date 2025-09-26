@@ -176,7 +176,7 @@ Feature: MFA reset journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      And I activate the 'disableStrategicApp,accountInterventions' feature set
+      And I activate the 'disableStrategicApp' feature set
 
       # Start MFA reset journey
       When I start a new 'reverification' journey

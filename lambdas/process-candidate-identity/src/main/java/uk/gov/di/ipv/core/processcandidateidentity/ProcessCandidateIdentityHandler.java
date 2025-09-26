@@ -80,7 +80,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
@@ -263,9 +262,7 @@ public class ProcessCandidateIdentityHandler
 
             // We skip AIS checks for reverification journeys or if we don't have a user ID to check
             // against (in some error cases)
-            if (configService.enabled(AIS_ENABLED)
-                    && !SKIP_AIS_TYPES.contains(processIdentityType)
-                    && !StringUtils.isBlank(userId)) {
+            if (!SKIP_AIS_TYPES.contains(processIdentityType) && !StringUtils.isBlank(userId)) {
                 currentAccountInterventionType = aisService.fetchAisInterventionType(userId);
                 var isReproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
@@ -273,7 +270,6 @@ public class ProcessCandidateIdentityHandler
                         isReproveIdentity, currentAccountInterventionType)) {
                     throw new AccountInterventionException();
                 }
-                ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
             var sessionVcs =
@@ -640,8 +636,7 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     sharedAuditEventParameters.auditEventUser());
 
-            if (configService.enabled(AIS_ENABLED)
-                    && checkHasRelevantIntervention(currentAccountInterventionType, ticfVcs)) {
+            if (checkHasRelevantIntervention(currentAccountInterventionType, ticfVcs)) {
                 throw new AccountInterventionException();
             }
 
