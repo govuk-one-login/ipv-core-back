@@ -1499,7 +1499,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -1634,7 +1634,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2758,7 +2758,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -3431,7 +3431,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
             - Sid: kmsSisSigningKeyPermission
               Effect: Allow
               Action:
