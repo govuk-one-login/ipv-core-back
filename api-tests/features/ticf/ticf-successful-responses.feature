@@ -38,7 +38,7 @@ Feature: TICF successful responses
     Scenario: New P2 identity via F2F - TICF request returns a CI
       Given TICF CRI will respond with default parameters
         | cis  | BREACHING                    |
-      Given I start a new 'medium-confidence' journey
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -111,7 +111,7 @@ Feature: TICF successful responses
       Then I get a 'P2' identity
 
     Scenario: Blocked
-      And The AIS stub will return an 'AIS_NO_INTERVENTION' result
+      Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
       And TICF CRI will respond with default parameters and
         | interventionCode | 03 |
       When I start a new 'medium-confidence' journey

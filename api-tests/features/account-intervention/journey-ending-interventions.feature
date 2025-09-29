@@ -108,7 +108,7 @@ Feature: Journey ending interventions
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of update identity journey
-    And the subject already has the following credentials
+    Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
@@ -131,7 +131,7 @@ Feature: Journey ending interventions
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of initial F2F journey
-    And The AIS stub will return an 'AIS_NO_INTERVENTION' result
+    Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

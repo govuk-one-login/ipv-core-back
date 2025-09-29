@@ -3,7 +3,7 @@ Feature: Fail open scenarios
 
   Scenario Outline: Journey with AIS failures but no interventions succeeds
     Given I activate the 'disableStrategicApp' feature set
-    When The AIS stub will return an '<first_ais_response>' result
+    And The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -30,7 +30,7 @@ Feature: Fail open scenarios
 
   Scenario Outline: Journey with AIS failure and <intervention> intervention fails
     Given I activate the 'disableStrategicApp' feature set
-    When The AIS stub will return an '<first_ais_response>' result
+    And The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
