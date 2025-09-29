@@ -69,7 +69,6 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -258,28 +257,19 @@ public class CheckExistingIdentityHandler
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var isReproveIdentity =
-                    Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
-
-            if (configService.enabled(AIS_ENABLED)) {
-                var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
-
-                isReproveIdentity =
-                        AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
-                                fetchedAisInterventionType);
-
-                if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
-                        fetchedAisInterventionType)) {
-                    ipvSessionService.invalidateSession(
-                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
-                    throw new AccountInterventionException();
-                }
-
-                clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
-                clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
+            var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
+            if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
+                    fetchedAisInterventionType)) {
+                ipvSessionService.invalidateSession(
+                        ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+                throw new AccountInterventionException();
             }
 
-            ipvSessionService.updateIpvSession(ipvSessionItem);
+            var isReproveIdentity =
+                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
+                            fetchedAisInterventionType);
+            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
 
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -310,7 +300,8 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             userId,
                             govukSigninJourneyId,
-                            auditEventUser)
+                            auditEventUser,
+                            isReproveIdentity)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
@@ -338,7 +329,8 @@ public class CheckExistingIdentityHandler
 
     @SuppressWarnings({
         "java:S3776", // Cognitive Complexity of methods should not be too high
-        "java:S6541" // "Brain method" PYIC-6901 should refactor this method
+        "java:S6541", // "Brain method" PYIC-6901 should refactor this method
+        "java:S107" // Methods should not have too many parameters
     })
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
@@ -347,7 +339,8 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             String userId,
             String govukSigninJourneyId,
-            AuditEventUser auditEventUser) {
+            AuditEventUser auditEventUser,
+            boolean isReproveIdentity) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
@@ -371,12 +364,9 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (Boolean.TRUE.equals(isReproveIdentity)
-                            && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));

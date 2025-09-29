@@ -372,15 +372,8 @@ core:
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: false
-    accountInterventionsEnabled: true
 
   features:
-    accountInterventions:
-      featureFlags:
-        accountInterventionsEnabled: true
-    disableAccountInterventions:
-      featureFlags:
-        accountInterventionsEnabled: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true

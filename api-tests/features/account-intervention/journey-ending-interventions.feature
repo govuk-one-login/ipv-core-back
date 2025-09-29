@@ -2,7 +2,7 @@
 Feature: Journey ending interventions
 
   Scenario Outline: <intervention> intervention at of identity proving journey
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     And The AIS stub will return an '<first_ais_response>' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -32,7 +32,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
   Scenario Outline: TICF <intervention> result during identity proving journey
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -62,7 +62,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | 06                     |
 
   Scenario Outline: <intervention> intervention at of reprove identity journey
-    Given I activate the 'accountInterventions,disableStrategicApp' feature set
+    Given I activate the 'disableStrategicApp' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
@@ -98,8 +98,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | AIS_FORCED_USER_IDENTITY_VERIFY                    | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
   Scenario: Blocked intervention of update identity journey
-    Given I activate the 'accountInterventions' feature set
-    And the subject already has the following credentials
+    Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
@@ -109,8 +108,7 @@ Feature: Journey ending interventions
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of update identity journey
-    Given I activate the 'accountInterventions' feature set
-    And the subject already has the following credentials
+    Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
@@ -133,8 +131,7 @@ Feature: Journey ending interventions
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of initial F2F journey
-    Given I activate the 'accountInterventions' feature set
-    And The AIS stub will return an 'AIS_NO_INTERVENTION' result
+    Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

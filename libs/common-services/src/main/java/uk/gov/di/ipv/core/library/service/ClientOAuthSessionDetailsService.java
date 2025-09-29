@@ -57,7 +57,6 @@ public class ClientOAuthSessionDetailsService {
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
         clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
-        clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
 
         dataStore.create(clientOAuthSessionItem, configService.getBackendSessionTtl());
