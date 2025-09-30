@@ -175,7 +175,7 @@ class FetchJourneyTransitionHandlerTest {
                         Map.of(
                                 "fromDate", "2025-09-15T12:45+01:00",
                                 "toDate", "2025-09-15T13:15+01:00",
-                                "govukJourneyId", "not-uuid-v4")));
+                                "govukJourneyId", "a".repeat(257))));
     }
 
     @Test

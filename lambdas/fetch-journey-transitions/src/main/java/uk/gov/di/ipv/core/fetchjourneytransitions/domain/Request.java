@@ -25,8 +25,7 @@ public record Request(
         if (ipvSessionId != null && !ValidationHelper.isValidIpvSessionId(ipvSessionId)) {
             throw new RequestParseException("Invalid ipvSessionId format.");
         }
-        if (govukJourneyId != null
-                && !ValidationHelper.isValidGovukSigninJourneyId(govukJourneyId)) {
+        if (govukJourneyId != null && govukJourneyId.length() > 256) {
             throw new RequestParseException("Invalid govukJourneyId format.");
         }
 
