@@ -65,7 +65,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -1791,7 +1790,6 @@ class ContractTest {
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(EC_PRIVATE_KEY_JWK)
-                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(TEST_ISSUER)
                 .clientCallbackUrl(URI.create("https://mock-redirect-uri.gov.uk"))
                 .requiresApiKey(true)

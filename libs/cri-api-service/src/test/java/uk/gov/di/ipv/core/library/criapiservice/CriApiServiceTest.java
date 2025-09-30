@@ -55,7 +55,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 
@@ -82,7 +81,6 @@ class CriApiServiceTest {
                     .authorizeUrl(URI.create("http://example.com/authorize"))
                     .clientId("ipv-core")
                     .signingKey(TEST_EC_PUBLIC_JWK)
-                    .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                     .componentId("test-audience")
                     .clientCallbackUrl(
                             URI.create(

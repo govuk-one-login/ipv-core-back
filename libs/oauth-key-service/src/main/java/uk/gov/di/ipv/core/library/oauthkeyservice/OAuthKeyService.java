@@ -10,7 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedJWKSet;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -30,7 +32,6 @@ import static com.nimbusds.jose.jwk.KeyUse.SIGNATURE;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWKS_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_KEY_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
@@ -58,26 +59,15 @@ public class OAuthKeyService {
         this.httpClient = httpClient;
     }
 
-    public RSAKey getEncryptionKey(OauthCriConfig criConfig) throws ParseException {
+    public RSAKey getEncryptionKey(OauthCriConfig criConfig) {
         var jwksUrl = criConfig.getJwksUrl();
-        var keyFromConfig = criConfig.getParsedEncryptionKey();
-
-        return jwksUrl == null
-                ? keyFromConfig
-                : getCachedJWKSet(jwksUrl).filter(ENC_USE_MATCHER).getKeys().stream()
-                        .findFirst()
-                        .map(JWK::toRSAKey)
-                        .orElseGet(
-                                () -> {
-                                    LOGGER.warn(
-                                            LogHelper.buildLogMessage(
-                                                            "No encryption key found, returning key from config")
-                                                    .with(
-                                                            LOG_CRI_ISSUER.getFieldName(),
-                                                            criConfig.getComponentId())
-                                                    .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
-                                    return keyFromConfig;
-                                });
+        if (jwksUrl == null) {
+            throw new ConfigParameterNotFoundException("JWKS URL is not set in CRI config");
+        }
+        return getCachedJWKSet(jwksUrl).filter(ENC_USE_MATCHER).getKeys().stream()
+                .findFirst()
+                .map(JWK::toRSAKey)
+                .orElseThrow();
     }
 
     public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) throws ParseException {
@@ -140,25 +130,38 @@ public class OAuthKeyService {
     }
 
     private JWKSet getCachedJWKSet(URI jwksUrl) {
-        return cachedJwkSets
-                .compute(
+        var cachedJWKSet =
+                cachedJwkSets.compute(
                         jwksUrl,
                         (key, existingCachedJWKSet) -> {
                             if (existingCachedJWKSet == null || existingCachedJWKSet.isExpired()) {
-                                return createCachedJWKSet(jwksUrl);
+                                try {
+                                    return createCachedJWKSet(jwksUrl);
+                                } catch (Exception e) {
+                                    LOGGER.error(
+                                            LogHelper.buildErrorMessage(
+                                                            "Error creating cached JWK set", e)
+                                                    .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
+                                }
                             }
                             return existingCachedJWKSet;
-                        })
-                .jwkSet();
+                        });
+        if (cachedJWKSet == null) {
+            throw new ConfigParseException(
+                    "Cached JWK set cannot be retrieved, nor does it have a cached value.");
+        }
+        return cachedJWKSet.jwkSet();
     }
 
-    private CachedJWKSet createCachedJWKSet(URI jwksEndpoint) {
+    private CachedJWKSet createCachedJWKSet(URI jwksEndpoint)
+            throws IOException, ParseException, InterruptedException, ConfigException {
         return new CachedJWKSet(
                 getJWKSetFromJwksEndpoint(jwksEndpoint),
                 Instant.now().plus(configService.getOauthKeyCacheDurationMins(), MINUTES));
     }
 
-    private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {
+    private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint)
+            throws InterruptedException, IOException, ParseException, ConfigException {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving JWKSet from well-known endpoint"));
             var request = HttpRequest.newBuilder().uri(jwksEndpoint).GET().build();
@@ -169,7 +172,7 @@ public class OAuthKeyService {
                         LogHelper.buildLogMessage("Error retrieving JWKS")
                                 .with(LOG_STATUS_CODE.getFieldName(), httpResponse.statusCode())
                                 .with(LOG_JWKS_URL.getFieldName(), jwksEndpoint));
-                return new JWKSet();
+                throw new ConfigException("Error retrieving JWKs");
             }
 
             return JWKSet.parse(httpResponse.body());
@@ -177,13 +180,13 @@ public class OAuthKeyService {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Error parsing JWKSet key", e)
                             .with(LOG_JWKS_URL.getFieldName(), jwksEndpoint));
-            return new JWKSet();
+            throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.error(
                     LogHelper.buildErrorMessage("Interrupted while trying to fetch JWKSet.", e)
                             .with(LOG_JWKS_URL.getFieldName(), jwksEndpoint));
-            return new JWKSet();
+            throw e;
         }
     }
 }

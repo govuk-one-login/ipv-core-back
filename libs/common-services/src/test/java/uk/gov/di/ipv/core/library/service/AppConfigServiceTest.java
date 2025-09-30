@@ -45,7 +45,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -377,7 +376,6 @@ class AppConfigServiceTest {
                         .authorizeUrl(URI.create("https://testAuthoriseUrl"))
                         .clientId("ipv-core-test")
                         .signingKey(EC_PRIVATE_KEY_JWK)
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                         .componentId("main-issuer")
                         .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
                         .requiresApiKey(true)

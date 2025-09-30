@@ -120,7 +120,6 @@ class UserIdentityServiceTest {
                         .authorizeUrl(new URI("http://example.com/authorize"))
                         .clientId("ipv-core")
                         .signingKey("test-jwk")
-                        .encryptionKey("test-encryption-jwk")
                         .componentId("https://review-a.integration.account.gov.uk")
                         .clientCallbackUrl(new URI("http://example.com/redirect"))
                         .requiresApiKey(true)
