@@ -50,8 +50,6 @@ class OAuthKeyServiceTest {
     private static final String TEST_JWKS_ENDPOINT = "https://example.com/jwks";
     private static final String TEST_ISSUER = "https://example.com/issuer";
     private static final String TEST_CLIENT_ID = "test-client-id";
-    private static final String TEST_KEY =
-            "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"enc\",\"kid\":\"nfwejnfwefcojwnk\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3\"}"; // pragma: allowlist secret
     private static OauthCriConfig oauthCriConfig;
 
     @Captor private ArgumentCaptor<HttpRequest> httpRequestCaptor;

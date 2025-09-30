@@ -154,14 +154,14 @@ public class OAuthKeyService {
     }
 
     private CachedJWKSet createCachedJWKSet(URI jwksEndpoint)
-            throws IOException, ParseException, InterruptedException, ConfigException {
+            throws IOException, ParseException, ConfigException {
         return new CachedJWKSet(
                 getJWKSetFromJwksEndpoint(jwksEndpoint),
                 Instant.now().plus(configService.getOauthKeyCacheDurationMins(), MINUTES));
     }
 
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint)
-            throws InterruptedException, IOException, ParseException, ConfigException {
+            throws IOException, ParseException, ConfigException {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving JWKSet from well-known endpoint"));
             var request = HttpRequest.newBuilder().uri(jwksEndpoint).GET().build();
@@ -186,7 +186,7 @@ public class OAuthKeyService {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Interrupted while trying to fetch JWKSet.", e)
                             .with(LOG_JWKS_URL.getFieldName(), jwksEndpoint));
-            throw e;
+            throw new ConfigException("Interrupted while trying to fetch JWKSet");
         }
     }
 }
