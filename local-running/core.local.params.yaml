@@ -157,6 +157,7 @@ core:
           credentialUrl: https://dcmaw-async.stubs.account.gov.uk/async/credential
           tokenUrl: https://dcmaw-async.stubs.account.gov.uk/async/token
           clientId: dummyClientId
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
           componentId: https://dcmaw-async.stubs.account.gov.uk
           clientCallbackUrl: http://localhost:4501/credential-issuer/callback/dcmawAsync
           requiresApiKey: false
