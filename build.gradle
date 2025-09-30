@@ -2,7 +2,7 @@ plugins {
 	id "java"
 	alias libs.plugins.sonar
 	alias libs.plugins.spotless
-	id "au.com.dius.pact" version "4.6.5"
+	alias libs.plugins.pact
 }
 
 sonar {
