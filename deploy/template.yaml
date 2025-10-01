@@ -3050,6 +3050,16 @@ Resources:
       Principal: "appconfig.amazonaws.com"
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
+#  App Config Pipeline
+  ValidateAppConfigFunctionPermissionForAppConfig:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
+      Action: lambda:InvokeFunction
+      Principal: appconfig.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
+
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
