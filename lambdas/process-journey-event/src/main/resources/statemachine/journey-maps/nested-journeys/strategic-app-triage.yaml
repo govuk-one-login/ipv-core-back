@@ -108,6 +108,40 @@ nestedJourneyStates:
       anotherWay:
         exitEventToEmit: anotherWay
 
+  DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-desktop-download-app
+      context: iphone-appOnly
+    events:
+      next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        exitEventToEmit: anotherWay
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: dl-auth-source-check
+      preferNoApp:
+        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+      anotherWay:
+        exitEventToEmit: anotherWay
+
   DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
       type: page
@@ -133,6 +167,38 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: android
+    events:
+      next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: dl-auth-source-check
+      preferNoApp:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-desktop-download-app
+      context: android-appOnly
     events:
       next:
         exitEventToEmit: next
@@ -219,24 +285,28 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  MOBILE_ANDROID_START_SESSION:
-    response:
-      type: process
-      lambda: call-dcmaw-async-cri
-      lambdaInput:
-        mobileAppJourneyType: mam
-    events:
-      next:
-        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
   MOBILE_IPHONE_DOWNLOAD_PAGE:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: iphone
+    events:
+      next:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
+      preferNoApp:
+        targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-mobile-download-app
+      context: iphone-appOnly
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -259,11 +329,41 @@ nestedJourneyStates:
       back:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
 
+  MOBILE_ANDROID_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: mam
+    events:
+      next:
+        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   MOBILE_ANDROID_DOWNLOAD_PAGE:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: android
+    events:
+      next:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
+      preferNoApp:
+        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-mobile-download-app
+      context: android-appOnly
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
