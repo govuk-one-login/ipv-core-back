@@ -185,7 +185,6 @@ class BuildCriOauthRequestHandlerTest {
                         .authorizeUrl(new URI(CRI_AUTHORIZE_URL))
                         .clientId(IPV_CLIENT_ID)
                         .signingKey("{}")
-                        .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                         .componentId("http://www.example.com/audience")
                         .clientCallbackUrl(URI.create("http://www.example.com/callback/criId"))
                         .requiresApiKey(true)

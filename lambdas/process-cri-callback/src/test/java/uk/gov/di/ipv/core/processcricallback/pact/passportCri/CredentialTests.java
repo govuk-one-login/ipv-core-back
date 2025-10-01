@@ -51,7 +51,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -442,7 +441,6 @@ class CredentialTests {
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(EC_PRIVATE_KEY_JWK)
-                .encryptionKey(RSA_ENCRYPTION_PUBLIC_JWK)
                 .componentId(CRI_COMPONENT_ID)
                 .clientCallbackUrl(
                         URI.create(
