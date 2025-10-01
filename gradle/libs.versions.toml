@@ -52,6 +52,7 @@ log4j = ["log4jApi", "log4jCore"]
 awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
+pact = { id = "au.com.dius.pact", version.ref = "pact" }
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.14"
 sonar = "org.sonarqube:5.1.0.4882"
 spotless = "com.diffplug.spotless:7.2.1"
