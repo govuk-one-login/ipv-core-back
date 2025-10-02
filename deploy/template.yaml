@@ -3069,6 +3069,106 @@ Resources:
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
 
+  GitHubArtifactSourceBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsDevelopment
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Id: artifactBucketExpiry
+            Status: Enabled
+            ExpirationInDays: 180
+      VersioningConfiguration:
+        Status: "Enabled"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "AES256"
+
+  GitHubArtifactSourceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: IsDevelopment
+    Properties:
+      Bucket: !Ref GitHubArtifactSourceBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Sid: "AllowGithubActions"
+            Resource:
+              - !GetAtt GitHubArtifactSourceBucket.Arn
+              - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
+            Principal:
+              AWS:
+                !GetAtt GitHubActionsRole.Arn
+            Action:
+              - "s3:PutObject"
+              - "s3:PutObjectAcl"
+              - "s3:ListBucket"
+            Condition:
+              Bool:
+                "aws:SecureTransport": true
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Condition: IsDevelopment
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Principal:
+              Federated: !ImportValue GitHubIdentityProviderArn
+            Condition:
+              StringLike:
+                "token.actions.githubusercontent.com:sub":
+                  - !If
+                    - IsDevelopment
+                    - "repo:govuk-one-login/ipv-core-common-infra*ref:refs/heads/*"
+                    - "repo:govuk-one-login/ipv-core-common-infra*ref:refs/heads/main"
+      ManagedPolicyArns:
+        - !Ref GitHubActionsPolicy
+
+  GitHubActionsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsDevelopment
+    Properties:
+      ManagedPolicyName:
+        Fn::Join:
+          - "-"
+          - - !Ref AWS::StackName
+            - "GitHubActionsPolicy"
+            - Fn::Select:
+                - 4
+                - Fn::Split:
+                    - "-"
+                    - Fn::Select:
+                        - 2
+                        - Fn::Split:
+                            - "/"
+                            - Ref: AWS::StackId
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AccessToGitHubArtifactSourceBucket"
+            Effect: "Allow"
+            Action:
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:GetObjectTagging"
+              - "s3:GetObjectVersion"
+              - "s3:ListBucket"
+            Resource:
+              - !GetAtt GitHubArtifactSourceBucket.Arn
+              - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
+
+
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
