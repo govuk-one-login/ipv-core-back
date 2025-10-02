@@ -19,8 +19,14 @@ Globals:
           - IsDevelopment
           - !Sub "core-${Environment}"
           - !Sub "core-back-${Environment}"
-        APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
-        APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
+        APP_CONFIG_ENVIRONMENT_ID: !If
+          - IsDevelopment
+          - !Sub "core-${Environment}"
+          - !Sub "core-back-${Environment}"
+        APP_CONFIG_PROFILE_ID: !If
+          - IsDevelopment
+          - !Sub "core-${Environment}"
+          - !Sub "core-back-${Environment}"
         DT_CONNECTION_BASE_URL: !If
           - UseDynatrace
           - !Sub
