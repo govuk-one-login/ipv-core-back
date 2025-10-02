@@ -3073,6 +3073,7 @@ Resources:
     Type: AWS::S3::Bucket
     Condition: IsDevelopment
     Properties:
+      BucketName: core-config-github-artifact-source-bucket
       LifecycleConfiguration:
         Rules:
           - Id: artifactBucketExpiry
@@ -3167,7 +3168,6 @@ Resources:
             Resource:
               - !GetAtt GitHubArtifactSourceBucket.Arn
               - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
-
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
