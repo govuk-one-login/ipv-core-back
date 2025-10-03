@@ -5198,3 +5198,25 @@ Outputs:
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
       Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
+
+#  App Config Dev Pipeline Output
+  GitHubArtifactSourceBucketArn:
+    Condition: IsDevelopment
+    Description: >
+      The ARN of the bucket containing artifacts to be promoted to higher
+      environments.
+    Value: !GetAtt GitHubArtifactSourceBucket.Arn
+  GitHubActionsRoleArn:
+    Condition: IsDevelopment
+    Description: >
+      Role ARN for deploying and signing artifacts in GitHub Actions.
+      Restricted for usage only in the repository specified in the
+      `GitHubRepositoryName` and/or `OneLoginRepositoryName` parameter
+      and on branches named `main`.
+    Value: !GetAtt GitHubActionsRole.Arn
+  ArtefactSigningKeyArn:
+    Condition: IsDevelopment
+    Description: >
+      The ARN of the KMS key used to sign artefacts in Github actions, and used to verify provenance prior to deploying
+      new configurations to an environment.
+    Value: !GetAtt ArtefactSigningKey.Arn
