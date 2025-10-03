@@ -3127,12 +3127,11 @@ Resources:
             Principal:
               Federated: !ImportValue GitHubIdentityProviderArn
             Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                "token.actions.githubusercontent.com:sub":
-                  - !If
-                    - IsDevelopment
-                    - "repo:govuk-one-login/ipv-core-common-infra*ref:refs/heads/*"
-                    - "repo:govuk-one-login/ipv-core-common-infra*ref:refs/heads/main"
+                token.actions.githubusercontent.com:sub:
+                  - "repo:govuk-one-login/ipv-core-common-infra:ref:refs/heads/*"
       ManagedPolicyArns:
         - !Ref GitHubActionsPolicy
 
@@ -3140,20 +3139,7 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Condition: IsDevelopment
     Properties:
-      ManagedPolicyName:
-        Fn::Join:
-          - "-"
-          - - !Ref AWS::StackName
-            - "GitHubActionsPolicy"
-            - Fn::Select:
-                - 4
-                - Fn::Split:
-                    - "-"
-                    - Fn::Select:
-                        - 2
-                        - Fn::Split:
-                            - "/"
-                            - Ref: AWS::StackId
+      ManagedPolicyName: AppConfigGitHubManagedPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
