@@ -3169,6 +3169,82 @@ Resources:
               - !GetAtt GitHubArtifactSourceBucket.Arn
               - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
 
+  ArtefactSigningKey:
+    Type: AWS::KMS::Key
+    Condition: IsDevelopment
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: Key for signing config artefacts
+      Enabled: TRUE
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - "kms:CancelKeyDeletion"
+              - "kms:CreateAlias"
+              - "kms:CreateGrant"
+              - "kms:DeleteAlias"
+              - "kms:DescribeKey"
+              - "kms:DisableKey"
+              - "kms:EnableKey"
+              - "kms:GetKeyPolicy"
+              - "kms:GetPublicKey"
+              - "kms:ListKeyPolicies"
+              - "kms:ListResourceTags"
+              - "kms:PutKeyPolicy"
+              - "kms:ReplicateKey"
+              - "kms:ScheduleKeyDeletion"
+              - "kms:TagResource"
+              - "kms:UntagResource"
+              - "kms:UpdateAlias"
+              - "kms:UpdateKeyDescription"
+              - "kms:UpdatePrimaryRegion"
+              - "kms:Verify"
+            Resource: '*'
+          - Sid: Allow Github Actions to Sign
+            Effect: "Allow"
+            Principal:
+              AWS: !GetAtt GitHubActionsRole.Arn
+            Action:
+              - "kms:Sign"
+            Resource: '*'
+      KeySpec: ECC_NIST_P256
+      KeyUsage: SIGN_VERIFY
+
+  LogsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource:
+              - "*"
+          - Effect: "Allow"
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource:
+              - "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*"
+
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
