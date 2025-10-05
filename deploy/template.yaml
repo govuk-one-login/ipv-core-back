@@ -3232,6 +3232,16 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  ArtefactSigningKeyArnParam:
+    Type: AWS::SSM::Parameter
+    Condition: IsDevelopment
+    Properties:
+      Name: /dev/app-config-pipeline/signing-key/arn
+      Type: String
+      Value: !GetAtt ArtefactSigningKey.Arn
+      Description: ARN of the dev artefact signing KMS key
+      Tier: Standard
+
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
