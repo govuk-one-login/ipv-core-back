@@ -3191,6 +3191,7 @@ Resources:
               - "kms:UpdateKeyDescription"
               - "kms:UpdatePrimaryRegion"
               - "kms:Verify"
+              - "kms:Sign"
             Resource: '*'
           - Sid: Allow Github Actions to Sign
             Effect: "Allow"
