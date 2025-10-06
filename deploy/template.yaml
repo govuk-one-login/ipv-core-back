@@ -5024,3 +5024,25 @@ Resources:
       GrowthFactor: 100
       GrowthType: LINEAR
       ReplicateTo: NONE
+
+Outputs:
+  IPVCorePrivateAPIGatewayID:
+    Description: Core Back Private API Gateway ID
+    Export:
+      Name: !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
+    Value: !Ref IPVCorePrivateAPI
+  IPVCoreExternalAPIGatewayID:
+    Description: Core Back External API Gateway ID
+    Export:
+      Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
+    Value: !Ref IPVCoreExternalAPI
+  IPVCoreDynamoDBKmsKey:
+    Description: Core Back DynamoDB KMS Key Export with Environment
+    Value: !Ref DynamoDBKmsKey
+    Export:
+      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
+  IPVCoreLoggingKmsKey:
+    Description: Core Back Logging KMS Key Export with Environment
+    Value: !GetAtt LoggingKmsKey.Arn
+    Export:
+      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
