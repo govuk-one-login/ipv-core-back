@@ -131,6 +131,11 @@ Conditions:
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, production ]
+  IsBuildStagingIntProd: !Or
+    - !Equals [ !Ref Environment, build]
+    - !Equals [ !Ref Environment, staging]
+    - !Equals [ !Ref Environment, integration]
+    - !Equals [ !Ref Environment, production]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -3053,6 +3058,7 @@ Resources:
 
   ValidateAppConfigInvokePermission:
     Type: AWS::Lambda::Permission
+    Condition: IsBuildStagingIntProd
     Properties:
       Action: "lambda:InvokeFunction"
       FunctionName: !Ref ValidateAppConfigFunction
@@ -4985,17 +4991,20 @@ Resources:
 
   # App Config
   AppConfigApplication:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::Application
     Properties:
       Name: !Sub "core-back-${Environment}"
 
   AppConfigEnvironment:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::Environment
     Properties:
       Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
 
   AppConfigConfigurationProfile:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::ConfigurationProfile
     Properties:
       Name: !Sub "core-back-${Environment}"
@@ -5006,6 +5015,7 @@ Resources:
           Content: !GetAtt ValidateAppConfigFunction.Arn
 
   AppConfigDeploymentStrategy:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::DeploymentStrategy
     Properties:
       Name: !Sub "core-back-${Environment}"
