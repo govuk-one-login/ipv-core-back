@@ -3060,7 +3060,7 @@ Resources:
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
 #  App Config Pipeline
-  ValidateAppConfigFunctionPermissionForAppConfig:
+  AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
@@ -3069,7 +3069,7 @@ Resources:
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
 
-  GitHubArtifactSourceBucket:
+  AppConfigPipelineGitHubArtifactSourceBucket:
     Type: AWS::S3::Bucket
     Condition: IsDevelopment
     Properties:
@@ -3091,22 +3091,22 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: "AES256"
 
-  GitHubArtifactSourceBucketPolicy:
+  AppConfigPipelineGitHubArtifactSourceBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Condition: IsDevelopment
     Properties:
-      Bucket: !Ref GitHubArtifactSourceBucket
+      Bucket: !Ref AppConfigPipelineGitHubArtifactSourceBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: "Allow"
             Sid: "AllowGithubActions"
             Resource:
-              - !GetAtt GitHubArtifactSourceBucket.Arn
-              - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
+              - !GetAtt AppConfigPipelineGitHubArtifactSourceBucket.Arn
+              - !Sub "${AppConfigPipelineGitHubArtifactSourceBucket.Arn}/*"
             Principal:
               AWS:
-                !GetAtt GitHubActionsRole.Arn
+                !GetAtt AppConfigPipelineGitHubActionsRole.Arn
             Action:
               - "s3:PutObject"
               - "s3:PutObjectAcl"
@@ -3115,7 +3115,7 @@ Resources:
               Bool:
                 "aws:SecureTransport": true
 
-  GitHubActionsRole:
+  AppConfigPipelineGitHubActionsRole:
     Type: AWS::IAM::Role
     Condition: IsDevelopment
     Properties:
@@ -3133,17 +3133,17 @@ Resources:
                 token.actions.githubusercontent.com:sub:
                   - "repo:govuk-one-login/ipv-core-common-infra:ref:refs/heads/*"
       ManagedPolicyArns:
-        - !Ref GitHubActionsPolicy
+        - !Ref AppConfigPipelineGitHubActionsPolicy
 
-  GitHubActionsPolicy:
+  AppConfigPipelineGitHubActionsPolicy:
     Type: AWS::IAM::ManagedPolicy
     Condition: IsDevelopment
     Properties:
-      ManagedPolicyName: AppConfigGitHubManagedPolicy
+      ManagedPolicyName: AppConfigGitHubActionManagedPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "AccessToGitHubArtifactSourceBucket"
+          - Sid: "AccessToAppConfigPipelineGitHubArtifactSourceBucket"
             Effect: "Allow"
             Action:
               - "s3:GetObject"
@@ -3152,10 +3152,10 @@ Resources:
               - "s3:GetObjectVersion"
               - "s3:ListBucket"
             Resource:
-              - !GetAtt GitHubArtifactSourceBucket.Arn
-              - !Sub "${GitHubArtifactSourceBucket.Arn}/*"
+              - !GetAtt AppConfigPipelineGitHubArtifactSourceBucket.Arn
+              - !Sub "${AppConfigPipelineGitHubArtifactSourceBucket.Arn}/*"
 
-  ArtefactSigningKey:
+  AppConfigPipelineArtefactSigningKey:
     Type: AWS::KMS::Key
     Condition: IsDevelopment
     DeletionPolicy: Retain
@@ -3196,14 +3196,14 @@ Resources:
           - Sid: Allow Github Actions to Sign
             Effect: "Allow"
             Principal:
-              AWS: !GetAtt GitHubActionsRole.Arn
+              AWS: !GetAtt AppConfigPipelineGitHubActionsRole.Arn
             Action:
               - "kms:Sign"
             Resource: '*'
       KeySpec: ECC_NIST_P256
       KeyUsage: SIGN_VERIFY
 
-  LogsKmsKey:
+  AppConfigPipelineLogsKmsKey:
     Type: AWS::KMS::Key
     Properties:
       EnableKeyRotation: true
@@ -3232,13 +3232,13 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*"
 
-  ArtefactSigningKeyArnParam:
+  AppConfigPipelineArtefactSigningKeyArnSSMParam:
     Type: AWS::SSM::Parameter
     Condition: IsDevelopment
     Properties:
       Name: /dev/app-config-pipeline/signing-key/arn
       Type: String
-      Value: !GetAtt ArtefactSigningKey.Arn
+      Value: !GetAtt AppConfigPipelineArtefactSigningKey.Arn
       Description: ARN of the dev artefact signing KMS key
       Tier: Standard
 
@@ -5211,23 +5211,23 @@ Outputs:
       Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
 
 #  App Config Dev Pipeline Output
-  GitHubArtifactSourceBucketArn:
+  AppConfigPipelineGitHubArtifactSourceBucketArn:
     Condition: IsDevelopment
     Description: >
       The ARN of the bucket containing artifacts to be promoted to higher
       environments.
-    Value: !GetAtt GitHubArtifactSourceBucket.Arn
-  GitHubActionsRoleArn:
+    Value: !GetAtt AppConfigPipelineGitHubArtifactSourceBucket.Arn
+  AppConfigPipelineGitHubActionsRoleArn:
     Condition: IsDevelopment
     Description: >
       Role ARN for deploying and signing artifacts in GitHub Actions.
       Restricted for usage only in the repository specified in the
       `GitHubRepositoryName` and/or `OneLoginRepositoryName` parameter
       and on branches named `main`.
-    Value: !GetAtt GitHubActionsRole.Arn
-  ArtefactSigningKeyArn:
+    Value: !GetAtt AppConfigPipelineGitHubActionsRole.Arn
+  AppConfigPipelineArtefactSigningKeyArn:
     Condition: IsDevelopment
     Description: >
       The ARN of the KMS key used to sign artefacts in Github actions, and used to verify provenance prior to deploying
       new configurations to an environment.
-    Value: !GetAtt ArtefactSigningKey.Arn
+    Value: !GetAtt AppConfigPipelineArtefactSigningKey.Arn
