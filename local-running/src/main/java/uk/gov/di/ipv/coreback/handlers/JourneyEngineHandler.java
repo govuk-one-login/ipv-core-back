@@ -1,7 +1,11 @@
 package uk.gov.di.ipv.coreback.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import io.javalin.http.Context;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler;
@@ -31,6 +35,8 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESS
 
 public class JourneyEngineHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static final String JOURNEY = "journey";
     public static final String IPV_SESSION_ID = "ipv-session-id";
@@ -65,11 +71,15 @@ public class JourneyEngineHandler {
         this.processCandidateIdentityHandler = new ProcessCandidateIdentityHandler(configService);
     }
 
-    public void journeyEngine(Context ctx) {
+    public void journeyEngine(Context ctx) throws JsonProcessingException {
         String journeyEvent = ctx.pathParam("event");
+        String currentPage = ctx.queryParam("currentPage");
 
         while (true) {
-            var processJourneyEventOutput = processJourneyEvent(ctx, journeyEvent);
+            var processJourneyEventOutput = processJourneyEvent(ctx, currentPage, journeyEvent);
+
+            // After the first event currentPage is no longer valid
+            currentPage = "";
 
             if (!processJourneyEventOutput.containsKey(JOURNEY)) {
                 ctx.json(processJourneyEventOutput);
@@ -90,26 +100,38 @@ public class JourneyEngineHandler {
     }
 
     // Corresponds to the ProcessJourneyStep state in the step function
-    private Map<String, Object> processJourneyEvent(Context ctx, String journeyEvent) {
+    private Map<String, Object> processJourneyEvent(
+            Context ctx, String currentPage, String journeyEvent) throws JsonProcessingException {
+        LOGGER.info(
+                "LOCAL RUNNING - Processing journey event: {}, path: {}, params: {}",
+                journeyEvent,
+                ctx.path(),
+                OBJECT_MAPPER.writeValueAsString(ctx.queryParamMap()));
         return processJourneyEventHandler.handleRequest(
-                buildJourneyRequest(ctx, journeyEvent), EMPTY_CONTEXT);
+                buildJourneyRequest(ctx, currentPage, journeyEvent), EMPTY_CONTEXT);
     }
 
     // Corresponds to the ProcessJourneyStepResult state in the step function
     private Map<String, Object> processJourneyStep(
-            Context ctx, Map<String, Object> processJourneyEventOutput) {
+            Context ctx, Map<String, Object> processJourneyEventOutput)
+            throws JsonProcessingException {
         var journeyStep = (String) processJourneyEventOutput.get(JOURNEY);
 
+        LOGGER.info(
+                "LOCAL RUNNING - Processing journey step: {}, path: {}, params: {}",
+                journeyStep,
+                ctx.path(),
+                OBJECT_MAPPER.writeValueAsString(ctx.queryParamMap()));
         return switch (journeyStep) {
             case JOURNEY_CHECK_EXISTING_IDENTITY_PATH ->
                     checkExistingIdentityHandler.handleRequest(
-                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+                            buildJourneyRequest(ctx, "", journeyStep), EMPTY_CONTEXT);
             case JOURNEY_RESET_SESSION_IDENTITY_PATH ->
                     resetSessionIdentityHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH ->
                     buildClientOauthResponseHandler.handleRequest(
-                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+                            buildJourneyRequest(ctx, "", journeyStep), EMPTY_CONTEXT);
             case JOURNEY_CHECK_GPG45_SCORE_PATH ->
                     checkGpg45ScoreHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
@@ -134,13 +156,14 @@ public class JourneyEngineHandler {
         };
     }
 
-    private JourneyRequest buildJourneyRequest(Context ctx, String journeyEvent) {
-        var currentPage =
-                StringUtils.isBlank(ctx.queryParam("currentPage"))
+    private JourneyRequest buildJourneyRequest(
+            Context ctx, String currentPage, String journeyEvent) {
+        var currentPageParam =
+                StringUtils.isBlank(currentPage)
                         ? ""
-                        : String.format("?currentPage=%s", ctx.queryParam("currentPage"));
+                        : String.format("?currentPage=%s", currentPage);
 
-        var journeyWithQuery = journeyEvent + currentPage;
+        var journeyWithQuery = journeyEvent + currentPageParam;
 
         return JourneyRequest.builder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
