@@ -220,8 +220,7 @@ public class SisService {
                     e.getMessage(),
                     evcsVcSignatures,
                     sisVcSignatures);
-        }
-        finally {
+        } finally {
             auditService.awaitAuditEvents();
         }
     }
