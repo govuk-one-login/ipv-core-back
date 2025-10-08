@@ -70,6 +70,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        checkJourneyContext:
+          appOnly:
+            targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -255,6 +258,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        checkJourneyContext:
+          appOnly:
+            targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -281,6 +287,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        checkJourneyContext:
+          appOnly:
+            targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -338,6 +347,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        checkJourneyContext:
+          appOnly:
+            targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

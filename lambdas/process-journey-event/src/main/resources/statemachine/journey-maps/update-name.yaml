@@ -88,6 +88,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
             targetEntryEvent: appTriage
+            journeyContextToSet: appOnly
 
   APP_DOC_CHECK_NAMES_ONLY:
     nestedJourney: APP_DOC_CHECK
@@ -120,16 +121,20 @@ states:
     exitEvents:
       next:
         targetState: POST_APP_DOC_CHECK_NAMES_ONLY
+        journeyContextToUnset: appOnly
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+        journeyContextToUnset: appOnly
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+        journeyContextToUnset: appOnly
       returnToRp:
         targetState: RETURN_TO_RP
+        journeyContextToUnset: appOnly
 
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY:
     response:
@@ -140,6 +145,7 @@ states:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
         targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -229,6 +235,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
             targetEntryEvent: appTriage
+            journeyContextToSet: appOnly
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -238,16 +245,21 @@ states:
     exitEvents:
       next:
         targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+        journeyContextToUnset: appOnly
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+        journeyContextToUnset: appOnly
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+        journeyContextToUnset: appOnly
       returnToRp:
         targetState: RETURN_TO_RP
+        journeyContextToUnset: appOnly
+
 
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
@@ -258,6 +270,7 @@ states:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
         targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
       returnToRp:
         targetState: RETURN_TO_RP
 
