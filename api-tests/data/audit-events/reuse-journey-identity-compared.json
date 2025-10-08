@@ -23,10 +23,10 @@
       "expired": null
     },
     "restricted": {
-      "sisJwt":"",
-      "reconstructedSignatures":[],
-      "sisSignatures":[],
-      "failureDetails":"Call to SIS service failed, no stored identity comparison can be made"
+      "sisJwt": "",
+      "reconstructedSignatures": [],
+      "sisSignatures": [],
+      "failureDetails": "Call to SIS service failed, no stored identity comparison can be made"
     }
   },
   {
