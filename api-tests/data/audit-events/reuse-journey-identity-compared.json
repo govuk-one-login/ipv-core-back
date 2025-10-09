@@ -13,20 +13,18 @@
     "event_name": "IPV_STORED_IDENTITY_CHECKED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "max_vot": null,
-      "reconstructed_vot": null,
-      "reconstructed_max_vot": null,
-      "is_valid": null,
+      "max_vot": "P2",
+      "reconstructed_vot": "P2",
+      "reconstructed_max_vot": "P2",
+      "is_valid": true,
       "verification_outcome": "FAILURE",
-      "failure_code": "SIS_ERROR",
-      "vot": null,
-      "expired": null
+      "failure_code": "MISSING_SIGNATURE",
+      "vot": "P2",
+      "expired": false
     },
     "restricted": {
-      "sisJwt": "",
       "reconstructedSignatures": [],
-      "sisSignatures": [],
-      "failureDetails": "Call to SIS service failed, no stored identity comparison can be made"
+      "sisSignatures": []
     }
   },
   {

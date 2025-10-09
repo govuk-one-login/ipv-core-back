@@ -170,7 +170,9 @@ public class SisClient {
                         OBJECT_MAPPER.readValue(sisHttpResponse.body(), new TypeReference<>() {});
                 responseMessage =
                         Optional.ofNullable(responseBody.get("message"))
-                                .orElse("Received no sis response body.");
+                                .orElse(
+                                        "Received unrecognised sis response body: "
+                                                + sisHttpResponse.body());
             } catch (JsonProcessingException e) {
                 responseMessage = "Failed to parse sis response body.";
             }

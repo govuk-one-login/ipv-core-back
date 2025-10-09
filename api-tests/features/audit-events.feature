@@ -55,7 +55,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
-  Scenario: Reuse journey - identity is compared when SIS is enabled qqqqqqqqqqqq
+  Scenario: Reuse journey - identity is compared when SIS is enabled
     Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
