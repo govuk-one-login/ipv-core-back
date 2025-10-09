@@ -5,6 +5,7 @@ public enum ConfigurationVariable {
     CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET("credentialIssuers/%s/connections/%s/oAuthClientSecret"),
     CREDENTIAL_ISSUER_API_KEY("credentialIssuers/%s/connections/%s/apiKey"),
     EVCS_API_KEY("evcs/apiKey"),
+    SIS_API_KEY("sis/apiKey"),
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
     SIGNING_KEY_JWK("self/signingKey");
 

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
@@ -44,6 +45,8 @@ import static org.mockito.Mockito.when;
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
 
+    private static final String X_API_KEY_HEADER = "x-api-key";
+    private static final String SIS_API_KEY = "some-api-key"; // pragma: allowlist secret
     private static final String TEST_SIS_ACCESS_TOKEN = "test-access-token";
     private static final String TEST_INVALID_SIS_ACCESS_TOKEN = "test-invalid-access-token";
     private static final String TEST_EXPIRED_SIS_ACCESS_TOKEN = "test-expired-access-token";
@@ -65,6 +68,8 @@ class ContractTest {
 
     @BeforeEach
     void setup(MockServer mockServer) {
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockConfigService.getSisApplicationUrl())
                 .thenReturn(URI.create("http://localhost:" + mockServer.getPort()));
         sisClient = new SisClient(mockConfigService);
@@ -83,7 +88,9 @@ class ContractTest {
                                 AUTHORIZATION,
                                 String.format("Bearer %s", TEST_SIS_ACCESS_TOKEN),
                                 CONTENT_TYPE,
-                                APPLICATION_JSON.getMimeType()))
+                                APPLICATION_JSON.getMimeType(),
+                                X_API_KEY_HEADER,
+                                SIS_API_KEY))
                 .body(getValidRequestBody())
                 .willRespondWith()
                 .status(SC_OK)
@@ -107,6 +114,30 @@ class ContractTest {
 
         // Assert
         assertEquals(expectedValidResult, sisGetStoredIdentityResult);
+    }
+
+    @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidApiKeyReturns403(PactDslWithProvider builder) {
+        return buildStoredIdentityInteraction(
+                String.format("%s is not a valid api-key", SIS_API_KEY),
+                SC_FORBIDDEN,
+                TEST_SIS_ACCESS_TOKEN,
+                builder);
+    }
+
+    @Test
+    @DisplayName("POST /user-identity - 403 due to invalid api key")
+    @PactTestFor(pactMethod = "invalidApiKeyReturns403")
+    void testGetUserIdentityRequestReturns403DueToInvalidApiKey(MockServer mockServer) {
+        // Arrange
+        var expectedFailedResult = new SisGetStoredIdentityResult(false, false, null);
+
+        // Act/Assert
+        var sisGetStoredIdentityResult =
+                sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
+
+        // Assert
+        assertEquals(expectedFailedResult, sisGetStoredIdentityResult);
     }
 
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
@@ -281,7 +312,9 @@ class ContractTest {
                                 AUTHORIZATION,
                                 String.format("Bearer %s", bearerToken),
                                 CONTENT_TYPE,
-                                APPLICATION_JSON.getMimeType()))
+                                APPLICATION_JSON.getMimeType(),
+                                X_API_KEY_HEADER,
+                                SIS_API_KEY))
                 .body(getValidRequestBody())
                 .willRespondWith()
                 .status(httpStatusCode)

@@ -34,10 +34,12 @@ import java.util.Optional;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIS_API_KEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class SisClient {
+    public static final String X_API_KEY_HEADER = "x-api-key";
     private static final String USER_IDENTITY_SUB_PATH = "user-identity";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -76,7 +78,8 @@ public class SisClient {
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(requestBody)))
                             .header(AUTHORIZATION, "Bearer " + accessToken)
-                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                            .header(X_API_KEY_HEADER, configService.getSecret(SIS_API_KEY));
 
             var httpResponse = sendHttpRequest(httpRequestBuilder.build());
 
