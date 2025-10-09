@@ -397,7 +397,7 @@ states:
       try-again-post-office:
         targetState: CRI_CLAIMED_IDENTITY_J4
       return-to-rp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   # DCMAW journey (J1)
   POST_APP_DOC_CHECK_SUCCESS_PAGE:
