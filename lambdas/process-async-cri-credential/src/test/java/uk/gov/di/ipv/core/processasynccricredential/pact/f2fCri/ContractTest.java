@@ -11,8 +11,6 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import au.com.dius.pact.core.model.messaging.Message;
 import au.com.dius.pact.core.model.messaging.MessagePact;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -27,6 +25,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +38,7 @@ import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -132,46 +132,24 @@ public class ContractTest {
                                 criConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode passportNode =
-                                                credentialSubject.get(PASSPORT).get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Kenneth", name.getNameParts().get(0).getValue());
+                                    assertEquals(
+                                            "Decerqueira", name.getNameParts().get(1).getValue());
 
-                                        assertEquals(
-                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals(
-                                                "Decerqueira",
-                                                nameParts.get(1).get(VALUE).asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1965-07-08", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "2030-01-01",
-                                                passportNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "321654987",
-                                                passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1965-07-08", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var passport = credentialSubject.getPassport();
+                                    assertEquals(
+                                            "321654987", passport.getFirst().getDocumentNumber());
+                                    assertEquals("2030-01-01", passport.getFirst().getExpiryDate());
                                 });
             } catch (VerifiableCredentialException | JsonProcessingException e) {
                 throw new RuntimeException(e);
@@ -259,59 +237,30 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode evidence =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get("evidence")
-                                                        .get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode passportNode =
-                                                credentialSubject.get(PASSPORT).get(0);
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Kenneth", name.getNameParts().get(0).getValue());
+                                    assertEquals(
+                                            "Decerqueira", name.getNameParts().get(1).getValue());
 
-                                        assertNotNull(evidence.get("failedCheckDetails").get(0));
-                                        assertEquals("0", evidence.get("validityScore").asText());
-                                        assertEquals(
-                                                "3", evidence.get("verificationScore").asText());
-                                        assertEquals("4", evidence.get("strengthScore").asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1965-07-08", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                    var passport = credentialSubject.getPassport();
+                                    assertEquals(
+                                            "321654987", passport.getFirst().getDocumentNumber());
+                                    assertEquals("2030-01-01", passport.getFirst().getExpiryDate());
 
-                                        assertEquals(
-                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals(
-                                                "Decerqueira",
-                                                nameParts.get(1).get(VALUE).asText());
-
-                                        assertEquals(
-                                                "2030-01-01",
-                                                passportNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "321654987",
-                                                passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1965-07-08", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var evidence = parsedVc.getEvidence().getFirst();
+                                    assertNotNull(evidence.getFailedCheckDetails());
+                                    assertEquals(0, evidence.getValidityScore());
+                                    assertEquals(3, evidence.getVerificationScore());
+                                    assertEquals(4, evidence.getStrengthScore());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -404,60 +353,31 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode evidence =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get("evidence")
-                                                        .get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode passportNode =
-                                                credentialSubject.get(PASSPORT).get(0);
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Kenneth", name.getNameParts().get(0).getValue());
+                                    assertEquals(
+                                            "Decerqueira", name.getNameParts().get(1).getValue());
 
-                                        assertNotNull(evidence.get("failedCheckDetails").get(0));
-                                        assertEquals("D14", evidence.get("ci").get(0).asText());
-                                        assertEquals("0", evidence.get("validityScore").asText());
-                                        assertEquals(
-                                                "3", evidence.get("verificationScore").asText());
-                                        assertEquals("4", evidence.get("strengthScore").asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1965-07-08", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                    var passport = credentialSubject.getPassport();
+                                    assertEquals(
+                                            "321654987", passport.getFirst().getDocumentNumber());
+                                    assertEquals("2030-01-01", passport.getFirst().getExpiryDate());
 
-                                        assertEquals(
-                                                "Kenneth", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals(
-                                                "Decerqueira",
-                                                nameParts.get(1).get(VALUE).asText());
-
-                                        assertEquals(
-                                                "2030-01-01",
-                                                passportNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "321654987",
-                                                passportNode.get(DOCUMENT_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1965-07-08", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var evidence = parsedVc.getEvidence().getFirst();
+                                    assertNotNull(evidence.getFailedCheckDetails());
+                                    assertEquals(0, evidence.getValidityScore());
+                                    assertEquals(3, evidence.getVerificationScore());
+                                    assertEquals(4, evidence.getStrengthScore());
+                                    assertEquals("D14", evidence.getCi().getFirst());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -548,56 +468,29 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode drivingLicenceNode =
-                                                credentialSubject.get(DRIVING_PERMIT).get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(2).get(NAME_TYPE).asText());
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Alice", name.getNameParts().get(0).getValue());
+                                    assertEquals("Jane", name.getNameParts().get(1).getValue());
+                                    assertEquals("Parker", name.getNameParts().get(1).getValue());
 
-                                        assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
-                                        assertEquals(
-                                                "Parker", nameParts.get(2).get(VALUE).asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1970-01-01", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "2032-02-02",
-                                                drivingLicenceNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "2005-02-02",
-                                                drivingLicenceNode.get(ISSUE_DATE).asText());
-                                        assertEquals(
-                                                "dummyTestAddress",
-                                                drivingLicenceNode.get(FULL_ADDRESS).asText());
-                                        assertEquals(
-                                                "DVLA", drivingLicenceNode.get(ISSUED_BY).asText());
-                                        assertEquals(
-                                                "PARKE710112PBFGA",
-                                                drivingLicenceNode.get(PERSONAL_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1970-01-01", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var drivingPermit =
+                                            credentialSubject.getDrivingPermit().getFirst();
+                                    assertEquals("2032-02-02", drivingPermit.getExpiryDate());
+                                    assertEquals("2005-02-02", drivingPermit.getIssueDate());
+                                    assertEquals(
+                                            "dummyTestAddress", drivingPermit.getFullAddress());
+                                    assertEquals("DVLA", drivingPermit.getIssuedBy());
+                                    assertEquals(
+                                            "PARKE710112PBFGA", drivingPermit.getPersonalNumber());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -689,54 +582,27 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode drivingLicenceNode =
-                                                credentialSubject.get(DRIVING_PERMIT).get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(2).get(NAME_TYPE).asText());
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Alice", name.getNameParts().get(0).getValue());
+                                    assertEquals("Jane", name.getNameParts().get(1).getValue());
+                                    assertEquals("Parker", name.getNameParts().get(2).getValue());
 
-                                        assertEquals("Alice", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals("Jane", nameParts.get(1).get(VALUE).asText());
-                                        assertEquals(
-                                                "Parker", nameParts.get(2).get(VALUE).asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1970-01-01", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "2022-02-02",
-                                                drivingLicenceNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "2012-02-02",
-                                                drivingLicenceNode.get(ISSUE_DATE).asText());
-                                        assertEquals(
-                                                "Landratsamt",
-                                                drivingLicenceNode.get(ISSUED_BY).asText());
-                                        assertEquals(
-                                                "DOE99751010AL9OD",
-                                                drivingLicenceNode.get(PERSONAL_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1970-01-01", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var drivingPermit =
+                                            credentialSubject.getDrivingPermit().getFirst();
+                                    assertEquals("2022-02-02", drivingPermit.getExpiryDate());
+                                    assertEquals("2012-02-02", drivingPermit.getIssueDate());
+                                    assertEquals("Landratsamt", drivingPermit.getIssuedBy());
+                                    assertEquals(
+                                            "DOE99751010AL9OD", drivingPermit.getPersonalNumber());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -825,46 +691,24 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode idCardNode =
-                                                credentialSubject.get("idCard").get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Saul", name.getNameParts().get(0).getValue());
+                                    assertEquals("Goodman", name.getNameParts().get(1).getValue());
 
-                                        assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals(
-                                                "Goodman", nameParts.get(1).get(VALUE).asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1970-01-01", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "2031-08-02", idCardNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "2021-08-02", idCardNode.get(ISSUE_DATE).asText());
-                                        assertEquals(
-                                                "NLD", idCardNode.get(ICAO_ISSUER_CODE).asText());
-                                        assertEquals(
-                                                "SPEC12031",
-                                                idCardNode.get(DOCUMENT_NUMBER).asText());
-
-                                        assertEquals(
-                                                "1970-01-01", birthDateNode.get(VALUE).asText());
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var idCard = credentialSubject.getIdCard().getFirst();
+                                    assertEquals("2031-08-02", idCard.getExpiryDate());
+                                    assertEquals("2021-08-02", idCard.getIssueDate());
+                                    assertEquals("NLD", idCard.getIcaoIssuerCode());
+                                    assertEquals("SPEC12031", idCard.getDocumentNumber());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -953,50 +797,25 @@ public class ContractTest {
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
                                 vc -> {
-                                    try {
-                                        JsonNode credentialSubject =
-                                                objectMapper
-                                                        .readTree(vc.getClaimsSet().toString())
-                                                        .get(VC)
-                                                        .get(CREDENTIAL_SUBJECT);
+                                    assertInstanceOf(
+                                            IdentityCheckCredential.class, vc.getCredential());
 
-                                        JsonNode nameParts =
-                                                credentialSubject.get(NAME).get(0).get(NAME_PARTS);
-                                        JsonNode birthDateNode =
-                                                credentialSubject.get(BIRTH_DATE).get(0);
-                                        JsonNode residencePermitNode =
-                                                credentialSubject.get(RESIDENCE_PERMIT).get(0);
+                                    var parsedVc = (IdentityCheckCredential) vc.getCredential();
+                                    var credentialSubject = parsedVc.getCredentialSubject();
 
-                                        assertEquals(
-                                                "GivenName",
-                                                nameParts.get(0).get(NAME_TYPE).asText());
-                                        assertEquals(
-                                                "FamilyName",
-                                                nameParts.get(1).get(NAME_TYPE).asText());
+                                    var name = credentialSubject.getName().getFirst();
+                                    assertEquals("Saul", name.getNameParts().get(0).getValue());
+                                    assertEquals("Goodman", name.getNameParts().get(1).getValue());
 
-                                        assertEquals("Saul", nameParts.get(0).get(VALUE).asText());
-                                        assertEquals(
-                                                "Goodman", nameParts.get(1).get(VALUE).asText());
+                                    var birthDate = credentialSubject.getBirthDate();
+                                    assertEquals("1970-01-01", birthDate.getFirst().getValue());
 
-                                        assertEquals(
-                                                "2030-07-13",
-                                                residencePermitNode.get(EXPIRY_DATE).asText());
-                                        assertEquals(
-                                                "AX66K69P2",
-                                                residencePermitNode.get(DOCUMENT_NUMBER).asText());
-                                        assertEquals(
-                                                "UTO",
-                                                residencePermitNode.get(ICAO_ISSUER_CODE).asText());
-                                        assertEquals(
-                                                "CR",
-                                                residencePermitNode.get(DOCUMENT_TYPE).asText());
-
-                                        assertEquals(
-                                                "1970-01-01", birthDateNode.get(VALUE).asText());
-
-                                    } catch (JsonProcessingException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    var residencePermit =
+                                            credentialSubject.getResidencePermit().getFirst();
+                                    assertEquals("2030-07-13", residencePermit.getExpiryDate());
+                                    assertEquals("AX66K69P2", residencePermit.getDocumentNumber());
+                                    assertEquals("UTO", residencePermit.getIcaoIssuerCode());
+                                    assertEquals("CR", residencePermit.getDocumentType());
                                 });
             } catch (JsonProcessingException | VerifiableCredentialException e) {
                 throw new RuntimeException(e);
@@ -1047,8 +866,6 @@ public class ContractTest {
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final Clock CURRENT_TIME =
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
