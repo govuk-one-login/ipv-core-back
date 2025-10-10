@@ -92,8 +92,6 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification:
-        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
