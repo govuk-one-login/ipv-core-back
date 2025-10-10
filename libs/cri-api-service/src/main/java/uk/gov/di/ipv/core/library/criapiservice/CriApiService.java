@@ -9,7 +9,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
@@ -50,7 +49,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -148,14 +146,12 @@ public class CriApiService {
             var tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
-                var errorResponse = tokenResponse.toErrorResponse();
-                var errorObject =
-                        Objects.requireNonNullElse(
-                                errorResponse.getErrorObject(),
-                                new ErrorObject("unknown", "unknown"));
+                var errorObject = tokenResponse.toErrorResponse().getErrorObject();
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
-                                "Failed to exchange token with credential issuer", errorObject));
+                                "Failed to exchange token with credential issuer",
+                                OBJECT_MAPPER.writeValueAsString(tokenResponse),
+                                errorObject.getHTTPStatusCode()));
                 throw new CriApiException(
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
@@ -272,7 +268,7 @@ public class CriApiService {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
                                 "Error retrieving credential",
-                                response.getStatusMessage(),
+                                response.getBody(),
                                 response.getStatusCode()));
                 if (DCMAW.equals(cri) && response.getStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                     throw new CriApiException(
