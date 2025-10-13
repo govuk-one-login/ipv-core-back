@@ -30,7 +30,7 @@ public class NameHelper {
         return names.stream()
                 .filter(
                         name -> {
-                            var normalisedName = normaliseNameForComparison(NameHelper.getFullName(name));
+                            var normalisedName = getNormalisedFullNameForComparison(name);
 
                             if (!normalisedNames.contains(normalisedName)) {
                                 normalisedNames.add(normalisedName);
@@ -41,7 +41,7 @@ public class NameHelper {
                 .collect(Collectors.toSet());
     }
 
-    public static String getFullName(Name name) {
+    public static String getNormalisedFullNameForComparison(Name name) {
         var nameParts = name.getNameParts();
 
         String givenNames =
@@ -50,7 +50,8 @@ public class NameHelper {
                                 namePart ->
                                         NamePart.NamePartType.GIVEN_NAME.equals(namePart.getType()))
                         .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
+                        .collect(Collectors.joining(" "))
+                        .trim();
 
         String familyNames =
                 nameParts.stream()
@@ -59,9 +60,12 @@ public class NameHelper {
                                         NamePart.NamePartType.FAMILY_NAME.equals(
                                                 namePart.getType()))
                         .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
+                        .collect(Collectors.joining(" "))
+                        .trim();
 
-        return (givenNames + " " + familyNames).trim();
+        return (normaliseNameForComparison(givenNames)
+                + " "
+                + normaliseNameForComparison(familyNames));
     }
 
     public static String normaliseNameForComparison(String name) {

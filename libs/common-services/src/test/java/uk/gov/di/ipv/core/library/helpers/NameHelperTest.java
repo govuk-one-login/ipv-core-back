@@ -24,17 +24,17 @@ class NameHelperTest {
     }
 
     @Test
-    void shouldDeduplicateAcrossGivenAndFamilyNames() {
+    void shouldNotDeduplicateAcrossGivenAndFamilyNames() {
         // Arrange
-        var name1 = createName(new String[] { "Martin", "John" }, new String[] { "Smith" });
-        var name2 = createName(new String[] { "Martin" }, new String[] { "John", "Smith" });
+        var name1 = createName(new String[] {"Martin", "John"}, new String[] {"Smith"});
+        var name2 = createName(new String[] {"Martin"}, new String[] {"John", "Smith"});
         var names = Set.of(name1, name2);
 
         // Act
         var deduplicateNames = NameHelper.deduplicateNames(names);
 
         // Assert
-        assertEquals(1, deduplicateNames.size());
+        assertEquals(2, deduplicateNames.size());
     }
 
     @Test

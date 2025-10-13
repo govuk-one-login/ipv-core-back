@@ -269,7 +269,8 @@ public class UserIdentityService {
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForNameCorrelation(vcs);
-        return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+        var normalisedNames = getNormalisedFullNamesFromCredentials(identityClaims);
+        return normalisedNames.stream().distinct().count() <= 1;
     }
 
     private boolean checkBirthDateCorrelationInCredentials(List<VerifiableCredential> vcs)
@@ -285,10 +286,7 @@ public class UserIdentityService {
     }
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {
-        return userFullNames.stream()
-                        .map(NameHelper::normaliseNameForComparison)
-                        .distinct()
-                        .count()
+        return userFullNames.stream().map(NameHelper::normaliseNameForComparison).distinct().count()
                 <= 1;
     }
 
@@ -329,10 +327,10 @@ public class UserIdentityService {
         return identityClaims;
     }
 
-    private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
+    private List<String> getNormalisedFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
         return identityClaims.stream()
                 .flatMap(claim -> claim.getName().stream())
-                .map(NameHelper::getFullName)
+                .map(NameHelper::getNormalisedFullNameForComparison)
                 .toList();
     }
 
