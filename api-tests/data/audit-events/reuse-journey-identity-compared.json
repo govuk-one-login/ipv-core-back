@@ -23,8 +23,14 @@
       "expired": false
     },
     "restricted": {
-      "reconstructedSignatures": [],
-      "sisSignatures": []
+      "reconstructedSignatures": [
+        "type[string]"
+      ],
+      "sisSignatures": [
+        "type[string]"
+      ],
+      "sisJwt": "type[string]",
+      "failureDetails": "type[string]"
     }
   },
   {
