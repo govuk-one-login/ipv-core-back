@@ -4,11 +4,16 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NameHelper {
+
+    private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
+    private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'’-]+");
 
     @ExcludeFromGeneratedCoverageReport
     private NameHelper() {
@@ -20,15 +25,15 @@ public class NameHelper {
             return Set.of();
         }
 
-        var capitalisedFullNames = new ArrayList<String>();
+        var normalisedNames = new ArrayList<String>();
 
         return names.stream()
                 .filter(
                         name -> {
-                            var capitalisedFullName = NameHelper.getFullName(name).toUpperCase();
+                            var normalisedName = normaliseNameForComparison(NameHelper.getFullName(name));
 
-                            if (!capitalisedFullNames.contains(capitalisedFullName)) {
-                                capitalisedFullNames.add(capitalisedFullName);
+                            if (!normalisedNames.contains(normalisedName)) {
+                                normalisedNames.add(normalisedName);
                                 return true;
                             }
                             return false;
@@ -57,5 +62,14 @@ public class NameHelper {
                         .collect(Collectors.joining(" "));
 
         return (givenNames + " " + familyNames).trim();
+    }
+
+    public static String normaliseNameForComparison(String name) {
+        var unicodeNormalisedName = Normalizer.normalize(name, Normalizer.Form.NFD);
+        var diacriticRemovedName =
+                DIACRITIC_CHECK_PATTERN.matcher(unicodeNormalisedName).replaceAll("");
+        var specialCharactersRemovedName =
+                IGNORE_SOME_CHARACTERS_PATTERN.matcher(diacriticRemovedName).replaceAll("");
+        return specialCharactersRemovedName.toLowerCase();
     }
 }

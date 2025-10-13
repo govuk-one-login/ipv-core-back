@@ -35,13 +35,11 @@ import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
-import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
@@ -60,8 +58,6 @@ public class UserIdentityService {
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS);
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
-    private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
 
     private final ConfigService configService;
     private final CimitUtilityService cimitUtilityService;
@@ -182,6 +178,8 @@ public class UserIdentityService {
         var successfulVcs = getSuccessfulVcs(vcs);
         var identityClaimsForNameCorrelation = getIdentityClaimsForNameCorrelation(successfulVcs);
 
+        // We check the given names in full, but only the first three characters of the family name
+        // This may seem odd, but is deliberate and matches what has been agreed.
         var areGivenNamesCorrelated =
                 checkNamesForCorrelation(
                         getNameProperty(
@@ -288,10 +286,7 @@ public class UserIdentityService {
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {
         return userFullNames.stream()
-                        .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
-                        .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
-                        .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
-                        .map(String::toLowerCase)
+                        .map(NameHelper::normaliseNameForComparison)
                         .distinct()
                         .count()
                 <= 1;
