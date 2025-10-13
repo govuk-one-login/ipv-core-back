@@ -113,21 +113,9 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-        checkJourneyContext:
-          mediumConfidence:
-            targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
-          lowConfidence:
-            targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
+        targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
       webRoute:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-        checkJourneyContext:
-          mediumConfidence:
-            targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
-          lowConfidence:
-            targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -139,6 +127,8 @@ states:
         resetType: ALL
     events:
       next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
         checkJourneyContext:
           mediumConfidence:
             targetJourney: NEW_P2_IDENTITY
@@ -147,13 +137,8 @@ states:
             targetJourney: NEW_P1_IDENTITY
             targetState: IDENTITY_DOCUMENT_START
       error:
-        checkJourneyContext:
-          mediumConfidence:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: IDENTITY_DOCUMENT_START
-          lowConfidence:
-            targetJourney: NEW_P1_IDENTITY
-            targetState: IDENTITY_DOCUMENT_START
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
     response:
@@ -163,6 +148,8 @@ states:
         resetType: ALL
     events:
       next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
         checkJourneyContext:
           mediumConfidence:
             targetJourney: NEW_P2_IDENTITY
@@ -171,13 +158,8 @@ states:
             targetJourney: NEW_P1_IDENTITY
             targetState: DCMAW_ASYNC_ANOTHER_WAY
       error:
-        checkJourneyContext:
-          mediumConfidence:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: DCMAW_ASYNC_ANOTHER_WAY
-          lowConfidence:
-            targetJourney: NEW_P1_IDENTITY
-            targetState: DCMAW_ASYNC_ANOTHER_WAY
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   RESET_SESSION_BEFORE_F2F_HANDOFF:
     response:
