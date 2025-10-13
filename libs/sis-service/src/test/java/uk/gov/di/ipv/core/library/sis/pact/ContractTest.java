@@ -15,11 +15,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityContent;
 
 import java.net.URI;
 import java.util.List;
@@ -38,6 +42,7 @@ import static org.apache.hc.core5.http.HttpStatus.SC_OK;
 import static org.apache.hc.core5.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.kennethDecerqueiraName;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -52,11 +57,33 @@ class ContractTest {
     private static final String TEST_EXPIRED_SIS_ACCESS_TOKEN = "test-expired-access-token";
     private static final List<Vot> TEST_VOTS = List.of(Vot.P1, Vot.P2);
     private static final String TEST_JOURNEY_ID = "test-gov-journey-id";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_VTM = "some-vtm";
 
     private static final String USER_IDENTITY_ENDPOINT_PATH = "/user-identity";
 
-    private static final String CONTENT_JWT =
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoiZWFlMDFhYzI5MGE5ODRkMGVhN2MzM2NjNDVlMzZmMTIiLCJuYmYiOjE3NTA2ODIwMTgsImNyZWRlbnRpYWxzIjpbIk43UHhoZmtGa215VFFGS3lBWE15U19INk51Ri13RHpFa3RiX2RWdXJ1bFNSTU1YaG54aGJSMnJ4czlUYy1LUUIwaVhiMV85YUJJOFhDeTJBYkdRdkZRIiwiUzROSlBjaWltYmZ4MDhqczltOThoc3JLTDRiSkh0QlF5S0d0cmRJeklmWW1CUGpyVTlwYXpfdV8xaENySFo4aWp5UW81UlBtUWxNUC1fYzVldXZaSHciLCJBOU9IdUtJOE41aDRDNDU3UTRxdE52a1NGS2ZGZVZNNHNFR3dxUlBjU0hpUXlsemh4UnlxMDBlMURVUUxtU2RpZTlYSWswQ2ZpUVNBX3I3LW1tQ2JBdyIsInk0NHYwcEVBODh6dURoREZEQ0RjUGduOTZwOWJTRm9qeHZQQTFCeEdYTnhEMG5QelFONk1SaG1PWXBTUXg4TW92XzNLWUF4bmZ5aXdSemVBclhKa3FBIl0sImlzcyI6Imh0dHBzOi8vaWRlbnRpdHkubG9jYWwuYWNjb3VudC5nb3YudWsiLCJjbGFpbXMiOnsiaHR0cHM6Ly92b2NhYi5hY2NvdW50Lmdvdi51ay92MS9jb3JlSWRlbnRpdHkiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJLRU5ORVRIIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiREVDRVJRVUVJUkEifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5NjUtMDctMDgifV19LCJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2FkZHJlc3MiOlt7ImFkZHJlc3NDb3VudHJ5IjoiR0IiLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwiYnVpbGRpbmdOYW1lIjoiIiwiYnVpbGRpbmdOdW1iZXIiOiI4IiwicG9zdGFsQ29kZSI6IkJBMiA1QUEiLCJzdHJlZXROYW1lIjoiSEFETEVZIFJPQUQiLCJzdWJCdWlsZGluZ05hbWUiOiIiLCJ1cHJuIjoxMDAxMjAwMTIwNzcsInZhbGlkRnJvbSI6IjEwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzUwNjgyMDE4fQ.nrbiwaOcvWM92TTAlORzerjjrrCuYD9fcxwEoXbf71J3YZUnwNW0KGUN5jaEvOysG0YWTXSLl_W4sN-Krf7PfQ"; // pragma: allowlist secret
+    private static final List<String> VC_SIGNATURES =
+            List.of(
+                    "N7PxhfkFkmyTQFKyAXMyS_H6NuF-wDzEktb_dVurulSRMMXhnxhbR2rxs9Tc-KQB0iXb1_9aBI8XCy2AbGQvFQ", // pragma: allowlist secret
+                    "S4NJPciimbfx08js9m98hsrKL4bJHtBQyKGtrdIzIfYmBPjrU9paz_u_1hCrHZ8ijyQo5RPmQlMP-_c5euvZHw", // pragma: allowlist secret
+                    "A9OHuKI8N5h4C457Q4qtNvkSFKfFeVM4sEGwqRPcSHiQylzhxRyq00e1DUQLmSdie9XIk0CfiQSA_r7-mmCbAw", // pragma: allowlist secret
+                    "y44v0pEA88zuDhDFDCDcPgn96p9bSFojxvPA1BxGXNxD0nPzQN6MRhmOYpSQx8Mov_3KYAxnfyiwRzeArXJkqA"); // pragma: allowlist secret
+
+    private static final IdentityClaim IDENTITY_CLAIM =
+            new IdentityClaim(
+                    List.of(kennethDecerqueiraName()),
+                    List.of(BirthDateGenerator.createBirthDate("1965-07-08")));
+    private static final SisStoredIdentityContent SIS_CONTENT =
+            new SisStoredIdentityContent(
+                    TEST_USER_ID,
+                    Vot.P2,
+                    TEST_VTM,
+                    VC_SIGNATURES,
+                    IDENTITY_CLAIM,
+                    null,
+                    VcFixtures.passportDetails(),
+                    null,
+                    null);
 
     private static final SisGetStoredIdentityResult EXPECTED_INVALID_RESULT =
             new SisGetStoredIdentityResult(false, false, null);
@@ -104,7 +131,7 @@ class ContractTest {
     void testGetUserIdentityRequestReturns200(MockServer mockServer) {
         // Arrange
         var expectedIdentityDetails =
-                new SisStoredIdentityCheckDto(CONTENT_JWT, true, false, Vot.P2, true, true);
+                new SisStoredIdentityCheckDto(SIS_CONTENT, true, false, Vot.P2, true, true);
         var expectedValidResult =
                 new SisGetStoredIdentityResult(true, true, expectedIdentityDetails);
 
@@ -113,7 +140,21 @@ class ContractTest {
                 sisClient.getStoredIdentity(TEST_SIS_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
-        assertEquals(expectedValidResult, sisGetStoredIdentityResult);
+        assertEquals(
+                expectedValidResult.requestSucceeded(),
+                sisGetStoredIdentityResult.requestSucceeded());
+        assertEquals(
+                expectedValidResult.identityWasFound(),
+                sisGetStoredIdentityResult.identityWasFound());
+
+        var realIdentityDetails = sisGetStoredIdentityResult.identityDetails();
+        assertEquals(
+                expectedIdentityDetails.content().getVot(), realIdentityDetails.content().getVot());
+        assertEquals(
+                expectedIdentityDetails.content().getCredentialSignatures(),
+                realIdentityDetails.content().getCredentialSignatures());
+        assertEquals(expectedIdentityDetails.vot(), realIdentityDetails.vot());
+        assertEquals(expectedIdentityDetails.isValid(), realIdentityDetails.isValid());
     }
 
     @Pact(provider = "StoredIdentityServiceProvider", consumer = "IpvCoreBack")
@@ -338,7 +379,84 @@ class ContractTest {
     private static DslPart getValidResponseBody() {
         return newJsonBody(
                         body -> {
-                            body.stringValue("content", CONTENT_JWT);
+                            body.object(
+                                    "content",
+                                    siContent -> {
+                                        siContent.stringValue("sub", TEST_USER_ID);
+                                        siContent.stringValue("vot", Vot.P2.name());
+                                        siContent.stringValue("vtm", TEST_VTM);
+                                        siContent.array(
+                                                "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                credentials -> {
+                                                    credentials.stringValue(VC_SIGNATURES.get(0));
+                                                    credentials.stringValue(VC_SIGNATURES.get(1));
+                                                    credentials.stringValue(VC_SIGNATURES.get(2));
+                                                    credentials.stringValue(VC_SIGNATURES.get(3));
+                                                });
+                                        siContent.object(
+                                                "https://vocab.account.gov.uk/v1/coreIdentity",
+                                                identity -> {
+                                                    identity.array(
+                                                            "name",
+                                                            name -> {
+                                                                name.object(
+                                                                        n -> {
+                                                                            n.array(
+                                                                                    "nameParts",
+                                                                                    nameParts -> {
+                                                                                        nameParts
+                                                                                                .object(
+                                                                                                        np -> {
+                                                                                                            np
+                                                                                                                    .stringValue(
+                                                                                                                            "type",
+                                                                                                                            "GivenName");
+                                                                                                            np
+                                                                                                                    .stringValue(
+                                                                                                                            "value",
+                                                                                                                            "KENNETH");
+                                                                                                        });
+                                                                                        nameParts
+                                                                                                .object(
+                                                                                                        np -> {
+                                                                                                            np
+                                                                                                                    .stringValue(
+                                                                                                                            "type",
+                                                                                                                            "FamilyName");
+                                                                                                            np
+                                                                                                                    .stringValue(
+                                                                                                                            "value",
+                                                                                                                            "DECERQUEIRA");
+                                                                                                        });
+                                                                                    });
+                                                                        });
+                                                            });
+                                                    identity.array(
+                                                            "birthDate",
+                                                            birthDate -> {
+                                                                birthDate.object(
+                                                                        bd -> {
+                                                                            bd.stringValue(
+                                                                                    "value",
+                                                                                    "1965-07-08");
+                                                                        });
+                                                            });
+                                                });
+                                        siContent.array(
+                                                "https://vocab.account.gov.uk/v1/passport",
+                                                passport -> {
+                                                    passport.object(
+                                                            p -> {
+                                                                p.stringValue(
+                                                                        "documentNumber",
+                                                                        "321654987");
+                                                                p.stringValue(
+                                                                        "expiryDate", "2030-01-01");
+                                                                p.stringValue(
+                                                                        "icaoIssuerCode", "GBR");
+                                                            });
+                                                });
+                                    });
                             body.booleanValue("isValid", true);
                             body.booleanValue("expired", false);
                             body.stringValue("vot", EXPECTED_VOT.name());

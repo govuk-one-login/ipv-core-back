@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityContent;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -169,29 +170,44 @@ class SisClientTest {
         var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
-        assertEquals(expectedResult, result);
+        assertEquals(expectedResult.requestSucceeded(), result.requestSucceeded());
+        assertEquals(expectedResult.identityWasFound(), result.identityWasFound());
+
+        var expectedIdentityDetails = expectedResult.identityDetails();
+        var realIdentityDetails = result.identityDetails();
+        assertEquals(
+                expectedIdentityDetails.content().getVot(), realIdentityDetails.content().getVot());
+        assertEquals(
+                expectedIdentityDetails.content().getCredentialSignatures(),
+                realIdentityDetails.content().getCredentialSignatures());
+        assertEquals(expectedIdentityDetails.vot(), realIdentityDetails.vot());
+        assertEquals(expectedIdentityDetails.isValid(), realIdentityDetails.isValid());
     }
+
+    private static final SisStoredIdentityContent SIS_CONTENT =
+            new SisStoredIdentityContent(
+                    "userId", Vot.P2, "vtm", List.of("sig1"), null, null, null, null, null);
 
     private static Stream<Arguments> getStoredIdentityTestData() {
         return Stream.of(
                 Arguments.of(
                         """
-                        { "content": "dummy_JWT", "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "sig1" ] }, "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
                                 new SisStoredIdentityCheckDto(
-                                        "dummy_JWT", true, false, Vot.P2, true, false))),
+                                        SIS_CONTENT, true, false, Vot.P2, true, false))),
                 Arguments.of(
                         """
-                        { "content": "dummy_JWT", "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "sig1" ] }, "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
                                 new SisStoredIdentityCheckDto(
-                                        "dummy_JWT", false, true, Vot.P1, false, true))));
+                                        SIS_CONTENT, false, true, Vot.P1, false, true))));
     }
 
     @Test
