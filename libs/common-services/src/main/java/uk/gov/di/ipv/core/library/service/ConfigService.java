@@ -112,8 +112,8 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getBackendSessionTtl();
     }
 
-    public String getDcmawAsyncVcPendingReturnTtl() {
-        return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl().toString();
+    public long getDcmawAsyncVcPendingReturnTtl() {
+        return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl();
     }
 
     public long getCriResponseTtl() {

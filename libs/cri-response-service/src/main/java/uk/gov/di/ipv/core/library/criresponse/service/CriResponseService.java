@@ -117,7 +117,7 @@ public class CriResponseService {
                 var now = DateUtils.toSecondsSinceEpoch(new Date());
                 var expiry =
                         DateUtils.toSecondsSinceEpoch(issuedAt)
-                                + Integer.parseInt(configService.getDcmawAsyncVcPendingReturnTtl());
+                                + configService.getDcmawAsyncVcPendingReturnTtl();
                 if (now < expiry) {
                     var criResponse = getCriResponseItem(userId, DCMAW_ASYNC);
                     return new AsyncCriStatus(
