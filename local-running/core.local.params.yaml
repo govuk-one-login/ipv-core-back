@@ -365,7 +365,6 @@ core:
     pendingF2FResetEnabled: false
     strategicAppEnabled: true
     repeatFraudCheckEnabled: true
-    mfaResetEnabled: true
     parseVcClasses: true
     sqsAsync: true
     kidJarHeaderEnabled: true
@@ -380,9 +379,6 @@ core:
     sisVerification:
       featureFlags:
         sisVerificationEnabled: true
-    mfaReset:
-      featureFlags:
-        mfaResetEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true

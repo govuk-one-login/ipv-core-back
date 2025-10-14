@@ -14,12 +14,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,7 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
@@ -124,10 +120,8 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), thrown.getErrorObject().getCode());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest(boolean mfaResetEnabled)
-            throws Exception {
+    @Test
+    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest() throws Exception {
         stubClientIssuer();
         stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
@@ -135,10 +129,7 @@ class JarValidatorTest {
         when(configService.getMaxAllowedAuthClientTtl()).thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getClientValidRedirectUrls(CLIENT_ID_CLAIM))
                 .thenReturn(Collections.singletonList(REDIRECT_URI_CLAIM));
-        when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
-        if (mfaResetEnabled) {
-            when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("openid");
-        }
+        when(configService.getValidScopes(CLIENT_ID_CLAIM)).thenReturn("openid");
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -164,11 +155,6 @@ class JarValidatorTest {
 
     @Nested
     class ScopeTests {
-        @BeforeEach
-        public void setUp() {
-            when(configService.enabled(MFA_RESET)).thenReturn(true);
-        }
-
         @Test
         void validateRequestJwtShouldThrowRecoverableExceptionIfScopeClaimMissing()
                 throws Exception {

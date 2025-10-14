@@ -410,8 +410,8 @@ Resources:
                 - 'execute-api:/*'
       StageName: !Sub ${Environment}
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
@@ -646,8 +646,8 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
         Format: >-
@@ -929,8 +929,8 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-analytics.yaml"
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
         Format: >-
