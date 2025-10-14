@@ -32,6 +32,8 @@ class ConfigServiceTest {
         assertEquals(
                 new URI("https://identity.local.account.gov.uk"),
                 configuration.getSelf().getComponentId());
+        assertEquals(1800L,
+                configuration.getSelf().getDcmawAsyncVcPendingReturnTtl());
     }
 
     @Test
