@@ -163,7 +163,7 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE:
     response:
@@ -247,7 +247,7 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
   DAD_ANDROID_START_SESSION:
     response:
@@ -416,7 +416,7 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
     response:
@@ -426,7 +426,7 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
   STRATEGIC_APP_HANDLE_RESULT:
     nestedJourney: STRATEGIC_APP_HANDLE_RESULT

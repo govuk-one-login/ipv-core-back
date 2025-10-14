@@ -260,7 +260,6 @@ states:
         targetState: RETURN_TO_RP
         journeyContextToUnset: appOnly
 
-
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
       type: page

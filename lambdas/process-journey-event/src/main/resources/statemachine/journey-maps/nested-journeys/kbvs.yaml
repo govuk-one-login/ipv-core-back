@@ -41,6 +41,7 @@ nestedJourneyStates:
         exitEventToEmit: next
       fail-with-ci:
         exitEventToEmit: fail-with-ci
+
   PRE_EXPERIAN_PAGE:
     response:
       type: page

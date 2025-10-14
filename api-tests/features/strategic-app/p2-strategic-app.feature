@@ -437,7 +437,7 @@ Feature: M2B Strategic App Journeys
       Then I get a 'non-uk-no-app-options' page response
       # Change their mind and go back
       When I submit a 'useApp' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
       # Decide to abandon again
       When I submit a 'preferNoApp' event
       Then I get a 'non-uk-no-app-options' page response
