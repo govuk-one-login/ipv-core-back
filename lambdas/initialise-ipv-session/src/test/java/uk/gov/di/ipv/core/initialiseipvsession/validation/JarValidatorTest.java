@@ -14,12 +14,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -124,8 +121,7 @@ class JarValidatorTest {
     }
 
     @Test
-    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest()
-            throws Exception {
+    void validateRequestJwtShouldPassValidationChecksOnValidJARRequest() throws Exception {
         stubClientIssuer();
         stubComponentId();
         when(mockOAuthKeyService.getClientSigningKey(eq(CLIENT_ID_CLAIM), any()))
