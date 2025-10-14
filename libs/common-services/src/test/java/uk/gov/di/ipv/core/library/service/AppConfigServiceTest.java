@@ -112,6 +112,11 @@ class AppConfigServiceTest {
     }
 
     @Test
+    void getDcmawAsyncVcPendingReturnTtl_returnsYamlValue() {
+        assertEquals(1800L, configService.getDcmawAsyncVcPendingReturnTtl());
+    }
+
+    @Test
     void getBackendSessionTimeout_returnsYamlValue() {
         assertEquals(3600L, configService.getBackendSessionTimeout());
     }
