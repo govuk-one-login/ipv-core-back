@@ -26,8 +26,11 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 @Getter
 public class SisStoredIdentityContent extends UserClaims {
     @NonNull
-    @JsonProperty(VCS_CLAIM_NAME)
+    @JsonProperty(value = "credentials")
     private List<String> credentialSignatures;
+
+    @JsonProperty(VCS_CLAIM_NAME)
+    private List<String> vcs;
 
     @JsonProperty private String sub;
 
@@ -41,8 +44,8 @@ public class SisStoredIdentityContent extends UserClaims {
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
-            @JsonProperty(value = VCS_CLAIM_NAME, required = true)
-                    List<String> credentialSignatures,
+            @JsonProperty(value = "credentials", required = true) List<String> credentialSignatures,
+            @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
             @JsonProperty(value = ADDRESS_CLAIM_NAME) List<PostalAddress> addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
@@ -54,5 +57,6 @@ public class SisStoredIdentityContent extends UserClaims {
         this.vot = vot;
         this.vtm = vtm;
         this.credentialSignatures = credentialSignatures;
+        this.vcs = vcs;
     }
 }

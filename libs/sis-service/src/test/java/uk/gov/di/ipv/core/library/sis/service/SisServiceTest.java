@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -262,6 +263,7 @@ class SisServiceTest {
                         Vot.P2,
                         TEST_VTM,
                         SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
                         null,
                         null,
                         null,
@@ -310,6 +312,7 @@ class SisServiceTest {
                         Vot.P1,
                         TEST_VTM,
                         SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
                         null,
                         null,
                         null,
@@ -452,6 +455,7 @@ class SisServiceTest {
                         Vot.P0,
                         TEST_VTM,
                         SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
                         null,
                         null,
                         null,
@@ -615,6 +619,7 @@ class SisServiceTest {
                     Vot.P2,
                     TEST_VTM,
                     SUCCESSFUL_SIGNATURES,
+                    List.of(VcFixtures.vcDcmawPassport().getVcString()),
                     null,
                     null,
                     null,

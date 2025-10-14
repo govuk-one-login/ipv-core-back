@@ -79,6 +79,7 @@ class ContractTest {
                     Vot.P2,
                     TEST_VTM,
                     VC_SIGNATURES,
+                    List.of(VcFixtures.vcDcmawPassport().getVcString()),
                     IDENTITY_CLAIM,
                     null,
                     VcFixtures.passportDetails(),
@@ -386,12 +387,19 @@ class ContractTest {
                                         siContent.stringValue("vot", Vot.P2.name());
                                         siContent.stringValue("vtm", TEST_VTM);
                                         siContent.array(
-                                                "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                "credentials",
                                                 credentials -> {
                                                     credentials.stringValue(VC_SIGNATURES.get(0));
                                                     credentials.stringValue(VC_SIGNATURES.get(1));
                                                     credentials.stringValue(VC_SIGNATURES.get(2));
                                                     credentials.stringValue(VC_SIGNATURES.get(3));
+                                                });
+                                        siContent.array(
+                                                "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                credentials -> {
+                                                    credentials.stringValue(
+                                                            VcFixtures.vcDcmawPassport()
+                                                                    .getVcString());
                                                 });
                                         siContent.object(
                                                 "https://vocab.account.gov.uk/v1/coreIdentity",

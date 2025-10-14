@@ -186,13 +186,22 @@ class SisClientTest {
 
     private static final SisStoredIdentityContent SIS_CONTENT =
             new SisStoredIdentityContent(
-                    "userId", Vot.P2, "vtm", List.of("sig1"), null, null, null, null, null);
+                    "userId",
+                    Vot.P2,
+                    "vtm",
+                    List.of("sig1"),
+                    List.of("vc1"),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
 
     private static Stream<Arguments> getStoredIdentityTestData() {
         return Stream.of(
                 Arguments.of(
                         """
-                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "sig1" ] }, "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "vc1" ], "credentials": [ "sig1" ] }, "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
@@ -201,7 +210,7 @@ class SisClientTest {
                                         SIS_CONTENT, true, false, Vot.P2, true, false))),
                 Arguments.of(
                         """
-                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "sig1" ] }, "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "vc1" ], "credentials": [ "sig1" ] }, "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
