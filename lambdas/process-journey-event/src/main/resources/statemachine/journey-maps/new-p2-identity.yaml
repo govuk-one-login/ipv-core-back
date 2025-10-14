@@ -395,7 +395,12 @@ states:
             targetState: STRATEGIC_APP_TRIAGE
             targetEntryEvent: appTriage
       try-again-post-office:
-        targetState: CRI_CLAIMED_IDENTITY_J4
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
@@ -520,7 +525,12 @@ states:
             targetState: STRATEGIC_APP_TRIAGE
             targetEntryEvent: appTriage
       try-again-post-office:
-        targetState: CRI_CLAIMED_IDENTITY_J4
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
