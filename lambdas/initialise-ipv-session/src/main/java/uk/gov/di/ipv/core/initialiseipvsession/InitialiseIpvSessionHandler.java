@@ -54,7 +54,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CLAIMS_CLAIM;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -145,9 +144,7 @@ public class InitialiseIpvSessionHandler
             List<String> vtr = claimsSet.getStringListClaim(REQUEST_VTR_KEY);
 
             var isReverification =
-                    configService.enabled(MFA_RESET)
-                            && Scope.parse(claimsSet.getStringClaim(SCOPE))
-                                    .contains(REVERIFICATION);
+                    Scope.parse(claimsSet.getStringClaim(SCOPE)).contains(REVERIFICATION);
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(

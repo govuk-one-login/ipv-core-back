@@ -9,15 +9,11 @@ states:
   START:
     events:
       next:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-        checkFeatureFlag:
-          mfaResetEnabled:
-            targetState: CHECK_REVERIFICATION_IDENTITY
-            checkIfDisabled:
-              dcmaw:
-                targetJourney: TECHNICAL_ERROR
-                targetState: ERROR
+        targetState: CHECK_REVERIFICATION_IDENTITY
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   # Parent states
   CRI_STATE:

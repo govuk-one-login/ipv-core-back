@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
@@ -233,11 +232,8 @@ public class JarValidator {
                                 JWTClaimNames.EXPIRATION_TIME,
                                 JWTClaimNames.NOT_BEFORE,
                                 JWTClaimNames.ISSUED_AT,
-                                JWTClaimNames.SUBJECT));
-
-        if (configService.enabled(MFA_RESET)) {
-            requiredClaims.add(SCOPE);
-        }
+                                JWTClaimNames.SUBJECT,
+                                SCOPE));
 
         var verifier =
                 new DefaultJWTClaimsVerifier<>(
@@ -254,9 +250,7 @@ public class JarValidator {
             verifier.verify(claimsSet, null);
 
             validateMaxAllowedJarTtl(claimsSet);
-            if (configService.enabled(MFA_RESET)) {
-                validateScope(clientId, claimsSet);
-            }
+            validateScope(clientId, claimsSet);
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
