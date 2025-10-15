@@ -21,14 +21,18 @@ import uk.gov.di.ipv.core.library.config.domain.ClientConfig;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.text.ParseException;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,8 +50,6 @@ class OAuthKeyServiceTest {
     private static final String TEST_JWKS_ENDPOINT = "https://example.com/jwks";
     private static final String TEST_ISSUER = "https://example.com/issuer";
     private static final String TEST_CLIENT_ID = "test-client-id";
-    private static final String TEST_KEY =
-            "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"enc\",\"kid\":\"nfwejnfwefcojwnk\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3\"}"; // pragma: allowlist secret
     private static OauthCriConfig oauthCriConfig;
 
     @Captor private ArgumentCaptor<HttpRequest> httpRequestCaptor;
@@ -70,7 +72,6 @@ class OAuthKeyServiceTest {
                             .clientId("ipv-core")
                             .signingKey("")
                             .jwksUrl(new URI(TEST_JWKS_ENDPOINT))
-                            .encryptionKey(TEST_KEY)
                             .componentId(TEST_ISSUER)
                             .clientCallbackUrl(new URI(""))
                             .requiresApiKey(false)
@@ -99,54 +100,46 @@ class OAuthKeyServiceTest {
         }
 
         @Test
-        void getEncryptionKeyShouldReturnKeyFromConfigIfResponseHasNoEncryptionKeys()
-                throws Exception {
+        void getEncryptionKeyShouldThrowIfResponseHasNoEncryptionKeysAndNoCache() {
             // Set up
             when(mockHttpResponse.body())
                     .thenReturn(
                             String.format("{\"keys\":[%s]}", RSA_ENCRYPTION_PUBLIC_JWK_NO_KEY_USE));
 
-            // Act
-            var key = oAuthKeyService.getEncryptionKey(oauthCriConfig);
-
-            // Assert
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            assertEquals(RSAKey.parse(TEST_KEY), key);
+            // Act & Assert
+            assertThrows(
+                    NoSuchElementException.class,
+                    () -> oAuthKeyService.getEncryptionKey(oauthCriConfig));
         }
 
         @Test
-        void getEncryptionKeyShouldReturnKeyFromConfigIfResponseReturnsEmptyArray()
-                throws Exception {
+        void getEncryptionKeyShouldThrowIfResponseReturnsEmptyArrayAndNoCache() {
             // Set up
             when(mockHttpResponse.body()).thenReturn("{\"keys\":[]}");
 
-            // Act
-            var key = oAuthKeyService.getEncryptionKey(oauthCriConfig);
-
-            // Assert
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            assertEquals(RSAKey.parse(TEST_KEY), key);
+            // Act & Assert
+            assertThrows(
+                    NoSuchElementException.class,
+                    () -> oAuthKeyService.getEncryptionKey(oauthCriConfig));
         }
 
         @ParameterizedTest
         @ValueSource(ints = {400, 500})
         @MockitoSettings(strictness = LENIENT)
-        void getEncryptionKeyShouldReturnKeyFromConfigIfRequestErrors(int errorCode)
-                throws Exception {
+        void getEncryptionKeyShouldThrowIfRequestErrorsAndNoCache(int errorCode) {
             // Set up
             when(mockHttpResponse.statusCode()).thenReturn(errorCode);
 
-            // Act
-            var key = oAuthKeyService.getEncryptionKey(oauthCriConfig);
-
-            // Assert
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            assertEquals(RSAKey.parse(TEST_KEY), key);
+            // Act & Assert
+            assertThrows(
+                    ConfigParseException.class,
+                    () -> oAuthKeyService.getEncryptionKey(oauthCriConfig));
         }
 
         @Test
         @MockitoSettings(strictness = LENIENT)
-        void getEncryptionKeyShouldReturnKeyFromConfigIfNoJwksUrl() throws Exception {
+        void getEncryptionKeyShouldReturnKeyFromConfigIfNoJwksUrlAndNoCache() throws Exception {
+            // Arrange
             var oauthConfigNoJwksUrl =
                     OauthCriConfig.builder()
                             .tokenUrl(new URI(""))
@@ -154,15 +147,20 @@ class OAuthKeyServiceTest {
                             .authorizeUrl(new URI(""))
                             .clientId("ipv-core")
                             .signingKey("")
-                            .encryptionKey(TEST_KEY)
                             .componentId(TEST_ISSUER)
                             .clientCallbackUrl(new URI(""))
                             .requiresApiKey(false)
                             .requiresAdditionalEvidence(false)
                             .build();
-            var key = oAuthKeyService.getEncryptionKey(oauthConfigNoJwksUrl);
 
-            assertEquals(RSAKey.parse(TEST_KEY), key);
+            // Act & Assert
+            var exception =
+                    assertThrows(
+                            ConfigParameterNotFoundException.class,
+                            () -> oAuthKeyService.getEncryptionKey(oauthConfigNoJwksUrl));
+            assertEquals(
+                    "Parameter not found in config: JWKS URL is not set in CRI config",
+                    exception.getMessage());
         }
 
         @Test
@@ -191,6 +189,24 @@ class OAuthKeyServiceTest {
 
             // Assert
             verify(mockHttpClient, times(2)).send(httpRequestCaptor.capture(), any());
+            assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), secondKey);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {400, 500})
+        void getEncryptionKeyShouldReturnExpiredCacheIfResponseErrors(int errorCode)
+                throws ParseException {
+            // Set up expired cache
+            when(mockConfigService.getOauthKeyCacheDurationMins()).thenReturn(0L);
+            oAuthKeyService.getEncryptionKey(oauthCriConfig); // First call to cache key
+
+            // Set up failed second call
+            when(mockHttpResponse.statusCode()).thenReturn(errorCode);
+
+            // Act
+            var secondKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
+
+            // Assert
             assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), secondKey);
         }
     }
