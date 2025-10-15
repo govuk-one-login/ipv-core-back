@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +50,6 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 
 @ExtendWith(MockitoExtension.class)
 class SisServiceTest {
-    private static final Base64.Encoder b64Encoder = Base64.getEncoder();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_VTM = "test-vtm";
     private static final String TEST_TOKEN = "test-token";
