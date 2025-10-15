@@ -523,10 +523,6 @@ class SisServiceTest {
         return VerifiableCredential.fromValidJwt(userId, cri, SignedJWT.parse(jwt));
     }
 
-    private static String base64Encode(SisStoredIdentityContent content) throws Exception {
-        return b64Encoder.encodeToString(OBJECT_MAPPER.writeValueAsBytes(content));
-    }
-
     // Dummy JWTs containing realistic looking data, created using JWT.IO and the dummy JWT content
     // from process-cri-callback contract tests
     // Passport JWT has been tweaked to strength 3 so that the EVCS calculated identity is only P2
