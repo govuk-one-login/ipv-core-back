@@ -28,8 +28,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.time.Instant;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-
 public abstract class UserIdentityRequestHandler {
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
     protected static final Logger LOGGER = LogManager.getLogger();
@@ -109,7 +107,7 @@ public abstract class UserIdentityRequestHandler {
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        if (configService.enabled(MFA_RESET) && !scopeClaims.contains(this.allowedScope)) {
+        if (!scopeClaims.contains(this.allowedScope)) {
             throw new InvalidScopeException();
         }
         return clientOAuthSessionItem;

@@ -736,7 +736,7 @@ public interface VcFixtures {
                 .build();
     }
 
-    private static Name kennethDecerqueiraName() {
+    static Name kennethDecerqueiraName() {
         return Name.builder()
                 .withNameParts(
                         List.of(

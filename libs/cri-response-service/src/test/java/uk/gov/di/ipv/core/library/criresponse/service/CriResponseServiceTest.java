@@ -221,7 +221,7 @@ class CriResponseServiceTest {
 
     @Test
     void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
-        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn("1000000000");
+        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn(1000000000L);
         when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
                 .thenReturn(new CriResponseItem());
         var vcs = List.of(vcDcmawAsyncDrivingPermitDva(), vcAddressTwo());
@@ -236,7 +236,7 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
         // Arrange
-        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn("-1");
+        when(mockConfigService.getDcmawAsyncVcPendingReturnTtl()).thenReturn(-1L);
 
         // Act
         var asyncCriStatus =

@@ -15,9 +15,18 @@ Globals:
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
-        APP_CONFIG_ID: !Sub "core-back-${Environment}"
-        APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
-        APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
+        APP_CONFIG_ID: !If
+          - IsDevelopment
+          - !Sub "core-${Environment}"
+          - !Sub "core-back-${Environment}"
+        APP_CONFIG_ENVIRONMENT_ID: !If
+          - IsDevelopment
+          - !Sub "core-${Environment}"
+          - !Sub "core-back-${Environment}"
+        APP_CONFIG_PROFILE_ID: !If
+          - IsDevelopment
+          - !Sub "core-${Environment}"
+          - !Sub "core-back-${Environment}"
         DT_CONNECTION_BASE_URL: !If
           - UseDynatrace
           - !Sub
@@ -122,6 +131,11 @@ Conditions:
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, production ]
+  IsBuildStagingIntProd: !Or
+    - !Equals [ !Ref Environment, build]
+    - !Equals [ !Ref Environment, staging]
+    - !Equals [ !Ref Environment, integration]
+    - !Equals [ !Ref Environment, production]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -396,8 +410,8 @@ Resources:
                 - 'execute-api:/*'
       StageName: !Sub ${Environment}
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
@@ -632,8 +646,8 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
         Format: >-
@@ -800,8 +814,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -915,8 +929,8 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-analytics.yaml"
       Tags:
-        FMSRegionalPolicy: !If [ IsDevOrBuildOrStaging, "false", "none" ]
-        CustomPolicy: !If [ IsDevOrBuildOrStaging, "true", "none" ]
+        FMSRegionalPolicy: "false"
+        CustomPolicy: "true"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreAnalyticsAPILogGroup.Arn
         Format: >-
@@ -1123,8 +1137,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1228,8 +1242,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1339,8 +1353,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1474,8 +1488,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1628,8 +1642,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1759,8 +1773,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -1891,8 +1905,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2000,8 +2014,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2120,8 +2134,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2372,8 +2386,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2488,8 +2502,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2613,8 +2627,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2735,8 +2749,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2958,8 +2972,8 @@ Resources:
               - appconfig:StartConfigurationSession
               - appconfig:GetLatestConfiguration
             Resource:
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
           - Sid: EnforceStayinSpecificVpc
             Effect: Allow
             Action:
@@ -3044,11 +3058,22 @@ Resources:
 
   ValidateAppConfigInvokePermission:
     Type: AWS::Lambda::Permission
+    Condition: IsBuildStagingIntProd
     Properties:
       Action: "lambda:InvokeFunction"
       FunctionName: !Ref ValidateAppConfigFunction
       Principal: "appconfig.amazonaws.com"
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
+
+#  App Config Pipeline
+  AppConfigPipelineValidateFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
+      Action: lambda:InvokeFunction
+      Principal: appconfig.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
@@ -3129,8 +3154,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -3212,8 +3237,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -3320,8 +3345,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -3418,8 +3443,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -3586,8 +3611,8 @@ Resources:
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
       Events:
         IPVCoreAnalyticsAPIJourneyTransitions:
           Type: Api
@@ -4966,17 +4991,20 @@ Resources:
 
   # App Config
   AppConfigApplication:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::Application
     Properties:
       Name: !Sub "core-back-${Environment}"
 
   AppConfigEnvironment:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::Environment
     Properties:
       Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
 
   AppConfigConfigurationProfile:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::ConfigurationProfile
     Properties:
       Name: !Sub "core-back-${Environment}"
@@ -4987,6 +5015,7 @@ Resources:
           Content: !GetAtt ValidateAppConfigFunction.Arn
 
   AppConfigDeploymentStrategy:
+    Condition: IsBuildStagingIntProd
     Type: AWS::AppConfig::DeploymentStrategy
     Properties:
       Name: !Sub "core-back-${Environment}"

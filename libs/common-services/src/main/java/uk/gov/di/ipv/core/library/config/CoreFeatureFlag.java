@@ -4,7 +4,6 @@ public enum CoreFeatureFlag implements FeatureFlag {
     UNUSED_PLACEHOLDER("unusedPlaceHolder"),
     RESET_IDENTITY("resetIdentity"),
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
-    MFA_RESET("mfaResetEnabled"),
     SQS_ASYNC("sqsAsync"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     STORED_IDENTITY_SERVICE("storedIdentityServiceEnabled"),

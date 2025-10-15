@@ -38,7 +38,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidatio
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -80,7 +79,6 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
@@ -168,38 +166,6 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSessionIdWhenProvidedValidRequest()
-            throws JsonProcessingException, JarValidationException, ParseException {
-        // Arrange
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
-                        any(), any(), any(), any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(signedJWT.getJWTClaimsSet());
-
-        // Act
-        APIGatewayProxyResponseEvent response =
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
-
-        // Assert
-        Map<String, Object> responseBody =
-                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatusCode.OK, response.getStatusCode());
-        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
-
-        verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
-        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
-    }
-
-    @Test
     void shouldReturnIpvSessionIdGivenValidReverificationRequest() throws Exception {
         // Arrange
         signedJWT = getSignedJWT(getValidClaimsBuilder("reverification"));
@@ -214,7 +180,6 @@ class InitialiseIpvSessionHandlerTest {
                                 signedEncryptedJwt.serialize())));
         validEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(Boolean.TRUE);
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
@@ -251,7 +216,6 @@ class InitialiseIpvSessionHandlerTest {
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
         clientOAuthSessionItem.setReproveIdentity(true);
-        when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
@@ -286,7 +250,6 @@ class InitialiseIpvSessionHandlerTest {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         var evcsAccessTokenClaims = Map.of(USER_INFO, Map.of());
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
@@ -329,7 +292,6 @@ class InitialiseIpvSessionHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -360,7 +322,6 @@ class InitialiseIpvSessionHandlerTest {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
 
@@ -422,7 +383,6 @@ class InitialiseIpvSessionHandlerTest {
                     ParseException,
                     JarValidationException {
         // Arrange
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
         var missingVtrClaimsBuilder = getValidClaimsBuilder();
         missingVtrClaimsBuilder.claim(VTR, vtrList);
         var missingVtrSignedJwt = getSignedJWT(missingVtrClaimsBuilder);
@@ -460,7 +420,6 @@ class InitialiseIpvSessionHandlerTest {
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
 
-        when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
         var missingVtrClaimsBuilder = getValidClaimsBuilder();
         missingVtrClaimsBuilder.claim(VTR, vtrList);
         missingVtrClaimsBuilder.claim(SCOPE, REVERIFICATION);

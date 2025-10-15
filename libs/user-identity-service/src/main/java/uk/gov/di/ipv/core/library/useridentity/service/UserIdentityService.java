@@ -345,13 +345,7 @@ public class UserIdentityService {
             List<IdentityClaim> identityClaims) {
         return getShortenedNamesForCoiCheck(
                 identityClaims,
-                Integer.parseInt(
-                        configService
-                                .getConfiguration()
-                                .getSelf()
-                                .getCoi()
-                                .getFamilyNameChars()
-                                .toString()),
+                configService.getConfiguration().getSelf().getCoi().getFamilyNameChars(),
                 NamePart.NamePartType.FAMILY_NAME);
     }
 
@@ -359,13 +353,7 @@ public class UserIdentityService {
             List<IdentityClaim> identityClaims) {
         return getShortenedNamesForCoiCheck(
                 identityClaims,
-                Integer.parseInt(
-                        configService
-                                .getConfiguration()
-                                .getSelf()
-                                .getCoi()
-                                .getGivenNameChars()
-                                .toString()),
+                configService.getConfiguration().getSelf().getCoi().getGivenNameChars(),
                 NamePart.NamePartType.GIVEN_NAME);
     }
 

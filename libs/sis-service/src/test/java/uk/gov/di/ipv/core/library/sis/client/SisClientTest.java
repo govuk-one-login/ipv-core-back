@@ -12,10 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityContent;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -41,6 +43,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SisClientTest {
     private static final String SIS_APPLICATION_URL = "http://localhost/v1";
+    private static final String SIS_API_KEY = "some-api-key"; // pragma: allowlist secret
     private static final String TEST_JOURNEY_ID = "TEST_JOURNEY_ID";
     private static final List<Vot> TEST_VOTS = List.of(Vot.P1, Vot.P2);
     public static final String TEST_ACCESS_TOKEN = "dummy_access_token";
@@ -50,7 +53,6 @@ class SisClientTest {
     @Mock private HttpResponse<String> mockHttpResponse;
     @Mock private Sleeper mockSleeper;
     @Captor ArgumentCaptor<HttpRequest> httpRequestCaptor;
-    @Captor private ArgumentCaptor<String> stringCaptor;
     @InjectMocks private SisClient sisClient;
     @Mock private URI badUri;
 
@@ -76,6 +78,8 @@ class SisClientTest {
     @Test
     void getStoredIdentity_retriesRequest_ifSisReturnsErrorCode() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
 
         when(mockHttpResponse.body())
@@ -99,6 +103,8 @@ class SisClientTest {
     @Test
     void getStoredIdentity_returnsEmptyResult_ifRetryRequestLimitExceeded() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body()).thenReturn("{\"message\":\"throttled\"}");
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.THROTTLING);
@@ -121,6 +127,8 @@ class SisClientTest {
     @Test
     void getStoredIdentity_sendsCorrectRequest() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
 
@@ -152,6 +160,8 @@ class SisClientTest {
     void getStoredIdentity_shouldParseResponseCorrectly(
             String responseJson, SisGetStoredIdentityResult expectedResult) throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(responseJson);
@@ -160,34 +170,60 @@ class SisClientTest {
         var result = sisClient.getStoredIdentity(TEST_ACCESS_TOKEN, TEST_VOTS, TEST_JOURNEY_ID);
 
         // Assert
-        assertEquals(expectedResult, result);
+        assertEquals(expectedResult.requestSucceeded(), result.requestSucceeded());
+        assertEquals(expectedResult.identityWasFound(), result.identityWasFound());
+
+        var expectedIdentityDetails = expectedResult.identityDetails();
+        var realIdentityDetails = result.identityDetails();
+        assertEquals(
+                expectedIdentityDetails.content().getVot(), realIdentityDetails.content().getVot());
+        assertEquals(
+                expectedIdentityDetails.content().getCredentialSignatures(),
+                realIdentityDetails.content().getCredentialSignatures());
+        assertEquals(expectedIdentityDetails.vot(), realIdentityDetails.vot());
+        assertEquals(expectedIdentityDetails.isValid(), realIdentityDetails.isValid());
     }
+
+    private static final SisStoredIdentityContent SIS_CONTENT =
+            new SisStoredIdentityContent(
+                    "userId",
+                    Vot.P2,
+                    "vtm",
+                    List.of("sig1"),
+                    List.of("vc1"),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
 
     private static Stream<Arguments> getStoredIdentityTestData() {
         return Stream.of(
                 Arguments.of(
                         """
-                        { "content": "dummy_JWT", "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "vc1" ], "credentials": [ "sig1" ] }, "isValid": true, "expired": false, "vot": "P2", "kidValid": true, "signatureValid": false }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
                                 new SisStoredIdentityCheckDto(
-                                        "dummy_JWT", true, false, Vot.P2, true, false))),
+                                        SIS_CONTENT, true, false, Vot.P2, true, false))),
                 Arguments.of(
                         """
-                        { "content": "dummy_JWT", "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
+                        { "content": { "sub": "userId", "vot": "P2", "vtm": "vtm", "https://vocab.account.gov.uk/v1/credentialJWT": [ "vc1" ], "credentials": [ "sig1" ] }, "isValid": false, "expired": true, "vot": "P1", "kidValid": false, "signatureValid": true }
                         """,
                         new SisGetStoredIdentityResult(
                                 true,
                                 true,
                                 new SisStoredIdentityCheckDto(
-                                        "dummy_JWT", false, true, Vot.P1, false, true))));
+                                        SIS_CONTENT, false, true, Vot.P1, false, true))));
     }
 
     @Test
     void getStoredIdentity_returnsFailure_whenJsonIsInvalid() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn("not valid json");
@@ -202,6 +238,8 @@ class SisClientTest {
     @Test
     void getStoredIdentity_returnsFailure_whenHttpErrorReceived() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
 
@@ -215,6 +253,8 @@ class SisClientTest {
     @Test
     void getStoredIdentity_returnsNotFound_when404Received() throws Exception {
         // Arrange
+        when(mockConfigService.getSecret(ConfigurationVariable.SIS_API_KEY))
+                .thenReturn(SIS_API_KEY);
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NOT_FOUND);
 

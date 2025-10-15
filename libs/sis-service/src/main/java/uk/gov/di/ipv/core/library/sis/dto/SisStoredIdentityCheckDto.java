@@ -6,7 +6,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SisStoredIdentityCheckDto(
-        @NonNull String content,
+        @NonNull SisStoredIdentityContent content,
         boolean isValid,
         boolean expired,
         // This is the maximum VoT for the user, the calculated VoT for this request is stored in
