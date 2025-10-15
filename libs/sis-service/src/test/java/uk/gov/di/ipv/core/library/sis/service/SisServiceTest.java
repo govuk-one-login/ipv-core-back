@@ -465,8 +465,7 @@ class SisServiceTest {
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(
-                                sisContent, true, false, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(sisContent, true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, List.of(Vot.P3), TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
@@ -506,13 +505,11 @@ class SisServiceTest {
             Vot expectedSisMaxVot,
             Vot expectedEvcsRequestedVot,
             Vot expectedEvcsMaxVot,
-            String expectedSisJwt,
             List<String> expectedSisSignatures,
             List<String> expectedEvcsSignatures,
             String expectedFailureDetails) {
         var restrictedValues = (AuditRestrictedSisComparison) auditEvent.getRestricted();
         assertEquals(expectedFailureDetails, restrictedValues.getFailureDetails());
-        assertEquals(expectedSisJwt, restrictedValues.getSisJwt());
         assertEquals(expectedSisSignatures, restrictedValues.getSisSignatures());
         assertEquals(expectedEvcsSignatures, restrictedValues.getReconstructedSignatures());
 

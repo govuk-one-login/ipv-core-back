@@ -25,7 +25,6 @@
     "restricted": {
       "reconstructedSignatures": ["type[string]"],
       "sisSignatures": ["type[string]"],
-      "sisJwt": "type[string]",
       "failureDetails": "type[string]"
     }
   },

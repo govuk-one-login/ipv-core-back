@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -30,7 +29,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -41,8 +39,6 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 public class SisService {
     private final SisClient sisClient;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Base64.Encoder b64Encoder = Base64.getEncoder();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ConfigService configService;
     private final AuditService auditService;
@@ -244,13 +240,6 @@ public class SisService {
             boolean sisIdFound =
                     storedIdentityResult != null && storedIdentityResult.identityWasFound();
 
-            String sisJwt =
-                    sisIdFound
-                            ? b64Encoder.encodeToString(
-                                    OBJECT_MAPPER.writeValueAsBytes(
-                                            storedIdentityResult.identityDetails().content()))
-                            : "";
-
             var auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_STORED_IDENTITY_CHECKED,
@@ -270,7 +259,7 @@ public class SisService {
                                     verificationOutcome,
                                     failureCode),
                             new AuditRestrictedSisComparison(
-                                    sisJwt, evcsSignatures, sisSignatures, failureDetails));
+                                    evcsSignatures, sisSignatures, failureDetails));
             auditService.sendAuditEvent(auditEvent);
         } catch (Exception e) {
             LOGGER.error(
