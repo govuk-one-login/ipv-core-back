@@ -28,7 +28,7 @@ jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", vers
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 javalin = "io.javalin:javalin:6.7.0"
-junitJupiter = "org.junit.jupiter:junit-jupiter:5.13.0"
+junitJupiter = "org.junit.jupiter:junit-jupiter:6.0.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.13.0"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4jApi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
