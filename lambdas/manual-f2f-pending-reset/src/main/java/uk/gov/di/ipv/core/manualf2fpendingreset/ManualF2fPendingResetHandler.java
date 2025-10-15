@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.exceptions.ManualF2fPendingResetException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -26,7 +27,6 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
 
     private static final String RESULT_KEY = "result";
     private static final String MESSAGE_KEY = "message";
-    private static final String RESULT_ERROR = "error";
     private static final String RESULT_SUCCESS = "success";
 
     private final CriResponseService criResponseService;
@@ -58,24 +58,11 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
 
         Map<String, Object> response = new HashMap<>();
 
-        if (input == null || input.isBlank()) {
-            LOGGER.error(LogHelper.buildLogMessage("No userId provided in input"));
-            response.put(RESULT_KEY, RESULT_ERROR);
-            response.put(MESSAGE_KEY, "Missing or empty userId in input");
-            return response;
-        }
-
         try {
-            CriResponseItem item = criResponseService.getCriResponseItem(input, Cri.F2F);
+            validateInput(input);
+            findPendingRecord(input);
+            deletePendingRecord(input);
 
-            if (item == null) {
-                LOGGER.error(LogHelper.buildLogMessage("No F2F pending record found"));
-                response.put(RESULT_KEY, RESULT_ERROR);
-                response.put(MESSAGE_KEY, "No F2F pending record found.");
-                return response;
-            }
-
-            criResponseService.deleteCriResponseItem(input, Cri.F2F);
             LOGGER.info(LogHelper.buildLogMessage("Successfully deleted F2F pending record"));
             response.put(RESULT_KEY, RESULT_SUCCESS);
             response.put(MESSAGE_KEY, "Deleted F2F pending record.");
@@ -85,14 +72,46 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
                             AuditEventTypes.IPV_F2F_SUPPORT_CANCEL,
                             configService.getComponentId(),
                             new AuditEventUser(input, null, null, null)));
+
+        } catch (ManualF2fPendingResetException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Manual F2F pending reset failed", e));
+            throw e;
         } catch (Exception e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to delete record", e));
-            response.put(RESULT_KEY, RESULT_ERROR);
-            response.put(MESSAGE_KEY, "Failed to delete record due to internal error.");
+            LOGGER.error(LogHelper.buildErrorMessage("Unexpected error occurred", e));
+            throw new ManualF2fPendingResetException(
+                    "Unexpected failure in Manual F2F Pending Reset Lambda", e);
         } finally {
             auditService.awaitAuditEvents();
         }
 
         return response;
+    }
+
+    private void validateInput(String input) {
+        if (input == null || input.isBlank()) {
+            throw new ManualF2fPendingResetException("Missing or empty userId in input");
+        }
+    }
+
+    private CriResponseItem findPendingRecord(String userId) {
+        try {
+            CriResponseItem item = criResponseService.getCriResponseItem(userId, Cri.F2F);
+            if (item == null) {
+                throw new ManualF2fPendingResetException("No F2F pending record found.");
+            }
+            return item;
+        } catch (ManualF2fPendingResetException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ManualF2fPendingResetException("Failed to look up F2F record", e);
+        }
+    }
+
+    private void deletePendingRecord(String userId) {
+        try {
+            criResponseService.deleteCriResponseItem(userId, Cri.F2F);
+        } catch (Exception e) {
+            throw new ManualF2fPendingResetException("Failed to delete F2F pending record", e);
+        }
     }
 }
