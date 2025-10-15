@@ -145,7 +145,6 @@ class SisServiceTest {
                 null,
                 null,
                 null,
-                "",
                 List.of(),
                 List.of(),
                 "Call to SIS service failed, no stored identity comparison can be made");
@@ -176,7 +175,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -214,7 +212,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -248,7 +245,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Exception caught calculating VOT from EVCS VCs");
@@ -297,7 +293,6 @@ class SisServiceTest {
                 Vot.P1,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Maximum EVCS (P2) and SIS (P1) vots do not match");
@@ -346,7 +341,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Requested EVCS (P2) and SIS (P1) vots do not match");
@@ -377,7 +371,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 MISSING_ONE_SIGNATURES,
                 "Some signatures in the stored identity are not present in EVCS: 71rsp9h4OS8kZOK4LtKh5dRtQ1uX8On4OL0W3nhCSmSZhtPJrE-0TXuc9rpzWzS0a92mc-aNGggcKDGp7oSc3g");
@@ -408,7 +401,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
@@ -439,7 +431,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
@@ -489,7 +480,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
