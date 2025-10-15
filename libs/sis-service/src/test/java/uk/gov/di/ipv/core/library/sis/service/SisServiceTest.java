@@ -466,7 +466,7 @@ class SisServiceTest {
                         true,
                         true,
                         new SisStoredIdentityCheckDto(
-                                sisContent, false, false, Vot.P2, true, true));
+                                sisContent, true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, List.of(Vot.P3), TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
@@ -485,7 +485,7 @@ class SisServiceTest {
                 VerificationOutcome.SUCCESS,
                 null,
                 false,
-                false,
+                true,
                 Vot.P0,
                 Vot.P2,
                 null,

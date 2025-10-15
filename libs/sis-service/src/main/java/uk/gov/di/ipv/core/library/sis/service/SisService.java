@@ -162,10 +162,10 @@ public class SisService {
             }
 
             // If SIS doesn't think it can provide a strong enough identity it will still return a
-            // result with content.vot set to P0 and isValid set to false.
+            // result with content.vot set to P0 and isValid set to true.
             if (!(evcsRequestedVot == null
                             && sisRequestedVot == Vot.P0
-                            && !storedIdentityResult.identityDetails().isValid())
+                            && storedIdentityResult.identityDetails().isValid())
                     && sisRequestedVot != evcsRequestedVot) {
                 throw new SisMatchException(
                         FailureCode.REQUESTED_VOT_MISMATCH,
