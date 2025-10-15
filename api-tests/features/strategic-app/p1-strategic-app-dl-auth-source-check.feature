@@ -7,7 +7,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
 
   Scenario: Cross-browser scenario
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
@@ -43,7 +43,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
   Rule:
     Background:
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event

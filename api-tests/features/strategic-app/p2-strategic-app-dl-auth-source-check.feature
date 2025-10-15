@@ -7,7 +7,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
@@ -48,7 +48,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
