@@ -55,4 +55,4 @@ awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 pact = { id = "au.com.dius.pact", version.ref = "pact" }
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:9.0.0"
 sonar = "org.sonarqube:5.1.0.4882"
-spotless = "com.diffplug.spotless:7.2.1"
+spotless = "com.diffplug.spotless:8.0.0"
