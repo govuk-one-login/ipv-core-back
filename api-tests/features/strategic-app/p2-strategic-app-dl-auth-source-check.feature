@@ -88,12 +88,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I submit a 'next' event
 
       # Attempt 1 - retry after viewing prove-identity-another-way
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
@@ -110,12 +104,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I submit an 'anotherTypePhotoId' event
 
       # Attempt 2 - give up
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
@@ -140,12 +128,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I submit a 'next' event
 
       # Reattempt
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
       # And the user returns from the app to core-front
@@ -197,12 +179,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
 
       # The user tries again
       When I submit an 'next' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front

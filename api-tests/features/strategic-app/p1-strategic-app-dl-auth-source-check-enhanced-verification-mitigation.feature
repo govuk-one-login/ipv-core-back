@@ -155,12 +155,6 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
 
       # Attempt 2 - retry after viewing prove-identity-another-way
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
@@ -177,12 +171,6 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'anotherTypePhotoId' event
 
       # Attempt 3 - give up
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
