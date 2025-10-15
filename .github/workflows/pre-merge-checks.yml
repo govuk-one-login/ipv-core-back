@@ -130,6 +130,7 @@ jobs:
           cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
           sed -i s/CIMIT_API_KEY/"${{ secrets.API_KEY_CIMIT }}"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/EVCS_API_KEY/"${{ secrets.API_KEY_EVCS }}"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/SIS_API_KEY/"${{ secrets.API_KEY_SIS }}"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/ASYNC_QUEUE_API_KEY/"${{ secrets.ASYNC_QUEUE_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/ASYNC_QUEUE_NAME/"${{ steps.extract_queue_name.outputs.queue_name }}"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/TICF_API_KEY/"${{ secrets.TICF_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
