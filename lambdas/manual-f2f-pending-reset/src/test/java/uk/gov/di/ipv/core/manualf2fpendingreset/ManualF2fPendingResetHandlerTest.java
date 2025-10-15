@@ -23,10 +23,10 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_F2F_SUPPORT_CANCEL;
@@ -54,11 +54,12 @@ class ManualF2fPendingResetHandlerTest {
     @NullAndEmptySource
     @ValueSource(strings = {"   "})
     void shouldThrowExceptionForInvalidInput(String invalidInput) {
-        assertThrows(
-                ManualF2fPendingResetException.class,
-                () -> handler.handleRequest(invalidInput, mockContext));
-
-        verify(auditService, times(1)).awaitAuditEvents();
+        var ex =
+                assertThrows(
+                        ManualF2fPendingResetException.class,
+                        () -> handler.handleRequest(invalidInput, mockContext));
+        assertEquals("Missing or empty userId in input", ex.getMessage());
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
@@ -73,7 +74,7 @@ class ManualF2fPendingResetHandlerTest {
         assertEquals("No F2F pending record found.", ex.getMessage());
         verify(mockCriResponseService, never()).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
         verify(auditService, never()).sendAuditEvent(any());
-        verify(auditService, times(1)).awaitAuditEvents();
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
@@ -81,44 +82,48 @@ class ManualF2fPendingResetHandlerTest {
         when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
                 .thenThrow(new RuntimeException("simulated failure"));
 
-        assertThrows(
-                ManualF2fPendingResetException.class,
-                () -> handler.handleRequest(TEST_USER_ID, mockContext));
+        var ex =
+                assertThrows(
+                        ManualF2fPendingResetException.class,
+                        () -> handler.handleRequest(TEST_USER_ID, mockContext));
 
+        assertTrue(ex.getMessage().contains("Failed to look up F2F record"));
         verify(mockCriResponseService, never()).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
         verify(auditService, never()).sendAuditEvent(any());
-        verify(auditService, times(1)).awaitAuditEvents();
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
     void shouldThrowExceptionWhenDeleteFails() {
-        CriResponseItem mockItem =
-                CriResponseItem.builder()
-                        .userId(TEST_USER_ID)
-                        .credentialIssuer(Cri.F2F.getId())
-                        .build();
-        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
+                .thenReturn(
+                        CriResponseItem.builder()
+                                .userId(TEST_USER_ID)
+                                .credentialIssuer(Cri.F2F.getId())
+                                .build());
         doThrow(new RuntimeException("delete failed"))
                 .when(mockCriResponseService)
                 .deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
 
-        assertThrows(
-                ManualF2fPendingResetException.class,
-                () -> handler.handleRequest(TEST_USER_ID, mockContext));
+        var ex =
+                assertThrows(
+                        ManualF2fPendingResetException.class,
+                        () -> handler.handleRequest(TEST_USER_ID, mockContext));
 
+        assertTrue(ex.getMessage().contains("Failed to delete F2F pending record"));
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
         verify(auditService, never()).sendAuditEvent(any());
-        verify(auditService, times(1)).awaitAuditEvents();
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
     void shouldReturnSuccessWhenItemFoundAndDeleted() {
-        CriResponseItem mockItem =
-                CriResponseItem.builder()
-                        .userId(TEST_USER_ID)
-                        .credentialIssuer(Cri.F2F.getId())
-                        .build();
-        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
+                .thenReturn(
+                        CriResponseItem.builder()
+                                .userId(TEST_USER_ID)
+                                .credentialIssuer(Cri.F2F.getId())
+                                .build());
 
         var response = handler.handleRequest(TEST_USER_ID, mockContext);
 
@@ -126,17 +131,17 @@ class ManualF2fPendingResetHandlerTest {
         assertEquals("Deleted F2F pending record.", response.get("message"));
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, Cri.F2F);
         verify(auditService).sendAuditEvent(any());
-        verify(auditService, times(1)).awaitAuditEvents();
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
     void shouldSendAuditEventWithUserId() {
-        CriResponseItem mockItem =
-                CriResponseItem.builder()
-                        .userId(TEST_USER_ID)
-                        .credentialIssuer(Cri.F2F.getId())
-                        .build();
-        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
+                .thenReturn(
+                        CriResponseItem.builder()
+                                .userId(TEST_USER_ID)
+                                .credentialIssuer(Cri.F2F.getId())
+                                .build());
 
         handler.handleRequest(TEST_USER_ID, mockContext);
 
@@ -145,19 +150,19 @@ class ManualF2fPendingResetHandlerTest {
 
         assertEquals(IPV_F2F_SUPPORT_CANCEL, auditEvent.getEventName());
         assertEquals(TEST_USER_ID, auditEvent.getUser().getUserId());
-        verify(auditService, times(1)).awaitAuditEvents();
+        verify(auditService).awaitAuditEvents();
     }
 
     @Test
     void shouldThrowExceptionOnUnexpectedError() {
         doThrow(new RuntimeException("unexpected")).when(auditService).awaitAuditEvents();
 
-        CriResponseItem mockItem =
-                CriResponseItem.builder()
-                        .userId(TEST_USER_ID)
-                        .credentialIssuer(Cri.F2F.getId())
-                        .build();
-        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F)).thenReturn(mockItem);
+        when(mockCriResponseService.getCriResponseItem(TEST_USER_ID, Cri.F2F))
+                .thenReturn(
+                        CriResponseItem.builder()
+                                .userId(TEST_USER_ID)
+                                .credentialIssuer(Cri.F2F.getId())
+                                .build());
 
         assertThrows(
                 RuntimeException.class, () -> handler.handleRequest(TEST_USER_ID, mockContext));

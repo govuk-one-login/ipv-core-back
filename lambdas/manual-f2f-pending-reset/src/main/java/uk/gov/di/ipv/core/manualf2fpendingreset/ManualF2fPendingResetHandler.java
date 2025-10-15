@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ManualF2fPendingResetException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -93,13 +92,11 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
         }
     }
 
-    private CriResponseItem findPendingRecord(String userId) {
+    private void findPendingRecord(String userId) {
         try {
-            CriResponseItem item = criResponseService.getCriResponseItem(userId, Cri.F2F);
-            if (item == null) {
+            if (criResponseService.getCriResponseItem(userId, Cri.F2F) == null) {
                 throw new ManualF2fPendingResetException("No F2F pending record found.");
             }
-            return item;
         } catch (ManualF2fPendingResetException e) {
             throw e;
         } catch (Exception e) {
