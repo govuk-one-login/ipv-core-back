@@ -18,18 +18,17 @@ export interface CriStubRequest {
   requestedError?: CriStubRequestedError;
 }
 
-type CriStubRequestedError =
-  | CriStubOauthErrorRequest
-  | CriStubUserInfoEndpointErrorRequest;
+type CriStubRequestedError = CriStubOauthErrorRequest | CriStubApiErrorRequest;
 
 interface CriStubOauthErrorRequest {
   error: string;
   description: string;
-  endpoint: "auth" | "token";
+  endpoint: "auth";
 }
 
-interface CriStubUserInfoEndpointErrorRequest {
-  userInfoError: "404";
+interface CriStubApiErrorRequest {
+  apiError: string;
+  endpoint: "credential" | "token";
 }
 
 export interface CriStubResponse {
