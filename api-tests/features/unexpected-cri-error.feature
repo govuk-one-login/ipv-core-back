@@ -157,7 +157,7 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'sorry-technical-problem' page response
+      Then I get a 'sorry-technical-problem' page response with context 'kbvCriError'
 
     Scenario: Unexpected error from Experian KBV CRI - try CRI again
       When I submit a 'tryAgain' event
@@ -206,14 +206,6 @@ Feature: Handling unexpected CRI errors
 
     Scenario: Unexpected error from Experian KBV CRI - try post office route
       When I submit a 'postOffice' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
