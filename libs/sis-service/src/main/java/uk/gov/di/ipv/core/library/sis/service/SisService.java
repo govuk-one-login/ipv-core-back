@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -23,7 +21,6 @@ import uk.gov.di.ipv.core.library.sis.audit.AuditExtensionsSisComparison;
 import uk.gov.di.ipv.core.library.sis.audit.AuditRestrictedSisComparison;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
-import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.sis.enums.FailureCode;
 import uk.gov.di.ipv.core.library.sis.enums.VerificationOutcome;
 import uk.gov.di.ipv.core.library.sis.exception.SisMatchException;
@@ -33,6 +30,7 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -43,6 +41,9 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 public class SisService {
     private final SisClient sisClient;
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Base64.Encoder b64Encoder = Base64.getEncoder();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final ConfigService configService;
     private final AuditService auditService;
     private final CimitUtilityService cimitUtilityService;
@@ -125,9 +126,9 @@ public class SisService {
             }
 
             // Get stored signatures and calculated VoT
-            var sisClaims = getSisClaims(storedIdentityResult.identityDetails());
-            sisRequestedVot = getSisRequestedVot(sisClaims);
-            sisVcSignatures = getSisSignatures(sisClaims);
+            var sisClaims = storedIdentityResult.identityDetails().content();
+            sisRequestedVot = sisClaims.getVot();
+            sisVcSignatures = sisClaims.getCredentialSignatures();
             sisMaxVot = storedIdentityResult.identityDetails().vot();
 
             // Get EVCS details
@@ -241,7 +242,12 @@ public class SisService {
             boolean sisIdFound =
                     storedIdentityResult != null && storedIdentityResult.identityWasFound();
 
-            String sisJwt = sisIdFound ? storedIdentityResult.identityDetails().content() : "";
+            String sisJwt =
+                    sisIdFound
+                            ? b64Encoder.encodeToString(
+                                    OBJECT_MAPPER.writeValueAsBytes(
+                                            storedIdentityResult.identityDetails().content()))
+                            : "";
 
             var auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
@@ -300,32 +306,6 @@ public class SisService {
                     "Some signatures in the stored identity are not present in EVCS: "
                             + String.join(", ", missingStoredSignatures));
         }
-    }
-
-    private JWTClaimsSet getSisClaims(SisStoredIdentityCheckDto storedIdentity)
-            throws SisMatchException {
-        try {
-            var storedJwtParts = storedIdentity.content().split("\\.");
-            var storedJwt =
-                    new SignedJWT(
-                            new Base64URL(storedJwtParts[0]),
-                            new Base64URL(storedJwtParts[1]),
-                            new Base64URL(storedJwtParts[2]));
-            return storedJwt.getJWTClaimsSet();
-        } catch (Exception e) {
-            throw new SisMatchException(
-                    FailureCode.PARSE_ERROR,
-                    "Failed to parse stored identity JWT: " + e.getMessage());
-        }
-    }
-
-    private ArrayList<String> getSisSignatures(JWTClaimsSet sisClaims) {
-        return (ArrayList<String>) sisClaims.getClaims().get("credentials");
-    }
-
-    private Vot getSisRequestedVot(JWTClaimsSet sisClaims) {
-        var votString = (String) sisClaims.getClaims().get("vot");
-        return Vot.valueOf(votString);
     }
 
     private String getVcSignature(String vcString) {

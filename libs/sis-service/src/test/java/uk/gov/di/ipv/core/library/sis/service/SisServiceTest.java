@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -26,12 +28,14 @@ import uk.gov.di.ipv.core.library.sis.audit.AuditRestrictedSisComparison;
 import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
+import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityContent;
 import uk.gov.di.ipv.core.library.sis.enums.FailureCode;
 import uk.gov.di.ipv.core.library.sis.enums.VerificationOutcome;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 
 import java.text.ParseException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +52,11 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 
 @ExtendWith(MockitoExtension.class)
 class SisServiceTest {
+    private static final Base64.Encoder b64Encoder = Base64.getEncoder();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_VTM = "test-vtm";
     private static final String TEST_TOKEN = "test-token";
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_GOV_SIGNIN_JOURNEY_ID = "test-gov-signin-journey-id";
@@ -169,7 +176,7 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -182,7 +189,8 @@ class SisServiceTest {
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(SIS_JWT, false, true, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(
+                                P2_SIS_CONTENT, false, true, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisExpiredResult);
@@ -206,7 +214,7 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -240,55 +248,32 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Exception caught calculating VOT from EVCS VCs");
     }
 
     @Test
-    void shouldSendFailureAuditEventWhenStoredJwtCannotBeParsed() throws Exception {
-        // Arrange
-        var sisBadJwtResult =
-                new SisGetStoredIdentityResult(
-                        true,
-                        true,
-                        new SisStoredIdentityCheckDto(
-                                "Not.a.JWT", true, false, Vot.P2, true, true));
-
-        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
-                .thenReturn(sisBadJwtResult);
-
-        // Act
-        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
-
-        // Assert
-        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-        checkAuditEvent(
-                auditEventCaptor.getValue(),
-                VerificationOutcome.FAILURE,
-                FailureCode.PARSE_ERROR,
-                false,
-                true,
-                null,
-                null,
-                null,
-                null,
-                "Not.a.JWT",
-                List.of(),
-                List.of(),
-                "Failed to parse stored identity JWT: Invalid JWS header: Invalid JSON object");
-    }
-
-    @Test
     void shouldSendFailureAuditEventWhenMaxVotComparisonFails() throws Exception {
         // Arrange
+        var sisContent =
+                new SisStoredIdentityContent(
+                        TEST_USER_ID,
+                        Vot.P2,
+                        TEST_VTM,
+                        SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
         var sisP1MaxResult =
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P1, true, true));
+                        new SisStoredIdentityCheckDto(sisContent, true, false, Vot.P1, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP1MaxResult);
@@ -312,7 +297,7 @@ class SisServiceTest {
                 Vot.P1,
                 Vot.P2,
                 Vot.P2,
-                SIS_JWT,
+                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Maximum EVCS (P2) and SIS (P1) vots do not match");
@@ -321,11 +306,23 @@ class SisServiceTest {
     @Test
     void shouldSendFailureAuditEventWhenRequestedVotComparisonFails() throws Exception {
         // Arrange
+        var sisContent =
+                new SisStoredIdentityContent(
+                        TEST_USER_ID,
+                        Vot.P1,
+                        TEST_VTM,
+                        SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
         var sisP1CalculatedResult =
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(SIS_JWT_P1, true, false, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(sisContent, true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP1CalculatedResult);
@@ -349,7 +346,7 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                SIS_JWT_P1,
+                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Requested EVCS (P2) and SIS (P1) vots do not match");
@@ -380,7 +377,7 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 MISSING_ONE_SIGNATURES,
                 "Some signatures in the stored identity are not present in EVCS: 71rsp9h4OS8kZOK4LtKh5dRtQ1uX8On4OL0W3nhCSmSZhtPJrE-0TXuc9rpzWzS0a92mc-aNGggcKDGp7oSc3g");
@@ -411,7 +408,7 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
@@ -442,7 +439,7 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                SIS_JWT,
+                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
@@ -452,12 +449,24 @@ class SisServiceTest {
     void shouldSendSuccessAuditEventIfRequestedVotCannotBeAchieved() throws Exception {
         // Arrange
         clientOAuthSessionItem.setVtr(List.of("P3"));
+        var sisContent =
+                new SisStoredIdentityContent(
+                        TEST_USER_ID,
+                        Vot.P0,
+                        TEST_VTM,
+                        SUCCESSFUL_SIGNATURES,
+                        List.of(VcFixtures.vcDcmawPassport().getVcString()),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
         var sisP2Result =
                 new SisGetStoredIdentityResult(
                         true,
                         true,
                         new SisStoredIdentityCheckDto(
-                                SIS_JWT_P0, false, false, Vot.P2, true, true));
+                                sisContent, false, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, List.of(Vot.P3), TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
@@ -481,7 +490,7 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 Vot.P2,
-                SIS_JWT_P0,
+                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
@@ -527,6 +536,10 @@ class SisServiceTest {
         return VerifiableCredential.fromValidJwt(userId, cri, SignedJWT.parse(jwt));
     }
 
+    private static String base64Encode(SisStoredIdentityContent content) throws Exception {
+        return b64Encoder.encodeToString(OBJECT_MAPPER.writeValueAsBytes(content));
+    }
+
     // Dummy JWTs containing realistic looking data, created using JWT.IO and the dummy JWT content
     // from process-cri-callback contract tests
     // Passport JWT has been tweaked to strength 3 so that the EVCS calculated identity is only P2
@@ -547,30 +560,6 @@ class SisServiceTest {
     private static final String CIMIT_JWT =
             // pragma: allowlist nextline secret
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RpY2Yuc3R1YnMuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDQ4MjI1NzAsImlhdCI6MTcwNDgyMjU3MCwidmMiOnsiZXZpZGVuY2UiOlt7InR4biI6Ijk2M2RlZWI1LWE1MmMtNDAzMC1hNjlhLTMxODRmNzdhNGYxOCIsInR5cGUiOiJSaXNrQXNzZXNzbWVudCJ9XSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlJpc2tBc3Nlc3NtZW50Q3JlZGVudGlhbCJdfX0.H3mI9mnYfYRszuAQa-0HyIMkIjcmukvMsmpdOo0cTICOWwmvLF-hJgIqSkK17m2Ua6PE3wNo0CiLsotVK84_Og";
-
-    // Created in JWT.IO to contain the signatures from DCMAW_PASSPORT_JWT, ADDRESS_JWT, FRAUD_JWT,
-    // and CIMIT_JWT. Claiming to match a P2
-    private static final String SIS_JWT =
-            // pragma: allowlist nextline secret
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAyIiwiaWF0IjoxNzU2ODA4MzA0fQ.xGRJ14Py0jo1h5MIPPVUCOugBiJgrhhf7XwYQ7MxwG_2dRiLeOQd_-YuVZrOR2JVpzvmGNzhHHoC1vfKRaMoHA";
-
-    // This JWT is the same as the one above except that it says that the user has only reached P1
-    // instead of P2 for this request
-    private static final String SIS_JWT_P1 =
-            // pragma: allowlist nextline secret
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAxIiwiaWF0IjoxNzU2ODA4MzA0fQ.VdsdMY2CDlTmoWToD-w_x6hTmqMZkielHC2X9Gy-SXtTSRVGmF_BxOqU-zZV7ta64FTWDfFMiepsRt8N_mAawQ";
-
-    // This JWT is the same as the one above except that it says that the user has only reached P0
-    // instead of P2 for this request
-    private static final String SIS_JWT_P0 =
-            // pragma: allowlist nextline secret
-            "eyJraWQiOiJ0ZXN0LXNpZ25pbmcta2V5IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJhdWQiOiJodHRwczovL3JldXNlLWlkZW50aXR5LmJ1aWxkLmFjY291bnQuZ292LnVrIiwic3ViIjoic2lzdGVzdCIsIm5iZiI6MTc1NjgwODMwNCwiY3JlZGVudGlhbHMiOlsiVVVqRzJaNEhiM25TSU81c1pkUHpNd1lidDhjN2U5OHY1MDJXRXNsREdleHlVNnhycnFXRExiT1Ixc1VobjRYdUM3LUtLQV9xT0ExSDVqRUpTTDg2eVEiLCI3MXJzcDloNE9TOGtaT0s0THRLaDVkUnRRMXVYOE9uNE9MMFczbmhDU21TWmh0UEpyRS0wVFh1YzlycHpXelMwYTkybWMtYU5HZ2djS0RHcDdvU2MzZyIsIkxLbXYzMUx3UFdFS1d1aVRVdWhWcm0zNjctU1hGZmZMTkxNZzE1ZXI4dDNJcHRueS1PeTFwSEUtVE1kODBXLTdEZ1ZFSTFvQlcxQ0ZNOHdVd3ZVSThnIiwiSDNtSTltbllmWVJzenVBUWEtMEh5SU1rSWpjbXVrdk1zbXBkT28wY1RJQ09Xd212TEYtaEpnSXFTa0sxN20yVWE2UEUzd05vMENpTHNvdFZLODRfT2ciXSwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS5sb2NhbC5hY2NvdW50Lmdvdi51ayIsImNsYWltcyI6eyJodHRwczovL3ZvY2FiLmFjY291bnQuZ292LnVrL3YxL2NvcmVJZGVudGl0eSI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Iktlbm5ldGgifSx7InR5cGUiOiJGYW1pbHlOYW1lIiwidmFsdWUiOiJEZWNlcnF1ZWlyYSJ9XX1dLCJiaXJ0aERhdGUiOlt7InZhbHVlIjoiMTk2NS0wNy0wOCJ9XX0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImFkZHJlc3NMb2NhbGl0eSI6IkJBVEgiLCJidWlsZGluZ05hbWUiOiIiLCJidWlsZGluZ051bWJlciI6IjgiLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInZhbGlkRnJvbSI6IjIwMDAtMDEtMDEifV0sImh0dHBzOi8vdm9jYWIuYWNjb3VudC5nb3YudWsvdjEvcGFzc3BvcnQiOlt7ImRvY3VtZW50TnVtYmVyIjoiMzIxNjU0OTg3IiwiZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJpY2FvSXNzdWVyQ29kZSI6IkdCUiJ9XX0sInZvdCI6IlAwIiwiaWF0IjoxNzU2ODA4MzA0fQ.rtgjOekdVjVthUCirvRtewA25VA0hnK-QewHn3BqyROgLp1CYgbisi8BDh-zlYv4q114lnBvJ9kZD7Qx-2Tv9A";
-
-    private static final SisGetStoredIdentityResult SIS_SUCCESSFUL_RESULT =
-            new SisGetStoredIdentityResult(
-                    true,
-                    true,
-                    new SisStoredIdentityCheckDto(SIS_JWT, true, false, Vot.P2, true, true));
 
     private static final List<VerifiableCredential> EVCS_SUCCESSFUL_VCS;
     private static final List<VerifiableCredential> EVCS_MISSING_ONE_VCS;
@@ -623,4 +612,23 @@ class SisServiceTest {
                     getSignature(FRAUD_JWT),
                     getSignature(CIMIT_JWT),
                     getSignature(CIC_JWT));
+
+    private static final SisStoredIdentityContent P2_SIS_CONTENT =
+            new SisStoredIdentityContent(
+                    TEST_USER_ID,
+                    Vot.P2,
+                    TEST_VTM,
+                    SUCCESSFUL_SIGNATURES,
+                    List.of(VcFixtures.vcDcmawPassport().getVcString()),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+
+    private static final SisGetStoredIdentityResult SIS_SUCCESSFUL_RESULT =
+            new SisGetStoredIdentityResult(
+                    true,
+                    true,
+                    new SisStoredIdentityCheckDto(P2_SIS_CONTENT, true, false, Vot.P2, true, true));
 }
