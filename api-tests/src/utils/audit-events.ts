@@ -22,6 +22,15 @@ export const compareAuditEvents = (
   actualAuditEvents: AuditEvent[],
   expectedAuditEvent: AuditEvent[],
 ): ObjectPartialEqualityResult => {
+  if (actualAuditEvents.length !== expectedAuditEvent.length) {
+    const expectedEventNames = expectedAuditEvent.map((e) => e.event_name);
+    const actualEventNames = actualAuditEvents.map((e) => e.event_name);
+    return {
+      isPartiallyEqual: false,
+      errorMessage: `Expected (${expectedAuditEvent.length}) and actual (${actualAuditEvents.length}) events are not the same length. Expected: ${expectedEventNames} but found: ${actualEventNames}`,
+    };
+  }
+
   for (let i = 0; i < expectedAuditEvent.length; i++) {
     const comparisonResult = comparePartialEqualityBetweenObjects(
       actualAuditEvents[i],

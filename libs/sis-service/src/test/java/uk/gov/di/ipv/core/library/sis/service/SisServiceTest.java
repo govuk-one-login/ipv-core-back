@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.sis.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +50,6 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 
 @ExtendWith(MockitoExtension.class)
 class SisServiceTest {
-    private static final Base64.Encoder b64Encoder = Base64.getEncoder();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_VTM = "test-vtm";
     private static final String TEST_TOKEN = "test-token";
@@ -145,7 +140,6 @@ class SisServiceTest {
                 null,
                 null,
                 null,
-                "",
                 List.of(),
                 List.of(),
                 "Call to SIS service failed, no stored identity comparison can be made");
@@ -176,7 +170,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -214,7 +207,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 List.of(),
                 "Exception caught retrieving VCs from EVCS");
@@ -248,7 +240,6 @@ class SisServiceTest {
                 Vot.P2,
                 null,
                 null,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Exception caught calculating VOT from EVCS VCs");
@@ -297,7 +288,6 @@ class SisServiceTest {
                 Vot.P1,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Maximum EVCS (P2) and SIS (P1) vots do not match");
@@ -346,7 +336,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 "Requested EVCS (P2) and SIS (P1) vots do not match");
@@ -377,7 +366,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 MISSING_ONE_SIGNATURES,
                 "Some signatures in the stored identity are not present in EVCS: 71rsp9h4OS8kZOK4LtKh5dRtQ1uX8On4OL0W3nhCSmSZhtPJrE-0TXuc9rpzWzS0a92mc-aNGggcKDGp7oSc3g");
@@ -408,7 +396,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
@@ -439,7 +426,6 @@ class SisServiceTest {
                 Vot.P2,
                 Vot.P2,
                 Vot.P2,
-                base64Encode(P2_SIS_CONTENT),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
@@ -465,8 +451,7 @@ class SisServiceTest {
                 new SisGetStoredIdentityResult(
                         true,
                         true,
-                        new SisStoredIdentityCheckDto(
-                                sisContent, false, false, Vot.P2, true, true));
+                        new SisStoredIdentityCheckDto(sisContent, true, false, Vot.P2, true, true));
 
         when(sisClient.getStoredIdentity(TEST_TOKEN, List.of(Vot.P3), TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(sisP2Result);
@@ -485,12 +470,11 @@ class SisServiceTest {
                 VerificationOutcome.SUCCESS,
                 null,
                 false,
-                false,
+                true,
                 Vot.P0,
                 Vot.P2,
                 null,
                 Vot.P2,
-                base64Encode(sisContent),
                 SUCCESSFUL_SIGNATURES,
                 SUCCESSFUL_SIGNATURES,
                 null);
@@ -506,13 +490,11 @@ class SisServiceTest {
             Vot expectedSisMaxVot,
             Vot expectedEvcsRequestedVot,
             Vot expectedEvcsMaxVot,
-            String expectedSisJwt,
             List<String> expectedSisSignatures,
             List<String> expectedEvcsSignatures,
             String expectedFailureDetails) {
         var restrictedValues = (AuditRestrictedSisComparison) auditEvent.getRestricted();
         assertEquals(expectedFailureDetails, restrictedValues.getFailureDetails());
-        assertEquals(expectedSisJwt, restrictedValues.getSisJwt());
         assertEquals(expectedSisSignatures, restrictedValues.getSisSignatures());
         assertEquals(expectedEvcsSignatures, restrictedValues.getReconstructedSignatures());
 
@@ -534,10 +516,6 @@ class SisServiceTest {
     private static VerifiableCredential createVc(String userId, Cri cri, String jwt)
             throws ParseException, CredentialParseException {
         return VerifiableCredential.fromValidJwt(userId, cri, SignedJWT.parse(jwt));
-    }
-
-    private static String base64Encode(SisStoredIdentityContent content) throws Exception {
-        return b64Encoder.encodeToString(OBJECT_MAPPER.writeValueAsBytes(content));
     }
 
     // Dummy JWTs containing realistic looking data, created using JWT.IO and the dummy JWT content

@@ -55,6 +55,18 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
+  Scenario: Reuse journey - identity is compared when SIS comparison is enabled
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    And I activate the 'storedIdentityService,sisVerification' feature sets
+    And I have an existing stored identity record with a 'P2' vot
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    And audit events for 'reuse-journey-identity-compared' are recorded [local only]
+
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

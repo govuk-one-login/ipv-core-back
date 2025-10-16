@@ -1,0 +1,112 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_STORED_IDENTITY_CHECKED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "max_vot": "P2",
+      "reconstructed_vot": "P2",
+      "reconstructed_max_vot": "P2",
+      "is_valid": true,
+      "verification_outcome": "FAILURE",
+      "failure_code": "MISSING_SIGNATURE",
+      "vot": "P2",
+      "expired": false
+    },
+    "restricted": {
+      "reconstructedSignatures": ["type[string]"],
+      "sisSignatures": ["type[string]"],
+      "failureDetails": "type[string]"
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "previous_achieved_vot": "P2"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "REUSE_EXISTING_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_GPG45_PROFILE_MATCHED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "gpg45Profile": "M1B",
+      "gpg45Scores": {
+        "evidences": [
+          {
+            "strength": 3,
+            "validity": 2
+          }
+        ],
+        "activity": 1,
+        "fraud": 2,
+        "verification": 3
+      },
+      "vcTxnIds": []
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://ticf.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "type": "RiskAssessment"
+        }
+      ],
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "ticf",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "existing",
+      "vot": "P2",
+      "sis_record_created": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  }
+]

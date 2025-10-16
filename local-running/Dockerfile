@@ -1,4 +1,4 @@
-FROM amazoncorretto:21.0.7@sha256:d51610ff3c790833e308318d25424361a69680a4b7968329b73012ad502ab936 AS build
+FROM amazoncorretto:21.0.8@sha256:4599af808338fc153b3d921e5e85797a477320cb677d5c672390b790159eebd1 AS build
 
 WORKDIR /core-back
 
@@ -17,7 +17,7 @@ COPY local-running ./local-running
 RUN --mount=type=cache,target=/root/.gradle ./gradlew :local-running:build --no-daemon
 RUN mkdir untarred && tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
 
-FROM amazoncorretto:21.0.7@sha256:d51610ff3c790833e308318d25424361a69680a4b7968329b73012ad502ab936
+FROM amazoncorretto:21.0.8@sha256:4599af808338fc153b3d921e5e85797a477320cb677d5c672390b790159eebd1
 
 WORKDIR /core-back
 
