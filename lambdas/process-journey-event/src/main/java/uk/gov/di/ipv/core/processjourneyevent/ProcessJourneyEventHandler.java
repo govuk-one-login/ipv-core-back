@@ -113,7 +113,6 @@ public class ProcessJourneyEventHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyEventHandler(ConfigService configService) throws IOException {
-        // Comment just to create a PR. If you see me, please delete.
         this.configService = configService;
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
