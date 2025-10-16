@@ -129,7 +129,8 @@ export const generateCriStubUserInfoEndpointErrorBody = (
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
     requestedError: {
-      userInfoError: "404",
+      apiError: "404",
+      endpoint: "credential",
     },
   };
 };
