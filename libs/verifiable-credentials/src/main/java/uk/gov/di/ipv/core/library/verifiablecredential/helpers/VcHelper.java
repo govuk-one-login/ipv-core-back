@@ -161,7 +161,8 @@ public class VcHelper {
         }
     }
 
-    public static boolean allFraudVcsAreExpiredOrFromUnavailableSource(List<VerifiableCredential> vcs, ConfigService configService) {
+    public static boolean allFraudVcsAreExpiredOrFromUnavailableSource(
+            List<VerifiableCredential> vcs, ConfigService configService) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
                 .allMatch(

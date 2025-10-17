@@ -618,7 +618,8 @@ public class CheckExistingIdentityHandler
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
-                && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials, configService)) {
+                && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        credentialBundle.credentials, configService)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));

@@ -408,7 +408,7 @@ class SisServiceTest {
         when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
                 .thenReturn(SIS_SUCCESSFUL_RESULT);
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
-                TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(-1 * 100 * 365 * 24);
 

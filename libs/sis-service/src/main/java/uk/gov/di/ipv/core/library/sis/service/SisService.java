@@ -139,7 +139,10 @@ public class SisService {
                             .map(credential -> getVcSignature(credential.getVcString()))
                             .toList();
 
-            evcsExpired = !evcsCredentials.isEmpty() && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(evcsCredentials, configService);
+            evcsExpired =
+                    !evcsCredentials.isEmpty()
+                            && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                    evcsCredentials, configService);
 
             var evcsVotMatches =
                     calculateVotMatches(
@@ -154,7 +157,10 @@ public class SisService {
 
             // Compare VoTs
             assertMaxVotsMatch(sisMaxVot, evcsMaxVot);
-            assertRequestVotsMatch(evcsRequestedVot, sisRequestedVot, storedIdentityResult.identityDetails().isValid());
+            assertRequestVotsMatch(
+                    evcsRequestedVot,
+                    sisRequestedVot,
+                    storedIdentityResult.identityDetails().isValid());
 
             // Compare signatures
             assertSignatureListsMatch(evcsVcSignatures, sisVcSignatures);
@@ -254,12 +260,12 @@ public class SisService {
         }
     }
 
-    private static void assertRequestVotsMatch(Vot evcsRequestedVot, Vot sisRequestedVot, boolean sisIsValid) throws SisMatchException {
+    private static void assertRequestVotsMatch(
+            Vot evcsRequestedVot, Vot sisRequestedVot, boolean sisIsValid)
+            throws SisMatchException {
         // If SIS doesn't think it can provide a strong enough identity it will still return a
         // result with content.vot set to P0 and isValid set to true.
-        if (!(evcsRequestedVot == null
-                && sisRequestedVot == Vot.P0
-                && sisIsValid)
+        if (!(evcsRequestedVot == null && sisRequestedVot == Vot.P0 && sisIsValid)
                 && sisRequestedVot != evcsRequestedVot) {
             throw new SisMatchException(
                     FailureCode.REQUESTED_VOT_MISMATCH,
@@ -283,11 +289,16 @@ public class SisService {
         }
     }
 
-    private void assertExpiryMatches(boolean evcsExpired, boolean sisExpired) throws SisMatchException {
+    private void assertExpiryMatches(boolean evcsExpired, boolean sisExpired)
+            throws SisMatchException {
         if (evcsExpired != sisExpired) {
             throw new SisMatchException(
                     FailureCode.FRAUD_CHECK_MISMATCH,
-                    "Expiry mismatch between EVCS (" + evcsExpired + ") and SIS (" + sisExpired + ")");
+                    "Expiry mismatch between EVCS ("
+                            + evcsExpired
+                            + ") and SIS ("
+                            + sisExpired
+                            + ")");
         }
     }
 
