@@ -376,7 +376,7 @@ Feature: M2B Strategic App Journeys
       When I submit a 'smartphone' event
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
       When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -432,12 +432,12 @@ Feature: M2B Strategic App Journeys
       When I submit a 'computer-or-tablet' event
       Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
       When I submit a 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
       When I submit a 'preferNoApp' event
       Then I get a 'non-uk-no-app-options' page response
       # Change their mind and go back
       When I submit a 'useApp' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
       # Decide to abandon again
       When I submit a 'preferNoApp' event
       Then I get a 'non-uk-no-app-options' page response

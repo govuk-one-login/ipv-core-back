@@ -168,8 +168,10 @@ states:
     exitEvents:
       next:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        journeyContextToUnset: appOnly
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+        journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
@@ -179,9 +181,11 @@ states:
                 targetState: INELIGIBLE
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
+        journeyContextToUnset: appOnly
       failedDlAuthCheckInvalidDl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
+        journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
             targetJourney: FAILED
@@ -192,6 +196,7 @@ states:
           mitigationType: invalid-dl
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
+        journeyContextToUnset: appOnly
 
   STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
@@ -769,6 +774,7 @@ states:
       next:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
         auditEvents:
           - IPV_INTERNATIONAL_ADDRESS_START
       abandon:
@@ -840,6 +846,7 @@ states:
       next:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
       end:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
