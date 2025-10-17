@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.sis.pact;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
+import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
@@ -24,6 +25,7 @@ import uk.gov.di.ipv.core.library.sis.client.SisClient;
 import uk.gov.di.ipv.core.library.sis.client.SisGetStoredIdentityResult;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityCheckDto;
 import uk.gov.di.ipv.core.library.sis.dto.SisStoredIdentityContent;
+import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 
 import java.net.URI;
 import java.util.List;
@@ -394,13 +396,21 @@ class ContractTest {
                                                     credentials.stringValue(VC_SIGNATURES.get(2));
                                                     credentials.stringValue(VC_SIGNATURES.get(3));
                                                 });
-                                        siContent.array(
+                                        var jwtBuilder =
+                                                new PactJwtBuilder(
+                                                        VALID_VC_HEADER,
+                                                        VALID_VC_BODY,
+                                                        VALID_VC_SIGNATURE);
+
+                                        siContent.minMaxArrayLike(
                                                 "https://vocab.account.gov.uk/v1/credentialJWT",
-                                                credentials -> {
-                                                    credentials.stringValue(
-                                                            VcFixtures.vcDcmawPassport()
-                                                                    .getVcString());
-                                                });
+                                                1,
+                                                1,
+                                                PactDslJsonRootValue.stringMatcher(
+                                                        jwtBuilder
+                                                                .buildRegexMatcherIgnoringSignature(),
+                                                        jwtBuilder.buildJwt()),
+                                                1);
                                         siContent.object(
                                                 "https://vocab.account.gov.uk/v1/coreIdentity",
                                                 identity -> {
@@ -485,4 +495,83 @@ class ContractTest {
                         })
                 .build();
     }
+
+    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
+    // sent by the CRI team
+    private static final String VALID_VC_HEADER =
+            """
+            {
+              "alg": "ES256",
+              "typ": "JWT"
+            }
+            """;
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_VC_BODY =
+            """
+            {
+                "iss": "dummyPassportComponentId",
+                "sub": "test-subject",
+                "nbf": 4070908800,
+                "vc": {
+                    "type": [
+                        "VerifiableCredential",
+                        "IdentityCheckCredential"
+                    ],
+                    "credentialSubject": {
+                        "birthDate": [
+                            {
+                                "value": "1932-02-25"
+                            }
+                        ],
+                        "name": [
+                            {
+                                "nameParts": [
+                                    {
+                                        "type": "GivenName",
+                                        "value": "Mary"
+                                    },
+                                    {
+                                        "type": "FamilyName",
+                                        "value": "Watson"
+                                    }
+                                ]
+                            }
+                        ],
+                        "passport": [
+                            {
+                                "documentNumber": "824159121",
+                                "icaoIssuerCode": "GBR",
+                                "expiryDate": "2030-01-01"
+                            }
+                        ]
+                    },
+                    "evidence": [
+                        {
+                            "type": "IdentityCheck",
+                            "txn": "278450f1-75f5-4d0d-9e8e-8bc37a07248d",
+                            "strengthScore": 4,
+                            "validityScore": 2,
+                            "ci": [],
+                            "checkDetails": [
+                                {
+                                    "checkMethod": "data",
+                                    "dataCheck": "scenario_1"
+                                },
+                                {
+                                    "checkMethod": "data",
+                                    "dataCheck": "record_check"
+                                }
+                            ],
+                            "ciReasons": []
+                        }
+                    ]
+                },
+                "jti": "urn:uuid:b07cc7e3-a2dc-4b17-9826-6907fcf4059a"
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_SIGNATURE =
+            "ZmeS-B5HQkQBEOnRogwGVuYORA28YiriPbdeKeGUtwVJ4bmvOAZD5ePNVOKO6788N8TAuYCC1uofV0J1gr_e9g"; // pragma: allowlist secret
 }

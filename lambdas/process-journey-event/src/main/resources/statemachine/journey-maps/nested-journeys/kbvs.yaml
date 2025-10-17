@@ -7,6 +7,8 @@ description: >-
 entryEvents:
   next:
     targetState: PRE_DWP_KBV_PIP_PAGE
+    auditEvents:
+      - IPV_DWP_KBV_HANDOFF_START
     checkIfDisabled:
       dwpKbv:
         targetState: PRE_EXPERIAN_PAGE
