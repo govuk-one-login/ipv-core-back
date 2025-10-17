@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
@@ -44,13 +45,8 @@ public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
-    private static ConfigService configService;
 
     private VcHelper() {}
-
-    public static void setConfigService(ConfigService configService) {
-        VcHelper.configService = configService;
-    }
 
     public static boolean isSuccessfulVc(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
@@ -165,7 +161,17 @@ public class VcHelper {
         }
     }
 
-    public static boolean isExpiredFraudVc(VerifiableCredential vc) {
+    public static boolean allFraudVcsAreExpiredOrFromUnavailableSource(
+            List<VerifiableCredential> vcs, ConfigService configService) {
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
+                .allMatch(
+                        vc ->
+                                VcHelper.isExpiredFraudVc(vc, configService)
+                                        || VcHelper.hasUnavailableFraudCheck(vc));
+    }
+
+    public static boolean isExpiredFraudVc(VerifiableCredential vc, ConfigService configService) {
         var jwtClaimsSet = vc.getClaimsSet();
         var nbfClaim = jwtClaimsSet.getNotBeforeTime();
         var nbf = nbfClaim.toInstant();

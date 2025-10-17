@@ -47,6 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.sis.enums.FailureCode.FRAUD_CHECK_MISMATCH;
 
 @ExtendWith(MockitoExtension.class)
 class SisServiceTest {
@@ -399,6 +400,37 @@ class SisServiceTest {
                 SUCCESSFUL_SIGNATURES,
                 EXTRA_ONE_SIGNATURES,
                 "Some signatures from EVCS are not in the stored identity: baWWfh_BWaZa_cvtf04vKnk0GxNZQx7OeY-HJzMorR9CIJMPMjDVZLjiX1JPZAvnEQCdz2w7SFcwNCGdOZLkwA");
+    }
+
+    @Test
+    void shouldSendFailureAuditEventWhenExpiryComparisonFails() throws Exception {
+        // Arrange
+        when(sisClient.getStoredIdentity(TEST_TOKEN, REQUEST_VTR, TEST_GOV_SIGNIN_JOURNEY_ID))
+                .thenReturn(SIS_SUCCESSFUL_RESULT);
+        when(evcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(-1 * 100 * 365 * 24);
+
+        // Act
+        sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        checkAuditEvent(
+                auditEventCaptor.getValue(),
+                VerificationOutcome.FAILURE,
+                FRAUD_CHECK_MISMATCH,
+                false,
+                true,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
+                Vot.P2,
+                SUCCESSFUL_SIGNATURES,
+                SUCCESSFUL_SIGNATURES,
+                "Expiry mismatch between EVCS (true) and SIS (false)");
     }
 
     @Test

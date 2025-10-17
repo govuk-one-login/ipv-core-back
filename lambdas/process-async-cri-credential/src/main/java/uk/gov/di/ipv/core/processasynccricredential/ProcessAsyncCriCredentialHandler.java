@@ -79,7 +79,6 @@ public class ProcessAsyncCriCredentialHandler
         this.cimitService = cimitService;
         this.criResponseService = criResponseService;
         this.evcsService = evcsService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -90,7 +89,6 @@ public class ProcessAsyncCriCredentialHandler
         this.cimitService = new CimitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.evcsService = new EvcsService(configService);
-        VcHelper.setConfigService(this.configService);
     }
 
     @Override

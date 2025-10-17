@@ -124,8 +124,6 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
         this.oAuthKeyService = oAuthKeyService;
-
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -144,7 +142,6 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.oAuthKeyService = new OAuthKeyService(configService);
-        VcHelper.setConfigService(configService);
     }
 
     @Override

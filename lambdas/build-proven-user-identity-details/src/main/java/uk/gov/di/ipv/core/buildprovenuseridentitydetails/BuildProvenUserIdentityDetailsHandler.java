@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.PostalAddress;
 
@@ -56,7 +55,6 @@ public class BuildProvenUserIdentityDetailsHandler
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.sessionCredentialsService = sessionCredentialsService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -66,7 +64,6 @@ public class BuildProvenUserIdentityDetailsHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        VcHelper.setConfigService(this.configService);
     }
 
     @Override

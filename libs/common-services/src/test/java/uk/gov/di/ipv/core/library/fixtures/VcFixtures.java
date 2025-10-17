@@ -25,7 +25,6 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 import uk.gov.di.model.VerifiableCredentialType;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,6 +61,8 @@ public interface VcFixtures {
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String CIMIT_ISSUER = "https://cimit.stubs.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
+    Instant INSTANT_01_01_2099 = Instant.ofEpochSecond(4070908800L);
+    Instant INSTANT_26_07_2022 = Instant.ofEpochSecond(1658829758L);
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -953,7 +954,7 @@ public interface VcFixtures {
                 Cri.EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.now().minusSeconds(10));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudM1aExpired() {
@@ -962,7 +963,7 @@ public interface VcFixtures {
                 Cri.EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829758));
+                INSTANT_26_07_2022);
     }
 
     static VerifiableCredential vcExperianFraudEvidenceFailed() {
@@ -971,7 +972,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore0(),
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829758));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudScoreTwo() {
@@ -980,7 +981,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore2(),
                 FRAUD_ISSUER_STAGING,
-                Instant.ofEpochSecond(1704290386));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudExpired() {
@@ -989,19 +990,16 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829758));
+                INSTANT_26_07_2022);
     }
 
     static VerifiableCredential vcExperianFraudNotExpired() {
-        ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime sixMonthsLater = now.plusMonths(6);
-        Instant futureInstant = sixMonthsLater.toInstant();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                futureInstant);
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudScoreOne() {
@@ -1010,7 +1008,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_STAGING,
-                Instant.ofEpochSecond(1652953380));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudMissingName() {
@@ -1022,7 +1020,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_STAGING,
-                Instant.ofEpochSecond(1704290386));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudApplicableAuthoritativeSourceFailed() {
@@ -1043,7 +1041,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829758));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcExperianFraudAvailableAuthoritativeFailed() {
@@ -1064,7 +1062,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829758));
+                INSTANT_01_01_2099);
     }
 
     static VerifiableCredential vcWebDrivingPermitDvaValid() {
