@@ -25,7 +25,6 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 import uk.gov.di.model.VerifiableCredentialType;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -995,8 +994,6 @@ public interface VcFixtures {
     }
 
     static VerifiableCredential vcExperianFraudNotExpired() {
-        ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime sixMonthsLater = now.plusMonths(6);
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 EXPERIAN_FRAUD,
