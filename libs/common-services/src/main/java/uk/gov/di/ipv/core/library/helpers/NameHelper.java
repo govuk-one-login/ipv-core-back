@@ -4,11 +4,16 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NameHelper {
+
+    private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
+    private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'’-]+");
 
     @ExcludeFromGeneratedCoverageReport
     private NameHelper() {
@@ -20,15 +25,15 @@ public class NameHelper {
             return Set.of();
         }
 
-        var capitalisedFullNames = new ArrayList<String>();
+        var normalisedNames = new ArrayList<String>();
 
         return names.stream()
                 .filter(
                         name -> {
-                            var capitalisedFullName = NameHelper.getFullName(name).toUpperCase();
+                            var normalisedName = getNormalisedFullNameForComparison(name);
 
-                            if (!capitalisedFullNames.contains(capitalisedFullName)) {
-                                capitalisedFullNames.add(capitalisedFullName);
+                            if (!normalisedNames.contains(normalisedName)) {
+                                normalisedNames.add(normalisedName);
                                 return true;
                             }
                             return false;
@@ -36,7 +41,7 @@ public class NameHelper {
                 .collect(Collectors.toSet());
     }
 
-    public static String getFullName(Name name) {
+    public static String getNormalisedFullNameForComparison(Name name) {
         var nameParts = name.getNameParts();
 
         String givenNames =
@@ -45,7 +50,8 @@ public class NameHelper {
                                 namePart ->
                                         NamePart.NamePartType.GIVEN_NAME.equals(namePart.getType()))
                         .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
+                        .collect(Collectors.joining(" "))
+                        .trim();
 
         String familyNames =
                 nameParts.stream()
@@ -54,8 +60,20 @@ public class NameHelper {
                                         NamePart.NamePartType.FAMILY_NAME.equals(
                                                 namePart.getType()))
                         .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
+                        .collect(Collectors.joining(" "))
+                        .trim();
 
-        return (givenNames + " " + familyNames).trim();
+        return (normaliseNameForComparison(givenNames)
+                + " "
+                + normaliseNameForComparison(familyNames));
+    }
+
+    public static String normaliseNameForComparison(String name) {
+        var unicodeNormalisedName = Normalizer.normalize(name, Normalizer.Form.NFD);
+        var diacriticRemovedName =
+                DIACRITIC_CHECK_PATTERN.matcher(unicodeNormalisedName).replaceAll("");
+        var specialCharactersRemovedName =
+                IGNORE_SOME_CHARACTERS_PATTERN.matcher(diacriticRemovedName).replaceAll("");
+        return specialCharactersRemovedName.toLowerCase();
     }
 }
