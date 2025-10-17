@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.sis.exception.SisMatchException;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.ArrayList;
@@ -98,8 +99,10 @@ public class SisService {
         List<String> evcsVcSignatures = new ArrayList<>();
         Vot sisRequestedVot = null;
         Vot sisMaxVot = null;
+        boolean sisExpired = false;
         Vot evcsRequestedVot = null;
         Vot evcsMaxVot = null;
+        boolean evcsExpired = false;
 
         try {
             String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -126,6 +129,7 @@ public class SisService {
             sisRequestedVot = sisClaims.getVot();
             sisVcSignatures = sisClaims.getCredentialSignatures();
             sisMaxVot = storedIdentityResult.identityDetails().vot();
+            sisExpired = storedIdentityResult.identityDetails().expired();
 
             // Get EVCS details
             var evcsCredentials = getEvcsVerifiableCredentials(userId, evcsAccessToken);
@@ -135,7 +139,8 @@ public class SisService {
                             .map(credential -> getVcSignature(credential.getVcString()))
                             .toList();
 
-            // Compare VOTs
+            evcsExpired = !evcsCredentials.isEmpty() && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(evcsCredentials, configService);
+
             var evcsVotMatches =
                     calculateVotMatches(
                             evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
@@ -147,33 +152,15 @@ public class SisService {
                             ? evcsRequestedVotOptional.get().vot()
                             : null;
 
-            if (sisMaxVot != evcsMaxVot) {
-                throw new SisMatchException(
-                        FailureCode.MAX_VOT_MISMATCH,
-                        "Maximum EVCS ("
-                                + (evcsMaxVot == null ? "no VOT" : evcsMaxVot)
-                                + ") and SIS ("
-                                + sisMaxVot
-                                + ") vots do not match");
-            }
-
-            // If SIS doesn't think it can provide a strong enough identity it will still return a
-            // result with content.vot set to P0 and isValid set to true.
-            if (!(evcsRequestedVot == null
-                            && sisRequestedVot == Vot.P0
-                            && storedIdentityResult.identityDetails().isValid())
-                    && sisRequestedVot != evcsRequestedVot) {
-                throw new SisMatchException(
-                        FailureCode.REQUESTED_VOT_MISMATCH,
-                        "Requested EVCS ("
-                                + (evcsRequestedVot == null ? "no VOT" : evcsRequestedVot)
-                                + ") and SIS ("
-                                + sisRequestedVot
-                                + ") vots do not match");
-            }
+            // Compare VoTs
+            assertMaxVotsMatch(sisMaxVot, evcsMaxVot);
+            assertRequestVotsMatch(evcsRequestedVot, sisRequestedVot, storedIdentityResult.identityDetails().isValid());
 
             // Compare signatures
             assertSignatureListsMatch(evcsVcSignatures, sisVcSignatures);
+
+            // Compare expiry
+            assertExpiryMatches(evcsExpired, sisExpired);
 
             sendComparisonAuditEvent(
                     auditEventUser,
@@ -264,6 +251,43 @@ public class SisService {
         } catch (Exception e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Failed to send SIS comparison audit event", e));
+        }
+    }
+
+    private static void assertRequestVotsMatch(Vot evcsRequestedVot, Vot sisRequestedVot, boolean sisIsValid) throws SisMatchException {
+        // If SIS doesn't think it can provide a strong enough identity it will still return a
+        // result with content.vot set to P0 and isValid set to true.
+        if (!(evcsRequestedVot == null
+                && sisRequestedVot == Vot.P0
+                && sisIsValid)
+                && sisRequestedVot != evcsRequestedVot) {
+            throw new SisMatchException(
+                    FailureCode.REQUESTED_VOT_MISMATCH,
+                    "Requested EVCS ("
+                            + (evcsRequestedVot == null ? "no VOT" : evcsRequestedVot)
+                            + ") and SIS ("
+                            + sisRequestedVot
+                            + ") vots do not match");
+        }
+    }
+
+    private static void assertMaxVotsMatch(Vot sisMaxVot, Vot evcsMaxVot) throws SisMatchException {
+        if (sisMaxVot != evcsMaxVot) {
+            throw new SisMatchException(
+                    FailureCode.MAX_VOT_MISMATCH,
+                    "Maximum EVCS ("
+                            + (evcsMaxVot == null ? "no VOT" : evcsMaxVot)
+                            + ") and SIS ("
+                            + sisMaxVot
+                            + ") vots do not match");
+        }
+    }
+
+    private void assertExpiryMatches(boolean evcsExpired, boolean sisExpired) throws SisMatchException {
+        if (evcsExpired != sisExpired) {
+            throw new SisMatchException(
+                    FailureCode.FRAUD_CHECK_MISMATCH,
+                    "Expiry mismatch between EVCS (" + evcsExpired + ") and SIS (" + sisExpired + ")");
         }
     }
 
