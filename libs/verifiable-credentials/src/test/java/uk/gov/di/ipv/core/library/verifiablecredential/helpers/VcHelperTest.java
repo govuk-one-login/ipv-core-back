@@ -191,6 +191,41 @@ class VcHelperTest {
         assertFalse(VcHelper.isExpiredFraudVc(vc, configService));
     }
 
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpired() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vc = vcExperianFraudExpired();
+
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vc, vc), configService));
+    }
+
+    @Test
+    void shouldReturnFalseWhenSomeVcsAreNotExpired() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotExpired = vcExperianFraudNotExpired();
+
+        assertFalse(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotExpired), configService));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredOrNotAvailable() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotAvailable), configService));
+    }
+
     private static Stream<Arguments> UnsuccessfulTestCases() {
         return Stream.of(
                 Arguments.of("VC missing evidence", vcWebPassportM1aMissingEvidence()),
