@@ -61,7 +61,6 @@ public class CriStoringService {
         this.criResponseService = criResponseService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.cimitService = cimitService;
-        VcHelper.setConfigService(configService);
     }
 
     public void recordCriResponse(

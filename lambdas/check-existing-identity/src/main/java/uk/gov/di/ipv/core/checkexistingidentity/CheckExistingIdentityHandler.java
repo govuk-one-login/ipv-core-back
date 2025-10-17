@@ -195,7 +195,6 @@ public class CheckExistingIdentityHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.votMatcher = votMatcher;
         this.aisService = aisService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -230,7 +229,6 @@ public class CheckExistingIdentityHandler
         this.votMatcher =
                 new VotMatcher(
                         userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
-        VcHelper.setConfigService(this.configService);
     }
 
     private record VerifiableCredentialBundle(
@@ -620,7 +618,7 @@ public class CheckExistingIdentityHandler
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
-                && allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials)) {
+                && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials, configService)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));
@@ -671,15 +669,6 @@ public class CheckExistingIdentityHandler
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
-    }
-
-    private boolean allFraudVcsAreExpiredOrFromUnavailableSource(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
-                .allMatch(
-                        vc ->
-                                VcHelper.isExpiredFraudVc(vc)
-                                        || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
     private void sendAuditEvent(

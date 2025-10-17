@@ -175,23 +175,20 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueWhenVcIsExpired() {
-        VcHelper.setConfigService(configService);
-
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         var vc = vcExperianFraudExpired();
 
-        assertTrue(VcHelper.isExpiredFraudVc(vc));
+        assertTrue(VcHelper.isExpiredFraudVc(vc, configService));
     }
 
     @Test
     void shouldReturnFalseWhenVcIsNotExpired() {
-        VcHelper.setConfigService(configService);
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         var vc = vcExperianFraudNotExpired();
 
-        assertFalse(VcHelper.isExpiredFraudVc(vc));
+        assertFalse(VcHelper.isExpiredFraudVc(vc, configService));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {

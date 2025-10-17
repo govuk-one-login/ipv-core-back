@@ -56,7 +56,6 @@ public class BuildProvenUserIdentityDetailsHandler
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.sessionCredentialsService = sessionCredentialsService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -66,7 +65,6 @@ public class BuildProvenUserIdentityDetailsHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        VcHelper.setConfigService(this.configService);
     }
 
     @Override

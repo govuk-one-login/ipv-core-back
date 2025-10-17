@@ -110,7 +110,6 @@ public class ProcessCriCallbackHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.auditService = auditService;
         this.sessionCredentialsService = sessionCredentialsService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -141,8 +140,6 @@ public class ProcessCriCallbackHandler
                         new CriResponseService(configService),
                         sessionCredentialsService,
                         cimitService);
-
-        VcHelper.setConfigService(configService);
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
