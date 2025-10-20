@@ -6,8 +6,6 @@ on:
       - main
     paths-ignore:
       - '**/README.md'
-      - '.github/workflows/secure-post-merge.yml'
-      - '.github/workflows/secure-post-merge-notags.yml'
   workflow_dispatch:
 
 jobs:
