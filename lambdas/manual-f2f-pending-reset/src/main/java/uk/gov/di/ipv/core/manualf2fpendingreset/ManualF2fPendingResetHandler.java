@@ -59,7 +59,7 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
 
         try {
             validateInput(input);
-            findPendingRecord(input);
+            checkIfPendingRecordExists(input);
             deletePendingRecord(input);
 
             LOGGER.info(LogHelper.buildLogMessage("Successfully deleted F2F pending record"));
@@ -92,23 +92,14 @@ public class ManualF2fPendingResetHandler implements RequestHandler<String, Map<
         }
     }
 
-    private void findPendingRecord(String userId) {
-        try {
-            if (criResponseService.getCriResponseItem(userId, Cri.F2F) == null) {
-                throw new ManualF2fPendingResetException("No F2F pending record found.");
-            }
-        } catch (ManualF2fPendingResetException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ManualF2fPendingResetException("Failed to look up F2F record", e);
+    private void checkIfPendingRecordExists(String userId) {
+        var response = criResponseService.getCriResponseItem(userId, Cri.F2F);
+        if (response == null) {
+            throw new ManualF2fPendingResetException("No F2F pending record found.");
         }
     }
 
     private void deletePendingRecord(String userId) {
-        try {
-            criResponseService.deleteCriResponseItem(userId, Cri.F2F);
-        } catch (Exception e) {
-            throw new ManualF2fPendingResetException("Failed to delete F2F pending record", e);
-        }
+        criResponseService.deleteCriResponseItem(userId, Cri.F2F);
     }
 }
