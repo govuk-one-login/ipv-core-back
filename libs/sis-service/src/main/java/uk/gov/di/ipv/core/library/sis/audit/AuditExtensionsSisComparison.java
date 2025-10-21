@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.sis.audit;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -31,6 +32,7 @@ public class AuditExtensionsSisComparison implements AuditExtensions {
     private final VerificationOutcome verificationOutcome;
 
     @JsonProperty("failure_code")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final FailureCode failureCode;
 
     public AuditExtensionsSisComparison(

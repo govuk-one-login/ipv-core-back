@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.sis.audit;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestricted;
@@ -12,6 +13,8 @@ public class AuditRestrictedSisComparison implements AuditRestricted {
 
     private final List<String> reconstructedSignatures;
     private final List<String> sisSignatures;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String failureDetails;
 
     public AuditRestrictedSisComparison(
