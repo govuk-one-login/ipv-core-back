@@ -637,7 +637,7 @@ public class CheckExistingIdentityHandler
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventUser,
                 deviceInformation,
-                new AuditExtensionPreviousAchievedVot(previousAchievedVot));
+                new AuditExtensionPreviousAchievedVot(previousAchievedVot, previousAchievedVot));
         EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
