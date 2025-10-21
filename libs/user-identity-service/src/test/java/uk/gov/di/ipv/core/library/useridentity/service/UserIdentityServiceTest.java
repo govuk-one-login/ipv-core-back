@@ -258,6 +258,26 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void areVCsCorrelatedReturnFalseWhenNamesConcatenateToTheSameString() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                PASSPORT,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                PASSPORT,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimb", "oJones", "1000-01-01")));
+
+        // Act & Assert
+        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+    }
+
+    @Test
     void areVCsCorrelatedReturnFalseWhenNameDifferentForBavCRI() throws Exception {
         // Arrange
         var vcs =
