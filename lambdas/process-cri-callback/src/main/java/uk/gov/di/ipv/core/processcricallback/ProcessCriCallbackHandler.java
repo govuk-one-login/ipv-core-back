@@ -53,7 +53,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
-import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
@@ -110,7 +109,6 @@ public class ProcessCriCallbackHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.auditService = auditService;
         this.sessionCredentialsService = sessionCredentialsService;
-        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -141,8 +139,6 @@ public class ProcessCriCallbackHandler
                         new CriResponseService(configService),
                         sessionCredentialsService,
                         cimitService);
-
-        VcHelper.setConfigService(configService);
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high

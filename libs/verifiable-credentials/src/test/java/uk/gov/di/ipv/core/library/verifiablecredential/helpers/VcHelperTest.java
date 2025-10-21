@@ -175,23 +175,55 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueWhenVcIsExpired() {
-        VcHelper.setConfigService(configService);
-
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         var vc = vcExperianFraudExpired();
 
-        assertTrue(VcHelper.isExpiredFraudVc(vc));
+        assertTrue(VcHelper.isExpiredFraudVc(vc, configService));
     }
 
     @Test
     void shouldReturnFalseWhenVcIsNotExpired() {
-        VcHelper.setConfigService(configService);
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
         var vc = vcExperianFraudNotExpired();
 
-        assertFalse(VcHelper.isExpiredFraudVc(vc));
+        assertFalse(VcHelper.isExpiredFraudVc(vc, configService));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpired() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vc = vcExperianFraudExpired();
+
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vc, vc), configService));
+    }
+
+    @Test
+    void shouldReturnFalseWhenSomeVcsAreNotExpired() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotExpired = vcExperianFraudNotExpired();
+
+        assertFalse(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotExpired), configService));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredOrNotAvailable() {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotAvailable), configService));
     }
 
     private static Stream<Arguments> UnsuccessfulTestCases() {

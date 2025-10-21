@@ -69,7 +69,6 @@ public class UserIdentityService {
     public UserIdentityService(ConfigService configService) {
         this.configService = configService;
         this.cimitUtilityService = new CimitUtilityService(configService);
-        VcHelper.setConfigService(configService);
     }
 
     public UserIdentity generateUserIdentity(
