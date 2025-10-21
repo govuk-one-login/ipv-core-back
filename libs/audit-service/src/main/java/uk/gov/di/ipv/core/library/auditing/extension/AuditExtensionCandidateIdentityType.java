@@ -9,5 +9,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 public record AuditExtensionCandidateIdentityType(
         @JsonProperty(value = "identity_type", required = true) CandidateIdentityType identityType,
         @JsonProperty(value = "sis_record_created", required = true) Boolean sisRecordCreated,
-        @JsonProperty(required = false) Vot vot)
+        @JsonProperty(required = false) Vot vot,
+        @JsonProperty(value = "max_vot", required = false) Vot maxVot)
         implements AuditExtensions {}
