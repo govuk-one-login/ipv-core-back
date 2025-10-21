@@ -100,7 +100,7 @@ class ContractTest {
                         "Content-Type", APPLICATION_JSON)
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
@@ -168,7 +168,7 @@ class ContractTest {
                         "Content-Type", APPLICATION_JSON)
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(noInterventionWithWarningsTicfVcJwtHelper)))
                 .toPact();
     }
@@ -240,7 +240,7 @@ class ContractTest {
                         "Content-Type", APPLICATION_JSON)
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(interventionTicfVcJwtHelper)))
                 .toPact();
     }
@@ -313,7 +313,7 @@ class ContractTest {
                         "application/json; charset=UTF-8")
                 .body(getRequestBody(List.of(passportVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(emptyTicfVcJwtHelper)))
                 .toPact();
     }
@@ -375,7 +375,7 @@ class ContractTest {
                         "Content-Type", APPLICATION_JSON)
                 .body(getRequestBody(List.of(dvlaVcJwtHelper, passportVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
@@ -441,7 +441,7 @@ class ContractTest {
                 .headers("x-api-key", PRIVATE_API_KEY)
                 .body(getRequestBody(List.of()))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(noInterventionTicfVcJwtHelper)))
                 .toPact();
     }
@@ -507,7 +507,7 @@ class ContractTest {
                         "Content-Type", APPLICATION_JSON)
                 .body(getRequestBody(List.of(dvlaWithCiVcJwtHelper)))
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .body(getResponseBody(List.of(noInterventionWithWarningsTicfVcJwtHelper)))
                 .toPact();
     }
