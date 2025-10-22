@@ -737,6 +737,15 @@ Resources:
                           - dev01
                           - dev02
                         - !Ref Environment
+                  - !Sub
+                    - "arn:aws:s3:::ipv-core-well-known-jwks-${env}/well-known-v5.json"
+                    - env: !If
+                        - IsDevelopment
+                        - !If
+                          - IsDev01
+                          - dev01
+                          - dev02
+                        - !Ref Environment
         - PolicyName: AccessDidS3Bucket
           PolicyDocument:
             Version: "2012-10-17"
