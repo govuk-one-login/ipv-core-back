@@ -247,6 +247,60 @@ class StateMachineTest {
     }
 
     @Test
+    void transitionShouldCombineJourneyContextsFromFirstAndSecondTransitionIntoNestedJourney()
+            throws Exception {
+        // Arrange
+        var nestedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey1", "testValue1"),
+                        null,
+                        List.of("nestedContextToSet"),
+                        List.of("nestedContextToUnset"));
+        State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
+        when(nestedJourneyInvokeState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
+                .thenReturn(nestedResult);
+
+        State startingState = mock(BasicState.class);
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
+                .thenReturn(
+                        new TransitionResult(
+                                nestedJourneyInvokeState,
+                                Arrays.asList(AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START),
+                                Map.of("testKey2", "testValue2"),
+                                null,
+                                List.of("contextToSet"),
+                                List.of("contextToUnset")));
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
+
+        // Assert
+        var expectedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                                AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey1", "testValue1", "testKey2", "testValue2"),
+                        null,
+                        List.of("contextToSet", "nestedContextToSet"),
+                        List.of("contextToUnset", "nestedContextToUnset"));
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
     void transitionShouldTransitionIntoNestedJourneyInvokeStateWithEntryEventOverride()
             throws Exception {
         var event = "event";

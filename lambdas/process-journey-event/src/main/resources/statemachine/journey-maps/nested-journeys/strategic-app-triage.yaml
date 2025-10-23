@@ -4,7 +4,17 @@ description: >-
   and handover to the appropriate journey type.
 entryEvents:
   appTriage:
+    checkJourneyContext:
+      mamIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mamAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      dadIphone:
+        targetState: DAD_IPHONE_START_SESSION
+      dadAndroid:
+        targetState: DAD_ANDROID_START_SESSION
     targetState: IDENTIFY_DEVICE
+    journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
@@ -70,9 +80,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        journeyContextToSet: dadIphone
         checkJourneyContext:
           appOnly:
             targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+            journeyContextToSet: dadIphone
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -258,9 +270,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        journeyContextToSet: dadAndroid
         checkJourneyContext:
           appOnly:
             targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+            journeyContextToSet: dadAndroid
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -287,9 +301,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        journeyContextToSet: mamIphone
         checkJourneyContext:
           appOnly:
             targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+            journeyContextToSet: mamIphone
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -347,9 +363,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        journeyContextToSet: mamAndroid
         checkJourneyContext:
           appOnly:
             targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+            journeyContextToSet: mamAndroid
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -440,4 +458,13 @@ nestedJourneyStates:
       failedDlAuthCheckInvalidDl:
         exitEventToEmit: failedDlAuthCheckInvalidDl
       retryApp:
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
         targetState: IDENTIFY_DEVICE

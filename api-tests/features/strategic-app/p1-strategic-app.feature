@@ -6,7 +6,7 @@ Feature: M2B Strategic App Journeys
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: Happy path MAM journey declared iphone
       When I submit an 'appTriage' event

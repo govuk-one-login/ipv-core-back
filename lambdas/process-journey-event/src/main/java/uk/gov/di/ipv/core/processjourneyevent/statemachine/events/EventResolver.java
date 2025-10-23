@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -116,13 +117,13 @@ public class EventResolver {
             List<String> journeyContextsToSet = new ArrayList<>();
             var eventContextToSet = event.getJourneyContextToSet();
             if (eventContextToSet != null && !eventContextToSet.isEmpty()) {
-                journeyContextsToSet.add(eventContextToSet);
+                Collections.addAll(journeyContextsToSet, eventContextToSet.split(","));
             }
 
             List<String> journeyContextsToUnset = new ArrayList<>();
             var eventContextToUnset = event.getJourneyContextToUnset();
             if (eventContextToUnset != null && !eventContextToUnset.isEmpty()) {
-                journeyContextsToUnset.add(eventContextToUnset);
+                Collections.addAll(journeyContextsToUnset, eventContextToUnset.split(","));
             }
 
             return new TransitionResult(

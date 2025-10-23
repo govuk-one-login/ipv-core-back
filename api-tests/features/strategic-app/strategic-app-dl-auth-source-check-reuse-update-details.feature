@@ -169,12 +169,6 @@ Feature: Identity reuse update details with Strategic App
             When I submit a 'next' event
 
             # Attempt 2 - retry after viewing prove-identity-another-way
-            Then I get an 'identify-device' page response
-            When I submit an 'appTriage' event
-            Then I get a 'pyi-triage-select-device' page response
-            When I submit a 'smartphone' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-            When I submit an 'iphone' event
             Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
             When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
             # And the user returns from the app to core-front
@@ -191,12 +185,6 @@ Feature: Identity reuse update details with Strategic App
             When I submit an 'anotherTypePhotoId' event
 
             # Attempt 3 - give up
-            Then I get an 'identify-device' page response
-            When I submit an 'appTriage' event
-            Then I get a 'pyi-triage-select-device' page response
-            When I submit a 'smartphone' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-            When I submit an 'iphone' event
             Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
             When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
             # And the user returns from the app to core-front
