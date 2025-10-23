@@ -28,10 +28,10 @@ declare global {
   }
   interface Element {
     style: {
-      stroke: string;
+      stroke?: string;
     };
     // Used to keep track of the previous colour or a path
-    previousColour: string;
+    previousColour?: string;
   }
 }
 
