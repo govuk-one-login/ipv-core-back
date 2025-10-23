@@ -30,6 +30,8 @@ interface RenderableMap {
   states: StateNode[];
 }
 
+export const DEFAULT_EDGE_COLOUR = "#E5E4E2";
+
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (
@@ -200,7 +202,7 @@ export const render = async (
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
   journeyMaps: Record<string, JourneyMap>,
-): Promise<string> => {
+): Promise<{ mermaidString: string; edgeIds: string[] }> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
   const direction = TOP_DOWN_JOURNEYS.includes(selectedJourney) ? "TD" : "LR";
 
@@ -244,11 +246,21 @@ export const render = async (
     ];
   });
 
-  return `${getMermaidHeader(direction)}
+  const edgeIds = transitionStrings
+    .filter((_, idx) => (idx + 1) % 2 !== 0)
+    .map((transitionString) => {
+      const trimmed = transitionString.trimStart();
+      return trimmed.slice(trimmed.indexOf(" ") + 1, trimmed.indexOf("@"));
+    });
+
+  return {
+    mermaidString: `${getMermaidHeader(direction)}
     ${states.map(renderState).join("\n")}
     ${states.map(renderClickHandler).join("\n")}
     ${transitionStrings.join("\n")}
-  `;
+  `,
+    edgeIds,
+  };
 };
 
 const getStrokeWidth = (count: number, maxCount: number): number => {

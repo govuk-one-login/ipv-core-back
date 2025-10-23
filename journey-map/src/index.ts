@@ -1,7 +1,7 @@
 import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import yaml from "yaml";
-import { render } from "./render.js";
+import { DEFAULT_EDGE_COLOUR, render } from "./render.js";
 import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
@@ -25,6 +25,11 @@ declare global {
   interface Window {
     // Used to define a click handler for use in the mermaid
     onStateClick?: (state: string, encodedDef: string) => void;
+  }
+  interface Element {
+    style: {
+      stroke: string;
+    };
   }
 }
 
@@ -314,7 +319,7 @@ const renderSvg = async (
   selectedNestedJourney: string | null,
   options: RenderOptions,
 ): Promise<void> => {
-  const diagram = await render(
+  const { mermaidString: diagram, edgeIds } = await render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
@@ -326,6 +331,32 @@ const renderSvg = async (
   if (bindFunctions) {
     bindFunctions(diagramElement);
   }
+
+  // There isn't a native way in mermaid.js to add an id to the
+  // edge labels so we manually add them after the diagram
+  // has been rendered onto the dom
+  const edgeLabels = document.querySelectorAll("span.edgeLabel");
+  edgeLabels.forEach((label, idx) => {
+    label.id = edgeIds[idx];
+    label.addEventListener("click", () => {
+      const edge = document.querySelector(`path[id^=${label.id}]`);
+      if (edge) {
+        // Reset all edges and paths to default styling
+        Array.from(document.querySelectorAll(`g.edgePaths path`))
+          .filter((edge) => edge.style.stroke === "black")
+          .forEach((edge) => (edge.style.stroke = DEFAULT_EDGE_COLOUR));
+        Array.from(
+          document.getElementsByClassName("edgeLabelIdentifier"),
+        ).forEach((edgeLabel) =>
+          edgeLabel.classList.remove("edgeLabelIdentifier"),
+        );
+
+        edge.style.stroke = "black";
+        label.classList.add("edgeLabelIdentifier");
+      }
+    });
+  });
+
   svgPanZoomInstance = svgPanZoom("#diagramSvg", {
     controlIconsEnabled: true,
     dblClickZoomEnabled: false,
