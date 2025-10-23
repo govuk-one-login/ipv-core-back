@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.sis.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +25,7 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VCS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SisStoredIdentityContent extends UserClaims {
     @NonNull
     @JsonProperty(value = "credentials")
