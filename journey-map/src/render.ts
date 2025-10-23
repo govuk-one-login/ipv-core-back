@@ -30,6 +30,9 @@ interface RenderableMap {
   states: StateNode[];
 }
 
+const DEFAULT_EDGE_COLOUR = "#ADADAC";
+const HIGHLIGHTED_JOURNEY_EDGE_COLOUR = "#FF8888";
+
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (
@@ -235,8 +238,8 @@ export const render = async (
   );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-      ? `#FF8888${alphaFromCount(t.transitionCount, maxCount)}`
-      : "#E5E4E2";
+      ? `${HIGHLIGHTED_JOURNEY_EDGE_COLOUR}${alphaFromCount(t.transitionCount, maxCount)}`
+      : DEFAULT_EDGE_COLOUR;
     const strokeWidth = getStrokeWidth(t.transitionCount ?? 0, maxCount);
     return [
       renderTransition(t),
