@@ -30,8 +30,6 @@ interface RenderableMap {
   states: StateNode[];
 }
 
-export const DEFAULT_EDGE_COLOUR = "#E5E4E2";
-
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (

@@ -1,7 +1,7 @@
 import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import yaml from "yaml";
-import { DEFAULT_EDGE_COLOUR, render } from "./render.js";
+import { render } from "./render.js";
 import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
@@ -30,6 +30,8 @@ declare global {
     style: {
       stroke: string;
     };
+    // Used to keep track of the previous colour or a path
+    previousColour: string;
   }
 }
 
@@ -317,7 +319,7 @@ const highlightEdgeAndLabel = (edge: Element, edgeLabel: Element) => {
   // Reset all edges and paths to default styling
   Array.from(document.querySelectorAll(`g.edgePaths path`))
     .filter((edge) => edge.style.stroke === "black")
-    .forEach((edge) => (edge.style.stroke = DEFAULT_EDGE_COLOUR));
+    .forEach((edge) => (edge.style.stroke = edge.previousColour));
   Array.from(document.getElementsByClassName("edgeLabelIdentifier")).forEach(
     (edgeLabel) => edgeLabel.classList.remove("edgeLabelIdentifier"),
   );
@@ -343,6 +345,7 @@ const setEdgeAndLabelClickHandlers = (edgeIds: string[]) => {
 
   const edges = document.querySelectorAll("g.edgePaths path");
   edges.forEach((edge) => {
+    edge.previousColour = edge.style.stroke;
     edge.addEventListener("click", () => {
       const label = document.querySelector(`span[id=${edge.id}]`);
       if (label) {
@@ -371,6 +374,9 @@ const renderSvg = async (
     bindFunctions(diagramElement);
   }
 
+  // There isn't a native way in mermaid.js to add event handlers
+  // to edges and their labels so we create them once the svg
+  // has been rendered onto the dom
   setEdgeAndLabelClickHandlers(edgeIds);
 
   svgPanZoomInstance = svgPanZoom("#diagramSvg", {
