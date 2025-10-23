@@ -317,7 +317,7 @@ core:
     dwpKbv:
       id: dwpKbv
       name: DWP KBV
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
@@ -414,7 +414,3 @@ core:
         ticf:
           enabled: true
     # CRI enablement combinations
-    dwpKbvTest:
-      credentialIssuers:
-        dwpKbv:
-          enabled: true

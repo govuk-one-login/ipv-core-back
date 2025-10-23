@@ -241,18 +241,17 @@ Feature: Disabled CRI journeys
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
 
-    Scenario: Experian KBV is offered first
-      Given I activate the 'dwpKbvDisabled' feature sets
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
-
     Scenario: Experian KBV is offered if DWP KBV unsuitable
-      Given I activate the 'dwpKbvTest' feature set
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'personal-independence-payment' page response
       When I submit an 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+
+    Scenario: Experian KBV is offered first
+      Given I activate the 'dwpKbvDisabled' feature sets
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response

@@ -83,7 +83,6 @@ Feature: P1 CIMIT - Alternate doc
         | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'pyi-passport-no-match'        | 'pyi-continue-with-driving-licence' |'drivingLicence'| 'kenneth-driving-permit-valid' |
 
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV
-      Given I activate the 'dwpKbvTest' feature set
       When I submit an <initialCri> event
       Then I get a <initialCri> CRI response
       When I submit <initialInvalidDoc> details to the CRI stub
@@ -117,7 +116,6 @@ Feature: P1 CIMIT - Alternate doc
         | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
     Scenario Outline: Alternate doc mitigation user drops out of DWP KBV CRI via thin file
-      Given I activate the 'dwpKbvTest' feature set
       When I submit an <initialCri> event
       Then I get a <initialCri> CRI response
       When I submit <initialInvalidDoc> details to the CRI stub
@@ -159,7 +157,6 @@ Feature: P1 CIMIT - Alternate doc
         | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV PIP page dropout
-      Given I activate the 'dwpKbvTest' feature set
       When I submit an <initialCri> event
       Then I get a <initialCri> CRI response
       When I submit <initialInvalidDoc> details to the CRI stub
@@ -193,7 +190,6 @@ Feature: P1 CIMIT - Alternate doc
         | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV transition page dropout
-      Given I activate the 'dwpKbvTest' feature set
       When I submit an <initialCri> event
       Then I get a <initialCri> CRI response
       When I submit <initialInvalidDoc> details to the CRI stub
