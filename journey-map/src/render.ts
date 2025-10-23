@@ -30,6 +30,9 @@ interface RenderableMap {
   states: StateNode[];
 }
 
+const DEFAULT_EDGE_COLOUR = "#ADADAC";
+const HIGHLIGHTED_JOURNEY_EDGE_COLOUR = "#FF8888";
+
 // Trace transitions (edges) and states (nodes) traced from the initial states
 // This allows us to skip unreachable states
 const getVisibleEdgesAndNodes = async (
@@ -200,7 +203,7 @@ export const render = async (
   nestedJourneys: Record<string, NestedJourneyMap>,
   options: RenderOptions,
   journeyMaps: Record<string, JourneyMap>,
-): Promise<string> => {
+): Promise<{ mermaidString: string; edgeIds: string[] }> => {
   const isNestedJourney = selectedJourney in nestedJourneys;
   const direction = TOP_DOWN_JOURNEYS.includes(selectedJourney) ? "TD" : "LR";
 
@@ -235,8 +238,8 @@ export const render = async (
   );
   const transitionStrings = transitions.flatMap((t, i) => {
     const colour = t.transitionCount
-      ? `#FF8888${alphaFromCount(t.transitionCount, maxCount)}`
-      : "#E5E4E2";
+      ? `${HIGHLIGHTED_JOURNEY_EDGE_COLOUR}${alphaFromCount(t.transitionCount, maxCount)}`
+      : DEFAULT_EDGE_COLOUR;
     const strokeWidth = getStrokeWidth(t.transitionCount ?? 0, maxCount);
     return [
       renderTransition(t),
@@ -244,16 +247,26 @@ export const render = async (
     ];
   });
 
-  return `${getMermaidHeader(direction)}
+  const edgeIds = transitionStrings
+    .filter((_, idx) => (idx + 1) % 2 !== 0)
+    .map((transitionString) => {
+      const trimmed = transitionString.trimStart();
+      return trimmed.slice(trimmed.indexOf(" ") + 1, trimmed.indexOf("@"));
+    });
+
+  return {
+    mermaidString: `${getMermaidHeader(direction)}
     ${states.map(renderState).join("\n")}
     ${states.map(renderClickHandler).join("\n")}
     ${transitionStrings.join("\n")}
-  `;
+  `,
+    edgeIds,
+  };
 };
 
 const getStrokeWidth = (count: number, maxCount: number): number => {
-  if (maxCount <= 0) return 1;
-  const minWidth = 1;
+  if (maxCount <= 0) return 2;
+  const minWidth = 2;
   const maxWidth = 8;
   const ratio = Math.min(1, Math.max(0, count / maxCount));
   return minWidth + (maxWidth - minWidth) * ratio;

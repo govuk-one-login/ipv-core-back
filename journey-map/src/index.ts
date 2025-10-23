@@ -26,6 +26,13 @@ declare global {
     // Used to define a click handler for use in the mermaid
     onStateClick?: (state: string, encodedDef: string) => void;
   }
+  interface Element {
+    style: {
+      stroke?: string;
+    };
+    // Used to keep track of the previous colour or a path
+    previousColour?: string;
+  }
 }
 
 const DEFAULT_JOURNEY_TYPE = "INITIAL_JOURNEY_SELECTION";
@@ -308,13 +315,53 @@ const updateView = async (): Promise<void> => {
   await renderSvg(selectedJourney, selectedNestedJourney, options);
 };
 
+const highlightEdgeAndLabel = (edge: Element, edgeLabel: Element) => {
+  // Reset all edges and paths to default styling
+  Array.from(document.querySelectorAll(`g.edgePaths path`))
+    .filter((edge) => edge.style.stroke === "black")
+    .forEach((edge) => (edge.style.stroke = edge.previousColour));
+  Array.from(document.getElementsByClassName("edgeLabelIdentifier")).forEach(
+    (edgeLabel) => edgeLabel.classList.remove("edgeLabelIdentifier"),
+  );
+
+  edge.style.stroke = "black";
+  edgeLabel.classList.add("edgeLabelIdentifier");
+};
+
+const setEdgeAndLabelClickHandlers = (edgeIds: string[]) => {
+  const edgeLabels = document.querySelectorAll("span.edgeLabel");
+  edgeLabels.forEach((label, idx) => {
+    // There isn't a native way in mermaid.js to add an id to the
+    // edge labels so we manually add them after the diagram
+    // has been rendered onto the dom
+    label.id = edgeIds[idx];
+    label.addEventListener("click", () => {
+      const edge = document.querySelector(`path[id^=${label.id}]`);
+      if (edge) {
+        highlightEdgeAndLabel(edge, label);
+      }
+    });
+  });
+
+  const edges = document.querySelectorAll("g.edgePaths path");
+  edges.forEach((edge) => {
+    edge.previousColour = edge.style.stroke;
+    edge.addEventListener("click", () => {
+      const label = document.querySelector(`span[id=${edge.id}]`);
+      if (label) {
+        highlightEdgeAndLabel(edge, label);
+      }
+    });
+  });
+};
+
 // Render the journey map SVG
 const renderSvg = async (
   selectedJourney: string,
   selectedNestedJourney: string | null,
   options: RenderOptions,
 ): Promise<void> => {
-  const diagram = await render(
+  const { mermaidString: diagram, edgeIds } = await render(
     selectedNestedJourney ?? selectedJourney,
     journeyMaps[selectedJourney],
     nestedJourneys,
@@ -326,6 +373,12 @@ const renderSvg = async (
   if (bindFunctions) {
     bindFunctions(diagramElement);
   }
+
+  // There isn't a native way in mermaid.js to add event handlers
+  // to edges and their labels so we create them once the svg
+  // has been rendered onto the dom
+  setEdgeAndLabelClickHandlers(edgeIds);
+
   svgPanZoomInstance = svgPanZoom("#diagramSvg", {
     controlIconsEnabled: true,
     dblClickZoomEnabled: false,
