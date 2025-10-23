@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientDetails;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator;
@@ -96,7 +96,7 @@ public class BuildClientOauthResponseHandler
 
     @Override
     @Logging(clearState = true)
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);

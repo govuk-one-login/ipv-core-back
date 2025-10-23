@@ -16,8 +16,8 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.lambda.powertools.parameters.AppConfigProvider;
-import software.amazon.lambda.powertools.parameters.SecretsProvider;
+import software.amazon.lambda.powertools.parameters.appconfig.AppConfigProvider;
+import software.amazon.lambda.powertools.parameters.secrets.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;

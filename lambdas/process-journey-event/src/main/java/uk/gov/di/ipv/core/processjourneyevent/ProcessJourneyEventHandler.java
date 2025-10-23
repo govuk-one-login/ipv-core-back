@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -133,7 +133,7 @@ public class ProcessJourneyEventHandler
 
     @Override
     @Logging(clearState = true)
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);

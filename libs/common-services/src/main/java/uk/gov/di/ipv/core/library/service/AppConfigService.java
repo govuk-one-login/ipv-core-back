@@ -12,10 +12,10 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.lambda.powertools.parameters.AppConfigProvider;
 import software.amazon.lambda.powertools.parameters.BaseProvider;
-import software.amazon.lambda.powertools.parameters.ParamManager;
-import software.amazon.lambda.powertools.parameters.SecretsProvider;
+import software.amazon.lambda.powertools.parameters.appconfig.AppConfigProvider;
+import software.amazon.lambda.powertools.parameters.cache.CacheManager;
+import software.amazon.lambda.powertools.parameters.secrets.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
@@ -23,12 +23,12 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
@@ -51,21 +51,28 @@ public class AppConfigService extends ConfigService {
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
 
+        CacheManager cacheManager = new CacheManager();
+        cacheManager.setDefaultExpirationTime(Duration.ofMinutes(cacheDuration));
+
         appConfigProvider =
-                ParamManager.getAppConfigProvider(
+                AppConfigProvider.builder()
+                        .withClient(
                                 AppConfigDataClient.builder()
                                         .httpClientBuilder(UrlConnectionHttpClient.builder())
-                                        .build(),
-                                environmentId,
-                                applicationId)
-                        .withMaxAge(cacheDuration, MINUTES);
+                                        .build())
+                        .withEnvironment(environmentId)
+                        .withApplication(applicationId)
+                        .withCacheManager(cacheManager)
+                        .build();
 
         secretsProvider =
-                ParamManager.getSecretsProvider(
+                SecretsProvider.builder()
+                        .withClient(
                                 SecretsManagerClient.builder()
                                         .httpClient(UrlConnectionHttpClient.create())
                                         .build())
-                        .defaultMaxAge(cacheDuration, MINUTES);
+                        .withCacheManager(cacheManager)
+                        .build();
     }
 
     @ExcludeFromGeneratedCoverageReport
