@@ -45,7 +45,7 @@ public class SisStoredIdentityContent extends UserClaims {
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
             @JsonProperty(value = "credentials", required = true) List<String> credentialSignatures,
-            @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
+            @JsonProperty(value = VCS_CLAIM_NAME) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
             @JsonProperty(value = ADDRESS_CLAIM_NAME) List<PostalAddress> addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
