@@ -161,7 +161,8 @@ class StoreIdentityServiceTest {
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
             assertEquals(
-                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+                    P2,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).maxVot());
             assertEquals(
                     CandidateIdentityType.NEW,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
@@ -191,7 +192,8 @@ class StoreIdentityServiceTest {
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
             assertEquals(
-                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+                    P2,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).maxVot());
             assertEquals(
                     CandidateIdentityType.UPDATE,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
@@ -218,7 +220,7 @@ class StoreIdentityServiceTest {
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).maxVot());
             assertEquals(
                     CandidateIdentityType.PENDING,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
@@ -249,7 +251,7 @@ class StoreIdentityServiceTest {
             var auditEvent = auditEventCaptor.getValue();
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).maxVot());
             assertEquals(
                     CandidateIdentityType.PENDING,
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())

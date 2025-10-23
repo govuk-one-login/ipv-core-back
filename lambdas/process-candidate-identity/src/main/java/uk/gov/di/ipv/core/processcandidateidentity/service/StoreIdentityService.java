@@ -92,7 +92,7 @@ public class StoreIdentityService {
             SharedAuditEventParameters auditEventParameters,
             boolean isSiRecordCreated) {
 
-        var vot = Objects.isNull(strongestMatchedVot) ? null : strongestMatchedVot.vot();
+        var maxVot = Objects.isNull(strongestMatchedVot) ? null : strongestMatchedVot.vot();
 
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
@@ -100,7 +100,7 @@ public class StoreIdentityService {
                         configService.getComponentId(),
                         auditEventParameters.auditEventUser(),
                         new AuditExtensionCandidateIdentityType(
-                                identityType, isSiRecordCreated, vot),
+                                identityType, isSiRecordCreated, maxVot, maxVot),
                         new AuditRestrictedDeviceInformation(
                                 auditEventParameters.deviceInformation())));
     }

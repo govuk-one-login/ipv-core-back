@@ -1007,7 +1007,7 @@ class CheckExistingIdentityHandlerTest {
             var ext =
                     (AuditExtensionPreviousAchievedVot)
                             auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
-            assertEquals(P2, ext.getPreviousAchievedVot());
+            assertEquals(P2, ext.previousAchievedMaxVot());
 
             verify(mockSessionCredentialService)
                     .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
@@ -1051,7 +1051,7 @@ class CheckExistingIdentityHandlerTest {
             var ext =
                     (AuditExtensionPreviousAchievedVot)
                             auditEventArgumentCaptor.getAllValues().get(0).getExtensions();
-            assertEquals(null, ext.getPreviousAchievedVot());
+            assertEquals(null, ext.previousAchievedMaxVot());
         }
 
         @Test
