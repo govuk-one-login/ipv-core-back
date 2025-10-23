@@ -237,5 +237,5 @@ span.edgeLabel .defaultEdgeLabel:last-child {
   border-bottom: none;
 }
 span.edgeLabelIdentifier {
-  text-shadow: 0.5px 0px 0px #555, -0.5px 0px 0px #555;
+  text-shadow: 0.3px 0px 0px #555, -0.3px 0px 0px #555;
 }

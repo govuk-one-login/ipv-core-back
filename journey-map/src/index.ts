@@ -313,6 +313,45 @@ const updateView = async (): Promise<void> => {
   await renderSvg(selectedJourney, selectedNestedJourney, options);
 };
 
+const highlightEdgeAndLabel = (edge: Element, edgeLabel: Element) => {
+  // Reset all edges and paths to default styling
+  Array.from(document.querySelectorAll(`g.edgePaths path`))
+    .filter((edge) => edge.style.stroke === "black")
+    .forEach((edge) => (edge.style.stroke = DEFAULT_EDGE_COLOUR));
+  Array.from(document.getElementsByClassName("edgeLabelIdentifier")).forEach(
+    (edgeLabel) => edgeLabel.classList.remove("edgeLabelIdentifier"),
+  );
+
+  edge.style.stroke = "black";
+  edgeLabel.classList.add("edgeLabelIdentifier");
+};
+
+const setEdgeAndLabelClickHandlers = (edgeIds: string[]) => {
+  const edgeLabels = document.querySelectorAll("span.edgeLabel");
+  edgeLabels.forEach((label, idx) => {
+    // There isn't a native way in mermaid.js to add an id to the
+    // edge labels so we manually add them after the diagram
+    // has been rendered onto the dom
+    label.id = edgeIds[idx];
+    label.addEventListener("click", () => {
+      const edge = document.querySelector(`path[id^=${label.id}]`);
+      if (edge) {
+        highlightEdgeAndLabel(edge, label);
+      }
+    });
+  });
+
+  const edges = document.querySelectorAll("g.edgePaths path");
+  edges.forEach((edge) => {
+    edge.addEventListener("click", () => {
+      const label = document.querySelector(`span[id=${edge.id}]`);
+      if (label) {
+        highlightEdgeAndLabel(edge, label);
+      }
+    });
+  });
+};
+
 // Render the journey map SVG
 const renderSvg = async (
   selectedJourney: string,
@@ -332,30 +371,7 @@ const renderSvg = async (
     bindFunctions(diagramElement);
   }
 
-  // There isn't a native way in mermaid.js to add an id to the
-  // edge labels so we manually add them after the diagram
-  // has been rendered onto the dom
-  const edgeLabels = document.querySelectorAll("span.edgeLabel");
-  edgeLabels.forEach((label, idx) => {
-    label.id = edgeIds[idx];
-    label.addEventListener("click", () => {
-      const edge = document.querySelector(`path[id^=${label.id}]`);
-      if (edge) {
-        // Reset all edges and paths to default styling
-        Array.from(document.querySelectorAll(`g.edgePaths path`))
-          .filter((edge) => edge.style.stroke === "black")
-          .forEach((edge) => (edge.style.stroke = DEFAULT_EDGE_COLOUR));
-        Array.from(
-          document.getElementsByClassName("edgeLabelIdentifier"),
-        ).forEach((edgeLabel) =>
-          edgeLabel.classList.remove("edgeLabelIdentifier"),
-        );
-
-        edge.style.stroke = "black";
-        label.classList.add("edgeLabelIdentifier");
-      }
-    });
-  });
+  setEdgeAndLabelClickHandlers(edgeIds);
 
   svgPanZoomInstance = svgPanZoom("#diagramSvg", {
     controlIconsEnabled: true,
