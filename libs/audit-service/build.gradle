@@ -13,7 +13,6 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkUrlConnectionClient,
 			libs.powertoolsLogging,
-			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials")

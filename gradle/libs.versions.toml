@@ -26,7 +26,6 @@ diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.3"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
-jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 javalin = "io.javalin:javalin:6.7.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:6.0.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:6.0.0"
@@ -38,7 +37,6 @@ mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.30"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.20.1-alpha"
-openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
