@@ -249,7 +249,6 @@ Feature: Disabled CRI journeys
       Then I get a 'page-pre-experian-kbv-transition' page response
 
     Scenario: Experian KBV is offered if DWP KBV unsuitable
-      Given I activate the 'dwpKbvTest' feature set
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |

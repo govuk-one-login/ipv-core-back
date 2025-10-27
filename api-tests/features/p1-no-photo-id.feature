@@ -69,7 +69,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - NINO dropout
-    Given I activate the 'dwpKbvTest' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -127,7 +126,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV
-    Given I activate the 'dwpKbvTest' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -162,7 +160,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
-    Given I activate the 'dwpKbvTest' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -203,7 +200,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV PIP page dropout
-    Given I activate the 'dwpKbvTest' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -238,7 +234,7 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
-    Given I activate the 'dwpKbvTest,disableStrategicApp' feature sets
+    Given I activate the 'disableStrategicApp' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event

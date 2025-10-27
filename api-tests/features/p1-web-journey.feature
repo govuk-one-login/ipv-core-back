@@ -194,9 +194,6 @@ Feature: P1 Web Journeys
       | ukPassport     | kenneth-passport-valid       |
 
   Rule: Route through DWP KBV
-    Background: Enable DWP KBV
-      Given I activate the 'dwpKbvTest' feature set
-
     Scenario Outline: Successful P1 journey - via <cri> and DWP KBV
       When I submit an '<cri>' event
       Then I get a '<cri>' CRI response
