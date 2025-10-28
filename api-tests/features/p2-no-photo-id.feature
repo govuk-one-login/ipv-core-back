@@ -30,6 +30,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -98,6 +100,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -122,6 +126,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -146,6 +152,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -274,6 +282,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -324,6 +334,8 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
