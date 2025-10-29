@@ -14,7 +14,8 @@ This is a small JavaScript-based tool to display the journey map in an interacti
 
 ### Tests
 
-The unit tests can be run with `npm run test`, and use the built-in node test runner.
+The unit tests can be run with `npm run test`, and use the vitest test runner.
+To run tests in Idea you will need to install the vitest plugin.
 
 Linting and typechecking are available with `npm run lint` and `npm run tsc`.
 

@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyState } from "../types.js";
 import { contractNestedJourneys } from "./contract-nested.js";
@@ -29,6 +28,6 @@ describe("contractNestedJourneys", () => {
     contractNestedJourneys(states);
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toStrictEqual(expected);
   });
 });

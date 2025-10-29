@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyState } from "../types.js";
 import { addJourneyTransitions } from "./add-journey-transitions.js";
@@ -31,6 +30,6 @@ describe("addJourneyTransitions", () => {
     addJourneyTransitions(states);
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 });

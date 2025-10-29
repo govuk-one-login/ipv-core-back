@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { getAsFullJourneyMap } from "./uplift-nested.js";
 import { JourneyMap, NestedJourneyMap } from "../types.js";
@@ -59,7 +58,7 @@ describe("getAsFullJourneyMap", () => {
     const actual = getAsFullJourneyMap(original);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    expect(actual).toEqual(expected);
   });
 
   it("should add synthetic exit events", () => {
@@ -111,6 +110,6 @@ describe("getAsFullJourneyMap", () => {
     const actual = getAsFullJourneyMap(original);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    expect(actual).toEqual(expected);
   });
 });

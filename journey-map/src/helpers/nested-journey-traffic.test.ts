@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
-import assert from "node:assert";
+import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import { attachTransitionTrafficToNestedJourneys } from "./nested-journey-traffic.js";
 import { TransitionEdge } from "./mermaid.js";
 import { JourneyTransition } from "../data/data.js";
@@ -178,14 +177,14 @@ describe("nestedJourneysTraffic", () => {
       (edge) =>
         edge.sourceState === "CRI_ADDRESS" && edge.targetState === "CRI_FRAUD",
     );
-    assert.equal(midEdge?.transitionCount, 20);
+    expect(midEdge?.transitionCount).toEqual(20);
 
     // Assert - exit nodes
     const exitEdge = TEST_TRANSITION_EDGES.find(
       (edge) =>
         edge.sourceState === "CRI_FRAUD" && edge.targetState === "EXIT_NEXT",
     );
-    assert.equal(exitEdge?.transitionCount, 10);
+    expect(exitEdge?.transitionCount).toEqual(10);
 
     // Assert - exit nodes - different exit than above
     const differentExitEdge = TEST_TRANSITION_EDGES.find(
@@ -193,7 +192,7 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "CRI_FRAUD" &&
         edge.targetState === "EXIT_FRAUD-FAIL-WITH-NO-CI",
     );
-    assert.equal(differentExitEdge?.transitionCount, 3);
+    expect(differentExitEdge?.transitionCount).toEqual(3);
 
     // Assert - from nested journey node
     const moreNestedToCurrentNested = TEST_TRANSITION_EDGES.find(
@@ -201,14 +200,14 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "NESTED_JOURNEY" &&
         edge.targetState === "NEXT_NODE",
     );
-    assert.equal(moreNestedToCurrentNested?.transitionCount, 20);
+    expect(moreNestedToCurrentNested?.transitionCount).toEqual(20);
 
     // Assert - to error nodes
     const toFailedNodeEdge = TEST_TRANSITION_EDGES.find(
       (edge) =>
         edge.sourceState === "CRI_FRAUD" && edge.targetState === "FAILED",
     );
-    assert.equal(toFailedNodeEdge?.transitionCount, 5);
+    expect(toFailedNodeEdge?.transitionCount).toEqual(5);
 
     // Assert - no transitions
     const noTransitionEdge = TEST_TRANSITION_EDGES.find(
@@ -216,6 +215,6 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "NODE_WITH_NO_TRANSITION" &&
         edge.targetState === "SOME_NODE",
     );
-    assert.equal(noTransitionEdge?.transitionCount, 0);
+    expect(noTransitionEdge?.transitionCount).toEqual(0);
   });
 });

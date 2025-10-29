@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyState } from "../types.js";
 import { getJourneyContexts } from "./journey-context.js";
@@ -28,7 +27,7 @@ describe("getJourneyContexts", () => {
     const actual = getJourneyContexts(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    expect(actual).toEqual(expected);
   });
 
   it("should find journey contexts in nested conditions", () => {
@@ -55,7 +54,7 @@ describe("getJourneyContexts", () => {
     const actual = getJourneyContexts(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    expect(actual).toEqual(expected);
   });
 
   it("should deduplicate", () => {
@@ -88,6 +87,6 @@ describe("getJourneyContexts", () => {
     const actual = getJourneyContexts(states);
 
     // Assert
-    assert.deepEqual(actual, expected);
+    expect(actual).toEqual(expected);
   });
 });
