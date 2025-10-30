@@ -4,7 +4,7 @@ jackson = "2.20.0"
 log4j = "2.25.0"
 mockito = "5.20.0"
 pact = "4.6.17"
-powertools = "1.20.1"
+powertools = "2.5.0"
 
 [libraries]
 apacheHttpCore = "org.apache.httpcomponents.core5:httpcore5:5.3.3"
@@ -26,7 +26,6 @@ diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.3"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
-jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 javalin = "io.javalin:javalin:6.7.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:6.0.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:6.0.0"
@@ -38,13 +37,14 @@ mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.30"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.20.1-alpha"
-openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
-powertoolsLogging = { module = "software.amazon.lambda:powertools-logging", version.ref = "powertools" }
+powertoolsLogging = { module = "software.amazon.lambda:powertools-logging-log4j", version.ref = "powertools" }
 powertoolsMetrics = { module = "software.amazon.lambda:powertools-metrics", version.ref = "powertools" }
 powertoolsParameters = { module = "software.amazon.lambda:powertools-parameters", version.ref = "powertools" }
+powertoolsSecrets = { module = "software.amazon.lambda:powertools-parameters-secrets", version.ref = "powertools" }
+powertoolsAppConfig = { module = "software.amazon.lambda:powertools-parameters-appconfig", version.ref = "powertools" }
 systemStubs = "uk.org.webcompere:system-stubs-jupiter:2.1.3"
 
 [bundles]

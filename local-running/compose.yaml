@@ -72,6 +72,7 @@ services:
       ENVIRONMENT: local
       AWS_EMF_ENVIRONMENT: Local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
+      POWERTOOLS_METRICS_NAMESPACE: CoreBackEmbeddedMetrics-local
     ports:
       - "4502:4502"
       - "5002:5002"

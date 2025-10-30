@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
-import static io.netty.handler.codec.http.HttpMethod.POST;
 import static org.apache.hc.core5.http.ContentType.APPLICATION_JSON;
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
@@ -112,7 +111,7 @@ class ContractTest {
                 .given(String.format("A request returns at least %s vot", EXPECTED_VOT))
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
-                .method(POST.name())
+                .method("POST")
                 .headers(
                         Map.of(
                                 AUTHORIZATION,
@@ -281,7 +280,7 @@ class ContractTest {
         return builder.given("Request is missing mandatory field vtr")
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
-                .method(POST.name())
+                .method("POST")
                 .headers(
                         Map.of(
                                 AUTHORIZATION,
@@ -318,7 +317,7 @@ class ContractTest {
         return builder.given("Malformed response is missing vtr")
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
-                .method(POST.name())
+                .method("POST")
                 .headers(
                         Map.of(
                                 AUTHORIZATION,
@@ -350,7 +349,7 @@ class ContractTest {
         return builder.given(given)
                 .uponReceiving("A request to get user stored identity")
                 .path(USER_IDENTITY_ENDPOINT_PATH)
-                .method(POST.name())
+                .method("POST")
                 .headers(
                         Map.of(
                                 AUTHORIZATION,

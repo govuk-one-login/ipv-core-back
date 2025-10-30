@@ -5,9 +5,9 @@ import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-import software.amazon.cloudwatchlogs.emf.logger.MetricsLogger;
-import software.amazon.cloudwatchlogs.emf.model.DimensionSet;
-import software.amazon.lambda.powertools.metrics.MetricsUtils;
+import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.MetricsFactory;
+import software.amazon.lambda.powertools.metrics.model.DimensionSet;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
@@ -35,7 +35,7 @@ import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.REV
 
 @ExcludeFromGeneratedCoverageReport
 public class EmbeddedMetricHelper {
-    private static final MetricsLogger METRICS_LOGGER = MetricsUtils.metricsLogger();
+    private static final Metrics METRICS_LOGGER = MetricsFactory.getMetricsInstance();
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Getter
@@ -128,12 +128,12 @@ public class EmbeddedMetricHelper {
     private static void recordMetric(
             Map<Dimension, String> dimensions, Map<Metric, Double> metrics) {
         try {
-            ThreadContext.getContext().forEach(METRICS_LOGGER::putProperty);
+            ThreadContext.getContext().forEach(METRICS_LOGGER::addMetadata);
             dimensions.forEach(
                     (dimension, value) ->
-                            METRICS_LOGGER.putDimensions(
+                            METRICS_LOGGER.addDimension(
                                     DimensionSet.of(dimension.getName(), value)));
-            metrics.forEach((metric, value) -> METRICS_LOGGER.putMetric(metric.getName(), value));
+            metrics.forEach((metric, value) -> METRICS_LOGGER.addMetric(metric.getName(), value));
         } catch (Exception e) {
             LOGGER.warn("Failed to record embedded metric", e);
         }

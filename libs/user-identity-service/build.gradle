@@ -13,7 +13,6 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.powertoolsLogging,
-			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:gpg45-evaluator")

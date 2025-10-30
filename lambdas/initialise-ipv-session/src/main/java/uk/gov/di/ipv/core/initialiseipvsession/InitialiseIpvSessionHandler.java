@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
@@ -107,7 +107,7 @@ public class InitialiseIpvSessionHandler
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
     @Logging(clearState = true)
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachTraceId();

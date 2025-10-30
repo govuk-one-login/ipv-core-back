@@ -15,7 +15,6 @@ dependencies {
 			libs.awsSdkUrlConnectionClient,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
-			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 

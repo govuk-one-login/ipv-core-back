@@ -36,10 +36,11 @@ subprojects {
 	}
 
 	tasks.withType(Test) {
-		// Configures environment variables to avoid errors in AWS X-Ray and EMF loggers
+		// Configures environment variables to avoid errors when running tests
 		environment "LAMBDA_TASK_ROOT", "handler"
 		environment 'AWS_EMF_ENVIRONMENT', 'Local'
 		environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
+		environment 'POWERTOOLS_METRICS_NAMESPACE', 'test'
 
 		// Class data sharing doesn't work with the tests anyway, and this suppresses the warning
 		jvmArgs('-Xshare:off')

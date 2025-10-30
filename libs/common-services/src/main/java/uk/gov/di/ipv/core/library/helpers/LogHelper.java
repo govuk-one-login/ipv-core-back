@@ -3,8 +3,8 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import io.opentelemetry.api.trace.Span;
 import org.apache.logging.log4j.message.StringMapMessage;
+import org.slf4j.MDC;
 import software.amazon.awssdk.utils.StringUtils;
-import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -165,7 +165,7 @@ public class LogHelper {
     }
 
     private static void attachFieldToLogs(LogField field, String value) {
-        LoggingUtils.appendKey(field.getFieldName(), value);
+        MDC.put(field.getFieldName(), value);
     }
 
     public static StringMapMessage buildLogMessage(String message) {
