@@ -8,6 +8,9 @@ The Journey Map consists of `sub-journeys` which represent unique user journeys 
 
 [Nested journeys](#nested-journeys) are stored within [`/resources/statemachine/journey-maps/nested-journey`](https://github.com/govuk-one-login/ipv-core-back/tree/main/lambdas/process-journey-event/src/main/resources/statemachine/journey-maps/nested-journeys).
 
+## Journey Map Visualiser
+To see a visualisation of the journey map, visit the [journey-map visualiser](https://journey-map.stubs.account.gov.uk/). More information on how to access and use it can be found in the [team manual](https://team-manual.account.gov.uk/teams/IPV-Core-team/How-IPV-Core-Works/understanding-journey-map/).
+
 ## Top-level structure of Sub-Journeys
 Each sub-journey map file starts with a `name`, `description` and `states` field:
 ```yaml
