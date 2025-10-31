@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.cfg.CoercionAction;
+import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
+import com.fasterxml.jackson.databind.type.LogicalType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -309,9 +312,13 @@ public abstract class ConfigService {
 
     public static Config generateConfiguration(String yaml) {
         try {
-            LOGGER.info(yaml);
+            OBJECT_MAPPER
+                    .coercionConfigFor(LogicalType.Boolean)
+                    .setCoercion(CoercionInputShape.String, CoercionAction.TryConvert);
             var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
-            if (core == null) throw new IllegalArgumentException("Missing Core config.");
+            if (core == null) {
+                throw new IllegalArgumentException("Missing Core config.");
+            }
             return OBJECT_MAPPER.treeToValue(core, Config.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameters yaml", e);
