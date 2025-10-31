@@ -15,12 +15,14 @@
     "tsc": "tsc && tsc --project tsconfig.server.json --noEmit",
     "lint": "eslint src server && prettier src server --check",
     "lint-fix": "eslint --fix src server && prettier src server --write",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "test": "vitest"
   },
   "dependencies": {
+    "dotenv": "17.2.3",
     "express": "5.0.1",
     "mermaid": "11.10.0",
     "svg-pan-zoom": "3.6.2",
+    "ts-node": "10.9.2",
     "yaml": "2.7.1"
   },
   "devDependencies": {
@@ -32,6 +34,7 @@
     "globals": "^15.9.0",
     "prettier": "^3.5.1",
     "tsx": "^4.19.3",
-    "typescript-eslint": "^8.31.0"
+    "typescript-eslint": "^8.31.0",
+    "vitest": "^3.0.0"
   }
 }

@@ -15,9 +15,7 @@ app.get("/healthcheck", (req, res) => {
   res.status(200).send("OK");
 });
 
-if (!isDevelopment) {
-  app.use(authorise);
-}
+app.use(authorise);
 
 app.post("/journey-transitions", fetchJourneyTransitionsHandler);
 app.get("/system-settings", fetchSystemSettingsHandler);

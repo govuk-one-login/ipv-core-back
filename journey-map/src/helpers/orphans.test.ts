@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { findOrphanStates } from "./orphans.js";
 import { JourneyState } from "../types.js";
@@ -29,9 +28,9 @@ describe("findOrphanStates", () => {
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.strictEqual(actual.length, 2);
-    assert.strictEqual(actual[0].name, "ENTRY_STATE");
-    assert.strictEqual(actual[1].name, "ORPHAN");
+    expect(actual.length).toEqual(2);
+    expect(actual[0].name).toEqual("ENTRY_STATE");
+    expect(actual[1].name).toEqual("ORPHAN");
   });
 
   it("should not include states referenced via checks", () => {
@@ -86,9 +85,9 @@ describe("findOrphanStates", () => {
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.strictEqual(actual.length, 2);
-    assert.strictEqual(actual[0].name, "ENTRY_STATE");
-    assert.strictEqual(actual[1].name, "ORPHAN");
+    expect(actual.length).toEqual(2);
+    expect(actual[0].name).toEqual("ENTRY_STATE");
+    expect(actual[1].name).toEqual("ORPHAN");
   });
 
   it("should include states even if they are referenced in other journeys", () => {
@@ -112,8 +111,8 @@ describe("findOrphanStates", () => {
     const actual = findOrphanStates(states);
 
     // Assert
-    assert.strictEqual(actual.length, 2);
-    assert.strictEqual(actual[0].name, "ENTRY_STATE");
-    assert.strictEqual(actual[1].name, "ORPHAN");
+    expect(actual.length).toEqual(2);
+    expect(actual[0].name).toEqual("ENTRY_STATE");
+    expect(actual[1].name).toEqual("ORPHAN");
   });
 });

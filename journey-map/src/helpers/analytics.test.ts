@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import { parseTransitionsApiForm } from "./analytics.js";
 
 describe("parseTransitionsApiSettings", () => {
@@ -34,11 +33,11 @@ describe("parseTransitionsApiSettings", () => {
 
       const result = parseTransitionsApiForm(formData);
 
-      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.ipvSessionId, "test-session-id");
-      assert.equal(result.environment, "production");
-      assert.ok(!("govukJourneyId" in result));
+      expect(result.fromDate).toEqual("2025-09-16T10:00+02:00");
+      expect(result.toDate).toEqual("2025-09-16T12:00+02:00");
+      expect(result.ipvSessionId).toEqual("test-session-id");
+      expect(result.environment).toEqual("production");
+      expect(result).not.toContain("govukJourneyId");
     } finally {
       restoreTzOffset();
     }
@@ -60,11 +59,11 @@ describe("parseTransitionsApiSettings", () => {
       const result = parseTransitionsApiForm(formData);
 
       // Assert
-      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.govukJourneyId, "test-session-id");
-      assert.equal(result.environment, "production");
-      assert.ok(!("ipvSessionId" in result));
+      expect(result.fromDate).toEqual("2025-09-16T10:00+02:00");
+      expect(result.toDate).toEqual("2025-09-16T12:00+02:00");
+      expect(result.govukJourneyId).toEqual("test-session-id");
+      expect(result.environment).toEqual("production");
+      expect(result).not.toContain("ipvSessionId");
     } finally {
       restoreTzOffset();
     }
@@ -85,11 +84,11 @@ describe("parseTransitionsApiSettings", () => {
       const result = parseTransitionsApiForm(formData);
 
       // Assert
-      assert.equal(result.fromDate, "2025-09-16T10:00+02:00");
-      assert.equal(result.toDate, "2025-09-16T12:00+02:00");
-      assert.equal(result.environment, "production");
-      assert.ok(!("ipvSessionId" in result));
-      assert.ok(!("govukJourneyId" in result));
+      expect(result.fromDate).toEqual("2025-09-16T10:00+02:00");
+      expect(result.toDate).toEqual("2025-09-16T12:00+02:00");
+      expect(result.environment).toEqual("production");
+      expect(result).not.toContain("ipvSessionId");
+      expect(result).not.toContain("govukJourneyId");
     } finally {
       restoreTzOffset();
     }
