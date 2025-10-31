@@ -3050,7 +3050,18 @@ Resources:
               StringEquals:
                 "lambda:VpcIds":
                   - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-      AutoPublishAlias: live
+
+  ValidateAppConfigFunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref ValidateAppConfigFunction
+
+  ValidateAppConfigFunctionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      Name: live
+      FunctionName: !Ref ValidateAppConfigFunction
+      FunctionVersion: !Ref ValidateAppConfigFunctionVersion
 
   ValidateAppConfigFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -3076,16 +3087,14 @@ Resources:
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
 
 #  App Config Pipeline
-#  AppConfigPipelineValidateFunctionInvokePermission:
-#    Type: AWS::Lambda::Permission
-#    DependsOn:
-#      - ValidateAppConfigFunction
-#    Properties:
-#      FunctionName: !GetAtt ValidateAppConfigFunction.Arn
-#      Action: lambda:InvokeFunction
-#      Principal: appconfig.amazonaws.com
-#      SourceAccount: !Ref AWS::AccountId
-#      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
+  AppConfigPipelineValidateFunctionInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
+      Action: lambda:InvokeFunction
+      Principal: appconfig.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
