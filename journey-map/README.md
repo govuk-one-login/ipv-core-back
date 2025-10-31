@@ -8,14 +8,19 @@ This is a small JavaScript-based tool to display the journey map in an interacti
 
 ## Running the map
 
+- Copy the `.env.template` file to `.env` and add the API gateway IDs and keys for any environments you want to query data from (note that production is currently used to get the default feature configuration).
+  - For local dev you will need to find the ID of the API gateway hosted in relevant account. You can find this in `AWS Console / API Gateway / APIs` then copy the ID of the `IPV Core Analytics API Gateway <env>` gateway.
+  - For the API Keys look in the stubs production account SSM parameter store.
 - Run `npm install` to install dependencies.
 - Run `npm run dev` to start the application in watch mode
 - Open [http://localhost:3000] in a web browser
+- Username and password are set in the `.env` file and default to `map` and `map`
 
 ### Tests
 
 The unit tests can be run with `npm run test`, and use the vitest test runner.
-To run tests in Idea you will need to install the vitest plugin.
+
+The tests should run in Idea with default settings, if they don't you may need to update Idea to the latest version. (Note that you might have to use the update function in Idea multiple times to get to the latest version)
 
 Linting and typechecking are available with `npm run lint` and `npm run tsc`.
 
@@ -28,18 +33,6 @@ To build
 Use `npm start` to run the built code.
 
 In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
-
-### Visualising real data
-
-Run the map locally, but set the following environment variables, for the deployment of your choice! Check API Gateway for the endpoint and API key info.
-Find possible environment variable list in .env.template file. See example below how to import variable for shared dev environment.
-```bash
-export JOURNEY_TRANSITIONS_ENDPOINT_SHARED_DEV=...
-export SYSTEM_SETTINGS_ENDPOINT_SHARED_DEV=...
-export ANALYTICS_API_KEY_SHARED_DEV=...
-npm run dev
-```
-This allows the user to see user traffic over journey edges and real system settings for disabled CRIs and feature flags.
 
 ## Using the map
 
