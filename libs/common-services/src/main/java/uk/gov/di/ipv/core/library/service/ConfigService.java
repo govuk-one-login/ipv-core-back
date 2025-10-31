@@ -309,6 +309,7 @@ public abstract class ConfigService {
 
     public static Config generateConfiguration(String yaml) {
         try {
+            LOGGER.info(yaml);
             var core = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
             if (core == null) throw new IllegalArgumentException("Missing Core config.");
             return OBJECT_MAPPER.treeToValue(core, Config.class);
