@@ -155,18 +155,18 @@ public class SisService {
                             ? evcsRequestedVotOptional.get().vot()
                             : null;
 
+            // Compare signatures
+            assertSignatureListsMatch(evcsVcSignatures, sisVcSignatures);
+
+            // Compare expiry
+            assertExpiryMatches(evcsExpired, sisExpired);
+
             // Compare VoTs
             assertMaxVotsMatch(sisMaxVot, evcsMaxVot);
             assertRequestVotsMatch(
                     evcsRequestedVot,
                     sisRequestedVot,
                     storedIdentityResult.identityDetails().isValid());
-
-            // Compare signatures
-            assertSignatureListsMatch(evcsVcSignatures, sisVcSignatures);
-
-            // Compare expiry
-            assertExpiryMatches(evcsExpired, sisExpired);
 
             sendComparisonAuditEvent(
                     auditEventUser,
