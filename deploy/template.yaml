@@ -3079,7 +3079,6 @@ Resources:
 #  App Config Pipeline
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
-    DependsOn: ValidateAppConfigFunction
     Properties:
       FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
       Action: lambda:InvokeFunction
