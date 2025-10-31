@@ -3050,18 +3050,7 @@ Resources:
               StringEquals:
                 "lambda:VpcIds":
                   - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-
-  ValidateAppConfigFunctionVersion:
-    Type: AWS::Lambda::Version
-    Properties:
-      FunctionName: !Ref ValidateAppConfigFunction
-
-  ValidateAppConfigFunctionAlias:
-    Type: AWS::Lambda::Alias
-    Properties:
-      Name: live
-      FunctionName: !Ref ValidateAppConfigFunction
-      FunctionVersion: !Ref ValidateAppConfigFunctionVersion
+      AutoPublishAlias: live
 
   ValidateAppConfigFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -3080,21 +3069,23 @@ Resources:
 
   ValidateAppConfigInvokePermission:
     Type: AWS::Lambda::Permission
+    Condition: IsBuildStagingIntProd
     Properties:
       Action: "lambda:InvokeFunction"
       FunctionName: !Ref ValidateAppConfigFunction
       Principal: "appconfig.amazonaws.com"
-      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
 #  App Config Pipeline
-  AppConfigPipelineValidateFunctionInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
-      Action: lambda:InvokeFunction
-      Principal: appconfig.amazonaws.com
-      SourceAccount: !Ref AWS::AccountId
-      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
+#  AppConfigPipelineValidateFunctionInvokePermission:
+#    Type: AWS::Lambda::Permission
+#    DependsOn: ValidateAppConfigFunction
+#    Properties:
+#      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
+#      Action: lambda:InvokeFunction
+#      Principal: appconfig.amazonaws.com
+#      SourceAccount: !Ref AWS::AccountId
+#      SourceArn: !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*
 
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
