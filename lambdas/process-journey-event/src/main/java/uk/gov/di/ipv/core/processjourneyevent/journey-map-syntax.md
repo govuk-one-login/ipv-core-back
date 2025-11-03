@@ -37,7 +37,7 @@ BASIC_STATE_NAME:
 ```
 
 ### Sub-Journey Entry Point State
-A state can be used as an entry point for a sub-journey if the `response` is omitted.
+A state can be used as an entry point for a sub-journey if that state does not have a `response`.
 To enter a new sub-journey from a state in another sub-journey, we must specify the `targetJourney` and `targetState` on the event we wish to trigger the transition to a new subjourney:
 ```yaml
 # In the initial-journey.yaml sub-journey
