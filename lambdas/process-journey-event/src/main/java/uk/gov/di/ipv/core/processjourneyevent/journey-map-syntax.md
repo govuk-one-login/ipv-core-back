@@ -30,14 +30,15 @@ BASIC_STATE_NAME:
     type: process
     lambda: reset-session-identity
   events:
-    event_name_1: # These are the events the state supports, which define what will happen if the event is received from this state
+    event_name_1: # These are the events the state supports, which define what will happen if the State Machine receives this event whilst at this state
       ...
     event_name_2:
       ...
 ```
 
 ### Sub-Journey Entry Point State
-A state can be used as an entry point to another sub-journey if the `response` is omitted. To enter a new sub-journey, we must specify the `targetJourney` and `targetState` on the event:
+A state can be used as an entry point for a sub-journey if the `response` is omitted.
+To enter a new sub-journey from a state in another sub-journey, we must specify the `targetJourney` and `targetState` on the event we wish to trigger the transition to a new subjourney:
 ```yaml
 # In the initial-journey.yaml sub-journey
 name: Initial Journey
@@ -61,7 +62,7 @@ description: The journey for creating new identities
 
 states:
     ENTRY_POINT_STATE_NAME:
-      events:
+      events: # Note here that this state does not have a `response` attribute
         event_name_1:
           ...
         event_name_2:
@@ -69,9 +70,10 @@ states:
 ```
 
 ### State Inheritance
-It is also possible to define a common state for other states to inherit from. These also omit the `response` type and a `parent` must be defined within the state.
+It is also possible to define a common state for other states to inherit from. These _parent_ states also omit the `response` type.
+When a child state inherits from a parent state, a `parent` attribute must be defined within the child state which specifies which parent state to inherit from.
 
-When a child state inherits from a parent state, it inherits all the events from the parent state without having to explicitly define the same events.
+The child inherits all the events from the parent state without having to explicitly define the same events.
 It can also override any events specified in the parent state.
 
 ```yaml
@@ -91,7 +93,7 @@ states:
       response:
         type: cri
         criId: dcmaw
-      parent: PARENT_STATE # define parent state here
+      parent: PARENT_STATE # specify the parent state here, this must match the name of the parent state
       events:
         next:
           ...
@@ -99,6 +101,53 @@ states:
           ...
 ```
 
+A child state within a [nested journey](#nested-journeys) will inherit from the parent state specified in the same nested journey.
+If the parent state is not defined within the nested journey, it will inherit from the parent state defined in the sub-journey it was called in:
+
+```yaml
+# In the new-identity.yaml sub-journey
+name: New Identity
+description: A journey for creating new identities
+
+states:
+    PARENT_STATE:
+      events:
+        access_denied:
+          ...
+        server_error:
+          ...
+
+    START:
+      events:
+        next:
+          targetState: NESTED_JOURNEY_STATE
+
+    NESTED_JOURNEY_STATE:
+      nestedJourney: NESTED_JOURNEY
+      exitEvents:
+        ...
+
+# In nested-journey.yaml
+name: Nested Journey
+description: This is a nested journey
+
+entryEvents:
+  entryEvent:
+    next:
+      targetState: CHILD_STATE
+
+nestedJourneyStates:
+    CHILD_STATE: # This child state will inherit from the PARENT_STATE defined in the new-identity.yaml sub-journey as the nested journey does not define its own PARENT_STATE
+      response:
+        type: cri
+        criId: dcmaw
+      parent: PARENT_STATE # define parent state here, this must match the name of the parent state
+      events:
+        next:
+          ...
+        server_error: # This will override the "server_error" event defined in the PARENT_STATE
+          ...
+```
 ### Nested Journey Entry State
 A state can also act as the entry-way for a nested journey by omitting the `response` and adding a `nestedJourney` identifier.
 Rather than `event`, these accept `exitEvents` emitted by the nested journey. The exit events have the same shape as a basic [Event](#events).
@@ -116,7 +165,7 @@ All exit events specified on a nested journey entry state must cover all exit ev
 
 ## Response Types
 The Step Response returned by the State Machine when transitioning to this state is reflected by the `response` block. A `response` can be three types:
-* `process`: the state represents a lambda
+* `process`: the state represents a call to a lambda
 * `page`: the state represents a page
 * `cri`: the state represents a CRI
 ```yaml
@@ -148,7 +197,7 @@ CRI_STATE:
 ## Events
 The `events` define what the state accepts and how the State Machine should handle when it receives a particular event for the current state.
 
-> The listed `events` must cover all of the events that could possibly be emitted by the state.
+> The listed `events` must be a one-to-one mapping of all possible journey events that can be sent to the State Machine as part of having executed a state.
 
 Events have the following options:
 
