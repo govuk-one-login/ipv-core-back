@@ -24,6 +24,7 @@ import {
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
 import { getJourneyTransitionsData } from "./data/data.js";
 import { attachTransitionTrafficToNestedJourneys } from "./helpers/nested-journey-traffic.js";
+import { getTransitionCountFromSubJourneyStateToTargetState } from "./helpers/sub-journey-traffic.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -102,55 +103,14 @@ const getVisibleEdgesAndNodes = async (
     for (const [targetState, transitionEvents] of Object.entries(
       eventsByTarget,
     )) {
-      const sourceStateDefinition = journeyStates[sourceState];
-
-      const count = journeyTransitionsTraffic
-        .filter((transition) => {
-          // Handle transitions if the sourceState is a nested journey entry state
-          if (sourceStateDefinition.response?.type === "nestedJourney") {
-            return (
-              transition.fromJourney === journeyMapName &&
-              transition.from.startsWith(sourceState) &&
-              transition.toJourney === journeyMapName &&
-              transition.to === targetState
-            );
-          }
-
-          // Handle transitions if the sourceState is a sub-journey entry state
-          // Sub-journey entry states do not have a `reponse` and will always have a "next" event
-          if (
-            !sourceStateDefinition.response &&
-            sourceStateDefinition.events?.next?.targetState === targetState
-          ) {
-            return (
-              transition.toJourney == journeyMapName &&
-              transition.to === targetState
-            );
-          }
-
-          // Handle transitions if the sourceState is a basic state and the targetState is to a new sub-journey
-          if (targetState.includes("__")) {
-            const [targetSubjourney, entryState] = targetState.split("__", 2);
-            const actualTargetState =
-              journeyMaps[targetSubjourney].states[entryState].events?.next
-                .targetState;
-            return (
-              transition.fromJourney === journeyMapName &&
-              transition.from === sourceState &&
-              transition.toJourney === targetSubjourney &&
-              transition.to === actualTargetState
-            );
-          }
-
-          // Handle all other transitions internal to the sub-journey
-          return (
-            transition.fromJourney === journeyMapName &&
-            transition.from === sourceState &&
-            transition.toJourney === journeyMapName &&
-            transition.to.split("/")[0] === targetState // We split this by "/" to also handle transitions from basic states where the targetState is a nested journey
-          );
-        })
-        .reduce((acc, t) => acc + t.count, 0);
+      const count = getTransitionCountFromSubJourneyStateToTargetState(
+        journeyStates,
+        journeyMapName,
+        journeyMaps,
+        journeyTransitionsTraffic,
+        sourceState,
+        targetState,
+      );
 
       transitionEdges.push({
         sourceState,
