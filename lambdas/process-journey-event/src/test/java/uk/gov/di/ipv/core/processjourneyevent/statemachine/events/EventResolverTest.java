@@ -93,6 +93,24 @@ public class EventResolverTest {
         }
 
         @Test
+        void resolveShouldReturnAStateWithMultipleJourneyContexts() throws Exception {
+            var expectedResult =
+                    new TransitionResult(
+                            new BasicState(),
+                            null,
+                            null,
+                            null,
+                            List.of("test-context-to-set1", "test-context-to-set2"),
+                            List.of("test-context-to-unset1", "test-context-to-unset2"));
+            BasicEvent basicEvent = new BasicEvent();
+            basicEvent.setTargetStateObj(expectedResult.state());
+            basicEvent.setJourneyContextToSet("test-context-to-set1,test-context-to-set2");
+            basicEvent.setJourneyContextToUnset("test-context-to-unset1,test-context-to-unset2");
+
+            assertEquals(expectedResult, eventResolver.resolve(basicEvent, eventResolveParameters));
+        }
+
+        @Test
         void resolveShouldReturnAlternativeStateIfACheckedCriIsDisabled() throws Exception {
             BasicEvent basicEventWithCheckIfDisabledConfigured = new BasicEvent();
             basicEventWithCheckIfDisabledConfigured.setTargetStateObj(new BasicState());
