@@ -50,6 +50,7 @@ const getVisibleEdgesAndNodes = async (
   const transitionEdges: TransitionEdge[] = [];
 
   const journeyTransitionsTraffic = getJourneyTransitionsData();
+
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -102,80 +103,54 @@ const getVisibleEdgesAndNodes = async (
       eventsByTarget,
     )) {
       const sourceStateDefinition = journeyStates[sourceState];
-      const targetStateDefinition = journeyStates[targetState];
-      const sourceIsNestedJourney =
-        sourceStateDefinition.response?.type === "nestedJourney";
-      const targetIsNestedJourney =
-        targetStateDefinition.response?.type === "nestedJourney";
 
-      let count = 0;
-      for (const transition of journeyTransitionsTraffic) {
-        // Source condition
-        if (sourceIsNestedJourney) {
-          if (
-            !(
+      const count = journeyTransitionsTraffic
+        .filter((transition) => {
+          // Handle transitions if the sourceState is a nested journey entry state
+          if (sourceStateDefinition.response?.type === "nestedJourney") {
+            return (
               transition.fromJourney === journeyMapName &&
-              transition.from.startsWith(sourceState)
-            )
-          ) {
-            continue;
-          }
-        } else if (!sourceStateDefinition.response) {
-          // Entry event
-          if (
-            !(
-              transition.fromJourney != journeyMapName &&
-              sourceStateDefinition.events?.next?.targetState === targetState
-            )
-          ) {
-            continue;
-          }
-        } else {
-          if (
-            !(
-              transition.fromJourney === journeyMapName &&
-              transition.from === sourceState
-            )
-          ) {
-            continue;
-          }
-        }
-
-        // Target condition
-        if (targetIsNestedJourney) {
-          if (
-            !(
-              transition.toJourney === journeyMapName &&
-              transition.to.startsWith(targetState)
-            )
-          ) {
-            continue;
-          }
-        } else if (targetState.includes("__")) {
-          const [targetJourney, entryState] = targetState.split("__", 2);
-          const actualState =
-            journeyMaps[targetJourney].states[entryState].events?.next
-              .targetState;
-          if (
-            !(
-              transition.toJourney === targetJourney &&
-              transition.to === actualState
-            )
-          ) {
-            continue;
-          }
-        } else {
-          if (
-            !(
+              transition.from.startsWith(sourceState) &&
               transition.toJourney === journeyMapName &&
               transition.to === targetState
-            )
-          ) {
-            continue;
+            );
           }
-        }
-        count += transition.count;
-      }
+
+          // Handle transitions if the sourceState is a sub-journey entry state
+          // Sub-journey entry states do not have a `reponse` and will always have a "next" event
+          if (
+            !sourceStateDefinition.response &&
+            sourceStateDefinition.events?.next?.targetState === targetState
+          ) {
+            return (
+              transition.toJourney == journeyMapName &&
+              transition.to === targetState
+            );
+          }
+
+          // Handle transitions if the sourceState is a basic state and the targetState is to a new sub-journey
+          if (targetState.includes("__")) {
+            const [targetSubjourney, entryState] = targetState.split("__", 2);
+            const actualTargetState =
+              journeyMaps[targetSubjourney].states[entryState].events?.next
+                .targetState;
+            return (
+              transition.fromJourney === journeyMapName &&
+              transition.from === sourceState &&
+              transition.toJourney === targetSubjourney &&
+              transition.to === actualTargetState
+            );
+          }
+
+          // Handle all other transitions internal to the sub-journey
+          return (
+            transition.fromJourney === journeyMapName &&
+            transition.from === sourceState &&
+            transition.toJourney === journeyMapName &&
+            transition.to.split("/")[0] === targetState // We split this by "/" to also handle transitions from basic states where the targetState is a nested journey
+          );
+        })
+        .reduce((acc, t) => acc + t.count, 0);
 
       transitionEdges.push({
         sourceState,
