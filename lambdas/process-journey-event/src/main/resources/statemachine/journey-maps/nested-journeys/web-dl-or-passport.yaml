@@ -39,7 +39,9 @@ nestedJourneyStates:
             auditContext:
               mitigationType: invalid-passport
       error:
-        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
+        checkFeatureFlag:
+          sorryTechnicalErrorEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT:
     response:
       type: page
@@ -97,7 +99,9 @@ nestedJourneyStates:
             auditContext:
               mitigationType: invalid-dl
       error:
-        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
+        checkFeatureFlag:
+          sorryTechnicalErrorEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE:
     response:
       type: page

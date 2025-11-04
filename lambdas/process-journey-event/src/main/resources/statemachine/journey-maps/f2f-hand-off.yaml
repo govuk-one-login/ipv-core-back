@@ -99,7 +99,9 @@ states:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       error:
-        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F
+        checkFeatureFlag:
+          sorryTechnicalErrorEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

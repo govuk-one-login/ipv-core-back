@@ -2,7 +2,7 @@
 Feature: Handling unexpected CRI errors
   Rule: Driving Licence and Passport CRIs
     Background: Go through web route
-      Given I activate the 'disableStrategicApp' feature set
+      Given I activate the 'disableStrategicApp,sorryTechnicalError' feature sets
       When  I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
