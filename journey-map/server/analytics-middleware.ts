@@ -59,37 +59,26 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     const data = await response.json();
 
-    switch (response.status) {
-      case 200:
-        res.json(data);
-        break;
-      case 400:
-        console.error("Error fetching counts, analytics response: ", response);
-        res.status(400).json({
-          message: data.message || "Bad Request",
-        });
-        break;
-      case 404:
-        console.error("Error fetching counts, analytics response: ", response);
-        res.status(404).json({
-          message: data.message || "Resource not found",
-        });
-        break;
-      case 500:
-        console.error("Error fetching counts, analytics response: ", response);
-        res.status(500).json({
-          message: "Internal Server Error",
-        });
-        break;
-      default:
-        console.error(
-          "Unexpected response from analytics lambda, analytics response: ",
-          response,
-        );
-        res.status(response.status).json({
-          message: `Unexpected status: ${response.status}`,
-        });
-        break;
+    if (response.status === 200) {
+      res.json(data);
+    } else {
+      console.error(
+        "Error fetching journey counts, analytics response: ",
+        response,
+        data,
+      );
+
+      let errorMessage =
+        "Error: Analytics endpoint responded with: " + response.status;
+      if (data.code && userMessagesByTransitionFetchErrorCode[data.code]) {
+        errorMessage = userMessagesByTransitionFetchErrorCode[data.code];
+      } else if (data.message) {
+        errorMessage = "Error: Analytics endpoint responded with: " + data.message;
+      }
+
+      res.status(500).json({
+        message: errorMessage,
+      });
     }
     next();
   } catch (err) {
@@ -125,3 +114,9 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
     next(err);
   }
 };
+
+const userMessagesByTransitionFetchErrorCode = {
+  0: "Unexpected error fetching user traffic",
+  1: "Couldn't get user traffic from CloudWatch",
+  2: "Timeout retrieving user traffic from CloudWatch. If this is the first time you have seen this error please try again, otherwise try reducing scope of your search to return fewer journeys.",
+} as const;
