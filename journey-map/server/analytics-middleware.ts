@@ -64,21 +64,28 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
         res.json(data);
         break;
       case 400:
+        console.error("Error fetching counts, analytics response: ", response);
         res.status(400).json({
           message: data.message || "Bad Request",
         });
         break;
       case 404:
+        console.error("Error fetching counts, analytics response: ", response);
         res.status(404).json({
           message: data.message || "Resource not found",
         });
         break;
       case 500:
+        console.error("Error fetching counts, analytics response: ", response);
         res.status(500).json({
           message: "Internal Server Error",
         });
         break;
       default:
+        console.error(
+          "Unexpected response from analytics lambda, analytics response: ",
+          response,
+        );
         res.status(response.status).json({
           message: `Unexpected status: ${response.status}`,
         });
@@ -86,6 +93,7 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
     }
     next();
   } catch (err) {
+    console.error("Error fetching counts: ", err);
     next(err);
   }
 };

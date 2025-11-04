@@ -166,6 +166,7 @@ public class FetchJourneyTransitionsHandler
             String status = results.getStatus();
 
             if ("Complete".equals(status)) {
+                LOGGER.info("CloudWatch query completed successfully");
                 return results.getResults().stream()
                         .map(this::parseResultRow)
                         .filter(Objects::nonNull)
@@ -173,9 +174,12 @@ public class FetchJourneyTransitionsHandler
             }
 
             if ("Failed".equals(status) || "Cancelled".equals(status) || "Timeout".equals(status)) {
+                LOGGER.info("CloudWatch query error status: {}", status);
                 throw new FetchJourneyTransitionException(
                         "CloudWatch query did not succeed: " + status);
             }
+
+            LOGGER.info("CloudWatch query status: {}", status);
         }
 
         throw new FetchJourneyTransitionException(
