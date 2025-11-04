@@ -224,7 +224,7 @@ class FetchJourneyTransitionHandlerTest {
 
         // Assert
         assertEquals(500, response.getStatusCode());
-        assertEquals("{\"message\": \"Internal Server Error\"}", response.getBody());
+        assertEquals("{\"message\": \"Unexpected error\", \"code\": \"0\"}", response.getBody());
     }
 
     @Test
@@ -259,7 +259,7 @@ class FetchJourneyTransitionHandlerTest {
 
         // Assert
         assertEquals(500, response.getStatusCode());
-        assertEquals("{\"message\": \"Internal Server Error\"}", response.getBody());
+        assertEquals("{\"message\": \"Unexpected error\", \"code\": \"0\"}", response.getBody());
     }
 
     @Test
