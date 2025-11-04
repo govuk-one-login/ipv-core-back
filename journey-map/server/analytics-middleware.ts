@@ -116,7 +116,7 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
   }
 };
 
-const userMessagesByTransitionFetchErrorCode = {
+const userMessagesByTransitionFetchErrorCode: Record<number, string> = {
   0: "Unexpected error fetching user traffic",
   1: "Couldn't get user traffic from CloudWatch",
   2: "Timeout retrieving user traffic from CloudWatch. If this is the first time you have seen this error please try again, otherwise try reducing scope of your search to return fewer journeys.",
