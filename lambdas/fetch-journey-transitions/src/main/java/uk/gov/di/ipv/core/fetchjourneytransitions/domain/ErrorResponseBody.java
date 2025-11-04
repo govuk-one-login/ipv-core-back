@@ -28,7 +28,9 @@ public class ErrorResponseBody {
             return OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             LOGGER.error("Error serialising error response", e);
-            return String.format("{\"message\": \"Unexpected error\", \"code\": \"%s\"}", ErrorCode.UNEXPECTED_ERROR.getCode());
+            return String.format(
+                    "{\"message\": \"Unexpected error\", \"code\": \"%s\"}",
+                    ErrorCode.UNEXPECTED_ERROR.getCode());
         }
     }
 }

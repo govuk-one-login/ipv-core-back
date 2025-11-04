@@ -184,8 +184,7 @@ public class FetchJourneyTransitionsHandler
             if ("Failed".equals(status) || "Cancelled".equals(status) || "Timeout".equals(status)) {
                 LOGGER.info("CloudWatch query error status: {}", status);
                 throw new FetchJourneyTransitionException(
-                        "CloudWatch query did not succeed: " + status,
-                        ErrorCode.CLOUD_WATCH_ERROR);
+                        "CloudWatch query did not succeed: " + status, ErrorCode.CLOUD_WATCH_ERROR);
             }
 
             LOGGER.info("CloudWatch query status: {}", status);

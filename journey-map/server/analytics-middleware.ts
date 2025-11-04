@@ -73,7 +73,8 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
       if (data.code && userMessagesByTransitionFetchErrorCode[data.code]) {
         errorMessage = userMessagesByTransitionFetchErrorCode[data.code];
       } else if (data.message) {
-        errorMessage = "Error: Analytics endpoint responded with: " + data.message;
+        errorMessage =
+          "Error: Analytics endpoint responded with: " + data.message;
       }
 
       res.status(500).json({
