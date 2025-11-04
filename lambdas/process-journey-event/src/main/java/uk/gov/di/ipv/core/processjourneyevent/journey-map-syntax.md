@@ -197,7 +197,7 @@ CRI_STATE:
 ## Events
 The `events` define what the state accepts and how the State Machine should handle when it receives a particular event for the current state.
 
-> The listed `events` must be a one-to-one mapping of all possible journey events that can be sent to the State Machine as part of having executed a state.
+> The events listed must uniquely correspond to all possible journey events that the State Machine can receive for a given state. If the State Machine receives an event that isn’t defined for its current state, it will throw an error.
 
 Events have the following options:
 
