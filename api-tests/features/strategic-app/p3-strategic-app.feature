@@ -7,7 +7,7 @@ Feature: P3 strategic app
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
 
   Scenario: Successful P3 strategic app journey - MAM
     When I submit an 'appTriage' event
