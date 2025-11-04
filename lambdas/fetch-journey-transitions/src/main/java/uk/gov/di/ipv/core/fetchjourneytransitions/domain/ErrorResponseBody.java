@@ -1,17 +1,22 @@
 package uk.gov.di.ipv.core.fetchjourneytransitions.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@Getter
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class ErrorResponseBody {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final String message;
-    private final Integer code;
+    @JsonProperty private final String message;
+    @JsonProperty private final Integer code;
 
     public ErrorResponseBody(String message) {
         this.message = message;
