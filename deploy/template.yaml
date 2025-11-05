@@ -3077,6 +3077,8 @@ Resources:
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
 #  App Config Pipeline
+#  This may fail on first deployment due to not existing alias.
+#  Simply comment it out to deploy and then uncomment and update the stack to give app config pipeline permissions to invoke validation lambda
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
