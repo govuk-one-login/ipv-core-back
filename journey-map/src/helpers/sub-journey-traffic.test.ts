@@ -15,6 +15,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: BASIC_PAGE_STATE,
       targetState: BASIC_CRI_STATE,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [BASIC_CRI_STATE],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -57,6 +58,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: ENTRY_STATE_TO_BASIC_PAGE_STATE,
       targetState: BASIC_PAGE_STATE,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [BASIC_PAGE_STATE],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -86,6 +88,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: NESTED_JOURNEY_ENTRY_STATE_1,
       targetState: BASIC_PAGE_STATE,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [BASIC_PAGE_STATE],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -122,6 +125,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: NESTED_JOURNEY_ENTRY_STATE_1,
       targetState: NESTED_JOURNEY_ENTRY_STATE_2,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [NESTED_JOURNEY_ENTRY_STATE_2],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -164,6 +168,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: ENTRY_STATE_TO_BASIC_PAGE_STATE,
       targetState: BASIC_PAGE_STATE,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [BASIC_PAGE_STATE],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -194,6 +199,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1,
       targetState: NESTED_JOURNEY_ENTRY_STATE_1,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [NESTED_JOURNEY_ENTRY_STATE_1],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -233,10 +239,46 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
     },
     {
       testCase:
+        "the sourceState is an entry state for an intermediate journey and the targetState is a nested journey state in the same sub-journey - targetState is from a conditional check",
+      sourceState: ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES,
+      targetState: NESTED_JOURNEY_ENTRY_STATE_1,
+      currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        BASIC_PAGE_STATE,
+        NESTED_JOURNEY_ENTRY_STATE_1,
+        BASIC_CRI_STATE,
+      ],
+      journeyTraffic: [
+        createTraffic({
+          // Valid transition
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_1,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/INTERNAL_STATE`,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: SUB_JOURNEY_2,
+          from: NESTED_JOURNEY_ENTRY_STATE_2,
+          toJourney: SUB_JOURNEY_1,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/ANOTHER_STATE`,
+        }),
+        createTraffic({
+          fromJourney: SUB_JOURNEY_2,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_1,
+          to: BASIC_PAGE_STATE,
+        }),
+      ],
+      expectedCount: 2,
+    },
+    {
+      testCase:
         "the sourceState is an entry state for a first sub-journey and the targetState is a basic state in the same sub-journey",
       sourceState: ENTRY_STATE_TO_BASIC_PAGE_STATE,
       targetState: BASIC_PAGE_STATE,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [BASIC_PAGE_STATE],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -266,6 +308,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1,
       targetState: NESTED_JOURNEY_ENTRY_STATE_1,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [NESTED_JOURNEY_ENTRY_STATE_1],
       journeyTraffic: [
         createTraffic({
           fromJourney: FIRST_SUB_JOURNEY,
@@ -308,6 +351,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: ENTRY_STATE_TO_BASIC_STATE_IN_NEW_SUB_JOURNEY,
       targetState: `${SUB_JOURNEY_1}__${ENTRY_STATE_TO_BASIC_PAGE_STATE}`,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [`${SUB_JOURNEY_1}__${ENTRY_STATE_TO_BASIC_PAGE_STATE}`],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -339,10 +383,61 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
     },
     {
       testCase:
+        "the sourceState is an entry state for a first sub-journey and the targetState is a new sub-journey with multiple targets",
+      sourceState: ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES,
+      targetState: `${SUB_JOURNEY_1}__${ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES}`,
+      currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [
+        BASIC_CRI_STATE,
+        BASIC_PAGE_STATE,
+        NESTED_JOURNEY_ENTRY_STATE_1,
+      ],
+      journeyTraffic: [
+        createTraffic({
+          // Valid transition
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES,
+          toJourney: SUB_JOURNEY_1,
+          to: BASIC_PAGE_STATE,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES,
+          toJourney: SUB_JOURNEY_1,
+          to: BASIC_CRI_STATE,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES,
+          toJourney: SUB_JOURNEY_1,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/INTERNAL_STATE`,
+        }),
+        createTraffic({
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES,
+          toJourney: SUB_JOURNEY_2,
+          to: BASIC_PAGE_STATE,
+        }),
+        createTraffic({
+          fromJourney: FIRST_SUB_JOURNEY,
+          from: BASIC_PAGE_STATE,
+          toJourney: SUB_JOURNEY_1,
+          to: BASIC_CRI_STATE,
+        }),
+      ],
+      expectedCount: 3,
+    },
+    {
+      testCase:
         "the sourceState is an entry state for a first sub-journey and the targetState is a nested state in a new sub-journey",
       sourceState: ENTRY_STATE_TO_NESTED_STATE_IN_NEW_SUB_JOURNEY,
       targetState: `${SUB_JOURNEY_1}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
       currentSubJourney: FIRST_SUB_JOURNEY,
+      allTargetStates: [
+        `${SUB_JOURNEY_1}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
+      ],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -392,6 +487,9 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: NESTED_JOURNEY_ENTRY_STATE_1,
       targetState: `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
+      ],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -434,6 +532,9 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: BASIC_CRI_STATE,
       targetState: `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
+      ],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -472,10 +573,74 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
     },
     {
       testCase:
+        "the sourceState is a basic state and the targetState is to a new sub-journey where the entry state has multiple targets",
+      sourceState: BASIC_CRI_STATE,
+      targetState: `${SUB_JOURNEY_2}__${ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES}`,
+      currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        BASIC_CRI_STATE,
+        BASIC_PAGE_STATE,
+        NESTED_JOURNEY_ENTRY_STATE_1,
+      ],
+      journeyTraffic: [
+        createTraffic({
+          // Valid transition
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/INTERNAL_STATE`,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/ANOTHER_INTERNAL_STATE`,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: BASIC_PAGE_STATE,
+        }),
+        createTraffic({
+          // Valid transition
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: BASIC_CRI_STATE,
+        }),
+        createTraffic({
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_PAGE_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/INTERNAL_STATE`,
+        }),
+        createTraffic({
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_2,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_2}/INTERNAL_STATE`,
+        }),
+        createTraffic({
+          fromJourney: SUB_JOURNEY_1,
+          from: BASIC_CRI_STATE,
+          toJourney: SUB_JOURNEY_1,
+          to: `${NESTED_JOURNEY_ENTRY_STATE_1}/INTERNAL_STATE`,
+        }),
+      ],
+      expectedCount: 4,
+    },
+    {
+      testCase:
         "the sourceState is a nested journey state and the targetState is a basic state in a new sub-journey",
       sourceState: NESTED_JOURNEY_ENTRY_STATE_1,
       targetState: `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
+      ],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -518,6 +683,9 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState: NESTED_JOURNEY_ENTRY_STATE_1,
       targetState: `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
       currentSubJourney: SUB_JOURNEY_1,
+      allTargetStates: [
+        `${SUB_JOURNEY_2}__${ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1}`,
+      ],
       journeyTraffic: [
         createTraffic({
           // Valid transition
@@ -560,6 +728,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
       sourceState,
       targetState,
       currentSubJourney,
+      allTargetStates,
       journeyTraffic,
       expectedCount,
     }) => {
@@ -571,6 +740,7 @@ describe("getTransitionCountFromSubJourneyStateToTargetState", () => {
           journeyTraffic,
           sourceState,
           targetState,
+          allTargetStates,
         );
       expect(transitionCount).toEqual(expectedCount);
     },
@@ -592,8 +762,29 @@ const ENTRY_STATE_TO_BASIC_STATE_IN_NEW_SUB_JOURNEY =
   "ENTRY_STATE_TO_BASIC_STATE_IN_NEW_SUB_JOURNEY";
 const ENTRY_STATE_TO_NESTED_STATE_IN_NEW_SUB_JOURNEY =
   "ENTRY_STATE_TO_NESTED_STATE_IN_NEW_SUB_JOURNEY";
+const ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES =
+  "ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES";
+const ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES =
+  "ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES";
 
 const JOURNEY_STATES = {
+  [ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES]: {
+    events: {
+      next: {
+        targetState: BASIC_PAGE_STATE,
+        checkMitigation: {
+          mitigation: {
+            targetState: NESTED_JOURNEY_ENTRY_STATE_1,
+          },
+        },
+        checkFeatureFlag: {
+          featureFlag: {
+            targetState: BASIC_CRI_STATE,
+          },
+        },
+      },
+    },
+  },
   [ENTRY_STATE_TO_BASIC_PAGE_STATE]: {
     events: {
       next: {
@@ -621,6 +812,14 @@ const JOURNEY_STATES = {
       next: {
         targetJourney: SUB_JOURNEY_1,
         targetState: ENTRY_STATE_TO_NESTED_JOURNEY_STATE_1,
+      },
+    },
+  },
+  [ENTRY_STATE_TO_NEW_SUB_JOURNEY_WITH_MULTIPLE_TARGET_STATES]: {
+    events: {
+      next: {
+        targetJourney: SUB_JOURNEY_1,
+        targetState: ENTRY_STATE_WITH_MULTIPLE_TARGET_STATES,
       },
     },
   },
