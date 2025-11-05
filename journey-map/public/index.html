@@ -82,6 +82,19 @@
             </fieldset>
             <fieldset id="featureFlagInput">
               <legend>Turn on a feature flag</legend>
+              <p>Fetch from specific environment</p>
+              <label for="featureFlagsTargetEnv"></label>
+              <div style="padding-bottom: 6px">
+                <select id="featureFlagsTargetEnv" name="featureFlagsTargetEnv">
+                  <option value="production">Production</option>
+                  <option value="integration">Integration</option>
+                  <option value="staging">Staging</option>
+                  <option value="build">Build</option>
+                  <option value="shared">Shared Dev</option>
+                </select>
+              </div>
+
+
             </fieldset>
             <fieldset id="otherOptions">
               <legend>Turn on other options</legend>
