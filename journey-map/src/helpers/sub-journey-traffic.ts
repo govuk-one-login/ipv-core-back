@@ -47,7 +47,6 @@ export const getTransitionCountFromSubJourneyStateToTargetState = (
         !sourceStateDefinition.response &&
         sourceStateDefinition.events?.next?.targetState === targetState
       ) {
-        console.log();
         return (
           // Sub-journeys which act as the first sub-journey a user goes through will have entry states
           // which map directly to a transition from that journey map and not from other sub-journeys.
