@@ -25,6 +25,12 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   WEB_DL_OR_PASSPORT: "Web DL or passport",
 };
 
+// These are the sub-journeys which a user starts on before going through any other sub-journey
+export const FIRST_JOURNEYS: string[] = [
+  "INITIAL_JOURNEY_SELECTION",
+  "REVERIFICATION",
+];
+
 export const COMMON_JOURNEY_TYPES: string[] = [
   "NEW_P1_IDENTITY",
   "NEW_P2_IDENTITY",
