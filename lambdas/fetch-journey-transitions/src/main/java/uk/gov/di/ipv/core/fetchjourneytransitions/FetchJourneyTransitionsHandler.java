@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.FlushMetrics;
+import uk.gov.di.ipv.core.fetchjourneytransitions.domain.ErrorCode;
+import uk.gov.di.ipv.core.fetchjourneytransitions.domain.ErrorResponseBody;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.Request;
 import uk.gov.di.ipv.core.fetchjourneytransitions.domain.TransitionCount;
 import uk.gov.di.ipv.core.fetchjourneytransitions.exceptions.FetchJourneyTransitionException;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 
 public class FetchJourneyTransitionsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String ENVIRONMENT =
@@ -82,7 +85,7 @@ public class FetchJourneyTransitionsHandler
             if (results.isEmpty()) {
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(404)
-                        .withBody(String.format("{\"message\": \"%s\"}", "Not found"));
+                        .withBody(new ErrorResponseBody("Not found").toString());
             }
 
             return new APIGatewayProxyResponseEvent()
@@ -93,18 +96,23 @@ public class FetchJourneyTransitionsHandler
             LOGGER.error("Invalid request", e);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(HttpStatus.SC_BAD_REQUEST)
-                    .withBody(String.format("{\"message\": \"%s\"}", e.getMessage()));
+                    .withBody(new ErrorResponseBody(e.getMessage()).toString());
         } catch (InterruptedException e) {
             LOGGER.warn("Interrupted!", e);
             Thread.currentThread().interrupt();
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-                    .withBody("{\"message\": \"Interrupted\"}");
-        } catch (FetchJourneyTransitionException | JsonProcessingException e) {
+                    .withBody(new ErrorResponseBody("Interrupted").toString());
+        } catch (FetchJourneyTransitionException e) {
             LOGGER.error("Unhandled exception", e);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
-                    .withBody("{\"message\": \"Internal Server Error\"}");
+                    .withBody(new ErrorResponseBody(e.getMessage(), e.getErrorCode()).toString());
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Unhandled exception", e);
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+                    .withBody(new ErrorResponseBody("Internal Server Error").toString());
         }
     }
 
@@ -176,14 +184,15 @@ public class FetchJourneyTransitionsHandler
             if ("Failed".equals(status) || "Cancelled".equals(status) || "Timeout".equals(status)) {
                 LOGGER.info("CloudWatch query error status: {}", status);
                 throw new FetchJourneyTransitionException(
-                        "CloudWatch query did not succeed: " + status);
+                        "CloudWatch query did not succeed: " + status, ErrorCode.CLOUD_WATCH_ERROR);
             }
 
             LOGGER.info("CloudWatch query status: {}", status);
         }
 
         throw new FetchJourneyTransitionException(
-                "CloudWatch query did not complete within max attempts");
+                "CloudWatch query did not complete within max attempts",
+                ErrorCode.CLOUD_WATCH_SLOW);
     }
 
     private TransitionCount parseResultRow(List<ResultField> row) {
