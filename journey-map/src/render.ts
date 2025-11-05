@@ -51,8 +51,6 @@ const getVisibleEdgesAndNodes = async (
   const transitionEdges: TransitionEdge[] = [];
 
   const journeyTransitionsTraffic = getJourneyTransitionsData();
-  console.log(journeyTransitionsTraffic);
-  console.log(journeyStates);
   for (const sourceState of states) {
     const definition = journeyStates[sourceState];
     const events = definition.events || definition.exitEvents || {};
@@ -100,8 +98,6 @@ const getVisibleEdgesAndNodes = async (
         });
       }
     });
-
-    console.log(eventsByTarget);
 
     for (const [targetState, transitionEvents] of Object.entries(
       eventsByTarget,
