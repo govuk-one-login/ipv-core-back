@@ -1,4 +1,4 @@
-import { JourneyMap, JourneyState } from "../types.js";
+import { JourneyEvent, JourneyMap, JourneyState } from "../types.js";
 import { JourneyTransition } from "../data/data.js";
 import { FIRST_JOURNEYS } from "../constants.js";
 
@@ -9,6 +9,7 @@ export const getTransitionCountFromSubJourneyStateToTargetState = (
   journeyTransitionsTraffic: JourneyTransition[],
   sourceState: string,
   targetState: string,
+  allTargetsFromState: string[],
 ): number => {
   const sourceStateDefinition = journeyStates[sourceState];
   const targetStateDefinition = journeyStates[targetState];
@@ -18,14 +19,16 @@ export const getTransitionCountFromSubJourneyStateToTargetState = (
       // Handle transitions if the sourceState is a basic state and the targetState is to a new sub-journey
       if (targetState.includes("__")) {
         const [targetSubJourney, entryState] = targetState.split("__", 2);
-        const actualTargetState =
-          journeyMaps[targetSubJourney].states[entryState].events?.next
-            .targetState;
         return (
           transition.fromJourney === journeyMapName &&
           transition.from.split("/")[0] === sourceState && // We split this by "/" to also handle transitions to/from a nested journey entry state
           transition.toJourney === targetSubJourney &&
-          transition.to.split("/")[0] === actualTargetState
+          // We want to compare to all possible targetStates from the entryState
+          // as the entryState can also have different targetStates from
+          // different conditional checks
+          getAllTargetStatesFromEntryEvent(
+            journeyMaps[targetSubJourney].states[entryState].events?.next,
+          ).includes(transition.to.split("/")[0])
         );
       }
 
@@ -42,10 +45,11 @@ export const getTransitionCountFromSubJourneyStateToTargetState = (
       }
 
       // Handle transitions if the sourceState is a sub-journey entry state
-      // Sub-journey entry states do not have a `response` and will always have a "next" event
+      // We check against all targets for the entry state as the current
+      // targetState could be from a conditional
       if (
         !sourceStateDefinition.response &&
-        sourceStateDefinition.events?.next?.targetState === targetState
+        allTargetsFromState.includes(targetState)
       ) {
         return (
           // Sub-journeys which act as the first sub-journey a user goes through will have entry states
@@ -71,4 +75,30 @@ export const getTransitionCountFromSubJourneyStateToTargetState = (
       );
     })
     .reduce((acc, t) => acc + t.count, 0);
+};
+
+const getAllTargetStatesFromEntryEvent = (
+  nextEvent: JourneyEvent | undefined,
+): string[] => {
+  if (!nextEvent) {
+    return [];
+  }
+
+  const allTargetStates: string[] = [];
+  const findAndStoreTargetState = (current: JourneyEvent) => {
+    for (const [key, value] of Object.entries(current)) {
+      if (
+        key === "targetState" &&
+        typeof value === "string" &&
+        !allTargetStates.includes(value)
+      ) {
+        allTargetStates.push(value);
+      } else if (value && typeof value === "object") {
+        findAndStoreTargetState(value);
+      }
+    }
+  };
+
+  findAndStoreTargetState(nextEvent);
+  return allTargetStates;
 };
