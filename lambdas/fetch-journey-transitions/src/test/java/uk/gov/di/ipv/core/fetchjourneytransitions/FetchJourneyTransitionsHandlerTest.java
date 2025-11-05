@@ -224,7 +224,9 @@ class FetchJourneyTransitionHandlerTest {
 
         // Assert
         assertEquals(500, response.getStatusCode());
-        assertEquals("{\"message\": \"Unexpected error\", \"code\": \"0\"}", response.getBody());
+        assertEquals(
+                "{\"message\":\"CloudWatch query did not succeed: Failed\",\"code\":1}",
+                response.getBody());
     }
 
     @Test
@@ -259,7 +261,9 @@ class FetchJourneyTransitionHandlerTest {
 
         // Assert
         assertEquals(500, response.getStatusCode());
-        assertEquals("{\"message\": \"Unexpected error\", \"code\": \"0\"}", response.getBody());
+        assertEquals(
+                "{\"message\":\"CloudWatch query did not complete within max attempts\",\"code\":2}",
+                response.getBody());
     }
 
     @Test
