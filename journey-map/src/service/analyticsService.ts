@@ -1,5 +1,6 @@
 import { JourneyTransition } from "../data/data.js";
 import { SystemSettings } from "../helpers/options.js";
+import { Environment } from "../constants.js";
 
 export interface TransitionsApiRequestBody {
   fromDate: string;
@@ -7,14 +8,6 @@ export interface TransitionsApiRequestBody {
   ipvSessionId?: string;
   govukJourneyId?: string;
   environment: Environment;
-}
-
-export enum Environment {
-  PRODUCTION = "production",
-  INTEGRATION = "integration",
-  STAGING = "staging",
-  BUILD = "build",
-  SHARED_DEV = "shared",
 }
 
 export const mapStringToEnvironment = (environment: string): Environment => {

@@ -54,3 +54,11 @@ export const CRI_NAMES: Record<string, string> = {
 export const TOP_DOWN_JOURNEYS = ["INITIAL_JOURNEY_SELECTION"];
 export const ERROR_JOURNEYS = ["TECHNICAL_ERROR"];
 export const FAILURE_JOURNEYS = ["INELIGIBLE", "FAILED"];
+
+export enum Environment {
+  PRODUCTION = "production",
+  INTEGRATION = "integration",
+  STAGING = "staging",
+  BUILD = "build",
+  SHARED_DEV = "shared",
+}

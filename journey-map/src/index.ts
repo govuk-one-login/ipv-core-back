@@ -6,6 +6,7 @@ import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
   CRI_NAMES,
+  Environment,
   JOURNEY_TYPES,
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
@@ -16,7 +17,6 @@ import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
 import {
   getJourneyTransitions,
   getSystemSettings,
-  Environment,
   mapStringToEnvironment,
 } from "./service/analyticsService.js";
 import { parseTransitionsApiForm } from "./helpers/analytics.js";
