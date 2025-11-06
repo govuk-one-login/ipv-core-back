@@ -94,7 +94,8 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const environment = req.params.environment;
+    const environment = req.params
+      .environment as keyof typeof config.environment;
     const envConfig = config.environment[environment];
 
     const response = await fetch(envConfig.systemSettingsEndpoint, {
