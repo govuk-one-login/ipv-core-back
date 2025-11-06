@@ -15,6 +15,15 @@ body {
   overflow: hidden;
   font-family: sans-serif;
 }
+
+figure {
+  display: flex;
+  flex-direction: row;
+  padding: 8px 16px 0;
+  align-items: center;
+  gap: 8px;
+}
+
 #header {
   position: relative;
   border-bottom: 3px solid black;
@@ -45,7 +54,7 @@ body {
   display: flex;
   margin: 8px 0;
   overflow: auto;
-  max-height: 500px;
+  max-height: 600px;
   transition:
     max-height 0.15s ease-out,
     margin 0.15s ease-out;
@@ -157,13 +166,19 @@ form fieldset p {
 #checkbox-controls {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: left;
   gap: 8px;
 }
 #checkbox-controls fieldset {
   flex: 1 0 0;
-  max-width: 30%;
+  min-width: 50%;
 }
+
+#checkbox-controls fieldset span {
+  display: inline-block;
+  word-break: break-word;
+}
+
 #nodeInfo {
   flex: 1 1 auto;
   padding: 8px 16px;
