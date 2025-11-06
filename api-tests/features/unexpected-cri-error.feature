@@ -46,7 +46,7 @@ Feature: Handling unexpected CRI errors
     Scenario Outline: Unexpected error from <cri> - try app route
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
-      When I override the existing feature sets and activate the 'strategicApp' feature set
+      When I override the existing feature sets and activate the 'strategicApp,sorryTechnicalError' feature sets
       And I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
       When I submit an 'app' event
@@ -86,7 +86,7 @@ Feature: Handling unexpected CRI errors
     Scenario Outline: Unexpected error from <cri> - try post office route
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
-      When I override the existing feature sets and activate the 'strategicApp' feature set
+      When I override the existing feature sets and activate the 'strategicApp,sorryTechnicalError' feature set
       And I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
       When I submit an 'postOffice' event
@@ -133,7 +133,7 @@ Feature: Handling unexpected CRI errors
 
   Rule: Experian KBV
     Background: Route to sorry-technical-problem Experian KBV CRI error page
-      Given I activate the 'disableStrategicApp' feature set
+      Given I activate the 'disableStrategicApp,sorryTechnicalError' feature set
       When  I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -235,6 +235,7 @@ Feature: Handling unexpected CRI errors
 
   Rule: F2F CRI - P2
     Background: Route to sorry-technical-problem F2F CRI error page
+      Given I activate the 'sorryTechnicalError' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -336,7 +337,7 @@ Feature: Handling unexpected CRI errors
 
   Rule: F2F CRI - P1
     Background: Route to sorry-technical-problem F2F CRI error page
-      Given I activate the 'p1Journeys,disableStrategicApp' feature set
+      Given I activate the 'p1Journeys,disableStrategicApp,sorryTechnicalError' feature set
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
