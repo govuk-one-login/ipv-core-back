@@ -1,7 +1,7 @@
 export const JOURNEY_TYPES: Record<string, string> = {
   INITIAL_JOURNEY_SELECTION: "Initial journey selection",
   NEW_P1_IDENTITY: "New P1 identity",
-  NEW_P2_IDENTITY: "New P2 identity",
+  NEW_P2_IDENTITY: "New P2/P3 identity",
   REUSE_EXISTING_IDENTITY: "Reuse existing identity",
   UPDATE_NAME: "Update name",
   UPDATE_ADDRESS: "Update address",
