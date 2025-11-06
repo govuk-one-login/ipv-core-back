@@ -6,19 +6,38 @@ export interface TransitionsApiRequestBody {
   toDate: string;
   ipvSessionId?: string;
   govukJourneyId?: string;
-  environment: string;
+  environment: Environment;
 }
 
-export enum TargetEnvironment {
+export enum Environment {
   PRODUCTION = "production",
   INTEGRATION = "integration",
   STAGING = "staging",
   BUILD = "build",
-  SHARED_DEV = "shared-dev",
+  SHARED_DEV = "shared",
 }
 
+export const mapStringToEnvironment = (environment: string): Environment => {
+  const normalized = environment.toLowerCase().trim();
+  switch (normalized) {
+    case "production":
+      return Environment.PRODUCTION;
+    case "integration":
+      return Environment.INTEGRATION;
+    case "staging":
+      return Environment.STAGING;
+    case "build":
+      return Environment.BUILD;
+    case "shared":
+      return Environment.SHARED_DEV;
+    default:
+      alert(`Unknown environment: ${environment}. Fetching from production`);
+      return Environment.PRODUCTION;
+  }
+};
+
 export const getSystemSettings = async (
-  targetEnvironment: TargetEnvironment,
+  targetEnvironment: Environment,
 ): Promise<SystemSettings | undefined> => {
   const response = await fetch(`/system-settings/${targetEnvironment}`);
   if (!response.ok) {

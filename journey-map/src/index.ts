@@ -16,7 +16,8 @@ import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
 import {
   getJourneyTransitions,
   getSystemSettings,
-  TargetEnvironment,
+  Environment,
+  mapStringToEnvironment,
 } from "./service/analyticsService.js";
 import { parseTransitionsApiForm } from "./helpers/analytics.js";
 
@@ -86,6 +87,9 @@ const systemSettingsSelection = document.getElementById(
   "systemSettingsTargetEnv",
 ) as HTMLSelectElement;
 const form = document.getElementById("configuration-form") as HTMLFormElement;
+const journeyMapForm = document.getElementById(
+  "journey-map-configuration-form",
+) as HTMLFormElement;
 const disabledInput = document.getElementById(
   "disabledInput",
 ) as HTMLFieldSetElement;
@@ -262,17 +266,21 @@ const setupOptions = (
   }
 };
 
-const clearOptions = (fieldset: HTMLFieldSetElement) => {
-  const labels = fieldset.querySelectorAll<HTMLInputElement>("label");
-  labels.forEach((label) => label.remove());
-  // checkboxes.forEach(checkbox => checkbox.remove());
-  // const spans = fieldset.querySelectorAll<HTMLInputElement>('span');
-  // spans.forEach(span => span.remove());
+const clearOptions = (...fieldsets: HTMLFieldSetElement[]) => {
+  fieldsets.forEach((fieldset) => {
+    const labels = fieldset.querySelectorAll<HTMLInputElement>("label");
+    labels.forEach((label) => label.remove());
+  });
 };
 
-const setupSystemSettingsOptions = async (
-  targetEnvironment: TargetEnvironment,
-) => {
+const disableOptions = (...fieldsets: HTMLFieldSetElement[]) => {
+  fieldsets.forEach((fieldset) => {
+    const inputs = fieldset.querySelectorAll<HTMLInputElement>("input");
+    inputs.forEach((input) => (input.disabled = true));
+  });
+};
+
+const setupSystemSettingsOptions = async (targetEnvironment: Environment) => {
   const systemSettings = await getSystemSettings(targetEnvironment);
   if (!systemSettings) {
     return;
@@ -285,10 +293,8 @@ const setupSystemSettingsOptions = async (
         !enabled,
       ]),
     );
-  clearOptions(disabledInput);
+  clearOptions(disabledInput, featureFlagInput);
   setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
-
-  clearOptions(featureFlagInput);
   setupOptions(
     "featureFlag",
     systemSettings?.featureFlagStatuses ?? {},
@@ -326,7 +332,10 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 };
 
 const updateView = async (): Promise<void> => {
-  const options = parseOptions(new FormData(form));
+  const options = parseOptions(
+    new FormData(form),
+    new FormData(journeyMapForm),
+  );
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
   );
@@ -611,20 +620,24 @@ const initialize = async (): Promise<void> => {
     NESTED_JOURNEY_TYPES,
     "nested-journeys",
   );
-  await setupSystemSettingsOptions(TargetEnvironment.PRODUCTION);
+  await setupSystemSettingsOptions(Environment.PRODUCTION);
   setupOtherOptions();
   setupMermaidClickHandlers();
   setupHeaderToggleClickHandlers();
 
   systemSettingsSelection.addEventListener("change", async () => {
-    const targetEnvironment = TargetEnvironment.BUILD;
-    const v = systemSettingsSelection.value;
-    console.log(v);
+    const selectionValue = systemSettingsSelection.value;
+    const targetEnvironment = mapStringToEnvironment(selectionValue);
+    disableOptions(disabledInput, featureFlagInput);
     await setupSystemSettingsOptions(targetEnvironment);
     await updateView();
   });
 
   form.addEventListener("change", async (event) => {
+    event.preventDefault();
+    await updateView();
+  });
+  journeyMapForm.addEventListener("change", async (event) => {
     event.preventDefault();
     await updateView();
   });
