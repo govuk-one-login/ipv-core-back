@@ -254,6 +254,19 @@
     }
   },
   {
+    "event_name": "IPV_DWP_KBV_HANDOFF_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]",
+      "ip_address": "type[string]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
     "user": {

@@ -22,6 +22,8 @@ Feature: P2 Web document journey
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'end' event
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'experianKbv' CRI response
@@ -62,6 +64,8 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-1' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -119,6 +123,8 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -210,7 +216,6 @@ Feature: P2 Web document journey
 
   Rule: P2 VTR only - DWP KBV
     Background: Start web journey
-      Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -450,6 +455,8 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
