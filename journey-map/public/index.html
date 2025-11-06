@@ -73,8 +73,20 @@
               <button id="form-button">Search</button>
             </fieldset>
         </form>
-        <form id="configuration-form">
+        <div>
           <h2>Options</h2>
+          <p>Fetch from specific environment</p>
+          <label for="systemSettingsTargetEnv"></label>
+          <div style="padding-bottom: 6px">
+            <select id="systemSettingsTargetEnv" name="systemSettingsTargetEnv">
+              <option value="production">Production</option>
+              <option value="integration">Integration</option>
+              <option value="staging">Staging</option>
+              <option value="build">Build</option>
+              <option value="shared">Shared Dev</option>
+            </select>
+          </div>
+        <form id="configuration-form">
           <div id="checkbox-controls">
             <fieldset id="disabledInput">
               <legend>Turn off a CRI</legend>
@@ -82,19 +94,6 @@
             </fieldset>
             <fieldset id="featureFlagInput">
               <legend>Turn on a feature flag</legend>
-              <p>Fetch from specific environment</p>
-              <label for="featureFlagsTargetEnv"></label>
-              <div style="padding-bottom: 6px">
-                <select id="featureFlagsTargetEnv" name="featureFlagsTargetEnv">
-                  <option value="production">Production</option>
-                  <option value="integration">Integration</option>
-                  <option value="staging">Staging</option>
-                  <option value="build">Build</option>
-                  <option value="shared">Shared Dev</option>
-                </select>
-              </div>
-
-
             </fieldset>
             <fieldset id="otherOptions">
               <legend>Turn on other options</legend>
@@ -140,6 +139,7 @@
             </fieldset>
           </div>
         </form>
+        </div>
         <div id="nodeInfo">
           <h2 id="journeyName"></h2>
           <p id="journeyDesc"></p>

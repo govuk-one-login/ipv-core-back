@@ -9,14 +9,23 @@ export interface TransitionsApiRequestBody {
   environment: string;
 }
 
-export const getSystemSettings = async (): Promise<
-  SystemSettings | undefined
-> => {
-  const response = await fetch("/system-settings");
+export enum TargetEnvironment {
+  PRODUCTION = "production",
+  INTEGRATION = "integration",
+  STAGING = "staging",
+  BUILD = "build",
+  SHARED_DEV = "shared-dev",
+}
+
+export const getSystemSettings = async (
+  targetEnvironment: TargetEnvironment,
+): Promise<SystemSettings | undefined> => {
+  const response = await fetch(`/system-settings/${targetEnvironment}`);
   if (!response.ok) {
     console.warn(
       `Failed to fetch system settings from journey map server: ${response.statusText}`,
     );
+    alert("Failed to fetch system settings.");
     return undefined;
   }
   return await response.json();

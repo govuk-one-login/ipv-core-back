@@ -94,15 +94,15 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const response = await fetch(
-      config.environment["production"].systemSettingsEndpoint,
-      {
-        method: "POST",
-        headers: {
-          "x-api-key": config.environment["production"].analyticsApiKey,
-        },
+    const environment = req.params.environment;
+    const envConfig = config.environment[environment];
+
+    const response = await fetch(envConfig.systemSettingsEndpoint, {
+      method: "POST",
+      headers: {
+        "x-api-key": envConfig.analyticsApiKey,
       },
-    );
+    });
     if (!response.ok) {
       throw new Error(
         `Failed to fetch system settings from analytics API: ${response.statusText}`,

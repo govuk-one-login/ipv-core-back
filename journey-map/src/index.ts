@@ -16,6 +16,7 @@ import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
 import {
   getJourneyTransitions,
   getSystemSettings,
+  TargetEnvironment,
 } from "./service/analyticsService.js";
 import { parseTransitionsApiForm } from "./helpers/analytics.js";
 
@@ -81,6 +82,9 @@ const transitionsToInput = document.getElementById(
 const transitionsSubmitButton = document.getElementById(
   "form-button",
 ) as HTMLButtonElement;
+const systemSettingsSelection = document.getElementById(
+  "systemSettingsTargetEnv",
+) as HTMLSelectElement;
 const form = document.getElementById("configuration-form") as HTMLFormElement;
 const disabledInput = document.getElementById(
   "disabledInput",
@@ -256,6 +260,40 @@ const setupOptions = (
   } else {
     fieldset.append("N/A");
   }
+};
+
+const clearOptions = (fieldset: HTMLFieldSetElement) => {
+  const labels = fieldset.querySelectorAll<HTMLInputElement>("label");
+  labels.forEach((label) => label.remove());
+  // checkboxes.forEach(checkbox => checkbox.remove());
+  // const spans = fieldset.querySelectorAll<HTMLInputElement>('span');
+  // spans.forEach(span => span.remove());
+};
+
+const setupSystemSettingsOptions = async (
+  targetEnvironment: TargetEnvironment,
+) => {
+  const systemSettings = await getSystemSettings(targetEnvironment);
+  if (!systemSettings) {
+    return;
+  }
+  const disabledCris =
+    systemSettings?.criStatuses &&
+    Object.fromEntries(
+      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
+        cri,
+        !enabled,
+      ]),
+    );
+  clearOptions(disabledInput);
+  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
+
+  clearOptions(featureFlagInput);
+  setupOptions(
+    "featureFlag",
+    systemSettings?.featureFlagStatuses ?? {},
+    featureFlagInput,
+  );
 };
 
 const setupOtherOptions = (): void => {
@@ -573,26 +611,19 @@ const initialize = async (): Promise<void> => {
     NESTED_JOURNEY_TYPES,
     "nested-journeys",
   );
-
-  const systemSettings = await getSystemSettings();
-  const disabledCris =
-    systemSettings?.criStatuses &&
-    Object.fromEntries(
-      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
-        cri,
-        !enabled,
-      ]),
-    );
-  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
-  setupOptions(
-    "featureFlag",
-    systemSettings?.featureFlagStatuses ?? {},
-    featureFlagInput,
-  );
-
+  await setupSystemSettingsOptions(TargetEnvironment.PRODUCTION);
   setupOtherOptions();
   setupMermaidClickHandlers();
   setupHeaderToggleClickHandlers();
+
+  systemSettingsSelection.addEventListener("change", async () => {
+    const targetEnvironment = TargetEnvironment.BUILD;
+    const v = systemSettingsSelection.value;
+    console.log(v);
+    await setupSystemSettingsOptions(targetEnvironment);
+    await updateView();
+  });
+
   form.addEventListener("change", async (event) => {
     event.preventDefault();
     await updateView();
