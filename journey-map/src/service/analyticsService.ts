@@ -12,21 +12,12 @@ export interface TransitionsApiRequestBody {
 
 export const mapStringToEnvironment = (environment: string): Environment => {
   const normalized = environment.toLowerCase().trim();
-  switch (normalized) {
-    case "production":
-      return Environment.PRODUCTION;
-    case "integration":
-      return Environment.INTEGRATION;
-    case "staging":
-      return Environment.STAGING;
-    case "build":
-      return Environment.BUILD;
-    case "shared":
-      return Environment.SHARED_DEV;
-    default:
-      alert(`Unknown environment: ${environment}. Fetching from production`);
-      return Environment.PRODUCTION;
+  const values = Object.values(Environment) as string[];
+  if (values.includes(normalized)) {
+    return normalized as Environment;
   }
+  alert(`Unknown environment: ${environment}. Fetching from production`);
+  return Environment.PRODUCTION;
 };
 
 export const getSystemSettings = async (

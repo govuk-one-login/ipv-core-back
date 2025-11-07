@@ -86,8 +86,10 @@ const transitionsSubmitButton = document.getElementById(
 const systemSettingsSelection = document.getElementById(
   "systemSettingsTargetEnv",
 ) as HTMLSelectElement;
-const form = document.getElementById("configuration-form") as HTMLFormElement;
-const journeyMapForm = document.getElementById(
+const coreBackConfigForm = document.getElementById(
+  "configuration-form",
+) as HTMLFormElement;
+const otherOptionsForm = document.getElementById(
   "journey-map-configuration-form",
 ) as HTMLFormElement;
 const disabledInput = document.getElementById(
@@ -333,8 +335,8 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 
 const updateView = async (): Promise<void> => {
   const options = parseOptions(
-    new FormData(form),
-    new FormData(journeyMapForm),
+    new FormData(coreBackConfigForm),
+    new FormData(otherOptionsForm),
   );
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
@@ -633,11 +635,11 @@ const initialize = async (): Promise<void> => {
     await updateView();
   });
 
-  form.addEventListener("change", async (event) => {
+  coreBackConfigForm.addEventListener("change", async (event) => {
     event.preventDefault();
     await updateView();
   });
-  journeyMapForm.addEventListener("change", async (event) => {
+  otherOptionsForm.addEventListener("change", async (event) => {
     event.preventDefault();
     await updateView();
   });
