@@ -406,7 +406,7 @@ states:
         targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
       try-again-post-office:
         targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
+        targetState: START_LOW_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -517,7 +517,7 @@ states:
         targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
       try-again-post-office:
         targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
+        targetState: START_LOW_CONFIDENCE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
