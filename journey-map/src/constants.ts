@@ -60,5 +60,5 @@ export enum Environment {
   INTEGRATION = "integration",
   STAGING = "staging",
   BUILD = "build",
-  SHARED_DEV = "shared",
+  SHARED = "shared",
 }

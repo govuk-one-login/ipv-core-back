@@ -11,13 +11,13 @@ export interface TransitionsApiRequestBody {
 }
 
 export const mapStringToEnvironment = (environment: string): Environment => {
-  const normalized = environment.toLowerCase().trim();
-  const values = Object.values(Environment) as string[];
-  if (values.includes(normalized)) {
-    return normalized as Environment;
+  const normalized = environment.toUpperCase().trim();
+  const env = Environment[normalized as keyof typeof Environment];
+  if (!env) {
+    alert(`Unknown environment: ${environment}. Fetching from production`);
+    return Environment.PRODUCTION;
   }
-  alert(`Unknown environment: ${environment}. Fetching from production`);
-  return Environment.PRODUCTION;
+  return env;
 };
 
 export const getSystemSettings = async (
