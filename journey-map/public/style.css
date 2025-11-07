@@ -4,6 +4,7 @@
 }
 h3 {
   padding-bottom: 8px;
+  overflow-wrap: anywhere;
 }
 h4 {
   padding: 12px 0 4px 0;
@@ -66,6 +67,8 @@ figure {
 #header-content > *:not(:first-child) {
   border-left: 1px solid black;
 }
+
+
 #header-toggle {
   position: absolute;
   left: 50%;
