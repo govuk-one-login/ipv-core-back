@@ -6,8 +6,8 @@
     <link rel="stylesheet" href="./style.css" type="text/css" />
   </head>
   <body>
-    <div id="header">
-      <div id="header-bar">
+    <header id="header">
+      <nav id="header-bar">
         <h1>
           <a id="header-title" href="javascript:void(0)">
             <svg
@@ -28,106 +28,13 @@
             <span>IPV Core Journey Map</span>
           </a>
         </h1>
-        <div id="header-actions">
+        <article id="header-actions">
           <label for="journey-select">Current Journey</label>
           <select id="journey-select"></select>
-        </div>
-      </div>
-      <div id="header-content">
-        <form id="transitions-traffic-form">
-            <h2>Users Traffic</h2>
-            <fieldset id="journeyTransitionsInput">
-              <legend>Define request</legend>
-              <p>Customise transitions request to see traffic between states</p>
-              <h4>Target Environment</h4>
-              <label for="targetEnvironment"></label>
-              <select id="targetEnvironment" name="targetEnvironment">
-                <option value="production">Production</option>
-                <option value="integration">Integration</option>
-                <option value="staging">Staging</option>
-                <option value="build">Build</option>
-                <option value="shared">Shared Dev</option>
-              </select>
-              <h4>Time Window</h4>
-              <div class="date-input-row">
-                <span>From</span>
-                <label>
-                  <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>
-                </label>
-              </div>
-              <div class="date-input-row">
-                <span>To</span>
-                <label>
-                  <input id="transitionsToInput" type="datetime-local" name="toDate"/>
-                </label>
-              </div>
-              <h4>Fetch By</h4>
-              <label for="sessionJourneySelection"></label>
-              <select id="sessionJourneySelection" name="sessionJourneySelection">
-                <option value="journey">Journey Id</option>
-                <option value="session">IPV Session Id</option>
-              </select>
-              <label>
-                <input placeholder="Leave blank to fetch all journeys" type="text" id="journeySessionIdInput" name="journeySession"/>
-              </label>
-              <button id="form-button">Search</button>
-            </fieldset>
-        </form>
-        <form id="configuration-form">
-          <h2>Options</h2>
-          <div id="checkbox-controls">
-            <fieldset id="disabledInput">
-              <legend>Turn off a CRI</legend>
-              <p>Note not all CRIs have disabled routing configured.</p>
-            </fieldset>
-            <fieldset id="featureFlagInput">
-              <legend>Turn on a feature flag</legend>
-            </fieldset>
-            <fieldset id="otherOptions">
-              <legend>Turn on other options</legend>
-              <p>By default, only successful identity journeys are displayed.</p>
-              <label>
-                <input
-                        id="includeFailuresInput"
-                        name="otherOption"
-                        value="includeFailures"
-                        type="checkbox"
-                />
-                <span>Show journeys that end in <strong>failures</strong></span>
-              </label>
-              <label>
-                <input
-                        id="includeErrorsInput"
-                        name="otherOption"
-                        value="includeErrors"
-                        type="checkbox"
-                />
-                <span>Show unexpected <strong>errors</strong></span>
-              </label>
-              <label>
-                <input
-                        id="onlyOrphanStatesInput"
-                        name="otherOption"
-                        value="onlyOrphanStates"
-                        type="checkbox"
-                />
-                <span>Show only <strong>orphaned states</strong></span>
-              </label>
-              <label>
-                <input
-                        id="expandNestedJourneysInput"
-                        name="otherOption"
-                        value="expandNestedJourneys"
-                        type="checkbox"
-                />
-                <span
-                >Show all states within <strong>nested journeys</strong></span
-                >
-              </label>
-            </fieldset>
-          </div>
-        </form>
-        <div id="nodeInfo">
+        </article>
+      </nav>
+      <main id="header-content">
+        <article id="nodeInfo">
           <h2 id="journeyName"></h2>
           <p id="journeyDesc"></p>
           <div id="journeyContextsList"></div>
@@ -140,10 +47,130 @@
             </p>
             <p>Click on a node to display more information.</p>
           </div>
-        </div>
-      </div>
+        </article>
+        <article>
+          <figure>
+            <h2>Users Traffic</h2>
+          </figure>
+          <form id="transitions-traffic-form">
+              <fieldset id="journeyTransitionsInput">
+                <legend>Define request</legend>
+                <p>Customise transitions request to see traffic between states</p>
+                <h4>Target Environment</h4>
+                <label for="targetEnvironment"></label>
+                <select id="targetEnvironment" name="targetEnvironment">
+                  <option value="production">Production</option>
+                  <option value="integration">Integration</option>
+                  <option value="staging">Staging</option>
+                  <option value="build">Build</option>
+                  <option value="shared">Shared Dev</option>
+                </select>
+                <h4>Time Window</h4>
+                <div class="date-input-row">
+                  <span>From</span>
+                  <label>
+                    <input id="transitionsFromInput" type="datetime-local" name="fromDate"/>
+                  </label>
+                </div>
+                <div class="date-input-row">
+                  <span>To</span>
+                  <label>
+                    <input id="transitionsToInput" type="datetime-local" name="toDate"/>
+                  </label>
+                </div>
+                <h4>Fetch By</h4>
+                <label for="sessionJourneySelection"></label>
+                <select id="sessionJourneySelection" name="sessionJourneySelection">
+                  <option value="journey">Journey Id</option>
+                  <option value="session">IPV Session Id</option>
+                </select>
+                <label>
+                  <input placeholder="Leave blank to fetch all journeys" type="text" id="journeySessionIdInput" name="journeySession"/>
+                </label>
+                <button id="form-button">Search</button>
+              </fieldset>
+          </form>
+        </article>
+        <article>
+          <figure>
+            <h2>IPV Core Back Options</h2>
+            <div>
+              <label for="systemSettingsTargetEnv"></label>
+              <select id="systemSettingsTargetEnv" name="systemSettingsTargetEnv">
+                <option value="production">Production</option>
+                <option value="integration">Integration</option>
+                <option value="staging">Staging</option>
+                <option value="build">Build</option>
+                <option value="shared">Shared Dev</option>
+              </select>
+            </div>
+          </figure>
+          <form id="configuration-form">
+            <div id="checkbox-controls" style="">
+              <fieldset id="disabledInput">
+                <legend>Turn off a CRI</legend>
+                <p>Note not all CRIs have disabled routing configured.</p>
+              </fieldset>
+              <fieldset id="featureFlagInput">
+                <legend>Turn on a feature flag</legend>
+              </fieldset>
+            </div>
+          </form>
+        </article>
+        <article>
+          <figure>
+            <h2>Other Options</h2>
+          </figure>
+          <form id="journey-map-configuration-form">
+            <div>
+              <fieldset id="otherOptions">
+                <legend>Turn on other options</legend>
+                <p>By default, only successful identity journeys are displayed.</p>
+                <label>
+                  <input
+                          id="includeFailuresInput"
+                          name="otherOption"
+                          value="includeFailures"
+                          type="checkbox"
+                  />
+                  <span>Show journeys that end in <strong>failures</strong></span>
+                </label>
+                <label>
+                  <input
+                          id="includeErrorsInput"
+                          name="otherOption"
+                          value="includeErrors"
+                          type="checkbox"
+                  />
+                  <span>Show unexpected <strong>errors</strong></span>
+                </label>
+                <label>
+                  <input
+                          id="onlyOrphanStatesInput"
+                          name="otherOption"
+                          value="onlyOrphanStates"
+                          type="checkbox"
+                  />
+                  <span>Show only <strong>orphaned states</strong></span>
+                </label>
+                <label>
+                  <input
+                          id="expandNestedJourneysInput"
+                          name="otherOption"
+                          value="expandNestedJourneys"
+                          type="checkbox"
+                  />
+                  <span
+                  >Show all states within <strong>nested journeys</strong></span
+                  >
+                </label>
+              </fieldset>
+            </div>
+          </form>
+        </article>
+      </main>
       <button id="header-toggle">Hide header</button>
-    </div>
+    </header>
     <div id="diagram"></div>
     <script type="module" src="./application.js"></script>
   </body>

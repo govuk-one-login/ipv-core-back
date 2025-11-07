@@ -1,4 +1,7 @@
-import { TransitionsApiRequestBody } from "../service/analyticsService.js";
+import {
+  mapStringToEnvironment,
+  TransitionsApiRequestBody,
+} from "../service/analyticsService.js";
 
 const addSystemTimeZone = (dateTimeStr: string): string => {
   const date = new Date(dateTimeStr);
@@ -15,6 +18,7 @@ export const parseTransitionsApiForm = (
 ): TransitionsApiRequestBody => {
   const selection = formData.get("sessionJourneySelection") as string;
   const typedInput = (formData.get("journeySession") as string) ?? "";
+  const targetEnvironment = (formData.get("targetEnvironment") as string) ?? "";
 
   return {
     fromDate: addSystemTimeZone(formData.get("fromDate") as string),
@@ -25,6 +29,6 @@ export const parseTransitionsApiForm = (
     ...(selection === "journey" && typedInput
       ? { govukJourneyId: typedInput }
       : {}),
-    environment: formData.get("targetEnvironment") as string,
+    environment: mapStringToEnvironment(targetEnvironment),
   };
 };

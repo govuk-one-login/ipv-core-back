@@ -15,13 +15,20 @@ export interface SystemSettings {
   criStatuses: Record<string, boolean>;
 }
 
-export const parseOptions = (formData: FormData): RenderOptions => ({
+export const parseOptions = (
+  formData: FormData,
+  journeyMapForm: FormData,
+): RenderOptions => ({
   disabledCris: formData.getAll("disabledCri") as string[],
   featureFlags: formData.getAll("featureFlag") as string[],
-  includeErrors: formData.getAll("otherOption").includes("includeErrors"),
-  includeFailures: formData.getAll("otherOption").includes("includeFailures"),
-  expandNestedJourneys: formData
+  includeErrors: journeyMapForm.getAll("otherOption").includes("includeErrors"),
+  includeFailures: journeyMapForm
+    .getAll("otherOption")
+    .includes("includeFailures"),
+  expandNestedJourneys: journeyMapForm
     .getAll("otherOption")
     .includes("expandNestedJourneys"),
-  onlyOrphanStates: formData.getAll("otherOption").includes("onlyOrphanStates"),
+  onlyOrphanStates: journeyMapForm
+    .getAll("otherOption")
+    .includes("onlyOrphanStates"),
 });
