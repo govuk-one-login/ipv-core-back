@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: P2 CIMIT - Alternate doc
   Background: Disable strategic app
     Given I activate the 'disableStrategicApp' feature set

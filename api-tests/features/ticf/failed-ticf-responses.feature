@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Failed TICF responses
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

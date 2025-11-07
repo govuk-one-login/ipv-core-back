@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: P2 Reuse journey
 
   @TrafficGeneration

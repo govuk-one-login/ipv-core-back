@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Reprove Identity Journey
   Background:
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

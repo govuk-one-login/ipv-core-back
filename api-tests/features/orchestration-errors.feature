@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Errors from Orchestration
 
   Scenario: Unrecoverable error from Orchestration

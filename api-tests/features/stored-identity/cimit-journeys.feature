@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Stored Identity Service - CIMIT journeys
   Background:
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

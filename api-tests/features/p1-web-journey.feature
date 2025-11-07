@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: P1 Web Journeys
   Background: Start P1 journey ineligible for app
     Given I activate the 'disableStrategicApp' feature set

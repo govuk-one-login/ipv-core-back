@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Well-known endpoints
   Scenario: JWKS endpoint provides valid keys
     When I call the JWKS endpoint

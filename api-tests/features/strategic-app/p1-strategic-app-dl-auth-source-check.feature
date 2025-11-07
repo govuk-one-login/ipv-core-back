@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @IntegrationTest
 Feature: M2B Strategic App Journeys with DL authoritative source check
   Background: Get to the DL check
     Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set

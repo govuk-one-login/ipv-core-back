@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Identity reuse update details failures
     Rule: Update given name only
         Background:

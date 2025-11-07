@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: P2 reuse journeys
   Background: Enable feature sets
     Given I activate the 'storedIdentityService,disableStrategicApp' feature sets
