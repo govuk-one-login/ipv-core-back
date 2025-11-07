@@ -85,6 +85,23 @@ states:
         targetState: ERROR
 
   # Journey states
+  RESET_SESSION_BEFORE_WEBAPP_RETRY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+      error:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
 
   RESET_SESSION_IDENTITY:
     response:
@@ -386,14 +403,14 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       try-again-app:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
       try-again-post-office:
-        targetState: CRI_CLAIMED_IDENTITY_J4
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
@@ -497,14 +514,14 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       try-again-app:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
       try-again-post-office:
-        targetState: CRI_CLAIMED_IDENTITY_J4
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
