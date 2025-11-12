@@ -507,12 +507,8 @@ Resources:
     Condition: IsTestApiEnv
     Properties:
       Enabled: true
-      Value: !Sub
-        - "{{resolve:secretsmanager:CoreBackInternalTestingApiKey:SecretString}}${env}" # pragma: allowlist secret
-        - env: !If
-            - IsDevelopment
-            - !Sub "-${Environment}"
-            - ""
+      Value: !Sub "{{resolve:secretsmanager:CoreBackInternalTestingApiKey:SecretString}}" # pragma: allowlist secret
+
 
   IPVCoreInternalTestingApiUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
