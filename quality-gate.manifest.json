@@ -18,7 +18,8 @@
         {
           "check-types": [
             "code style and linting",
-            "unit test coverage"
+            "unit test coverage",
+            "unit"
           ],
           "config": {
             "file": ".github/workflows/pre-merge-checks.yaml",
@@ -39,6 +40,17 @@
             "file": ".github/workflows/pre-merge-checks.yaml",
             "name": "run linting on api-tests directory and run api tests",
             "path": "jobs.api-test"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "contract"
+          ],
+          "config": {
+            "file": ".github/workflows/contract-tests.yaml",
+            "name": "run contract tests"
           },
           "phase": "pre-merge",
           "provider": "GitHub"
