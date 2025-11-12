@@ -157,7 +157,7 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'sorry-technical-problem' page response with context 'kbvCriError'
+      Then I get an 'sorry-technical-problem' page response with context 'kbvCriError'
 
     Scenario: Unexpected error from Experian KBV CRI - try CRI again
       When I submit a 'tryAgain' event
