@@ -112,6 +112,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "130355686670" ]
     - !Equals [ !Ref AWS::AccountId, "175872367215" ]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
+  IsSharedDev: !Equals [ !Ref Environment, "dev" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
   IsDevPerf: !Equals [ !Ref Environment, "dev-perf" ]
@@ -511,7 +512,10 @@ Resources:
         - "{{resolve:secretsmanager:CoreBackInternalTestingApiKey:SecretString}}${env}" # pragma: allowlist secret
         - env: !If
             - IsDevelopment
-            - !Sub "-${Environment}"
+            - !If
+              - IsSharedDev
+              - ""
+              - !Sub "-${Environment}"
             - ""
 
   IPVCoreInternalTestingApiUsagePlan:
