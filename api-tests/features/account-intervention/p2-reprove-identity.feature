@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Reprove Identity Journey
     Background: Disable strategic app
         Given I activate the 'disableStrategicApp' feature set

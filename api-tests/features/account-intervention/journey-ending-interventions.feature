@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Journey ending interventions
 
   Scenario Outline: <intervention> intervention at of identity proving journey

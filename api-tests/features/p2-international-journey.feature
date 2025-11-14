@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: P2 International Address
   Background: Activate feature sets
     Given I activate the 'disableStrategicApp' feature set

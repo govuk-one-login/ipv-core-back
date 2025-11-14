@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 @TrafficGeneration
 Feature: P2 Web document journey
   Background: Activate feature sets
