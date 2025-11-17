@@ -892,6 +892,7 @@ Resources:
             Action:
               - lambda:InvokeFunction
               - lambda:GetFunction
+              - lambda:GetFunctionConfiguration
             Resource:
               - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}
 
