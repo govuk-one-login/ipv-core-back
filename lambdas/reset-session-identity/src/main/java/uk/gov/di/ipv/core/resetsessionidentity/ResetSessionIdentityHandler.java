@@ -43,7 +43,6 @@ import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINS
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -100,7 +99,7 @@ public class ResetSessionIdentityHandler
         configService.setFeatureSet(RequestHelper.getFeatureSet(input));
 
         try {
-            String ipvSessionId = getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -121,6 +120,12 @@ public class ResetSessionIdentityHandler
             sessionCredentialsService.deleteSessionCredentialsForResetType(
                     ipvSessionId, sessionCredentialsResetType);
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
+
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Session credentials reset type: %s",
+                                    sessionCredentialsResetType)));
 
             if (sessionCredentialsResetType == REINSTATE) {
                 var existingIdentityVcs =
