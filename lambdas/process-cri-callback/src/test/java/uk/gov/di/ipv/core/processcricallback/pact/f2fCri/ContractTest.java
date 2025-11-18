@@ -320,16 +320,16 @@ class ContractTest {
     private static final String SECURE_TOKEN =
             "35110a7aeacf4d16f1d39d393d9e5d62"; // pragma: allowlist secret
     private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2025-05-09T08:59:51.00Z"), ZoneOffset.UTC);
+            Clock.fixed(Instant.parse("2025-11-18T10:14:25.00Z"), ZoneOffset.UTC);
     private static final String CLIENT_ASSERTION_SIGNING_KID =
             // pragma: allowlist nextline secret
-            "5d6ec7413ae8bf2ea7c416e766ba9b9299b67eaf9e14f984e2f798a48bf6c921";
+            "e6f09db2fb00739acda77f6348d85b601b5c45a123315041ca9d949a86f59d45";
     private static final String CLIENT_ASSERTION_HEADER =
-            "eyJraWQiOiI1ZDZlYzc0MTNhZThiZjJlYTdjNDE2ZTc2NmJhOWI5Mjk5YjY3ZWFmOWUxNGY5ODRlMmY3OThhNDhiZjZjOTIxIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
+            "eyJraWQiOiJlNmYwOWRiMmZiMDA3MzlhY2RhNzdmNjM0OGQ4NWI2MDFiNWM0NWExMjMzMTUwNDFjYTlkOTQ5YTg2ZjU5ZDQ1IiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
     private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJodHRwczovL2lwdi5jb3JlLmFjY291bnQuZ292LnVrIiwic3ViIjoiaHR0cHM6Ly9pcHYuY29yZS5hY2NvdW50Lmdvdi51ayIsImF1ZCI6Imh0dHBzOi8vcmV2aWV3LW8uZGV2LmFjY291bnQuZ292LnVrIiwiZXhwIjoxNzQ2NzgyMDkxLCJqdGkiOiIzNTExMGE3YWVhY2Y0ZDE2ZjFkMzlkMzkzZDllNWQ2MiJ9"; // pragma: allowlist secret
+            "eyJpc3MiOiJodHRwczovL2lwdi5jb3JlLmFjY291bnQuZ292LnVrIiwic3ViIjoiaHR0cHM6Ly9pcHYuY29yZS5hY2NvdW50Lmdvdi51ayIsImF1ZCI6Imh0dHBzOi8vcmV2aWV3LW8uZGV2LmFjY291bnQuZ292LnVrIiwiZXhwIjoxNzYzNDYxNzY1LCJqdGkiOiIzNTExMGE3YWVhY2Y0ZDE2ZjFkMzlkMzkzZDllNWQ2MiJ9"; // pragma: allowlist secret
 
     // We generate the signature using EC_PRIVATE_KEY_JWK and jwt.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "diJansVqKvRtOEsZYch1wNd17XPrYYETLjeXRu2HHDadLZJEz6uLoibp2IrChKCZcupETcBBWCPVj8qQYR2VbA"; // pragma: allowlist secret
+            "gW0g_9nDDFqpkKY5_Ps7GOQ7jDtYrCEiTx2cOKjfJwkVC0w1RiN_rOmTAZLZiNBGMW2HGQN1ldE29qrAEbJjIg"; // pragma: allowlist secret
 }
