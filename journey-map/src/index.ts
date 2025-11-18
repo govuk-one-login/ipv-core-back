@@ -609,10 +609,33 @@ const setupJourneyTransitionInput = (): void => {
     ).finally(() => {
       transitionsSubmitButton.disabled = false;
     });
+    enrichJourneyTransitionData(journeyTransitions, journeyMaps);
     setJourneyTransitionsData(journeyTransitions);
     await updateView();
   });
 };
+
+function enrichJourneyTransitionData(
+  journeyTransitions: JourneyTransition[],
+  journeyMaps: Record<string, JourneyMap>,
+): JourneyTransition[] {
+  journeyTransitions.map((t) => addNestedJourneyEntryEvent(t, journeyMaps));
+  return journeyTransitions;
+}
+
+function addNestedJourneyEntryEvent(
+  transition: JourneyTransition,
+  journeyMaps: Record<string, JourneyMap>,
+) {
+  const entryEvent =
+    journeyMaps[transition.fromJourney]?.states?.[transition.from]?.events?.[
+      transition.event
+    ]?.targetEntryEvent;
+
+  if (entryEvent) {
+    transition.toEntryEvent = entryEvent;
+  }
+}
 
 const initialize = async (): Promise<void> => {
   setupJourneyTransitionInput();

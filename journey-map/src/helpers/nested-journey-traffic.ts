@@ -129,6 +129,7 @@ const handleEntryNestedJourneyTraffic = (
     if (!edge.sourceState.startsWith("ENTRY_")) {
       continue;
     }
+
     const count = journeyTransitionsTraffic
       .filter((transition) => transition.fromJourney === journeyTypeUrlParam)
       .filter((transition) =>
@@ -142,7 +143,10 @@ const handleEntryNestedJourneyTraffic = (
       }))
       .filter((transition) => transition.toState === edge.targetState)
       .filter((transition) =>
-        edge.transitionEvents.find((te) => te.eventName === transition.event),
+        edge.transitionEvents.find(
+          (te) =>
+            te.eventName === (transition.toEntryEvent || transition.event),
+        ),
       )
       .reduce((sum, transition) => sum + (transition.count ?? 0), 0);
 
