@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -32,7 +33,6 @@ import java.io.UncheckedIOException;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -117,15 +117,15 @@ public class ResetSessionIdentityHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var sessionCredentialsResetType = RequestHelper.getSessionCredentialsResetType(input);
-            sessionCredentialsService.deleteSessionCredentialsForResetType(
-                    ipvSessionId, sessionCredentialsResetType);
-            LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
-
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             String.format(
                                     "Session credentials reset type: %s",
                                     sessionCredentialsResetType)));
+
+            sessionCredentialsService.deleteSessionCredentialsForResetType(
+                    ipvSessionId, sessionCredentialsResetType);
+            LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 
             if (sessionCredentialsResetType == REINSTATE) {
                 var existingIdentityVcs =
@@ -144,8 +144,10 @@ public class ResetSessionIdentityHandler
                 doResetForPendingVc(clientOAuthSessionItem, F2F);
             }
 
-            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
-                doResetForPendingVc(clientOAuthSessionItem, DCMAW_ASYNC);
+            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)
+                    || sessionCredentialsResetType.equals(
+                            SessionCredentialsResetType.DCMAW_ASYNC)) {
+                doResetForPendingVc(clientOAuthSessionItem, Cri.DCMAW_ASYNC);
             }
 
             return JOURNEY_NEXT;
