@@ -68,3 +68,6 @@ export enum Environment {
   BUILD = "build",
   SHARED = "shared",
 }
+
+export const ENTRY_STATE_PREFIX = "ENTRY_";
+export const EXIT_STATE_PREFIX = "EXIT_";

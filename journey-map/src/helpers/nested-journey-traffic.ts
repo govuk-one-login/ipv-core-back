@@ -1,5 +1,6 @@
 import { TransitionEdge } from "./mermaid.js";
 import { JourneyTransition } from "../data/data.js";
+import { ENTRY_STATE_PREFIX } from "../constants.js";
 
 export const attachTransitionTrafficToNestedJourneys = (
   journeyTransitionsTraffic: JourneyTransition[],
@@ -126,7 +127,7 @@ const handleEntryNestedJourneyTraffic = (
   nestedJourneyTypeUrlParam: string,
 ) => {
   for (const edge of transitionsEdges) {
-    if (!edge.sourceState.startsWith("ENTRY_")) {
+    if (!edge.sourceState.startsWith(ENTRY_STATE_PREFIX)) {
       continue;
     }
 
