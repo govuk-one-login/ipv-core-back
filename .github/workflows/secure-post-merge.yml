@@ -6,7 +6,7 @@ on:
       - main
     paths-ignore:
       - '**/README.md'
-      - '**/test/**'
+      - '/lambdas/*/src/test/**'
   workflow_dispatch:
 
 jobs:
