@@ -20,6 +20,7 @@ import {
   mapStringToEnvironment,
 } from "./service/analyticsService.js";
 import { parseTransitionsApiForm } from "./helpers/analytics.js";
+import { enrichJourneyTransitionData } from "./helpers/enrich-transitions.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -609,6 +610,11 @@ const setupJourneyTransitionInput = (): void => {
     ).finally(() => {
       transitionsSubmitButton.disabled = false;
     });
+    enrichJourneyTransitionData(
+      journeyTransitions,
+      journeyMaps,
+      nestedJourneys,
+    );
     setJourneyTransitionsData(journeyTransitions);
     await updateView();
   });

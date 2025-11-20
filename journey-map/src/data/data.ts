@@ -3,6 +3,7 @@ export interface JourneyTransition {
   from: string;
   toJourney: string;
   to: string;
+  toEntryEvent?: string;
   count: number;
   event: string;
 }
