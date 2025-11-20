@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @IntegrationTest
 Feature: Identity reuse update details with Strategic App
     Rule: Successful journeys
         Background:

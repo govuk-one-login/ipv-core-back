@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: First Account Intervention call
 
   Scenario Outline: Not allowed <intervention> intervention on start of identity proving journey

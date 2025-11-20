@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: International identity reuse update details
     Background:
         Given the subject already has the following credentials

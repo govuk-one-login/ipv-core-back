@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Repeat fraud check failures
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

@@ -1,4 +1,4 @@
-@Build
+@Build @IntegrationTest
 Feature: Stored Identity - P1 journeys
   Background: Enabled stored identity service flag and start p1 journey
     Given I activate the 'storedIdentityService,disableStrategicApp' feature sets
