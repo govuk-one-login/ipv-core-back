@@ -144,11 +144,9 @@ public class ResetSessionIdentityHandler
                 doResetForPendingVc(clientOAuthSessionItem, F2F);
             }
 
-            if (sessionCredentialsResetType.equals(SessionCredentialsResetType.DCMAW_ASYNC)) {
-                resetCriPendingResponse(clientOAuthSessionItem, Cri.DCMAW_ASYNC);
-            }
-
-            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
+            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)
+                    || sessionCredentialsResetType.equals(
+                            SessionCredentialsResetType.DCMAW_ASYNC)) {
                 doResetForPendingVc(clientOAuthSessionItem, Cri.DCMAW_ASYNC);
             }
 
@@ -199,15 +197,5 @@ public class ResetSessionIdentityHandler
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         String.format("Reset done for %s pending identity.", asyncCri.getId())));
-    }
-
-    private void resetCriPendingResponse(
-            ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri) {
-        var userId = clientOAuthSessionItem.getUserId();
-        criResponseService.deleteCriResponseItem(userId, asyncCri);
-        LOGGER.info(
-                LogHelper.buildLogMessage(
-                        String.format(
-                                "Reset done for %s pending cri response.", asyncCri.getId())));
     }
 }
