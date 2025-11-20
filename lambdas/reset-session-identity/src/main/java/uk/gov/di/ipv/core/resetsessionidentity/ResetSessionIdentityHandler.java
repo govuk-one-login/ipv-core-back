@@ -202,8 +202,7 @@ public class ResetSessionIdentityHandler
     }
 
     private void resetCriPendingResponse(
-            ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri)
-            throws EvcsServiceException {
+            ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri) {
         var userId = clientOAuthSessionItem.getUserId();
         criResponseService.deleteCriResponseItem(userId, asyncCri);
         LOGGER.info(
