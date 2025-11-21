@@ -393,7 +393,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("CRI_STATE");
         IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession(TEST_IP);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        when(mockConfigService.getBackendSessionTimeout()).thenReturn(99L);
+        when(mockIpvSessionService.checkIfSessionExpired(ipvSessionItem)).thenReturn(true);
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -1323,7 +1323,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
         when(mockConfigService.getComponentId()).thenReturn("core");
-        when(mockConfigService.getBackendSessionTimeout()).thenReturn(7200L);
+        when(mockIpvSessionService.checkIfSessionExpired(ipvSessionItem)).thenReturn(false);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
