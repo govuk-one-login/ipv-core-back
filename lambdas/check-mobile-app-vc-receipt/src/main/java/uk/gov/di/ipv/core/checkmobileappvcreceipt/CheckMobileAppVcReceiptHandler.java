@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionExpiredException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -129,6 +130,9 @@ public class CheckMobileAppVcReceiptHandler
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (IpvSessionExpiredException e) {
+            return buildErrorResponse(
+                    e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_ITEM_EXPIRED);
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
@@ -183,7 +187,8 @@ public class CheckMobileAppVcReceiptHandler
                     CiRetrievalException,
                     EvcsServiceException,
                     CiExtractionException,
-                    MissingSecurityCheckCredential {
+                    MissingSecurityCheckCredential,
+                    IpvSessionExpiredException {
         // Validate callback sessions
         validateSessionId(request);
 
@@ -200,6 +205,10 @@ public class CheckMobileAppVcReceiptHandler
                 clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(request.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
+
+        if (ipvSessionService.checkIfSessionExpired(ipvSessionItem)) {
+            throw new IpvSessionExpiredException(ErrorResponse.IPV_SESSION_ITEM_EXPIRED);
+        }
 
         // Retrieve and validate cri response and vc
         var criResponseItem = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);

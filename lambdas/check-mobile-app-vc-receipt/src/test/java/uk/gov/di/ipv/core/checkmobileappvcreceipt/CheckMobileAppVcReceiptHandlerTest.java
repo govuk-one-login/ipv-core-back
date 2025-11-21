@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -121,6 +122,33 @@ class CheckMobileAppVcReceiptHandlerTest {
     }
 
     @Test
+    void shouldReturn400WhenIpvSessionIsExpired() throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState();
+        var expiredIpvSessionItem = buildExpiredIpvSessionItem(3600L);
+
+        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
+                .thenReturn(expiredIpvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(buildValidClientOAuthSessionItem());
+        when(ipvSessionService.checkIfSessionExpired(expiredIpvSessionItem)).thenReturn(true);
+
+        // Act
+        var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
+
+        // Assert
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
+        assertEquals(
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatusCode.BAD_REQUEST,
+                        ErrorResponse.IPV_SESSION_ITEM_EXPIRED),
+                journeyResponse);
+    }
+
+    @Test
     void shouldReturn500WhenCriResponseNotFound() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState();
@@ -154,6 +182,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
+        when(ipvSessionService.checkIfSessionExpired(ipvSessionItem)).thenReturn(false);
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
@@ -324,6 +353,15 @@ class CheckMobileAppVcReceiptHandlerTest {
         var ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        return ipvSessionItem;
+    }
+
+    private IpvSessionItem buildExpiredIpvSessionItem(long backendSessionTimeout) {
+        var ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        ipvSessionItem.setCreationDateTime(
+                Instant.now().minusSeconds(backendSessionTimeout + 1000).toString());
         return ipvSessionItem;
     }
 
