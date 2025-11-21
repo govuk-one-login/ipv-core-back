@@ -207,6 +207,7 @@ public class CheckMobileAppVcReceiptHandler
         LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
 
         if (ipvSessionService.checkIfSessionExpired(ipvSessionItem)) {
+            LOGGER.warn(LogHelper.buildLogMessage("Ipv Session expired."));
             throw new IpvSessionExpiredException(ErrorResponse.IPV_SESSION_ITEM_EXPIRED);
         }
 
