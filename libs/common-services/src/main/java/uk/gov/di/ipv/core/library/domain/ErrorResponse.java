@@ -120,7 +120,8 @@ public enum ErrorResponse {
     FAILED_TO_EXTRACT_CIS_FROM_VC(1106, "Failed to extract contra-indicators from VC"),
     MISSING_SECURITY_CHECK_CREDENTIAL(1107, "Missing security check credential"),
     FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS(1108, "Failed to create stored identity for EVCS"),
-    ERROR_CALLING_AIS_API(1109, "Error when calling AIS API");
+    ERROR_CALLING_AIS_API(1109, "Error when calling AIS API"),
+    IPV_SESSION_ITEM_EXPIRED(1110, "Session expired.");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
