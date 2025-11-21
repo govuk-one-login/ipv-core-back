@@ -112,6 +112,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "130355686670" ]
     - !Equals [ !Ref AWS::AccountId, "175872367215" ]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
+  IsSharedDev: !Equals [ !Ref Environment, "dev" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
   IsDevPerf: !Equals [ !Ref Environment, "dev-perf" ]
@@ -511,7 +512,10 @@ Resources:
         - "{{resolve:secretsmanager:CoreBackInternalTestingApiKey:SecretString}}${env}" # pragma: allowlist secret
         - env: !If
             - IsDevelopment
-            - !Sub "-${Environment}"
+            - !If
+              - IsSharedDev
+              - ""
+              - !Sub "-${Environment}"
             - ""
 
   IPVCoreInternalTestingApiUsagePlan:
@@ -888,6 +892,7 @@ Resources:
             Action:
               - lambda:InvokeFunction
               - lambda:GetFunction
+              - lambda:GetFunctionConfiguration
             Resource:
               - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:manual-f2f-pending-reset-${Environment}
 
@@ -3077,6 +3082,8 @@ Resources:
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
 #  App Config Pipeline
+#  This may fail on first deployment due to not existing alias.
+#  Simply comment it out to deploy and then uncomment and update the stack to give app config pipeline permissions to invoke validation lambda
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:

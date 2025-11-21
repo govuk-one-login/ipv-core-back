@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.library.ais.exception.AccountInterventionException;
 import uk.gov.di.ipv.core.library.ais.helper.AccountInterventionEvaluator;
 import uk.gov.di.ipv.core.library.ais.service.AisService;
@@ -236,7 +236,7 @@ public class CheckExistingIdentityHandler
 
     @Override
     @Logging(clearState = true)
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
@@ -343,7 +343,7 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
-            var previousAchievedVot =
+            var previousAchievedMaxVot =
                     getStrongestAchievableVotFromBundle(credentialBundle.credentials);
 
             var asyncCriStatus =
@@ -399,7 +399,7 @@ public class CheckExistingIdentityHandler
                             credentialBundle,
                             areGpg45VcsCorrelated,
                             contraIndicators,
-                            previousAchievedVot);
+                            previousAchievedMaxVot);
             if (profileMatchResponse.isPresent()) {
                 return profileMatchResponse.get();
             }
@@ -493,7 +493,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators,
-            Vot previousAchievedVot)
+            Vot previousAchievedMaxVot)
             throws VerifiableCredentialException {
         // Check for attained vot from requested vots
         var votMatchingResult =
@@ -515,7 +515,7 @@ public class CheckExistingIdentityHandler
         return Optional.of(
                 buildReuseResponse(
                         requestedMatch.vot(),
-                        previousAchievedVot,
+                        previousAchievedMaxVot,
                         ipvSessionItem,
                         credentialBundle,
                         auditEventUser,
@@ -610,7 +610,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
-            Vot previousAchievedVot,
+            Vot previousAchievedMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
             AuditEventUser auditEventUser,
@@ -637,7 +637,8 @@ public class CheckExistingIdentityHandler
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventUser,
                 deviceInformation,
-                new AuditExtensionPreviousAchievedVot(previousAchievedVot));
+                new AuditExtensionPreviousAchievedVot(
+                        previousAchievedMaxVot, previousAchievedMaxVot));
         EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);

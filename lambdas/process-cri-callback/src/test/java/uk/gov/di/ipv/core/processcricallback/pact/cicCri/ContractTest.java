@@ -444,18 +444,18 @@ class ContractTest {
     private static final String SECURE_TOKEN =
             "bd43c0a6642a197b722b8085a7a55963"; // pragma: allowlist secret
     private static final Clock CLIENT_ASSERTION_TIME =
-            Clock.fixed(Instant.parse("2025-05-09T08:53:56.00Z"), ZoneOffset.UTC);
+            Clock.fixed(Instant.parse("2025-11-17T14:47:10.00Z"), ZoneOffset.UTC);
     private static final String CLIENT_ASSERTION_SIGNING_KID =
             // pragma: allowlist nextline secret
-            "6ff136d395e35a99f7520d56a6876effbe17ba0d7390c71b8373990806bda300";
+            "6f45e9889844330c36648f779227893afb2ebd5c3d90b92a8aeb3134e0f91c0b";
     private static final String CLIENT_ASSERTION_HEADER =
-            "eyJraWQiOiI2ZmYxMzZkMzk1ZTM1YTk5Zjc1MjBkNTZhNjg3NmVmZmJlMTdiYTBkNzM5MGM3MWI4MzczOTkwODA2YmRhMzAwIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
+            "eyJraWQiOiI2ZjQ1ZTk4ODk4NDQzMzBjMzY2NDhmNzc5MjI3ODkzYWZiMmViZDVjM2Q5MGI5MmE4YWViMzEzNGUwZjkxYzBiIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ"; // pragma: allowlist secret
     private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJodHRwczovL2lwdi5jb3JlLmFjY291bnQuZ292LnVrIiwic3ViIjoiaHR0cHM6Ly9pcHYuY29yZS5hY2NvdW50Lmdvdi51ayIsImF1ZCI6Imh0dHBzOi8vcmV2aWV3LWMuZGV2LmFjY291bnQuZ292LnVrIiwiZXhwIjoxNzQ2NzgxNzM2LCJqdGkiOiJiZDQzYzBhNjY0MmExOTdiNzIyYjgwODVhN2E1NTk2MyJ9"; // pragma: allowlist secret
+            "eyJpc3MiOiJodHRwczovL2lwdi5jb3JlLmFjY291bnQuZ292LnVrIiwic3ViIjoiaHR0cHM6Ly9pcHYuY29yZS5hY2NvdW50Lmdvdi51ayIsImF1ZCI6Imh0dHBzOi8vcmV2aWV3LWMuZGV2LmFjY291bnQuZ292LnVrIiwiZXhwIjoxNzYzMzkxNzMwLCJqdGkiOiJiZDQzYzBhNjY0MmExOTdiNzIyYjgwODVhN2E1NTk2MyJ9"; // pragma: allowlist secret
 
     // We generate the signature using EC_PRIVATE_KEY_JWK and jwt.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "UdqAlp4BYd0x4FxAd30AQg2ONT7bJR9Iw0je0Nrw7aldWJRzbkZ0ujTUTmyAevIAC1GoKTOnrWCEFlWCeJyWHw"; // pragma: allowlist secret
+            "EZvzqj9YiC5yR4o-lwdkERLXwQH0EQBBniySbQWLbZAFe7_Yio4xozN2DXKbQydeCEdqsVDzcV26y_VYeXCIuw"; // pragma: allowlist secret
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team

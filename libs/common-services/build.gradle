@@ -27,6 +27,8 @@ dependencies {
 			libs.openTelemetryJavaHttpClient,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
+			libs.powertoolsSecrets,
+			libs.powertoolsAppConfig,
 			libs.powertoolsMetrics
 
 	compileOnly libs.lombok

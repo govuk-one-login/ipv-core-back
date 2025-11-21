@@ -199,6 +199,13 @@ public class IpvSessionService {
         dataStore.update(ipvSessionItem);
     }
 
+    public boolean checkIfSessionExpired(IpvSessionItem ipvSessionItem) {
+        var creationDateTime = Instant.parse(ipvSessionItem.getCreationDateTime());
+        var expirationDateTime =
+                creationDateTime.plusSeconds(configService.getBackendSessionTimeout());
+        return Instant.now().isAfter(expirationDateTime);
+    }
+
     private String toExpiryDateTime(long expirySeconds) {
         return Instant.now().plusSeconds(expirySeconds).toString();
     }

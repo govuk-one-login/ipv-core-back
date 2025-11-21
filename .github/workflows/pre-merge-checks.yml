@@ -62,6 +62,7 @@ jobs:
         run: ./gradlew clean build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
 
       - name: Perform Static Analysis
         if: ${{ github.actor != 'dependabot[bot]' }}
@@ -145,11 +146,12 @@ jobs:
           CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
           MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
           CIMIT_INTERNAL_API_KEY: ${{ secrets.API_KEY_CIMIT }}
+          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
         run: npm run test:ci
 
       - name: Upload API test report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: API test report
           path: api-tests/reports/
@@ -157,7 +159,7 @@ jobs:
 
       - name: Upload Application logs
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Application logs
           path: api-tests/core-back-output.log

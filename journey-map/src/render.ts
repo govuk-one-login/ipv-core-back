@@ -24,6 +24,7 @@ import {
 import { contractNestedJourneys } from "./helpers/contract-nested.js";
 import { getJourneyTransitionsData } from "./data/data.js";
 import { attachTransitionTrafficToNestedJourneys } from "./helpers/nested-journey-traffic.js";
+import { getTransitionCountFromSubJourneyStateToTargetState } from "./helpers/sub-journey-traffic.js";
 
 interface RenderableMap {
   transitions: TransitionEdge[];
@@ -101,81 +102,15 @@ const getVisibleEdgesAndNodes = async (
     for (const [targetState, transitionEvents] of Object.entries(
       eventsByTarget,
     )) {
-      const sourceStateDefinition = journeyStates[sourceState];
-      const targetStateDefinition = journeyStates[targetState];
-      const sourceIsNestedJourney =
-        sourceStateDefinition.response?.type === "nestedJourney";
-      const targetIsNestedJourney =
-        targetStateDefinition.response?.type === "nestedJourney";
-
-      let count = 0;
-      for (const transition of journeyTransitionsTraffic) {
-        // Source condition
-        if (sourceIsNestedJourney) {
-          if (
-            !(
-              transition.fromJourney === journeyMapName &&
-              transition.from.startsWith(sourceState)
-            )
-          ) {
-            continue;
-          }
-        } else if (!sourceStateDefinition.response) {
-          // Entry event
-          if (
-            !(
-              transition.fromJourney != journeyMapName &&
-              sourceStateDefinition.events?.next?.targetState === targetState
-            )
-          ) {
-            continue;
-          }
-        } else {
-          if (
-            !(
-              transition.fromJourney === journeyMapName &&
-              transition.from === sourceState
-            )
-          ) {
-            continue;
-          }
-        }
-
-        // Target condition
-        if (targetIsNestedJourney) {
-          if (
-            !(
-              transition.toJourney === journeyMapName &&
-              transition.to.startsWith(targetState)
-            )
-          ) {
-            continue;
-          }
-        } else if (targetState.includes("__")) {
-          const [targetJourney, entryState] = targetState.split("__", 2);
-          const actualState =
-            journeyMaps[targetJourney].states[entryState].events?.next
-              .targetState;
-          if (
-            !(
-              transition.toJourney === targetJourney &&
-              transition.to === actualState
-            )
-          ) {
-            continue;
-          }
-        } else {
-          if (
-            !(
-              transition.toJourney === journeyMapName &&
-              transition.to === targetState
-            )
-          ) {
-            continue;
-          }
-        }
-        count += transition.count;
-      }
+      const count = getTransitionCountFromSubJourneyStateToTargetState(
+        journeyStates,
+        journeyMapName,
+        journeyMaps,
+        journeyTransitionsTraffic,
+        sourceState,
+        targetState,
+        Object.keys(eventsByTarget),
+      );
 
       transitionEdges.push({
         sourceState,

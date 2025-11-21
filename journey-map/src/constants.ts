@@ -1,7 +1,7 @@
 export const JOURNEY_TYPES: Record<string, string> = {
   INITIAL_JOURNEY_SELECTION: "Initial journey selection",
-  NEW_P1_IDENTITY: "New P1 identity",
-  NEW_P2_IDENTITY: "New P2 identity",
+  NEW_P1_IDENTITY: "New at least P1 identity",
+  NEW_P2_IDENTITY: "New at least P2 identity",
   REUSE_EXISTING_IDENTITY: "Reuse existing identity",
   UPDATE_NAME: "Update name",
   UPDATE_ADDRESS: "Update address",
@@ -24,6 +24,12 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
 };
+
+// These are the sub-journeys which a user starts on before going through any other sub-journey
+export const FIRST_JOURNEYS: string[] = [
+  "INITIAL_JOURNEY_SELECTION",
+  "REVERIFICATION",
+];
 
 export const COMMON_JOURNEY_TYPES: string[] = [
   "NEW_P1_IDENTITY",
@@ -54,3 +60,14 @@ export const CRI_NAMES: Record<string, string> = {
 export const TOP_DOWN_JOURNEYS = ["INITIAL_JOURNEY_SELECTION"];
 export const ERROR_JOURNEYS = ["TECHNICAL_ERROR"];
 export const FAILURE_JOURNEYS = ["INELIGIBLE", "FAILED"];
+
+export enum Environment {
+  PRODUCTION = "production",
+  INTEGRATION = "integration",
+  STAGING = "staging",
+  BUILD = "build",
+  SHARED = "shared",
+}
+
+export const ENTRY_STATE_PREFIX = "ENTRY_";
+export const EXIT_STATE_PREFIX = "EXIT_";

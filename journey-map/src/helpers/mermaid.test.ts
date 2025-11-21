@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import {
   renderClickHandler,
   renderState,
@@ -25,7 +24,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[TEST\ntest-page]:::page");
+    expect(actual).toEqual("    TEST[TEST\ntest-page]:::page");
   });
 
   it("should render a cri state", () => {
@@ -44,7 +43,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST([TEST\ntest-cri]):::cri");
+    expect(actual).toEqual("    TEST([TEST\ntest-cri]):::cri");
   });
 
   it("should render a cri state with context", () => {
@@ -64,8 +63,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       "    TEST([TEST\ntest-cri\n context: test-context]):::cri",
     );
   });
@@ -86,7 +84,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST(TEST\ntest-lambda):::process");
+    expect(actual).toEqual("    TEST(TEST\ntest-lambda):::process");
   });
 
   it("should render a journey transition state", () => {
@@ -106,8 +104,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       "    TEST(TEST_JOURNEY\nTEST_STATE):::journey_transition",
     );
   });
@@ -129,7 +126,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST(FAILED\nFAILED):::error_transition");
+    expect(actual).toEqual("    TEST(FAILED\nFAILED):::error_transition");
   });
 
   it("should render a nested journey state", () => {
@@ -148,7 +145,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST(TEST\nTEST_JOURNEY):::nested_journey");
+    expect(actual).toEqual("    TEST(TEST\nTEST_JOURNEY):::nested_journey");
   });
 
   it("should render a synthetic entry state", () => {
@@ -164,7 +161,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[ENTRY\ntest-entry]:::other");
+    expect(actual).toEqual("    TEST[ENTRY\ntest-entry]:::other");
   });
 
   it("should render a synthetic exit state", () => {
@@ -180,7 +177,7 @@ describe("renderState", () => {
     const actual = renderState(state);
 
     // Assert
-    assert.strictEqual(actual, "    TEST[EXIT\ntest-exit]:::other");
+    expect(actual).toEqual("    TEST[EXIT\ntest-exit]:::other");
   });
 });
 
@@ -207,8 +204,7 @@ describe("renderClickHandler", () => {
         pageId: "test-page",
       }),
     );
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       `    click TEST call onStateClick("TEST", ${expectedArg})`,
     );
   });
@@ -227,8 +223,7 @@ describe("renderTransition", () => {
     const actual = renderTransition(transition);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel">test-event</p>|TARGET',
     );
   });
@@ -247,8 +242,7 @@ describe("renderTransition", () => {
     const actual = renderTransition(transition);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel journeyCtxTransition">test-event - journeyContext: test-context</p>|TARGET',
     );
   });
@@ -267,8 +261,7 @@ describe("renderTransition", () => {
     const actual = renderTransition(transition);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel mitigationTransition">test-event - mitigation: test-mitigation</p>|TARGET',
     );
   });
@@ -289,8 +282,7 @@ describe("renderTransition", () => {
     const actual = renderTransition(transition);
 
     // Assert
-    assert.strictEqual(
-      actual,
+    expect(actual).toEqual(
       '    SOURCE SOURCE-TARGET@-->|<p class="defaultEdgeLabel">test-event</p>\n<p class="defaultEdgeLabel journeyCtxTransition">test-event - journeyContext: test-context</p>\n<p class="defaultEdgeLabel mitigationTransition">test-event - mitigation: test-mitigation</p>|TARGET',
     );
   });

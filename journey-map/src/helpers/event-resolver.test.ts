@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyEvent, JourneyState } from "../types.js";
 import {
@@ -49,7 +48,7 @@ describe("resolveAllEventTargets", () => {
     const actual = resolveAllEventTargets(event);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve deeply nested event targets", () => {
@@ -82,7 +81,7 @@ describe("resolveAllEventTargets", () => {
     const actual = resolveAllEventTargets(event);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 });
 
@@ -113,7 +112,7 @@ describe("resolveAllTargets", () => {
     const actual = resolveAllTargets(states);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve targets from exit events", () => {
@@ -132,7 +131,7 @@ describe("resolveAllTargets", () => {
     const actual = resolveAllTargets(states);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 });
 
@@ -149,7 +148,7 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve event targets behind a disabled check", () => {
@@ -167,7 +166,7 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve event targets behind a feature flag", () => {
@@ -185,7 +184,7 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve all journey context targets and add journeyContext", () => {
@@ -206,7 +205,7 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve all mitigation targets and add mitigation", () => {
@@ -227,7 +226,7 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 
   it("should resolve nested targets and propagate journeyContext and mitigations", () => {
@@ -264,6 +263,6 @@ describe("resolveVisibleEventTargets", () => {
     const actual = resolveVisibleEventTargets(event, DEFAULT_OPTIONS);
 
     // Assert
-    assert.partialDeepStrictEqual(actual, expected);
+    expect(actual).toMatchObject(expected);
   });
 });

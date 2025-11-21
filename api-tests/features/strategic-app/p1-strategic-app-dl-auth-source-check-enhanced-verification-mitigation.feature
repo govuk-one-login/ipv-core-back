@@ -6,7 +6,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
@@ -38,7 +38,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
 
     Scenario: Same session async DCMAW enhanced verification mitigation - successful
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -88,7 +88,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
 
     Scenario: Same session DCMAW enhanced verification mitigation - breaching CI received from async DCMAW
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -110,7 +110,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check invalid
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -157,12 +157,6 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
 
       # Attempt 2 - retry after viewing prove-identity-another-way
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
@@ -179,12 +173,6 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'anotherTypePhotoId' event
 
       # Attempt 3 - give up
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
@@ -209,7 +197,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -266,7 +254,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -290,7 +278,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event

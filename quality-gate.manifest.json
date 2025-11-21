@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.1.0/schemas/schema.json",
+  "services": [
+    {
+      "quality-gates": [
+        {
+          "check-types": [
+            "secret scanning"
+          ],
+          "config": {
+            "file": ".github/workflows/pre-merge-checks.yml",
+            "name": "run secret detection",
+            "path": "jobs.pre-commit"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "code style and linting",
+            "unit test coverage",
+            "unit"
+          ],
+          "config": {
+            "file": ".github/workflows/pre-merge-checks.yaml",
+            "name": "run unit tests and static analysis",
+            "path": "jobs.test-java"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "code style and linting",
+            "integration",
+            "regression",
+            "new feature"
+          ],
+          "config": {
+            "file": ".github/workflows/pre-merge-checks.yaml",
+            "name": "run linting on api-tests directory and run api tests",
+            "path": "jobs.api-test"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        },
+        {
+          "check-types": [
+            "contract"
+          ],
+          "config": {
+            "file": ".github/workflows/contract-tests.yaml",
+            "name": "run contract tests"
+          },
+          "phase": "pre-merge",
+          "provider": "GitHub"
+        }
+      ],
+      "service-tag": "ipv-core"
+    }
+  ]
+}

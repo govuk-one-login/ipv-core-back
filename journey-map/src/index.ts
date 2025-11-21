@@ -6,6 +6,7 @@ import { getAsFullJourneyMap } from "./helpers/uplift-nested.js";
 import {
   COMMON_JOURNEY_TYPES,
   CRI_NAMES,
+  Environment,
   JOURNEY_TYPES,
   NESTED_JOURNEY_TYPES,
 } from "./constants.js";
@@ -16,8 +17,10 @@ import { JourneyTransition, setJourneyTransitionsData } from "./data/data.js";
 import {
   getJourneyTransitions,
   getSystemSettings,
+  mapStringToEnvironment,
 } from "./service/analyticsService.js";
 import { parseTransitionsApiForm } from "./helpers/analytics.js";
+import { enrichJourneyTransitionData } from "./helpers/enrich-transitions.js";
 
 type ClickHandler = (e: MouseEvent) => void;
 
@@ -81,7 +84,15 @@ const transitionsToInput = document.getElementById(
 const transitionsSubmitButton = document.getElementById(
   "form-button",
 ) as HTMLButtonElement;
-const form = document.getElementById("configuration-form") as HTMLFormElement;
+const systemSettingsSelection = document.getElementById(
+  "systemSettingsTargetEnv",
+) as HTMLSelectElement;
+const coreBackConfigForm = document.getElementById(
+  "configuration-form",
+) as HTMLFormElement;
+const otherOptionsForm = document.getElementById(
+  "journey-map-configuration-form",
+) as HTMLFormElement;
 const disabledInput = document.getElementById(
   "disabledInput",
 ) as HTMLFieldSetElement;
@@ -258,6 +269,42 @@ const setupOptions = (
   }
 };
 
+const clearOptions = (...fieldsets: HTMLFieldSetElement[]) => {
+  fieldsets.forEach((fieldset) => {
+    const labels = fieldset.querySelectorAll<HTMLInputElement>("label");
+    labels.forEach((label) => label.remove());
+  });
+};
+
+const disableOptions = (...fieldsets: HTMLFieldSetElement[]) => {
+  fieldsets.forEach((fieldset) => {
+    const inputs = fieldset.querySelectorAll<HTMLInputElement>("input");
+    inputs.forEach((input) => (input.disabled = true));
+  });
+};
+
+const setupSystemSettingsOptions = async (targetEnvironment: Environment) => {
+  const systemSettings = await getSystemSettings(targetEnvironment);
+  if (!systemSettings) {
+    return;
+  }
+  const disabledCris =
+    systemSettings?.criStatuses &&
+    Object.fromEntries(
+      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
+        cri,
+        !enabled,
+      ]),
+    );
+  clearOptions(disabledInput, featureFlagInput);
+  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
+  setupOptions(
+    "featureFlag",
+    systemSettings?.featureFlagStatuses ?? {},
+    featureFlagInput,
+  );
+};
+
 const setupOtherOptions = (): void => {
   const selectedOptions =
     new URLSearchParams(window.location.search).getAll("otherOption") || [];
@@ -288,7 +335,10 @@ const displayJourneyContextInfo = (ctxOptions: string[]): void => {
 };
 
 const updateView = async (): Promise<void> => {
-  const options = parseOptions(new FormData(form));
+  const options = parseOptions(
+    new FormData(coreBackConfigForm),
+    new FormData(otherOptionsForm),
+  );
   const selectedNestedJourney = new URLSearchParams(window.location.search).get(
     NESTED_JOURNEY_TYPE_SEARCH_PARAM,
   );
@@ -560,6 +610,11 @@ const setupJourneyTransitionInput = (): void => {
     ).finally(() => {
       transitionsSubmitButton.disabled = false;
     });
+    enrichJourneyTransitionData(
+      journeyTransitions,
+      journeyMaps,
+      nestedJourneys,
+    );
     setJourneyTransitionsData(journeyTransitions);
     await updateView();
   });
@@ -573,27 +628,24 @@ const initialize = async (): Promise<void> => {
     NESTED_JOURNEY_TYPES,
     "nested-journeys",
   );
-
-  const systemSettings = await getSystemSettings();
-  const disabledCris =
-    systemSettings?.criStatuses &&
-    Object.fromEntries(
-      Object.entries(systemSettings?.criStatuses).map(([cri, enabled]) => [
-        cri,
-        !enabled,
-      ]),
-    );
-  setupOptions("disabledCri", disabledCris ?? {}, disabledInput, CRI_NAMES);
-  setupOptions(
-    "featureFlag",
-    systemSettings?.featureFlagStatuses ?? {},
-    featureFlagInput,
-  );
-
+  await setupSystemSettingsOptions(Environment.PRODUCTION);
   setupOtherOptions();
   setupMermaidClickHandlers();
   setupHeaderToggleClickHandlers();
-  form.addEventListener("change", async (event) => {
+
+  systemSettingsSelection.addEventListener("change", async () => {
+    const selectionValue = systemSettingsSelection.value;
+    const targetEnvironment = mapStringToEnvironment(selectionValue);
+    disableOptions(disabledInput, featureFlagInput);
+    await setupSystemSettingsOptions(targetEnvironment);
+    await updateView();
+  });
+
+  coreBackConfigForm.addEventListener("change", async (event) => {
+    event.preventDefault();
+    await updateView();
+  });
+  otherOptionsForm.addEventListener("change", async (event) => {
     event.preventDefault();
     await updateView();
   });

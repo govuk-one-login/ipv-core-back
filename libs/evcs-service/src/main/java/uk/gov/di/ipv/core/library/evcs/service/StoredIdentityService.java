@@ -27,6 +27,7 @@ import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSisSignedJwt;
 
 public class StoredIdentityService {
     public static final String VOT_CLAIM = "vot";
+    public static final String MAX_VOT_CLAIM = "max_vot";
     public static final String CREDENTIALS_CLAIM = "credentials";
     public static final String CLAIMS_CLAIM = "claims";
 
@@ -56,7 +57,7 @@ public class StoredIdentityService {
     }
 
     private JWTClaimsSet createStoredIdentityJwt(
-            String userId, List<VerifiableCredential> vcs, Vot achievedVot)
+            String userId, List<VerifiableCredential> vcs, Vot achievedVot, Vot maxVot)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now(clock);
 
@@ -75,6 +76,7 @@ public class StoredIdentityService {
                 .notBeforeTime(Date.from(now))
                 .issueTime(Date.from(now))
                 .claim(VOT_CLAIM, achievedVot)
+                .claim(MAX_VOT_CLAIM, maxVot)
                 .claim(
                         CREDENTIALS_CLAIM,
                         vcs.stream()
@@ -85,10 +87,10 @@ public class StoredIdentityService {
     }
 
     private String getSignedStoredIdentityForEvcs(
-            String userId, List<VerifiableCredential> vcs, Vot achievedVot)
+            String userId, List<VerifiableCredential> vcs, Vot achievedVot, Vot maxVot)
             throws FailedToCreateStoredIdentityForEvcsException {
         try {
-            var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot);
+            var storedIdentity = createStoredIdentityJwt(userId, vcs, achievedVot, maxVot);
 
             return createSisSignedJwt(storedIdentity, signerFactory.getSisSigner(), configService)
                     .serialize();
@@ -114,7 +116,8 @@ public class StoredIdentityService {
                     "No strongest matched vot found for user");
         }
 
-        var signedSiJwt = getSignedStoredIdentityForEvcs(userId, vcs, achievedVot);
+        var signedSiJwt =
+                getSignedStoredIdentityForEvcs(userId, vcs, achievedVot, strongestMatchedVot.vot());
 
         return new EvcsStoredIdentityDto(signedSiJwt, strongestMatchedVot.vot());
     }

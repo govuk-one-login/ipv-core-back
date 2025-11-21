@@ -1,10 +1,26 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
-import assert from "node:assert";
+import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import { attachTransitionTrafficToNestedJourneys } from "./nested-journey-traffic.js";
 import { TransitionEdge } from "./mermaid.js";
 import { JourneyTransition } from "../data/data.js";
 
 const TEST_JOURNEY_TRANSITION_TRAFFIC: JourneyTransition[] = [
+  {
+    fromJourney: "NEW_P2_IDENTITY",
+    from: "POST_APP_DOC_CHECK_SUCCESS_PAGE",
+    toJourney: "NEW_P2_IDENTITY",
+    to: "ADDRESS_AND_FRAUD_J4/CRI_ADDRESS",
+    event: "next",
+    count: 7,
+  },
+  {
+    fromJourney: "NEW_P2_IDENTITY",
+    from: "POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE",
+    toJourney: "NEW_P2_IDENTITY",
+    to: "ADDRESS_AND_FRAUD_J4/CRI_ADDRESS_ASK_INTERNATIONAL",
+    toEntryEvent: "otherEntryEvent",
+    event: "next",
+    count: 8,
+  },
   {
     fromJourney: "NEW_P2_IDENTITY",
     from: "ADDRESS_AND_FRAUD_J4/CRI_ADDRESS",
@@ -78,6 +94,16 @@ const TEST_TRANSITION_EDGES: TransitionEdge[] = [
     transitionEvents: [
       {
         eventName: "next",
+      },
+    ],
+  },
+  {
+    sourceState: "ENTRY_OTHER",
+    targetState: "CRI_ADDRESS_ASK_INTERNATIONAL",
+    transitionCount: 0,
+    transitionEvents: [
+      {
+        eventName: "otherEntryEvent",
       },
     ],
   },
@@ -173,19 +199,33 @@ describe("nestedJourneysTraffic", () => {
       TEST_TRANSITION_EDGES,
     );
 
+    // Assert - entry nodes
+    const defaultEntryEdge = TEST_TRANSITION_EDGES.find(
+      (edge) =>
+        edge.sourceState === "ENTRY_NEXT" && edge.targetState === "CRI_ADDRESS",
+    );
+    expect(defaultEntryEdge?.transitionCount).toEqual(7);
+
+    const otherEntryEdge = TEST_TRANSITION_EDGES.find(
+      (edge) =>
+        edge.sourceState === "ENTRY_OTHER" &&
+        edge.targetState === "CRI_ADDRESS_ASK_INTERNATIONAL",
+    );
+    expect(otherEntryEdge?.transitionCount).toEqual(8);
+
     // Assert - mid nodes
     const midEdge = TEST_TRANSITION_EDGES.find(
       (edge) =>
         edge.sourceState === "CRI_ADDRESS" && edge.targetState === "CRI_FRAUD",
     );
-    assert.equal(midEdge?.transitionCount, 20);
+    expect(midEdge?.transitionCount).toEqual(20);
 
     // Assert - exit nodes
     const exitEdge = TEST_TRANSITION_EDGES.find(
       (edge) =>
         edge.sourceState === "CRI_FRAUD" && edge.targetState === "EXIT_NEXT",
     );
-    assert.equal(exitEdge?.transitionCount, 10);
+    expect(exitEdge?.transitionCount).toEqual(10);
 
     // Assert - exit nodes - different exit than above
     const differentExitEdge = TEST_TRANSITION_EDGES.find(
@@ -193,7 +233,7 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "CRI_FRAUD" &&
         edge.targetState === "EXIT_FRAUD-FAIL-WITH-NO-CI",
     );
-    assert.equal(differentExitEdge?.transitionCount, 3);
+    expect(differentExitEdge?.transitionCount).toEqual(3);
 
     // Assert - from nested journey node
     const moreNestedToCurrentNested = TEST_TRANSITION_EDGES.find(
@@ -201,14 +241,14 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "NESTED_JOURNEY" &&
         edge.targetState === "NEXT_NODE",
     );
-    assert.equal(moreNestedToCurrentNested?.transitionCount, 20);
+    expect(moreNestedToCurrentNested?.transitionCount).toEqual(20);
 
     // Assert - to error nodes
     const toFailedNodeEdge = TEST_TRANSITION_EDGES.find(
       (edge) =>
         edge.sourceState === "CRI_FRAUD" && edge.targetState === "FAILED",
     );
-    assert.equal(toFailedNodeEdge?.transitionCount, 5);
+    expect(toFailedNodeEdge?.transitionCount).toEqual(5);
 
     // Assert - no transitions
     const noTransitionEdge = TEST_TRANSITION_EDGES.find(
@@ -216,6 +256,6 @@ describe("nestedJourneysTraffic", () => {
         edge.sourceState === "NODE_WITH_NO_TRANSITION" &&
         edge.targetState === "SOME_NODE",
     );
-    assert.equal(noTransitionEdge?.transitionCount, 0);
+    expect(noTransitionEdge?.transitionCount).toEqual(0);
   });
 });

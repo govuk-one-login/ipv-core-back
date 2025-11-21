@@ -34,9 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.enums.Vot.P3;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
-import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2A;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M3A;
 
 @ExtendWith(MockitoExtension.class)
 class StoredIdentityServiceTest {
@@ -46,7 +47,7 @@ class StoredIdentityServiceTest {
     private static final String MOCK_COMPONENT_ID = "mock-component-id";
     private static final String MOCK_SIS_COMPONENT_ID = "mock-sis-component-id";
     private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
-            new VotMatchingResult.VotAndProfile(P2, Optional.of(M2A));
+            new VotMatchingResult.VotAndProfile(P3, Optional.of(M3A));
     private static final PassportDetails PASSPORT_CLAIM =
             PassportDetails.builder().withDocumentNumber("DOCNUM123").build();
 
@@ -94,7 +95,8 @@ class StoredIdentityServiceTest {
                 storedIdentityService.getStoredIdentityForEvcs(
                         USER_ID, vcs, STRONGEST_MATCHED_VOT, P2);
 
-        assertEquals(P2, si.vot());
+        // Assert
+        assertEquals(P3, si.vot());
 
         var parsedJwt = SignedJWT.parse(si.jwt()).getJWTClaimsSet();
 
@@ -105,6 +107,10 @@ class StoredIdentityServiceTest {
                 P2,
                 OBJECT_MAPPER.convertValue(
                         parsedJwt.getClaim(StoredIdentityService.VOT_CLAIM), Vot.class));
+        assertEquals(
+                P3,
+                OBJECT_MAPPER.convertValue(
+                        parsedJwt.getClaim(StoredIdentityService.MAX_VOT_CLAIM), Vot.class));
         assertEquals(Date.from(Instant.now(CURRENT_TIME)), parsedJwt.getIssueTime());
         assertEquals(Date.from(Instant.now(CURRENT_TIME)), parsedJwt.getNotBeforeTime());
         assertEquals(

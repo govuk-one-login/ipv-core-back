@@ -1,13 +1,14 @@
 import { JourneyMap, JourneyState, NestedJourneyMap } from "../types.js";
 import { deepCloneJson } from "./deep-clone.js";
 import { resolveAllTargets } from "./event-resolver.js";
+import { ENTRY_STATE_PREFIX, EXIT_STATE_PREFIX } from "../constants.js";
 
 const buildSyntheticEntryStates = (
   nestedJourney: NestedJourneyMap,
 ): Record<string, JourneyState> =>
   Object.fromEntries(
     Object.entries(nestedJourney.entryEvents).map(([event, def]) => [
-      `entry_${event}`.toUpperCase(),
+      `${ENTRY_STATE_PREFIX}${event.toUpperCase()}`,
       {
         entryEvent: event,
         events: { [event]: def },
@@ -22,7 +23,7 @@ const buildSyntheticExitStates = (
 
   resolveAllTargets(nestedJourney.nestedJourneyStates).forEach((target) => {
     if (target.exitEventToEmit) {
-      const exitState = `exit_${target.exitEventToEmit}`.toUpperCase();
+      const exitState = `${EXIT_STATE_PREFIX}${target.exitEventToEmit.toUpperCase()}`;
       target.targetState = exitState;
       states[exitState] = {
         exitEvent: target.exitEventToEmit,

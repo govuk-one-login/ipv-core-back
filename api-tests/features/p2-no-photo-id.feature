@@ -202,7 +202,7 @@ Feature: P2 no photo id journey
     Scenario: P2 no photo id journey - Abandon - Strategic app
       Given I activate the 'strategicApp' feature set
       When I submit an 'mobileApp' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: P2 no photo id journey - Abandon - Passport
       When I submit an 'passport' event
@@ -300,7 +300,7 @@ Feature: P2 no photo id journey
     Scenario: P2 no photo id journey - KBV mitigation - Strategic app
       Given I activate the 'strategicApp' feature set
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: P2 no photo id journey - KBV mitigation - F2F
       When I submit an 'f2f' event
@@ -352,7 +352,7 @@ Feature: P2 no photo id journey
     Scenario: P2 no photo id journey - KBV dropout - Strategic app
       Given I activate the 'strategicApp' feature set
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: P2 no photo id journey - KBV dropout - F2F
       When I submit an 'f2f' event

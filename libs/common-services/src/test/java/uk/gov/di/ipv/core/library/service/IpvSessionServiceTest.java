@@ -18,11 +18,14 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 
+import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -338,5 +341,33 @@ class IpvSessionServiceTest {
                         .getValue()
                         .getAccessTokenMetadata()
                         .getRevokedAtDateTime());
+    }
+
+    @Test
+    void checkIfSessionExpired_shouldReturnTrueIfIpvSessionIsExpired() {
+        // Arrange
+        var expiredIpvSessionItem = new IpvSessionItem();
+        expiredIpvSessionItem.setCreationDateTime(Instant.now().minusSeconds(4000).toString());
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(3600L);
+
+        // Act
+        var result = ipvSessionService.checkIfSessionExpired(expiredIpvSessionItem);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void checkIfSessionExpired_shouldReturnFalseIfIpvSessionIsNotExpired() {
+        // Arrange
+        var validIpvSessionItem = new IpvSessionItem();
+        validIpvSessionItem.setCreationDateTime(Instant.now().minusSeconds(1000).toString());
+        when(mockConfigService.getBackendSessionTimeout()).thenReturn(3600L);
+
+        // Act
+        var result = ipvSessionService.checkIfSessionExpired(validIpvSessionItem);
+
+        // Assert
+        assertFalse(result);
     }
 }

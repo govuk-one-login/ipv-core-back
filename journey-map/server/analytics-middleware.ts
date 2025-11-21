@@ -59,33 +59,31 @@ export const fetchJourneyTransitionsHandler: RequestHandler = async (
 
     const data = await response.json();
 
-    switch (response.status) {
-      case 200:
-        res.json(data);
-        break;
-      case 400:
-        res.status(400).json({
-          message: data.message || "Bad Request",
-        });
-        break;
-      case 404:
-        res.status(404).json({
-          message: data.message || "Resource not found",
-        });
-        break;
-      case 500:
-        res.status(500).json({
-          message: "Internal Server Error",
-        });
-        break;
-      default:
-        res.status(response.status).json({
-          message: `Unexpected status: ${response.status}`,
-        });
-        break;
+    if (response.status === 200) {
+      res.json(data);
+    } else {
+      console.error(
+        "Error fetching journey counts, analytics response: ",
+        response,
+        data,
+      );
+
+      let errorMessage =
+        "Error: Analytics endpoint responded with: " + response.status;
+      if (data.code && userMessagesByTransitionFetchErrorCode[data.code]) {
+        errorMessage = userMessagesByTransitionFetchErrorCode[data.code];
+      } else if (data.message) {
+        errorMessage =
+          "Error: Analytics endpoint responded with: " + data.message;
+      }
+
+      res.status(500).json({
+        message: errorMessage,
+      });
     }
     next();
   } catch (err) {
+    console.error("Error fetching counts: ", err);
     next(err);
   }
 };
@@ -96,15 +94,16 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
   next,
 ) => {
   try {
-    const response = await fetch(
-      config.environment["production"].systemSettingsEndpoint,
-      {
-        method: "POST",
-        headers: {
-          "x-api-key": config.environment["production"].analyticsApiKey,
-        },
+    const environment = req.params
+      .environment as keyof typeof config.environment;
+    const envConfig = config.environment[environment];
+
+    const response = await fetch(envConfig.systemSettingsEndpoint, {
+      method: "POST",
+      headers: {
+        "x-api-key": envConfig.analyticsApiKey,
       },
-    );
+    });
     if (!response.ok) {
       throw new Error(
         `Failed to fetch system settings from analytics API: ${response.statusText}`,
@@ -117,3 +116,9 @@ export const fetchSystemSettingsHandler: RequestHandler = async (
     next(err);
   }
 };
+
+const userMessagesByTransitionFetchErrorCode: Record<number, string> = {
+  0: "Unexpected error fetching user traffic",
+  1: "Couldn't get user traffic from CloudWatch",
+  2: "Timeout retrieving user traffic from CloudWatch. If this is the first time you have seen this error please try again, otherwise try reducing scope of your search to return fewer journeys.",
+} as const;

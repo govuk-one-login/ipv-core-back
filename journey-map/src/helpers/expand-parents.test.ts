@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyState } from "../types.js";
 import { expandParents } from "./expand-parents.js";
@@ -55,7 +54,7 @@ describe("expandParents", () => {
     expandParents(original, {});
 
     // Assert
-    assert.deepEqual(original, expected);
+    expect(original).toEqual(expected);
   });
 
   it("should expand parent events from other states", () => {
@@ -91,6 +90,6 @@ describe("expandParents", () => {
     expandParents(original, other);
 
     // Assert
-    assert.deepEqual(original, expected);
+    expect(original).toEqual(expected);
   });
 });

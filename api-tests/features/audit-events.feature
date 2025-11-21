@@ -126,7 +126,7 @@ Feature: Audit Events
     # We want to wait a suitable period of time to let the request to the process-async-cri lambda to finish before
     # starting a new session. This will hopefully reduce flakiness with this test where we expect an exact sequence
     # of audit events to be generated.
-    When I wait for 3 seconds for the async credential to be processed
+    When I wait for 5 seconds for the async credential to be processed
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
@@ -318,7 +318,7 @@ Feature: Audit Events
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
@@ -335,7 +335,7 @@ Feature: Audit Events
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event

@@ -12,7 +12,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'identify-device' page response
+    Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
@@ -29,7 +29,7 @@ Feature: M2B Strategic App Journeys
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: Happy path MAM journey declared iphone
       When I submit an 'appTriage' event
@@ -372,7 +372,7 @@ Feature: M2B Strategic App Journeys
 
     Scenario: Happy path successful P2 identity
       When I submit a 'next' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -412,11 +412,11 @@ Feature: M2B Strategic App Journeys
       When I submit a 'abandon' event
       Then I get a 'non-uk-no-passport' page response
       When I submit a 'useApp' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
 
     Scenario: Strategic app non-uk address user retries with app
       When I submit a 'next' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
@@ -428,7 +428,7 @@ Feature: M2B Strategic App Journeys
 
     Scenario: Strategic app non-uk address user wants to prove identity another way from download page
       When I submit a 'next' event
-      Then I get a 'identify-device' page response
+      Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event

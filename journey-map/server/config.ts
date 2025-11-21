@@ -1,3 +1,7 @@
+import { config as dotenvConfig } from "dotenv";
+
+dotenvConfig();
+
 const sharedDevTransitionsEndpoint =
   "https://analytics-api-dev.01.dev.identity.account.gov.uk/journey-transitions";
 const sharedDevSystemSettingsEndpoint =

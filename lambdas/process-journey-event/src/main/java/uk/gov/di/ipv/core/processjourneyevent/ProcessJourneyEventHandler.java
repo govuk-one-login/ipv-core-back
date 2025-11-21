@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.metrics.Metrics;
+import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -55,7 +55,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepRes
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -133,7 +132,7 @@ public class ProcessJourneyEventHandler
 
     @Override
     @Logging(clearState = true)
-    @Metrics(captureColdStart = true)
+    @FlushMetrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
         LogHelper.attachTraceId();
         LogHelper.attachComponentId(configService);
@@ -417,10 +416,7 @@ public class ProcessJourneyEventHandler
 
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
         return (!SESSION_TIMEOUT.equals(ipvSessionItem.getState().subJourney()))
-                && Instant.parse(ipvSessionItem.getCreationDateTime())
-                        .isBefore(
-                                Instant.now()
-                                        .minusSeconds(configService.getBackendSessionTimeout()));
+                && ipvSessionService.checkIfSessionExpired(ipvSessionItem);
     }
 
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(

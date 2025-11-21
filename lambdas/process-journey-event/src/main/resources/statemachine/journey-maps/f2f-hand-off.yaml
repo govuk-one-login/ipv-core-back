@@ -4,10 +4,16 @@ description: >-
 
 states:
   # Entry points
-  START:
+  START_MEDIUM_CONFIDENCE:
     events:
       next:
         targetState: PROCESS_PENDING_IDENTITY
+        journeyContextToSet: mediumConfidence
+  START_LOW_CONFIDENCE:
+    events:
+      next:
+        targetState: PROCESS_PENDING_IDENTITY
+        journeyContextToSet: lowConfidence
 
   # Parent states
   CRI_STATE:
@@ -94,8 +100,68 @@ states:
         targetState: FAILED_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
+        targetState: ERROR
+        checkFeatureFlag:
+          sorryTechnicalErrorEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F
       temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      context: f2fCriError
+    events:
+      tryAgain:
+        targetState: CRI_F2F
+      app:
+        targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
+      webRoute:
+        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+      error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
@@ -115,3 +181,8 @@ states:
     response:
       type: page
       pageId: page-face-to-face-handoff
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import { deepCloneJson } from "./deep-clone.js";
 
 describe("deepCloneJson", () => {
@@ -16,7 +15,7 @@ describe("deepCloneJson", () => {
     const cloned = deepCloneJson(obj);
 
     // Assert
-    assert.deepEqual(obj, cloned);
+    expect(cloned).toStrictEqual(obj);
   });
 
   it("should produce independent clones", () => {
@@ -32,7 +31,7 @@ describe("deepCloneJson", () => {
     cloned.foo.bar = 10;
 
     // Assert
-    assert.equal(obj.foo.bar, 5);
-    assert.equal(cloned.foo.bar, 10);
+    expect(obj.foo.bar).toEqual(5);
+    expect(cloned.foo.bar).toEqual(10);
   });
 });

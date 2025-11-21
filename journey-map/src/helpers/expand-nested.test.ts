@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import yaml from "yaml";
 import { JourneyState, NestedJourneyMap } from "../types.js";
 import { expandNestedJourneys } from "./expand-nested.js";
@@ -61,7 +60,7 @@ describe("expandNested", () => {
     expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 
   it("should expand nested journeys with an explicit entry event", () => {
@@ -137,7 +136,7 @@ describe("expandNested", () => {
     expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 
   it("should expand nested journeys behind conditions", () => {
@@ -220,7 +219,7 @@ describe("expandNested", () => {
     expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 
   it("should expand doubly-nested journeys", () => {
@@ -298,7 +297,7 @@ describe("expandNested", () => {
     expandNestedJourneys(states, nestedJourneys);
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 
   it("should expand chained nested journeys", () => {
@@ -369,6 +368,6 @@ describe("expandNested", () => {
     expandNestedJourneys(states, { TEST_NESTED: nestedDefinition });
 
     // Assert
-    assert.deepEqual(states, expected);
+    expect(states).toEqual(expected);
   });
 });
