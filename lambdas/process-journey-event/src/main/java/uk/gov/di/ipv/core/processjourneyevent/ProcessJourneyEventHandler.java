@@ -55,7 +55,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepRes
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -417,10 +416,7 @@ public class ProcessJourneyEventHandler
 
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
         return (!SESSION_TIMEOUT.equals(ipvSessionItem.getState().subJourney()))
-                && Instant.parse(ipvSessionItem.getCreationDateTime())
-                        .isBefore(
-                                Instant.now()
-                                        .minusSeconds(configService.getBackendSessionTimeout()));
+                && ipvSessionService.checkIfSessionExpired(ipvSessionItem);
     }
 
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
