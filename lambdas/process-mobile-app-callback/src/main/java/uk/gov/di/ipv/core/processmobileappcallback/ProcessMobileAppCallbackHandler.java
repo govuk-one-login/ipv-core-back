@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 import uk.gov.di.ipv.core.processmobileappcallback.exception.InvalidMobileAppCallbackRequestException;
 
-import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.Set;
 
@@ -117,12 +116,6 @@ public class ProcessMobileAppCallbackHandler
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.ERROR);
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
