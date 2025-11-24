@@ -131,6 +131,64 @@ Feature: Handling unexpected CRI errors
         | ukPassport     |
         | drivingLicence |
 
+    Scenario Outline: CI from <ci_cri> then unexpected error twice from <mitigating_cri> before success
+      When I submit a '<ci_cri>' event
+      Then I get a '<ci_cri>' CRI response
+      When I submit '<ci_details>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigating_cri>' CRI response
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      When I submit a 'tryAgain' event
+      Then I get a '<mitigating_cri>' CRI response
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      When I submit a 'tryAgain' event
+      Then I get a '<mitigating_cri>' CRI response
+      When I submit '<mitigating_details>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+
+      Examples:
+        | ci_cri            | ci_details                                 | noMatchPage                              | mitigating_cri | mitigating_details           |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       |
+
+    Scenario Outline: CI from <ci_cri> then unexpected error from <mitigating_cri> and return to RP
+      When I submit a '<ci_cri>' event
+      Then I get a '<ci_cri>' CRI response
+      When I submit '<ci_details>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigating_cri>' CRI response
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      When I submit an 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
+      Examples:
+        | ci_cri            | ci_details                                 | noMatchPage                              | mitigating_cri |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     |
+
   Rule: Experian KBV
     Background: Route to sorry-technical-problem Experian KBV CRI error page
       Given I activate the 'disableStrategicApp,sorryTechnicalError' feature set
