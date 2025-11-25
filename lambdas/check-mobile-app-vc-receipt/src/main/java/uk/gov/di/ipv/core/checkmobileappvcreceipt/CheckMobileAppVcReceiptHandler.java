@@ -126,6 +126,10 @@ public class CheckMobileAppVcReceiptHandler
                 return buildErrorResponse(
                         e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.INFO);
             }
+            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
+                return buildErrorResponse(
+                        e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
+            }
             return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
@@ -134,6 +138,10 @@ public class CheckMobileAppVcReceiptHandler
             return buildErrorResponse(
                     e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_ITEM_EXPIRED);
         } catch (InvalidCriResponseException e) {
+            if (ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND.equals(e.getErrorResponse())) {
+                return buildErrorResponse(
+                        e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.WARN);
+            }
             return buildErrorResponse(
                     e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
         } catch (CredentialParseException e) {
