@@ -357,7 +357,7 @@ core:
     drivingLicenceAuthCheck: true
     sorryTechnicalErrorEnabled: false
     storedIdentityServiceEnabled: false
-    sisVerificationEnabled: false
+    sisVerificationEnabled: true
     accountInterventionsEnabled: true
   features:
     testFeature:
@@ -372,9 +372,6 @@ core:
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    sisVerification:
-      featureFlags:
-        sisVerificationEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true

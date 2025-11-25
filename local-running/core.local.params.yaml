@@ -360,15 +360,12 @@ core:
     drivingLicenceAuthCheck: true
     sorryTechnicalErrorEnabled: false
     storedIdentityServiceEnabled: true
-    sisVerificationEnabled: false
+    sisVerificationEnabled: true
 
   features:
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    sisVerification:
-      featureFlags:
-        sisVerificationEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
