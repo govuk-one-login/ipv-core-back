@@ -356,19 +356,9 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     sorryTechnicalErrorEnabled: false
-    storedIdentityServiceEnabled: false
+    storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
-    accountInterventionsEnabled: true
   features:
-    testFeature:
-      self:
-        componentId: alternate-component-id
-    accountInterventions:
-      featureFlags:
-        accountInterventionsEnabled: true
-    disableAccountInterventions:
-      featureFlags:
-        accountInterventionsEnabled: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
