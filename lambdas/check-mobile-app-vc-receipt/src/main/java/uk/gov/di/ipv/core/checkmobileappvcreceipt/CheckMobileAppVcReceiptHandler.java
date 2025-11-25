@@ -110,27 +110,20 @@ public class CheckMobileAppVcReceiptHandler
 
         try {
             var request = parseRequest(input);
-
             var journeyResponse = getJourneyResponse(request);
 
             if (journeyResponse != null) {
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatusCode.OK, journeyResponse);
             }
-
             // Frontend will continue polling
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.NOT_FOUND, "No VC found");
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
-                return buildErrorResponse(
-                        e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.INFO);
-            }
-            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
-                return buildErrorResponse(
-                        e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
-            }
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return handleHttpException(e);
+        } catch (VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
+
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
@@ -138,12 +131,7 @@ public class CheckMobileAppVcReceiptHandler
             return buildErrorResponse(
                     e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_ITEM_EXPIRED);
         } catch (InvalidCriResponseException e) {
-            if (ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND.equals(e.getErrorResponse())) {
-                return buildErrorResponse(
-                        e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.WARN);
-            }
-            return buildErrorResponse(
-                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
+            return handleInvalidCriResponseException(e);
         } catch (CredentialParseException e) {
             return buildErrorResponse(
                     e,
@@ -176,6 +164,27 @@ public class CheckMobileAppVcReceiptHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
         }
+    }
+
+    private APIGatewayProxyResponseEvent handleHttpException(HttpResponseExceptionWithErrorBody e) {
+        if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+            return buildErrorResponse(
+                    e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.INFO);
+        }
+        if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
+            return buildErrorResponse(
+                    e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
+        }
+        return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
+    }
+
+    private APIGatewayProxyResponseEvent handleInvalidCriResponseException(
+            InvalidCriResponseException e) {
+        if (ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND.equals(e.getErrorResponse())) {
+            return buildErrorResponse(
+                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.WARN);
+        }
+        return buildErrorResponse(e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
     }
 
     private CheckMobileAppVcReceiptRequest parseRequest(APIGatewayProxyRequestEvent input) {
