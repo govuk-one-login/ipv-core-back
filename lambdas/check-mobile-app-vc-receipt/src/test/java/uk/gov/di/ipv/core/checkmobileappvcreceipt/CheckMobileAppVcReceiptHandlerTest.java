@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -341,6 +342,112 @@ class CheckMobileAppVcReceiptHandlerTest {
         var logMessage = logCollector.getLogMessages().get(0);
         assertThat(logMessage, containsString("Unhandled lambda exception"));
         assertThat(logMessage, containsString("Test error"));
+    }
+
+    @Test
+    void shouldReturn400WhenFailedNameCorrelationError() throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(ipvSessionService.checkIfSessionExpired(ipvSessionItem)).thenReturn(false);
+
+        var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
+                .thenReturn(criResponseItem);
+
+        when(mockSignedJwt.getJWTClaimsSet())
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                Map.of(
+                                        "vc",
+                                        Map.of("type", List.of("IdentityAssertionCredential")))));
+        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), TEST_USER_ID))
+                .thenReturn(List.of());
+        when(evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
+                .thenReturn(List.of(vc));
+
+        when(criCheckingService.checkVcResponse(
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem, List.of()))
+                .thenThrow(
+                        new HttpResponseExceptionWithErrorBody(
+                                HttpStatusCode.BAD_REQUEST, ErrorResponse.FAILED_NAME_CORRELATION));
+
+        // Act
+        var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
+
+        // Assert
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
+        assertEquals(
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatusCode.BAD_REQUEST,
+                        ErrorResponse.FAILED_NAME_CORRELATION),
+                journeyResponse);
+    }
+
+    @Test
+    void shouldReturn400WhenGenericHttpResponseException() throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(clientOAuthSessionItem);
+        when(ipvSessionService.checkIfSessionExpired(ipvSessionItem)).thenReturn(false);
+
+        var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
+                .thenReturn(criResponseItem);
+
+        when(mockSignedJwt.getJWTClaimsSet())
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                Map.of(
+                                        "vc",
+                                        Map.of("type", List.of("IdentityAssertionCredential")))));
+        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), TEST_USER_ID))
+                .thenReturn(List.of());
+        when(evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
+                .thenReturn(List.of(vc));
+
+        // Force a HttpResponseExceptionWithErrorBody with a "generic" error response
+        when(criCheckingService.checkVcResponse(
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem, List.of()))
+                .thenThrow(
+                        new HttpResponseExceptionWithErrorBody(
+                                HttpStatusCode.BAD_REQUEST,
+                                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS));
+
+        // Act
+        var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
+
+        // Assert
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
+        assertEquals(
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatusCode.BAD_REQUEST,
+                        ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS),
+                journeyResponse);
     }
 
     private APIGatewayProxyRequestEvent buildValidRequestEventWithState() {
