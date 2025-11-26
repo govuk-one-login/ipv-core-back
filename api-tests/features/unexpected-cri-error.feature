@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Handling unexpected CRI errors
   Rule: Driving Licence and Passport CRIs
     Background: Go through web route

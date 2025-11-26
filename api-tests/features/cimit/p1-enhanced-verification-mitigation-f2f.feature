@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Mitigating CIs with enhanced verification using the F2F CRI
   Background:
     Given I activate the 'disableStrategicApp' feature set

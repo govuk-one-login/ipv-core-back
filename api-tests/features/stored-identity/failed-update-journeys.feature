@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Failed update details
   Background: Create user with existing credentials and SI record
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

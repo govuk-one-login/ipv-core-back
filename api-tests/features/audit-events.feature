@@ -1,4 +1,4 @@
-@IntegrationTest
+@QualityGateIntegrationTest
 Feature: Audit Events
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

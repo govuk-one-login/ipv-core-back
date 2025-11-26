@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState @IntegrationTest
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest
 Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI and driving licence authoritative source check
   Background:
     # Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI

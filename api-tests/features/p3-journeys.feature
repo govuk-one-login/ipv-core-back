@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: P3 journeys
   Background: Enable feature sets
     Given I activate the 'disableStrategicApp' feature set

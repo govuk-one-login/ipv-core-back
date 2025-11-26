@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey

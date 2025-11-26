@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Errors from Orchestration
 
   Scenario: Unrecoverable error from Orchestration

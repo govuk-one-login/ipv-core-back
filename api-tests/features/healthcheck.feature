@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Healthcheck API
   Scenario: Healthcheck passes
     When I call the healthcheck endpoint

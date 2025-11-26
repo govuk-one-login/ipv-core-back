@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 @TrafficGeneration
 Feature: P2 App journey
   Background:

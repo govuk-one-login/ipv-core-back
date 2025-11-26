@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Fail open scenarios
 
   Scenario Outline: Journey with AIS failures but no interventions succeeds

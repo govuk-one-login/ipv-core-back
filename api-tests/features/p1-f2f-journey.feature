@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: P1 F2F journey
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

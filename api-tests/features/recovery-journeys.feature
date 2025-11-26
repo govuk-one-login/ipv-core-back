@@ -1,4 +1,4 @@
-@Build @IntegrationTest
+@Build @QualityGateIntegrationTest
 Feature: Recovery journeys
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
