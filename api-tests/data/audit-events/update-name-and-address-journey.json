@@ -122,6 +122,23 @@
     }
   },
   {
+    "event_name": "IPV_STORED_IDENTITY_CHECKED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "max_vot": "P2",
+      "reconstructed_vot": "P2",
+      "reconstructed_max_vot": "P2",
+      "is_valid": true,
+      "verification_outcome": "SUCCESS",
+      "vot": "P2",
+      "expired": false
+    },
+    "restricted": {
+      "reconstructedSignatures": {},
+      "sisSignatures": {}
+    }
+  },
+  {
     "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {

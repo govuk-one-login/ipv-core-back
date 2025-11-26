@@ -92,7 +92,6 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I activate the 'storedIdentityService,sisVerification' feature sets
     And I have an existing stored identity record with a 'P2' vot
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response

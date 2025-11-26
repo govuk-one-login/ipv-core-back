@@ -271,11 +271,11 @@ class AppConfigServiceTest {
     @Test
     void featureSetsOverrideConfigurationInCorrectOrder() {
         // Act & Assert
-        configService.setFeatureSet(List.of("accountInterventions", "disableAccountInterventions"));
-        assertFalse(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("disableTestFeatureFlag", "enableTestFeatureFlag"));
+        assertTrue(configService.enabled("testFeatureFlag"));
 
-        configService.setFeatureSet(List.of("disableAccountInterventions", "accountInterventions"));
-        assertTrue(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("enableTestFeatureFlag", "disableTestFeatureFlag"));
+        assertFalse(configService.enabled("testFeatureFlag"));
     }
 
     @Test
@@ -297,8 +297,8 @@ class AppConfigServiceTest {
 
     @Test
     void enabledTrueIfFeatureFlagSetEnabled() {
-        configService.setFeatureSet(List.of("accountInterventions"));
-        assertTrue(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("enableTestFeatureFlag"));
+        assertTrue(configService.enabled("testFeatureFlag"));
     }
 
     @Test
