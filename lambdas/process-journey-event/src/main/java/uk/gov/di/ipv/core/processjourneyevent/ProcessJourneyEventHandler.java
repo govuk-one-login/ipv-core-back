@@ -67,6 +67,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 import static uk.gov.di.ipv.core.library.journeys.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
+import static uk.gov.di.ipv.core.library.journeys.Events.CROSS_BROWSER_PROBLEM_PAGE_EVENT;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
@@ -76,6 +77,8 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
+    private static final StepResponse CROSS_BROWSER_PROBLEM_PAGE_RESPONSE =
+            new PageStepResponse(CROSS_BROWSER_PROBLEM_PAGE_EVENT, null, null);
     private static final String BACK_EVENT = "back";
 
     private final IpvSessionService ipvSessionService;
@@ -139,6 +142,15 @@ public class ProcessJourneyEventHandler
 
         try {
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
+
+            // Special case
+            // Handle route to cross-browser-problem page directly as user will
+            // have a missing ipv-session header
+            if (journeyEvent.equals(CROSS_BROWSER_PROBLEM_PAGE_EVENT)) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Directing user to cross-browser problem page"));
+                return CROSS_BROWSER_PROBLEM_PAGE_RESPONSE.value();
+            }
 
             // Special case
             // Handle route direct back to RP (used for recoverable timeouts and cross browser

@@ -32,6 +32,8 @@ import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.journeys.Events;
+import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -249,6 +251,21 @@ class ProcessJourneyEventHandlerTest {
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
         assertEquals(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE, output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnCrossBrowserProblemPageForCrossBrowserProblemEvent() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JourneyUris.JOURNEY_CROSS_BROWSER_PATH)
+                        .ipvSessionId(null)
+                        .build();
+
+        Map<String, Object> output =
+                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+
+        assertEquals(Events.CROSS_BROWSER_PROBLEM_PAGE_EVENT, output.get("page"));
     }
 
     @Test
