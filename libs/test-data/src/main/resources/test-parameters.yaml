@@ -358,7 +358,17 @@ core:
     sorryTechnicalErrorEnabled: false
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
+    testFeatureFlag: false
   features:
+    testFeature:
+      self:
+        componentId: alternate-component-id
+    enableTestFeatureFlag:
+      featureFlags:
+        testFeatureFlag: true
+    disableTestFeatureFlag:
+      featureFlags:
+        testFeatureFlag: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
