@@ -536,9 +536,8 @@ When(
     }
 
     this.lastJourneyEngineResponse = await callbackFromStrategicApp(
-      this.oauthState,
+      this,
       separateSession ? undefined : this.ipvSessionId,
-      this.featureSet,
     );
   },
 );

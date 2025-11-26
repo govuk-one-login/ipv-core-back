@@ -275,11 +275,15 @@ Then(
 );
 
 When(
-  "I submit a(n) {string} event",
-  async function (this: World, event: string): Promise<void> {
+  /I submit an? '([\w-]+)' event( in a separate session)?/,
+  async function (
+    this: World,
+    event: string,
+    separateSession: " in a separate session" | undefined,
+  ): Promise<void> {
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       event,
-      this.ipvSessionId,
+      separateSession ? undefined : this.ipvSessionId,
       this.featureSet,
       this.clientOAuthSessionId,
     );
