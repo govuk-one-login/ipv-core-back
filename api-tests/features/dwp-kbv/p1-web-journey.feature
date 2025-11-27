@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P1 Web Journeys
   Background: Set feature sets
     Given I activate the 'disableStrategicApp,dwpKbvTest' feature sets

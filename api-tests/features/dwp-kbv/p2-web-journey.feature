@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P2 Web document journey
 
   Background: Start web journey

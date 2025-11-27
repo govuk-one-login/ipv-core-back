@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P1 CIMIT - Alternate doc
   Background: Start web journey
     Given I activate the 'disableStrategicApp,dwpKbvTest' feature set

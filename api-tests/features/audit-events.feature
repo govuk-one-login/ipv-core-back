@@ -90,6 +90,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
+  @QualityGateNewFeatureTest
   Scenario: Reuse journey - identity is compared when SIS comparison is enabled
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -137,6 +138,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
+  @QualityGateNewFeatureTest
   Scenario: Delete pending F2F
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -419,6 +421,7 @@ Feature: Audit Events
       When I submit a 'next' event
       Then I get a 'dwpKbv' CRI response
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - successful response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -426,6 +429,7 @@ Feature: Audit Events
       Then I get a 'page-ipv-success' page response
       And audit events for 'dwp-kbv-successful-journey' are recorded [local only]
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - dropout via thin file
       When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
         | Attribute          | Values                                          |
@@ -433,6 +437,7 @@ Feature: Audit Events
       Then I get a 'page-different-security-questions' page response
       And audit events for 'dwp-kbv-dropout-via-thin-file' are recorded [local only]
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - user abandons CRI
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
         | Attribute          | Values                                          |
