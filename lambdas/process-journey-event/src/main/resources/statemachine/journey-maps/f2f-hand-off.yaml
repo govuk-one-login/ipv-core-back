@@ -117,8 +117,18 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
+        checkMitigation:
+          enhanced-verification:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: APP_DOC_CHECK_PYI_ESCAPE
+            targetEntryEvent: next
         targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
       webRoute:
+        checkMitigation:
+          enhanced-verification:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: APP_DOC_CHECK_PYI_ESCAPE
+            targetEntryEvent: next
         targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
       returnToRp:
         targetState: RETURN_TO_RP
