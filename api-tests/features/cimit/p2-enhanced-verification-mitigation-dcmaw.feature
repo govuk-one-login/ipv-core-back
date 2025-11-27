@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
   Scenario Outline: Same session mitigation via app - successful <attained-vot> attained
     Given I activate the 'disableStrategicApp' feature set

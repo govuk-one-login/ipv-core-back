@@ -3,6 +3,7 @@ Feature: Audit Events
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
+  @QualityGateRegressionTest
   Scenario: New identity - p2 app journey
     Given I activate the 'storedIdentityService' feature set
     And I start a new 'medium-confidence' journey
@@ -27,6 +28,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: New identity - p2 web journey
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -72,6 +74,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reuse journey - identity is stored when SIS is enabled
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -98,6 +101,7 @@ Feature: Audit Events
     Then I get a 'page-ipv-reuse' page response
     And audit events for 'reuse-journey-identity-compared' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -166,6 +170,7 @@ Feature: Audit Events
     Then I get a 'pyi-details-deleted' page response with context 'f2f'
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Alternate doc mitigation
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -183,6 +188,7 @@ Feature: Audit Events
     Then I get a 'ukPassport' CRI response
     And audit events for 'alternate-doc-mitigation-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reprove identity journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -214,6 +220,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reprove identity journey with AIS
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -245,6 +252,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: No photo ID
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -254,6 +262,7 @@ Feature: Audit Events
     Then I get a 'claimedIdentity' CRI response
     And audit events for 'no-photo-id-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Update name and address journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -300,6 +309,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: International address journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -309,6 +319,7 @@ Feature: Audit Events
     Then I get a 'dcmaw' CRI response
     And audit events for 'international-address-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Strategic app journey
     Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
@@ -325,7 +336,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     And audit events for 'strategic-app-journey' are recorded [local only]
 
-  @InitialisesDCMAWSessionState
+  @InitialisesDCMAWSessionState @QualityGateRegressionTest
   Scenario: MAM journey cross-browser scenario
     Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
@@ -363,6 +374,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'strategic-app-cross-browser-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reverification - failed journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |

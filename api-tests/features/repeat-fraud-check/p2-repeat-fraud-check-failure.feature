@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Repeat fraud check failures
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

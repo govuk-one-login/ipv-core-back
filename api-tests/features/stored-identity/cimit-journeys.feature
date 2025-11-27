@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity Service - CIMIT journeys
   Background:
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - P2 journeys
   Background: Enabled stored identity service flag and start p1 journey
     Given I activate the 'storedIdentityService,disableStrategicApp' feature sets

@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to incorrect details)
   Background: Activate the featureSet
     Given I activate the 'drivingLicenceAuthCheck,disableStrategicApp' feature sets

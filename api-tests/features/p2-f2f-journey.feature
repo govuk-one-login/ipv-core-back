@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 F2F journey
   Rule: Pending F2F journey
     Background: User has pending f2f verification

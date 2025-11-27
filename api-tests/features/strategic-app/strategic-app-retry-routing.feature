@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Strategic App Retry Journeys
   Background: Trying again goes directly to the correct download page
     Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set

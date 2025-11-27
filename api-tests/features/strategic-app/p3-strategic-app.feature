@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P3 strategic app
   Background: Start strategic app journey
     Given I activate the 'strategicApp' feature set

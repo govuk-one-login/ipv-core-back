@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: M2B Strategic App Journeys
   Rule: Photo ID
     Background: Start journey

@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - Update Existing Identity
   Background: Enable feature sets
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
