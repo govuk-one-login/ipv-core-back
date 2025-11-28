@@ -6,6 +6,9 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -32,6 +36,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
@@ -236,8 +241,10 @@ class ResetSessionIdentityHandlerTest {
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), journeyResponse.get("message"));
     }
 
-    @Test
-    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmaw() throws Exception {
+    @ParameterizedTest
+    @MethodSource("getDcmawAsyncResetTypes")
+    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmaw(
+            SessionCredentialsResetType dcmawAsyncResetType) throws Exception {
         // Arrange
         when(mockConfigService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -247,7 +254,7 @@ class ResetSessionIdentityHandlerTest {
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ASYNC_ALL.name()))
+                        .lambdaInput(Map.of("resetType", dcmawAsyncResetType.name()))
                         .build();
 
         // Act
@@ -261,11 +268,17 @@ class ResetSessionIdentityHandlerTest {
 
         verify(mockSessionCredentialsService)
                 .deleteSessionCredentialsForResetType(
-                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC_ALL);
+                        ipvSessionItem.getIpvSessionId(), dcmawAsyncResetType);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
         verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    public static Stream<Arguments> getDcmawAsyncResetTypes() {
+        return Stream.of(
+                Arguments.of(SessionCredentialsResetType.DCMAW_ASYNC),
+                Arguments.of(PENDING_DCMAW_ASYNC_ALL));
     }
 
     @Test
