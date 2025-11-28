@@ -97,7 +97,10 @@ public class ProcessMobileAppCallbackHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
         } catch (InvalidMobileAppCallbackRequestException e) {
-            if (Set.of(ErrorResponse.INVALID_OAUTH_STATE, ErrorResponse.MISSING_IPV_SESSION_ID)
+            if (Set.of(
+                            ErrorResponse.INVALID_OAUTH_STATE,
+                            ErrorResponse.MISSING_IPV_SESSION_ID,
+                            ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND)
                     .contains(e.getErrorResponse())) {
                 return buildErrorResponse(
                         e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
