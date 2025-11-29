@@ -74,7 +74,15 @@ public class UserIdentityService {
             Vot targetVot,
             List<ContraIndicator> contraIndicators)
             throws HttpResponseExceptionWithErrorBody, UnrecognisedCiException {
-        var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
+        var vcJwts =
+                vcs.stream()
+                        .filter(
+                                vc ->
+                                        VcHelper.isSuccessfulVc(vc)
+                                                || VcHelper.hasUnavailableOrNotApplicableFraudCheck(
+                                                        List.of(vc)))
+                        .map(VerifiableCredential::getVcString)
+                        .toList();
 
         var vtm = configService.getCoreVtmClaim();
 

@@ -463,6 +463,16 @@ public interface VcFixtures {
         return vcClaim;
     }
 
+    static IdentityCheckCredential vcClaimDcmawPassportFailedNoBirthDate() {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
+        vcClaim.getCredentialSubject().setDrivingPermit(null);
+        vcClaim.getCredentialSubject().setBirthDate(null);
+        vcClaim.getCredentialSubject().setPassport(passportDetails());
+        vcClaim.getEvidence().getFirst().setStrengthScore(0);
+
+        return vcClaim;
+    }
+
     private static IdentityCheckCredential vcClaimF2fPassportPhoto() {
         return IdentityCheckCredential.builder()
                 .withType(
@@ -1255,6 +1265,15 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
                 vcClaimDcmawPassport(),
+                DCMAW_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcDcmawFailedPassport() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimDcmawPassportFailedNoBirthDate(),
                 DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
