@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: M2B Strategic App Journeys
 
   Scenario: User initially clicks international then changes their mind and can continue to a different identity proving method

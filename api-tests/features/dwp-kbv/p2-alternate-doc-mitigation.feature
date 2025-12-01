@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P2 CIMIT - Alternate doc
   Background: Disable strategic app
     Given I activate the 'disableStrategicApp,dwpKbvTest' feature set

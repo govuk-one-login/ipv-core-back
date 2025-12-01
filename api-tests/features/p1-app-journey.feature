@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P1 app journey
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

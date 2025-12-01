@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - repeat fraud check
   Background: Create user with existing credentials
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

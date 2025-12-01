@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: M2B Strategic App Journeys with DL authoritative source check
   Scenario: Cross-browser scenario
     Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set

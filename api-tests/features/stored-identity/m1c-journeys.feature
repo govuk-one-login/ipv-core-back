@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - M1C Outcomes
   Background:
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set

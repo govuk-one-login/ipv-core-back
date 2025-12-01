@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Reprove Identity Journey
     Background: Disable strategic app
         Given I activate the 'disableStrategicApp' feature set

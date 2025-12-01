@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Authoritative source checks with driving licence CRI
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

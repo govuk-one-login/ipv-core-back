@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P2 delete pending F2F journey
   Background: User has pending f2f verification
     Given I activate the 'pendingF2FResetEnabled' feature set

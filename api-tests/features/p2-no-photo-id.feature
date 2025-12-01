@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 no photo id journey
   Rule: Experian KBV
     Background: Start P2 no photo id with Experian KBV
