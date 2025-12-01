@@ -90,7 +90,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
-  @QualityGateNewFeatureTest
+  @QualityGateRegressionTest
   Scenario: Reuse journey - identity is compared when SIS comparison is enabled
     Given the subject already has the following credentials
       | CRI     | scenario                     |
