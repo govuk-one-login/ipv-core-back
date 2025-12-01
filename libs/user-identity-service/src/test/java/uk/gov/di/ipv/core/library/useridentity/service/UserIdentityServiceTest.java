@@ -59,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -69,7 +70,10 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressNoCredenti
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawFailedPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
@@ -1415,6 +1419,42 @@ class UserIdentityServiceTest {
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
+    }
+
+    @Test
+    void generateUSerIdentityShouldReturnOnlySuccessfulVcsAndValidFraudVcs() throws Exception {
+        // Arrange
+        var validDrivingPermit = vcWebDrivingPermitDvaValid();
+        var failedPassport = vcDcmawFailedPassport();
+        var validAddress = vcAddressOne();
+        var validFraudApplicableAuthoritativeSource =
+                vcExperianFraudApplicableAuthoritativeSourceFailed();
+        var validFraudAvailableAuthoritativeSource = vcExperianFraudAvailableAuthoritativeFailed();
+        var vcs =
+                List.of(
+                        validDrivingPermit,
+                        failedPassport,
+                        validAddress,
+                        validFraudApplicableAuthoritativeSource,
+                        validFraudAvailableAuthoritativeSource);
+
+        when(mockConfigService.enabled(FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM)).thenReturn(true);
+        useP2Defaults();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertEquals(4, credentials.getVcs().size());
+        assertEquals(
+                List.of(
+                        validDrivingPermit.getVcString(),
+                        validAddress.getVcString(),
+                        validFraudApplicableAuthoritativeSource.getVcString(),
+                        validFraudAvailableAuthoritativeSource.getVcString()),
+                credentials.getVcs());
     }
 
     @Test
