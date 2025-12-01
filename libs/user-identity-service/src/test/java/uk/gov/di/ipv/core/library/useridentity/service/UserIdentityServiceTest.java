@@ -59,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -1437,6 +1438,7 @@ class UserIdentityServiceTest {
                         validFraudApplicableAuthoritativeSource,
                         validFraudAvailableAuthoritativeSource);
 
+        when(mockConfigService.enabled(FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM)).thenReturn(true);
         useP2Defaults();
 
         // Act

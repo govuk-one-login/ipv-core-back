@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
@@ -74,15 +75,17 @@ public class UserIdentityService {
             Vot targetVot,
             List<ContraIndicator> contraIndicators)
             throws HttpResponseExceptionWithErrorBody, UnrecognisedCiException {
-        var vcJwts =
-                vcs.stream()
-                        .filter(
-                                vc ->
-                                        VcHelper.isSuccessfulVc(vc)
-                                                || VcHelper.hasUnavailableOrNotApplicableFraudCheck(
-                                                        List.of(vc)))
-                        .map(VerifiableCredential::getVcString)
-                        .toList();
+
+        var vcJwtsStream = vcs.stream();
+        if (configService.enabled(FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM)) {
+            vcJwtsStream =
+                    vcJwtsStream.filter(
+                            vc ->
+                                    VcHelper.isSuccessfulVc(vc)
+                                            || VcHelper.hasUnavailableOrNotApplicableFraudCheck(
+                                                    List.of(vc)));
+        }
+        var vcJwts = vcJwtsStream.map(VerifiableCredential::getVcString).toList();
 
         var vtm = configService.getCoreVtmClaim();
 
