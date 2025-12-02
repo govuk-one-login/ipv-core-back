@@ -104,6 +104,9 @@ states:
         checkFeatureFlag:
           sorryTechnicalErrorEnabled:
             targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F
+            checkMitigation:
+              enhanced-mitigation:
+                targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_F2F
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -117,19 +120,30 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
-        checkMitigation:
-          enhanced-verification:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: APP_DOC_CHECK_PYI_ESCAPE
-            targetEntryEvent: next
         targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
       webRoute:
-        checkMitigation:
-          enhanced-verification:
+        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_F2F:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      context: kbvMitigation
+    events:
+      tryAgain:
+        targetState: CRI_F2F
+      app:
+        checkJourneyContext:
+          medium-confidence:
             targetJourney: NEW_P2_IDENTITY
             targetState: APP_DOC_CHECK_PYI_ESCAPE
             targetEntryEvent: next
-        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+          low-confidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: APP_DOC_CHECK_PYI_ESCAPE
+            targetEntryEvent: next
       returnToRp:
         targetState: RETURN_TO_RP
 
