@@ -181,7 +181,9 @@ public class SisService {
                     evcsVcSignatures,
                     sisVcSignatures);
         } catch (SisMatchException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Comparison between SIS and EVCS failed", e));
+            LOGGER.warn(
+                    LogHelper.buildErrorMessage(
+                            "Mismatch found comparing SIS and EVCS identities", e));
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
