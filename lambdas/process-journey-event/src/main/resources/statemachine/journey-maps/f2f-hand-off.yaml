@@ -105,7 +105,7 @@ states:
           sorryTechnicalErrorEnabled:
             targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_F2F
             checkMitigation:
-              enhanced-mitigation:
+              enhanced-verification:
                 targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_F2F
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
@@ -135,15 +135,15 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
         checkJourneyContext:
-          medium-confidence:
+          mediumConfidence:
             targetJourney: NEW_P2_IDENTITY
-            targetState: APP_DOC_CHECK_PYI_ESCAPE
-            targetEntryEvent: next
-          low-confidence:
+            targetState: START
+          lowConfidence:
             targetJourney: NEW_P1_IDENTITY
-            targetState: APP_DOC_CHECK_PYI_ESCAPE
-            targetEntryEvent: next
+            targetState: START
       returnToRp:
         targetState: RETURN_TO_RP
 
