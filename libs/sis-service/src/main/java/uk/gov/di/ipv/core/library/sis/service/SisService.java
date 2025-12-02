@@ -170,6 +170,7 @@ public class SisService {
                     sisRequestedVot,
                     storedIdentityResult.identityDetails().isValid());
 
+            LOGGER.info(LogHelper.buildLogMessage("Successfully verified SIS and EVCS identities"));
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
