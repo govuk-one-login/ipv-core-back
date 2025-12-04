@@ -41,7 +41,7 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.Set;
 
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CROSS_BROWSER_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -209,8 +209,7 @@ public class ProcessMobileAppCallbackHandler
                             new AuditRestrictedDeviceInformation(
                                     callbackRequest.getDeviceInformation())));
 
-            return new JourneyResponse(
-                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, clientOAuthSessionId);
+            return new JourneyResponse(JOURNEY_CROSS_BROWSER_PATH, clientOAuthSessionId);
         }
 
         // Validate cri response item

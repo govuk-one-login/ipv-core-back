@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CROSS_BROWSER_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -122,8 +122,7 @@ class ProcessMobileAppCallbackHandlerTest {
         var journeyResponse =
                 OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
         assertEquals(
-                new JourneyResponse(
-                        JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
+                new JourneyResponse(JOURNEY_CROSS_BROWSER_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
                 journeyResponse);
         verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
@@ -167,8 +166,7 @@ class ProcessMobileAppCallbackHandlerTest {
         var journeyResponse =
                 OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
         assertEquals(
-                new JourneyResponse(
-                        JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
+                new JourneyResponse(JOURNEY_CROSS_BROWSER_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
                 journeyResponse);
         verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
