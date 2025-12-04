@@ -63,4 +63,6 @@ public class JourneyUris {
             "/journey/dcmaw-async-vc-received-medium";
     public static final String JOURNEY_PROCESS_CANDIDATE_IDENTITY =
             "/journey/process-candidate-identity";
+    public static final String JOURNEY_CROSS_BROWSER_PATH =
+            "/journey/" + Events.PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT;
 }
