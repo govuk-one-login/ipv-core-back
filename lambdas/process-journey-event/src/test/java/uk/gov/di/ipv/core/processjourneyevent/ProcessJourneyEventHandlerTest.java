@@ -265,7 +265,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals(Events.CROSS_BROWSER_PROBLEM_PAGE_EVENT, output.get("page"));
+        assertEquals(Events.PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT, output.get("page"));
     }
 
     @Test
