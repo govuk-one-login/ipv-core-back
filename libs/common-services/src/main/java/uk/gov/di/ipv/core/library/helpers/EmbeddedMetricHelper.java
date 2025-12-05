@@ -30,6 +30,7 @@ import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_ISSUED;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_JOURNEY_COMPLETE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_JOURNEY_START;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_PROVING;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_REUSE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.PROFILE_MATCH;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.REVERIFY_JOURNEY_COMPLETE;
@@ -51,6 +52,7 @@ public class EmbeddedMetricHelper {
         IDENTITY_ISSUED("identityIssued"),
         IDENTITY_JOURNEY_START("identityJourneyStart"),
         IDENTITY_JOURNEY_COMPLETE("identityJourneyComplete"),
+        IDENTITY_PROVING("identityProving"),
         IDENTITY_REUSE("identityReuse"),
         PROFILE_MATCH("profileMatch"),
         REVERIFY_JOURNEY_START("reverifyJourneyStart"),
@@ -109,6 +111,10 @@ public class EmbeddedMetricHelper {
 
     public static void identityReuse() {
         recordHighResolutionMetric(Map.of(), Map.of(IDENTITY_REUSE, 1.0));
+    }
+
+    public static void identityProving() {
+        recordHighResolutionMetric(Map.of(), Map.of(IDENTITY_PROVING, 1.0));
     }
 
     public static void profileMatch(Gpg45Profile matchedProfile) {

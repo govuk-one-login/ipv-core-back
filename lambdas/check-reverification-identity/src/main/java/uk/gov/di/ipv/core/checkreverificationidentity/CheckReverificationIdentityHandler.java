@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
@@ -122,6 +123,7 @@ public class CheckReverificationIdentityHandler
                 return NOT_FOUND_RESPONSE;
             }
 
+            EmbeddedMetricHelper.identityProving();
             return FOUND_RESPONSE;
 
         } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {

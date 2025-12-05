@@ -359,6 +359,7 @@ public class CheckExistingIdentityHandler
             // journey
             if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
+                EmbeddedMetricHelper.identityProving();
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
@@ -621,6 +622,7 @@ public class CheckExistingIdentityHandler
                     auditEventUser.getSessionId(),
                     false);
 
+            EmbeddedMetricHelper.identityProving();
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -645,6 +647,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
             throws HttpResponseExceptionWithErrorBody {
+        EmbeddedMetricHelper.identityProving();
         switch (preferredNewIdentityLevel) {
             case P1 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
