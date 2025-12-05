@@ -1,0 +1,15 @@
+name: Update Name
+
+states:
+  START:
+    events:
+      next:
+        targetState: UPDATE_NAME_PAGE
+
+  UPDATE_NAME_PAGE:
+    response:
+      type: page
+      pageId: update-name
+    events:
+      next:
+        targetState: PROCESS_STATE
