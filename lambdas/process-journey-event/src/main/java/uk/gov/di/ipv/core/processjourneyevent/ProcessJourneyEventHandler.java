@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -58,10 +59,13 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.UPDATE_ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.UPDATE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
@@ -76,6 +80,9 @@ public class ProcessJourneyEventHandler
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     private static final String BACK_EVENT = "back";
+    private static final Set<IpvJourneyTypes> UPDATE_JOURNEY_TYPES =
+            Set.of(UPDATE_NAME, UPDATE_ADDRESS);
+    private static final String REPEAT_FRAUD_CHECK_JOURNEY_CONTEXT = "rfc";
 
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -237,6 +244,17 @@ public class ProcessJourneyEventHandler
                                 .with(
                                         LOG_USER_STATE.getFieldName(),
                                         journeyChangeState.getInitialState()));
+
+                // We don't want to record another identityProving metric for a user
+                // starting an update journey if they require a repeat fraud check (RFC)
+                // as this would only count as a single identity proving journey (we
+                // already record this metric at the start of the RFC journey).
+                if (UPDATE_JOURNEY_TYPES.contains(journeyChangeState.getJourneyType())
+                        && !ipvSessionItem
+                                .getActiveJourneyContexts()
+                                .contains(REPEAT_FRAUD_CHECK_JOURNEY_CONTEXT)) {
+                    EmbeddedMetricHelper.identityProving();
+                }
 
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);
