@@ -70,11 +70,6 @@ class TokenTests {
                 .uponReceiving("Valid auth code")
                 .path("/token")
                 .method("POST")
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
                 .body(
                         "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Daddress&client_assertion="
                                 + CLIENT_ASSERTION_HEADER
@@ -82,6 +77,11 @@ class TokenTests {
                                 + CLIENT_ASSERTION_BODY
                                 + "."
                                 + CLIENT_ASSERTION_SIGNATURE)
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Content-Type",
+                        "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
                 .status(200)
                 .body(
