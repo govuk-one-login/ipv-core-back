@@ -9,7 +9,7 @@ services:
     image: orch-stub:latest
     container_name: orch-stub
     build:
-      context: ../../ipv-stubs/di-ipv-orchestrator-stub
+      context: ../../orch-stub/di-ipv-orchestrator-stub
       dockerfile: core-dev-deploy/Dockerfile
     environment:
       IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:4502/
@@ -37,7 +37,7 @@ services:
     image: core-front:latest
     container_name: core-front
     build:
-      context: ../../ipv-core-front
+      context: ../../core-front
       dockerfile: dev-deploy/Dockerfile
     environment:
       <<: *aws_creds
