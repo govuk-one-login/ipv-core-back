@@ -48,6 +48,13 @@ subprojects {
 }
 
 allprojects {
+	configurations.configureEach {
+		resolutionStrategy {
+			// Remove once pact pulls in this or a newer version
+			force 'org.apache.tika:tika-core:3.2.3'
+		}
+	}
+
 	plugins.withType(JavaPlugin).whenPluginAdded {
 		dependencies {
 			constraints {
