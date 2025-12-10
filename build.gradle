@@ -48,6 +48,10 @@ subprojects {
 }
 
 allprojects {
+	configurations.configureEach {
+		exclude group: 'org.apache.tika', module: 'tika-parser-pdf-module'
+	}
+
 	plugins.withType(JavaPlugin).whenPluginAdded {
 		dependencies {
 			constraints {
