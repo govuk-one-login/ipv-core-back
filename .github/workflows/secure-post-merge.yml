@@ -5,9 +5,14 @@ on:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      # If you are adding or removing from this list, also update 'files_ignore' in check-if-deploy-needed job
+      - '**/*.md'
       - 'lambdas/*/src/test/**'
+      - 'libs/*/src/test/**'
+      - 'libs/test-data/**'
+      - 'libs/test-helpers/**'
       - 'journey-map/**'
+      - 'local-running/**'
   workflow_dispatch:
 
 jobs:
@@ -49,9 +54,38 @@ jobs:
       packages: read
       contents: read
 
+  check-if-deploy-needed:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-needed: ${{ steps.check-if-should-deploy.outputs.any_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get relevant changed files
+        id: check-if-should-deploy
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        with:
+          files: |
+            **
+          # We want to skip api-tests folder here as we don't want it to trigger deployment.
+          files_ignore: |
+            api-tests/**
+            **/*.md
+            lambdas/*/src/test/**
+            libs/*/src/test/**
+            libs/test-data/**
+            libs/test-helpers/**
+            journey-map/**
+            local-running/**
+
   deploy:
-    needs: build-test-images-if-needed
-    if: '!failure()'
+    needs:
+      - build-test-images-if-needed
+      - check-if-deploy-needed
+    if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
