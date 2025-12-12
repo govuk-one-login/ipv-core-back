@@ -24,6 +24,20 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
+  KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
+    events:
+      next:
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+            targetEntryEvent: appTriage
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
   DCMAW_ASYNC_ANOTHER_WAY:
     events:
       next:

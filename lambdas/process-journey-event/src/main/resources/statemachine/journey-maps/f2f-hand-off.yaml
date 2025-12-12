@@ -140,10 +140,10 @@ states:
         checkJourneyContext:
           mediumConfidence:
             targetJourney: NEW_P2_IDENTITY
-            targetState: START
+            targetState: KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD
           lowConfidence:
             targetJourney: NEW_P1_IDENTITY
-            targetState: START
+            targetState: KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD
       returnToRp:
         targetState: RETURN_TO_RP
 
