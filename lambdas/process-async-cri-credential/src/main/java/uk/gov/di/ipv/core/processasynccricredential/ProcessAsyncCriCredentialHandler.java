@@ -229,12 +229,14 @@ public class ProcessAsyncCriCredentialHandler
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
 
+        var journeyId = extractJourneyIdFromSqsMessage(successAsyncCriResponse).orElse(null);
+
         for (var vc : vcs) {
             var auditEventUser = new AuditEventUser(userId, null, null, null);
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
 
-            submitVcToCiStorage(vc);
-            postMitigatingVc(vc);
+            submitVcToCiStorage(vc, journeyId);
+            postMitigatingVc(vc, journeyId);
             evcsService.storePendingVc(vc);
             sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
         }
@@ -329,12 +331,14 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    private void submitVcToCiStorage(VerifiableCredential vc) throws CiPutException {
-        cimitService.submitVC(vc, null, null);
+    private void submitVcToCiStorage(VerifiableCredential vc, String journeyId)
+            throws CiPutException {
+        cimitService.submitVC(vc, journeyId, null);
     }
 
-    private void postMitigatingVc(VerifiableCredential vc) throws CiPostMitigationsException {
-        cimitService.submitMitigatingVcList(List.of(vc), null, null);
+    private void postMitigatingVc(VerifiableCredential vc, String journeyId)
+            throws CiPostMitigationsException {
+        cimitService.submitMitigatingVcList(List.of(vc), journeyId, null);
     }
 
     private String extractQueueName(SQSEvent event) {
