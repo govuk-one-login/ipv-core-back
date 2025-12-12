@@ -59,7 +59,8 @@ Feature: Audit Events
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And audit events for 'new-identity-p2-web-journey' are recorded [local only]
-
+ 
+  @QualityGateRegressionTest
   Scenario: Reuse journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |
