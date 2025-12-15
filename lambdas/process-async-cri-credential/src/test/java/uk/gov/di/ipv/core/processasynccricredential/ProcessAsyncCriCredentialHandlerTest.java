@@ -227,7 +227,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         doThrow(new CiPutException("Lambda execution failed"))
                 .when(cimitService)
-                .submitVC(any(VerifiableCredential.class), eq(null), eq(null));
+                .submitVC(any(VerifiableCredential.class), any(), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -258,7 +258,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
                 .when(cimitService)
-                .submitMitigatingVcList(anyList(), eq(null), eq(null));
+                .submitMitigatingVcList(anyList(), any(), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -364,7 +364,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         var ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
-        assertNull(ciJourneyIds.get(0));
+        assertEquals(TEST_JOURNEY_ID, ciJourneyIds.get(0));
 
         var ciIpAddresses = ipAddressCaptor.getAllValues();
         assertEquals(1, ciIpAddresses.size());
@@ -390,7 +390,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         var ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
-        assertNull(ciJourneyIds.get(0));
+        assertEquals(TEST_JOURNEY_ID, ciJourneyIds.get(0));
 
         var ciIpAddresses = ipAddressCaptor.getAllValues();
         assertEquals(1, ciIpAddresses.size());
