@@ -7,8 +7,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     SQS_ASYNC("sqsAsync"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     STORED_IDENTITY_SERVICE("storedIdentityServiceEnabled"),
-    SIS_VERIFICATION("sisVerificationEnabled"),
-    FILTER_FAILED_VCS_FROM_CREDENTIAL_CLAIM("filterFailedVcsFromCredentialsClaim");
+    SIS_VERIFICATION("sisVerificationEnabled");
 
     private final String name;
 
