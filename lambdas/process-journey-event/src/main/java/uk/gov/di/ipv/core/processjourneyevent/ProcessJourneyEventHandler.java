@@ -176,6 +176,20 @@ public class ProcessJourneyEventHandler
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
+            ipvSessionItem
+                    .getStateStack()
+                    .forEach(
+                            state -> {
+                                LOGGER.warn(
+                                        LogHelper.buildLogMessage(
+                                                String.format("State is: %s", state)));
+                            });
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
@@ -203,6 +217,8 @@ public class ProcessJourneyEventHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
+            LOGGER.warn(LogHelper.buildLogMessage("BELOW NEXT STEP RESPONSE"));
+            LOGGER.warn(LogHelper.buildLogMessage(stepResponse.value().toString()));
             return stepResponse.value();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
@@ -342,6 +358,8 @@ public class ProcessJourneyEventHandler
                                 initialJourneyState.subJourney())));
 
         if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
+            LOGGER.info("HITTED HERE!!!");
+            LOGGER.error(journeyEvent);
             return handleBackEvent(ipvSessionItem, initialJourneyState);
         }
 
@@ -372,7 +390,19 @@ public class ProcessJourneyEventHandler
             result.journeyContextsToUnset().forEach(ipvSessionItem::unsetJourneyContext);
         }
 
-        if (result.state() instanceof BasicState basicState) {
+        if (BACK_EVENT.equals(journeyEvent)) {
+            var previousJourneyState = ipvSessionItem.getPreviousState();
+            var state = journeyStateToBasicState(previousJourneyState);
+            var skipBackResponse =
+                    ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
+
+            if (Boolean.TRUE.equals(skipBackResponse)) {
+                ipvSessionItem.popState();
+            }
+            ipvSessionItem.popState();
+        }
+
+        if (result.state() instanceof BasicState basicState && !BACK_EVENT.equals(journeyEvent)) {
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
         }
@@ -384,16 +414,41 @@ public class ProcessJourneyEventHandler
             throws UnknownEventException, StateMachineNotFoundException, UnknownStateException {
         var previousJourneyState = ipvSessionItem.getPreviousState();
 
+        LOGGER.error(
+                String.format(
+                        "In Handle Back Event. previousJourneyState: %s",
+                        previousJourneyState.state()));
+        LOGGER.error(
+                String.format(
+                        "In Handle Back Event. currentJourneyState: %s",
+                        initialJourneyState.state()));
+
         if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+
+            LOGGER.error("Current and previous are page responses!");
+
             var state = journeyStateToBasicState(previousJourneyState);
             var skipBackResponse =
                     ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
 
+            LOGGER.error(
+                    String.format(
+                            "In Handle Back Event previous state should be skipped? %s. ",
+                            skipBackResponse));
+
+            // What if previous states also has skipBack?
+            // We should handle all of them
             if (Boolean.TRUE.equals(skipBackResponse)) {
+                LOGGER.error("Skipping previous");
+
                 ipvSessionItem.popState();
                 previousJourneyState = ipvSessionItem.getPreviousState();
+                LOGGER.error(String.format("New previous: %s", previousJourneyState.state()));
             }
             ipvSessionItem.popState();
+            LOGGER.error("Poping previous state from stack");
+
+            LOGGER.error("END of Handle Back Event: Transforming and returning previous state.");
 
             return journeyStateToBasicState(previousJourneyState);
         }
@@ -515,7 +570,11 @@ public class ProcessJourneyEventHandler
     }
 
     private State journeyStateToBasicState(JourneyState journeyState) {
-        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+        LOGGER.error(String.format("Journey State: %s", journeyState.state()));
+        LOGGER.error(String.format("Sub Journey: %s", journeyState.subJourney().name()));
+        var r = stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+        LOGGER.error(String.format("Journey State: %s", r.toString()));
+        return r;
     }
 
     private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {
@@ -524,6 +583,20 @@ public class ProcessJourneyEventHandler
     }
 
     private boolean isBackEventDefinedOnState(JourneyState journeyState) {
+        var s = stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
+        if (s instanceof BasicState) {
+            ((BasicState) s)
+                    .getEvents()
+                    .forEach(
+                            (state, event) -> {
+                                LOGGER.info(
+                                        LogHelper.buildLogMessage(
+                                                String.format(
+                                                        "State is %s, and event is: %s",
+                                                        state, event.toString())));
+                            });
+        }
+
         return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
                         instanceof BasicState basicState
                 && basicState.getEvents().containsKey(BACK_EVENT);
