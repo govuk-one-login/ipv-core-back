@@ -5,9 +5,10 @@ import {
   JourneyResponse,
   PageResponse,
   ProcessCriCallbackRequest,
+  ProvenUserIdentity,
 } from "../types/internal-api.js";
-import { ProvenUserIdentity } from "../types/internal-api.js";
 import { ApiRequestError } from "../types/errors.js";
+import { World } from "../types/world.js";
 
 const JOURNEY_PREFIX = "/journey/";
 const POST = "POST";
@@ -76,19 +77,18 @@ export const sendJourneyEvent = async (
 };
 
 export const callbackFromStrategicApp = async (
-  oauthState: string,
+  world: World,
   ipvSessionId: string | undefined,
-  featureSet: string | undefined,
 ): Promise<JourneyEngineResponse> => {
   const url = `${config.core.internalApiUrl}/app/callback`;
   const response = await fetch(url, {
     method: POST,
     headers: {
       ...internalApiHeaders,
-      ...(featureSet ? { "feature-set": featureSet } : {}),
+      ...(world.featureSet ? { "feature-set": world.featureSet } : {}),
       ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
     },
-    body: JSON.stringify({ state: oauthState }),
+    body: JSON.stringify({ state: world.oauthState }),
   });
 
   if (!response.ok) {
@@ -99,10 +99,12 @@ export const callbackFromStrategicApp = async (
 
   const body = await response.json();
 
+  world.clientOAuthSessionId = body?.clientOAuthSessionId;
+
   return await sendJourneyEvent(
     body?.journey,
     ipvSessionId,
-    featureSet,
+    world.featureSet,
     body?.clientOAuthSessionId,
     "pyi-triage-mobile-download-app",
   );
