@@ -371,8 +371,6 @@ public class ProcessJourneyEventHandler
                                 initialJourneyState.subJourney())));
 
         if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
-            LOGGER.info("HITTED HERE!!!");
-            LOGGER.error(journeyEvent);
             return handleBackEvent(ipvSessionItem, initialJourneyState);
         }
 
@@ -403,78 +401,55 @@ public class ProcessJourneyEventHandler
             result.journeyContextsToUnset().forEach(ipvSessionItem::unsetJourneyContext);
         }
 
-        updateIpvSessionState(result.state(), journeyEvent, ipvSessionItem);
+        updateIpvSessionStateStack(result.state(), journeyEvent, ipvSessionItem);
 
         return result.state();
     }
 
-    private void updateIpvSessionState(
+    private void updateIpvSessionStateStack(
             State state, String journeyEvent, IpvSessionItem ipvSessionItem)
             throws StateMachineNotFoundException, UnknownStateException {
+        // If the event passed to the lambda is back event and is declared on the journey map,
+        // we want to pop it out from the stack to keep it consistent with core-front session
+        // history
+        // We are doing same if back event is not declared and both - previous and current state are
+        // pages
         if (BACK_EVENT.equals(journeyEvent)) {
-            var previousJourneyState = ipvSessionItem.getPreviousState();
-            var previousState = journeyStateToBasicState(previousJourneyState);
-            if (isPageState(previousJourneyState)) {
-                var skipBackResponse =
-                        ((PageStepResponse) ((BasicState) previousState).getResponse())
-                                .getSkipBack();
-
-                if (Boolean.TRUE.equals(skipBackResponse)) {
-                    ipvSessionItem.popState();
-                }
-            }
+            popMarkerdAsSkipBackStates(ipvSessionItem);
             ipvSessionItem.popState();
-        }
-
-        if (state instanceof BasicState basicState && !BACK_EVENT.equals(journeyEvent)) {
+        } else if (state instanceof BasicState basicState) {
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
         }
     }
 
-    private State handleBackEvent(IpvSessionItem ipvSessionItem, JourneyState initialJourneyState)
-            throws UnknownEventException,
-                    StateMachineNotFoundException,
-                    UnknownStateException,
-                    BackEventException {
+    private void popMarkerdAsSkipBackStates(IpvSessionItem ipvSessionItem)
+            throws StateMachineNotFoundException, UnknownStateException {
         var previousJourneyState = ipvSessionItem.getPreviousState();
+        var previousState = journeyStateToBasicState(previousJourneyState);
 
-        LOGGER.error(
-                String.format(
-                        "In Handle Back Event. previousJourneyState: %s",
-                        previousJourneyState.state()));
-        LOGGER.error(
-                String.format(
-                        "In Handle Back Event. currentJourneyState: %s",
-                        initialJourneyState.state()));
+        // We should iterate over previous states as if more than one state in the row
+        // will be marked as skipState we want to skip all of them.
+        while (isPageState(previousJourneyState)) {
+            var response = ((BasicState) previousState).getResponse();
 
-        if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
-
-            LOGGER.error("Current and previous are page responses!");
-
-            var state = journeyStateToBasicState(previousJourneyState);
-            var skipBackResponse =
-                    ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
-
-            LOGGER.error(
-                    String.format(
-                            "In Handle Back Event previous state should be skipped? %s. ",
-                            skipBackResponse));
-
-            // What if previous states also has skipBack?
-            // We should handle all of them
-            if (Boolean.TRUE.equals(skipBackResponse)) {
-                LOGGER.error("Skipping previous");
-
-                ipvSessionItem.popState();
-                previousJourneyState = ipvSessionItem.getPreviousState();
-                LOGGER.error(String.format("New previous: %s", previousJourneyState.state()));
+            if (!(response instanceof PageStepResponse pageResponse)
+                    || !Boolean.TRUE.equals(pageResponse.getSkipBack())) {
+                break;
             }
+
             ipvSessionItem.popState();
-            LOGGER.error("Poping previous state from stack");
+            previousJourneyState = ipvSessionItem.getPreviousState();
+            previousState = journeyStateToBasicState(previousJourneyState);
+        }
+    }
 
-            LOGGER.error("END of Handle Back Event: Transforming and returning previous state.");
-
+    private State handleBackEvent(IpvSessionItem ipvSessionItem, JourneyState initialJourneyState)
+            throws StateMachineNotFoundException, UnknownStateException, BackEventException {
+        var previousJourneyState = ipvSessionItem.getPreviousState();
+        if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+            popMarkerdAsSkipBackStates(ipvSessionItem);
+            ipvSessionItem.popState();
             return journeyStateToBasicState(previousJourneyState);
         }
 
