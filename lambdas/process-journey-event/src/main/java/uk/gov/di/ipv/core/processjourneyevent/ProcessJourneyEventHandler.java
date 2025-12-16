@@ -177,21 +177,6 @@ public class ProcessJourneyEventHandler
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            LOGGER.warn(LogHelper.buildLogMessage("Printing state!"));
-            ipvSessionItem
-                    .getStateStack()
-                    .forEach(
-                            state -> {
-                                LOGGER.warn(
-                                        LogHelper.buildLogMessage(
-                                                String.format("State is: %s", state)));
-                            });
-
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -570,11 +555,7 @@ public class ProcessJourneyEventHandler
     }
 
     private State journeyStateToBasicState(JourneyState journeyState) {
-        LOGGER.error(String.format("Journey State: %s", journeyState.state()));
-        LOGGER.error(String.format("Sub Journey: %s", journeyState.subJourney().name()));
-        var r = stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
-        LOGGER.error(String.format("Journey State: %s", r.toString()));
-        return r;
+        return stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
     }
 
     private JourneyState journeyStateFrom(JourneyChangeState journeyChangeState) {
@@ -583,20 +564,6 @@ public class ProcessJourneyEventHandler
     }
 
     private boolean isBackEventDefinedOnState(JourneyState journeyState) {
-        var s = stateMachines.get(journeyState.subJourney()).getState(journeyState.state());
-        if (s instanceof BasicState) {
-            ((BasicState) s)
-                    .getEvents()
-                    .forEach(
-                            (state, event) -> {
-                                LOGGER.info(
-                                        LogHelper.buildLogMessage(
-                                                String.format(
-                                                        "State is %s, and event is: %s",
-                                                        state, event.toString())));
-                            });
-        }
-
         return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
                         instanceof BasicState basicState
                 && basicState.getEvents().containsKey(BACK_EVENT);
