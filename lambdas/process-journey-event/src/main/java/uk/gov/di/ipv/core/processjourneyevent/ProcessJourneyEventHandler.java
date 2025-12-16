@@ -44,6 +44,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializ
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.BackEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -229,6 +230,9 @@ public class ProcessJourneyEventHandler
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (BackEventException e) {
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.BACK_EVENT_NOT_SUPPORTED);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -244,7 +248,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation,
             String currentPage,
             ClientOAuthSessionItem clientOAuthSessionItem)
-            throws JourneyEngineException {
+            throws JourneyEngineException, BackEventException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(ipvSessionItem, auditEventUser, deviceInformation);
             journeyEvent = NEXT_EVENT;
@@ -324,6 +328,14 @@ public class ProcessJourneyEventHandler
                     journeyEvent,
                     ipvSessionItem.getState());
             throw new JourneyEngineException();
+        } catch (BackEventException e) {
+            logWithCurrentJourneyDetails(
+                    Level.WARN,
+                    "Provided back event on not supported state, failed to execute journey engine step.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState());
+            throw e;
         } catch (JourneyEngineException e) {
             logErrorWithCurrentJourneyDetails(
                     e.getMessage(), e, journeyEvent, ipvSessionItem.getState());
@@ -342,7 +354,8 @@ public class ProcessJourneyEventHandler
             throws StateMachineNotFoundException,
                     UnknownEventException,
                     UnknownStateException,
-                    JourneyEngineException {
+                    JourneyEngineException,
+                    BackEventException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
@@ -390,28 +403,40 @@ public class ProcessJourneyEventHandler
             result.journeyContextsToUnset().forEach(ipvSessionItem::unsetJourneyContext);
         }
 
-        if (BACK_EVENT.equals(journeyEvent)) {
-            var previousJourneyState = ipvSessionItem.getPreviousState();
-            var state = journeyStateToBasicState(previousJourneyState);
-            var skipBackResponse =
-                    ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
-
-            if (Boolean.TRUE.equals(skipBackResponse)) {
-                ipvSessionItem.popState();
-            }
-            ipvSessionItem.popState();
-        }
-
-        if (result.state() instanceof BasicState basicState && !BACK_EVENT.equals(journeyEvent)) {
-            ipvSessionItem.pushState(
-                    new JourneyState(basicState.getJourneyType(), basicState.getName()));
-        }
+        updateIpvSessionState(result.state(), journeyEvent, ipvSessionItem);
 
         return result.state();
     }
 
+    private void updateIpvSessionState(
+            State state, String journeyEvent, IpvSessionItem ipvSessionItem)
+            throws StateMachineNotFoundException, UnknownStateException {
+        if (BACK_EVENT.equals(journeyEvent)) {
+            var previousJourneyState = ipvSessionItem.getPreviousState();
+            var previousState = journeyStateToBasicState(previousJourneyState);
+            if (isPageState(previousJourneyState)) {
+                var skipBackResponse =
+                        ((PageStepResponse) ((BasicState) previousState).getResponse())
+                                .getSkipBack();
+
+                if (Boolean.TRUE.equals(skipBackResponse)) {
+                    ipvSessionItem.popState();
+                }
+            }
+            ipvSessionItem.popState();
+        }
+
+        if (state instanceof BasicState basicState && !BACK_EVENT.equals(journeyEvent)) {
+            ipvSessionItem.pushState(
+                    new JourneyState(basicState.getJourneyType(), basicState.getName()));
+        }
+    }
+
     private State handleBackEvent(IpvSessionItem ipvSessionItem, JourneyState initialJourneyState)
-            throws UnknownEventException, StateMachineNotFoundException, UnknownStateException {
+            throws UnknownEventException,
+                    StateMachineNotFoundException,
+                    UnknownStateException,
+                    BackEventException {
         var previousJourneyState = ipvSessionItem.getPreviousState();
 
         LOGGER.error(
@@ -453,7 +478,7 @@ public class ProcessJourneyEventHandler
             return journeyStateToBasicState(previousJourneyState);
         }
 
-        throw new UnknownEventException(
+        throw new BackEventException(
                 String.format("Back event provided to state: '%s'", initialJourneyState.state()));
     }
 
