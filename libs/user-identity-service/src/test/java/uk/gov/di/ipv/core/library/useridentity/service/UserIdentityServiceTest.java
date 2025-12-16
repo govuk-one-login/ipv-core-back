@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.model.AddressAssertion;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
@@ -50,6 +51,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -257,7 +260,12 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
+        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
+
+        var logMessages = logCollector.getLogMessages();
+        assertEquals(1, logMessages.size());
+        assertThat(logMessages.getFirst(), containsString("Failed to correlate gathered names"));
     }
 
     @Test
@@ -297,7 +305,39 @@ class UserIdentityServiceTest {
                                         "Jimmy", "Jones", "1000-01-01")));
 
         // Act & Assert
+        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
+
+        var logMessages = logCollector.getLogMessages();
+        assertEquals(1, logMessages.size());
+        assertThat(logMessages.getFirst(), containsString("Failed to correlate gathered names"));
+    }
+
+    @Test
+    void areVCsCorrelatedReturnFalseWhenNameAndDobAreDifferent() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                PASSPORT,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "2025-01-01")),
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                BAV,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimmy", "Jones", "1000-01-01")));
+
+        // Act & Assert
+        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
+        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+
+        var logMessages = logCollector.getLogMessages();
+        assertEquals(1, logMessages.size());
+        assertThat(
+                logMessages.getFirst(),
+                containsString("Failed to correlate gathered names and DOB"));
     }
 
     @Test
@@ -558,7 +598,13 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "2000-01-01")));
 
         // Act & Assert
+        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
+
+        var logMessages = logCollector.getLogMessages();
+        //        assertEquals(1, logMessages.size());
+        assertThat(
+                logMessages.getFirst(), containsString("Failed to correlate gathered birth dates"));
     }
 
     @Test
