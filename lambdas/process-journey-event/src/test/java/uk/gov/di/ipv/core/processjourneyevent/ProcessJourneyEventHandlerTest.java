@@ -939,8 +939,7 @@ class ProcessJourneyEventHandlerTest {
 
         processJourneyEventHandler.handleRequest(backInput, mockContext);
         assertEquals(
-                new JourneyState(INITIAL_JOURNEY_SELECTION, "PROCESS_STATE"),
-                ipvSession.getState());
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), ipvSession.getState());
 
         InOrder auditInOrderTwo = inOrder(mockAuditService);
         auditInOrderTwo.verify(mockAuditService).awaitAuditEvents();
@@ -948,7 +947,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfPreviousStateNotPageState() throws Exception {
+    void shouldReturn400IfPreviousStateNotPageState() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -974,9 +973,9 @@ class ProcessJourneyEventHandlerTest {
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.BACK_EVENT_NOT_SUPPORTED.getCode(), response.get(CODE));
+        assertEquals(ErrorResponse.BACK_EVENT_NOT_SUPPORTED.getMessage(), response.get(MESSAGE));
     }
 
     @Test
