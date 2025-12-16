@@ -294,11 +294,32 @@ class UserIdentityServiceTest {
                                 USER_ID_1,
                                 BAV,
                                 createCredentialWithNameAndBirthDate(
-                                        "Jimmy", "Jones",
-                                        ""))); // BAV cri doesn't provide birthdate
+                                        "Jimmy", "Jones", "1000-01-01")));
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
+    }
+
+    @Test
+    void areVcsCorrelatedShouldThrowIfMissingBirthDateFromIdentityCredential() {
+        //  Arrange
+        var vcs =
+                List.of(
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                PASSPORT,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones", "1000-01-01")),
+                        generateVerifiableCredential(
+                                USER_ID_1,
+                                BAV,
+                                createCredentialWithNameAndBirthDate(
+                                        "Jimbo", "Jones",
+                                        ""))); // BAV cri doesn't provide birthdate
+        // Act & Assert
+        assertThrows(
+                HttpResponseExceptionWithErrorBody.class,
+                () -> userIdentityService.areVcsCorrelated(vcs));
     }
 
     @ParameterizedTest
