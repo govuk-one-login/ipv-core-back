@@ -24,9 +24,14 @@ public class LogCollector extends AbstractAppender {
 
     public static LogCollector getLogCollectorFor(Class<?> clazz) {
         var logCollector = new LogCollector();
+        logCollector.start();
         var logger = (Logger) LogManager.getLogger(clazz);
         logger.get().addAppender(logCollector, Level.ALL, null);
 
         return logCollector;
+    }
+
+    public void reset() {
+        logMessages.clear();
     }
 }

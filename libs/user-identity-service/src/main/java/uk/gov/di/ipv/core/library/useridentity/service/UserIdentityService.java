@@ -169,16 +169,20 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
-        if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
-            LOGGER.info(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
-            return false;
+        var successfulNameCorrelation =
+                checkNameAndFamilyNameCorrelationInCredentials(successfulVcs);
+        var successfulDobCorrelation = checkBirthDateCorrelationInCredentials(successfulVcs);
+
+        if (!successfulDobCorrelation && !successfulNameCorrelation) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_AND_DOB_CORRELATION));
+        } else if (!successfulDobCorrelation) {
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
+        } else if (!successfulNameCorrelation) {
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
         }
 
-        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
-            return false;
-        }
-        return true;
+        return successfulDobCorrelation && successfulNameCorrelation;
     }
 
     public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)
