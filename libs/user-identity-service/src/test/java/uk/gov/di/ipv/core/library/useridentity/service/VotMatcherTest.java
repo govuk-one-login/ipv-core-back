@@ -38,7 +38,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 class VotMatcherTest {
     private static final Gpg45Scores GPG_45_SCORES = Gpg45Scores.builder().build();
     private static List<VerifiableCredential> gpg45Vcs;
-
+    // This is a test
     @Mock private UserIdentityService mockUseridentityService;
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private CimitUtilityService mockCimitUtilityService;

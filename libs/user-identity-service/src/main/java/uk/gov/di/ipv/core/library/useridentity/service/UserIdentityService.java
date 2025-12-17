@@ -165,6 +165,7 @@ public class UserIdentityService {
                 getFamilyNameWithCharAllowanceForCoiCheck(identityClaimsForNameCorrelation));
     }
 
+    // This is a test
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
