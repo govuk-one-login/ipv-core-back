@@ -95,6 +95,16 @@ jobs:
             echo "$file was changed"
           done
 
+  check-output-value:
+    runs-on: ubuntu-latest
+    needs:
+      - check-if-deploy-needed
+    if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: get output for cehck-if-deploy-needed
+        run: |
+          echo "checkIfDeployNeededOutput is: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch'}}"
+
 #  deploy:
 #    needs:
 #      - build-test-images-if-needed
