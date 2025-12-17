@@ -114,6 +114,9 @@ class UserIdentityServiceTest {
 
     public static OauthCriConfig claimedIdentityConfig;
 
+    private static final LogCollector LOG_COLLECTOR =
+            LogCollector.getLogCollectorFor(UserIdentityServiceTest.class);
+
     @Mock private ConfigService mockConfigService;
     @InjectMocks private UserIdentityService userIdentityService;
 
@@ -156,6 +159,8 @@ class UserIdentityServiceTest {
         returnCodes.put("alwaysRequired", "");
         returnCodes.put("nonCiBreachingP0", "");
         when(mockSelf.getReturnCodes()).thenReturn(returnCodes);
+
+        LOG_COLLECTOR.reset();
     }
 
     private void setP2Threshold(int value) {
@@ -259,11 +264,13 @@ class UserIdentityServiceTest {
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
-        // Act & Assert
-        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        // Act
+        var result = userIdentityService.areVcsCorrelated(vcs);
 
-        var logMessages = logCollector.getLogMessages();
+        // Assert
+        assertFalse(result);
+
+        var logMessages = LOG_COLLECTOR.getLogMessages();
         assertEquals(1, logMessages.size());
         assertThat(logMessages.getFirst(), containsString("Failed to correlate gathered names"));
     }
@@ -289,31 +296,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void areVCsCorrelatedReturnFalseWhenNameDifferentForBavCRI() throws Exception {
-        // Arrange
-        var vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                PASSPORT,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                BAV,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimmy", "Jones", "1000-01-01")));
-
-        // Act & Assert
-        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
-
-        var logMessages = logCollector.getLogMessages();
-        assertEquals(1, logMessages.size());
-        assertThat(logMessages.getFirst(), containsString("Failed to correlate gathered names"));
-    }
-
-    @Test
     void areVCsCorrelatedReturnFalseWhenNameAndDobAreDifferent() throws Exception {
         // Arrange
         var vcs =
@@ -329,11 +311,12 @@ class UserIdentityServiceTest {
                                 createCredentialWithNameAndBirthDate(
                                         "Jimmy", "Jones", "1000-01-01")));
 
-        // Act & Assert
-        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        // Act
+        var result = userIdentityService.areVcsCorrelated(vcs);
 
-        var logMessages = logCollector.getLogMessages();
+        // Assert
+        assertFalse(result);
+        var logMessages = LOG_COLLECTOR.getLogMessages();
         assertEquals(1, logMessages.size());
         assertThat(
                 logMessages.getFirst(),
@@ -353,9 +336,7 @@ class UserIdentityServiceTest {
                         generateVerifiableCredential(
                                 USER_ID_1,
                                 BAV,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones",
-                                        ""))); // BAV cri doesn't provide birthdate
+                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", "")));
         // Act & Assert
         assertThrows(
                 HttpResponseExceptionWithErrorBody.class,
@@ -577,7 +558,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void areVCsCorrelatedShouldReturnFalseIfBavHasDifferentBirthDate() throws Exception {
+    void areVCsCorrelatedShouldReturnFalseIfGivenDifferentBirthDates() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -597,12 +578,14 @@ class UserIdentityServiceTest {
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
 
-        // Act & Assert
-        var logCollector = LogCollector.getLogCollectorFor(UserIdentityService.class);
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        // Act
+        var result = userIdentityService.areVcsCorrelated(vcs);
 
-        var logMessages = logCollector.getLogMessages();
-        //        assertEquals(1, logMessages.size());
+        // Assert
+        assertFalse(result);
+
+        var logMessages = LOG_COLLECTOR.getLogMessages();
+        assertEquals(1, logMessages.size());
         assertThat(
                 logMessages.getFirst(), containsString("Failed to correlate gathered birth dates"));
     }
