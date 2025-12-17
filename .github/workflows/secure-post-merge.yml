@@ -81,6 +81,14 @@ jobs:
             journey-map/**
             local-running/**
 
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.check-if-should-deploy.outputs.all_changed_files }}
+        run: |
+          for file in $CHANGED_FILES; do
+            echo "$file was changed"
+          done
+
   deploy:
     needs:
       - build-test-images-if-needed
