@@ -16,6 +16,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Re-run the automated tests now that the merge has happened.
+  automated-tests:
+    uses: ./.github/workflows/automated-tests.yaml
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+    secrets:
+      API_KEY_CIMIT: ${{ secrets.API_KEY_CIMIT }}
+      API_KEY_EVCS: ${{ secrets.API_KEY_EVCS }}
+      API_KEY_SIS: ${{ secrets.API_KEY_SIS }}
+      ASYNC_QUEUE_API_KEY: ${{ secrets.ASYNC_QUEUE_API_KEY }}
+      CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
+      DCMAW_ASYNC_SECRET: ${{ secrets.DCMAW_ASYNC_SECRET }}
+      MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      TICF_API_KEY: ${{ secrets.TICF_API_KEY }}
+      MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
+
   check-if-api-tests-changed:
     runs-on: ubuntu-latest
     outputs:
@@ -85,6 +104,7 @@ jobs:
     needs:
       - build-test-images-if-needed
       - check-if-deploy-needed
+      - automated-tests
     if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
