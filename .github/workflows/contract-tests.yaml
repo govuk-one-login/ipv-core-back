@@ -58,19 +58,19 @@ jobs:
           POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
       - name: Upload build-user-identity provider pact test report
         if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: build-user-identity provider pact test report
           path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/build-user-identity/build/reports/tests/pactProviderTests/
       - name: Upload issue-client-access-token provider pact test report
         if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: issue-client-access-token provider pact test report
           path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/issue-client-access-token/build/reports/tests/pactProviderTests/
       - name: Upload user-reverification provider pact test report
         if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: user-reverification provider pact test report
           path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/user-reverification/build/reports/tests/pactProviderTests/

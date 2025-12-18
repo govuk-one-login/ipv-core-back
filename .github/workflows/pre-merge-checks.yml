@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload API test report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: API test report
           path: api-tests/reports/
@@ -159,7 +159,7 @@ jobs:
 
       - name: Upload Application logs
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Application logs
           path: api-tests/core-back-output.log
