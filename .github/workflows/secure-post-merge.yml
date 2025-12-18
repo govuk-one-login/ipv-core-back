@@ -50,19 +50,15 @@ jobs:
 
   build-test-images-if-needed:
     needs: check-if-api-tests-changed
-    runs-on: ubuntu-latest
-    steps:
-      - name: run echo
-        if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
-        run: echo "Triggered build test images"
-#    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
-#    with:
-#      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
-#    secrets: inherit # pragma: allowlist secret
-#    permissions:
-#      id-token: write
-#      packages: read
-#      contents: read
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    with:
+      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
+    secrets: inherit # pragma: allowlist secret
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
 
   check-if-deploy-needed:
     runs-on: ubuntu-latest
@@ -104,7 +100,9 @@ jobs:
     needs:
       - build-test-images-if-needed
       - check-if-deploy-needed
-    if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: |
+      (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.build-test-images-if-needed.result == 'success' || needs.build-test-images-if-needed.result == 'skipped')
     steps:
       - name: get output for check-if-deploy-needed
         run: |
