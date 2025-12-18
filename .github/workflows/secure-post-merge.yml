@@ -93,7 +93,9 @@ jobs:
     needs:
       - build-test-images-if-needed
       - check-if-deploy-needed
-    if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: |
+      !failure() &&
+      (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
