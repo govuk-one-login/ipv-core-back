@@ -81,11 +81,21 @@ jobs:
             journey-map/**
             local-running/**
 
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.check-if-should-deploy.outputs.all_changed_files }}
+        run: |
+          for file in $CHANGED_FILES; do
+            echo "$file was changed"
+          done
+
   deploy:
     needs:
       - build-test-images-if-needed
       - check-if-deploy-needed
-    if: ${{ needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: |
+      !failure() &&
+      (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
