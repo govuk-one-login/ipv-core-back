@@ -101,6 +101,7 @@ jobs:
       - build-test-images-if-needed
       - check-if-deploy-needed
     if: |
+      !failure() &&
       (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.build-test-images-if-needed.result == 'success' || needs.build-test-images-if-needed.result == 'skipped')
     steps:
