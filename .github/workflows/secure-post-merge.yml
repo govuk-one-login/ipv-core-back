@@ -50,10 +50,10 @@ jobs:
 
   build-test-images-if-needed:
     needs: check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: run echo
+        if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
         run: echo "Triggered build test images"
 #    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
 #    with:
