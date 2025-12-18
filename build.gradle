@@ -50,9 +50,9 @@ subprojects {
 allprojects {
 	configurations.configureEach {
 		exclude group: 'org.apache.tika', module: 'tika-parser-pdf-module'
-		// Exclude netty in general
-		exclude group: "io.netty", module: "*"
-		exclude group: "io.grpc", module: "grpc-netty"
+		// Exclude netty libs with vulnerabilities
+		exclude group: "io.netty", module: "netty-codec-http"
+		exclude group: "io.netty", module: "netty-codec-http2"
 	}
 
 	plugins.withType(JavaPlugin).whenPluginAdded {
