@@ -24,9 +24,10 @@ public final class AccountInterventionEvaluator {
             return false;
         }
 
-        LogHelper.buildLogMessage(
-                "Intervention detected at the start of the journey. Intervention type: %s"
-                        .formatted(interventionType));
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Intervention detected at the start of the journey. Intervention type: %s"
+                                .formatted(interventionType)));
 
         return true;
     }
