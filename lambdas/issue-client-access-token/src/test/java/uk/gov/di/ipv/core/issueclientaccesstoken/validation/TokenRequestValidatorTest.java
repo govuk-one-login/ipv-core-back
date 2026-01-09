@@ -140,8 +140,7 @@ class TokenRequestValidatorTest {
         assertTrue(
                 exception
                         .getMessage()
-                        .contains(
-                                "Bad / expired JWT claims: JWT audience rejected: [NOT_THE_AUDIENCE_YOU_ARE_LOOKING_FOR]"));
+                        .contains("Bad / expired JWT claims: JWT aud claim rejected"));
     }
 
     @Test
