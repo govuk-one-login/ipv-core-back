@@ -24,6 +24,7 @@ public class InternalOperationsConfig {
     @NonNull Long maxAllowedAuthClientTtl;
     @NonNull Integer fraudCheckExpiryPeriodHours;
     @NonNull Long dcmawAsyncVcPendingReturnTtl;
+    @NonNull Integer dcmawExpiredDlValidityPeriodDays;
     @NonNull String clientJarKmsEncryptionKeyAliasPrimary;
     @NonNull String clientJarKmsEncryptionKeyAliasSecondary;
     @NonNull URI coreVtmClaim;
