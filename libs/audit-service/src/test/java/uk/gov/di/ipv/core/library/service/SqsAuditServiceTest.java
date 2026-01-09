@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
@@ -398,7 +399,8 @@ class SqsAuditServiceTest {
         var mockAllOfCompletableFuture = mock(CompletableFuture.class);
         when(mockAllOfCompletableFuture.get()).thenThrow(new InterruptedException("Excuse me..."));
 
-        try (var completableFutureMockedStatic = mockStatic(CompletableFuture.class)) {
+        try (var completableFutureMockedStatic =
+                mockStatic(CompletableFuture.class, CALLS_REAL_METHODS)) {
             completableFutureMockedStatic
                     .when(() -> CompletableFuture.allOf(any(CompletableFuture[].class)))
                     .thenReturn(mockAllOfCompletableFuture);
