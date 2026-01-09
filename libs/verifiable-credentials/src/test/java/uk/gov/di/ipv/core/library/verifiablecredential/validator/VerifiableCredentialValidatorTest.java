@@ -387,7 +387,7 @@ class VerifiableCredentialValidatorTest {
                                 false));
 
         assertEquals(
-                "description=\"JWT sub claim does not match expected\"",
+                "description=\"Verifiable credential claims set not valid\" errorDescription=\"com.nimbusds.jwt.proc.BadJWTException: JWT sub claim value rejected\"",
                 logCollector.getLogMessages().get(0));
     }
 

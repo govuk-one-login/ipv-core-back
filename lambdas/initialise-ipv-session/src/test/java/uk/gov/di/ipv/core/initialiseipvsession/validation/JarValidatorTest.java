@@ -455,9 +455,7 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals(
-                "JWT audience rejected: [invalid-audience]",
-                thrown.getCause().getCause().getMessage());
+        assertEquals("JWT aud claim rejected", thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -482,9 +480,7 @@ class JarValidatorTest {
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-        assertEquals(
-                "JWT iss claim has value invalid-issuer, must be test-issuer",
-                thrown.getCause().getCause().getMessage());
+        assertEquals("JWT iss claim value rejected", thrown.getCause().getCause().getMessage());
     }
 
     @Test
@@ -510,7 +506,7 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
-                "JWT response_type claim has value invalid-response-type, must be code",
+                "JWT response_type claim value rejected",
                 thrown.getCause().getCause().getMessage());
     }
 
@@ -538,8 +534,7 @@ class JarValidatorTest {
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
         assertEquals(
-                "JWT client_id claim has value test-client-id, must be different-client-id",
-                thrown.getCause().getCause().getMessage());
+                "JWT client_id claim value rejected", thrown.getCause().getCause().getMessage());
     }
 
     @Test
