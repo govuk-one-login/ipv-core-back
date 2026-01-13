@@ -13,6 +13,7 @@ core:
     maxAllowedAuthClientTtl: 3600
     fraudCheckExpiryPeriodHours: 720
     dcmawAsyncVcPendingReturnTtl: 1800
+    dcmawExpiredDlValidityPeriodDays: 180
     coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
     backendSessionTimeout: 3600
     backendSessionTtl: 3600

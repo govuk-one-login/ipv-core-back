@@ -116,6 +116,10 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl();
     }
 
+    public Integer getDcmawExpiredDlValidityPeriodDays() {
+        return getConfiguration().getSelf().getDcmawExpiredDlValidityPeriodDays();
+    }
+
     public long getCriResponseTtl() {
         return getConfiguration().getSelf().getCriResponseTtl();
     }
