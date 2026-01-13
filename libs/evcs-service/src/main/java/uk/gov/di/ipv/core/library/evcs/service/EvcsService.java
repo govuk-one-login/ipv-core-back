@@ -333,6 +333,22 @@ public class EvcsService {
         if (!vcsToUpdates.isEmpty()) evcsClient.updateUserVCs(userId, vcsToUpdates);
     }
 
+    public void markHistoricInEvcs(String userId, List<VerifiableCredential> vcs)
+            throws EvcsServiceException {
+        var update =
+                vcs.stream()
+                        .map(
+                                vc ->
+                                        new EvcsUpdateUserVCsDto(
+                                                getVcSignature(vc.getVcString()),
+                                                EvcsVCState.HISTORIC,
+                                                null))
+                        .toList();
+        if (!update.isEmpty()) {
+            evcsClient.updateUserVCs(userId, update);
+        }
+    }
+
     private static String getVcSignature(String vcString) {
         return vcString.split("\\.")[2];
     }

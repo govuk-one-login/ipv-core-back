@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +61,12 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.IdentityCheckCredential;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +78,9 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
@@ -380,6 +388,30 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL_WITH_CI;
             }
 
+            // Check for an expired driving licence only if the credential bundle does
+            // not contain PENDING_RETURN VCs
+            if (!credentialBundle.isPendingReturn()) {
+                var dcmawDlVc =
+                        credentialBundle.credentials.stream()
+                                .filter(vc -> List.of(DCMAW_ASYNC, DCMAW).contains(vc.getCri()))
+                                .filter(
+                                        vc ->
+                                                vc.getCredential()
+                                                                instanceof
+                                                                IdentityCheckCredential
+                                                                        identityCheckCredential
+                                                        && ObjectUtils.isNotEmpty(
+                                                                identityCheckCredential
+                                                                        .getCredentialSubject()
+                                                                        .getDrivingPermit()))
+                                .findFirst();
+
+                if (dcmawDlVc.isPresent()) {
+                    processDrivingPermitsIfExpired(
+                            credentialBundle.credentials, dcmawDlVc.get(), userId);
+                }
+            }
+
             // No breaching CIs.
             var areGpg45VcsCorrelated =
                     userIdentityService.areVcsCorrelated(credentialBundle.credentials);
@@ -451,6 +483,52 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC, e);
         } catch (MissingSecurityCheckCredential e) {
             return buildErrorResponse(ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL, e);
+        }
+    }
+
+    private void processDrivingPermitsIfExpired(
+            List<VerifiableCredential> credentialBundle,
+            VerifiableCredential dcmawDlVc,
+            String userId)
+            throws EvcsServiceException {
+        LocalDateTime vcIssueDate =
+                dcmawDlVc
+                        .getClaimsSet()
+                        .getNotBeforeTime()
+                        .toInstant()
+                        .atZone(ZoneOffset.UTC)
+                        .toLocalDateTime();
+
+        var dlExpiryDateString =
+                ((IdentityCheckCredential) dcmawDlVc.getCredential())
+                        .getCredentialSubject()
+                        .getDrivingPermit()
+                        .getFirst()
+                        .getExpiryDate();
+
+        // Apply grace period check only when DL expiry is same day or earlier than VC
+        // issue date
+        LocalDateTime dlExpiryDate =
+                LocalDateTime.of(LocalDate.parse(dlExpiryDateString), LocalTime.MIDNIGHT);
+
+        if (dlExpiryDate.isBefore(vcIssueDate)) {
+            Integer graceDays = configService.getDcmawExpiredDlValidityPeriodDays();
+            if (graceDays != null) {
+                LocalDateTime today = LocalDateTime.now(ZoneOffset.UTC);
+                LocalDateTime cutoffDate = vcIssueDate.plusDays(graceDays);
+
+                if (today.isAfter(cutoffDate)) {
+                    var vcsForUpdate = List.of(dcmawDlVc);
+                    credentialBundle.stream()
+                            .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
+                            .findFirst()
+                            .ifPresent(vcsForUpdate::add);
+
+                    evcsService.markHistoricInEvcs(userId, vcsForUpdate);
+
+                    vcsForUpdate.forEach(credentialBundle::remove);
+                }
+            }
         }
     }
 
