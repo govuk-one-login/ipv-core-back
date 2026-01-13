@@ -116,11 +116,6 @@ class AppConfigServiceTest {
     }
 
     @Test
-    void getDcmawExpiredDlValidityPeriodDays() {
-        assertEquals(180, configService.getDcmawExpiredDlValidityPeriodDays());
-    }
-
-    @Test
     void getBackendSessionTimeout_returnsYamlValue() {
         assertEquals(3600L, configService.getBackendSessionTimeout());
     }
