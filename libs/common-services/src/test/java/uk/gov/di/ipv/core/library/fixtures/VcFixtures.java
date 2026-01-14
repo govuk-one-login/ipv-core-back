@@ -226,6 +226,13 @@ public interface VcFixtures {
         return vcClaim;
     }
 
+    private static IdentityCheckCredential vcClaimWebDrivingLicenceDvaExpired() {
+        var vcClaim = vcClaimWebDrivingLicenceDvla();
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
+        vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
+        return vcClaim;
+    }
+
     private static IdentityCheckCredential vcClaimNinoIdentityCheck() {
         return IdentityCheckCredential.builder()
                 .withType(
@@ -789,6 +796,9 @@ public interface VcFixtures {
     DrivingPermitDetails DRIVING_PERMIT_DVA =
             createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19");
 
+    DrivingPermitDetails DRIVING_PERMIT_DVA_EXPIRED =
+            createDrivingPermitDetails("MORGA753116SM9IJ", "2020-10-01", "DVA", "2018-04-19");
+
     DrivingPermitDetails DRIVING_PERMIT_DVLA =
             createDrivingPermitDetails(
                     "PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02", "123456");
@@ -1084,6 +1094,15 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcWebDrivingPermitDvaExpired() {
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                vcClaimWebDrivingLicenceDvaExpired(),
+                DRIVING_PERMIT_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcWebDrivingPermitMissingDrivingPermit() {
         var vcClaim = vcClaimWebDrivingLicenceDvla();
         vcClaim.getCredentialSubject().setDrivingPermit(null);
@@ -1258,6 +1277,24 @@ public interface VcFixtures {
                 vcClaimDcmawDrivingPermitDva(),
                 DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcDcmawDrivingPermitDvaExpired() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimWebDrivingLicenceDvaExpired(),
+                DCMAW_ISSUER_STAGING,
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcDcmawDrivingPermitDvaExpiredSameDayAsNbf() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimWebDrivingLicenceDvaExpired(), // Expiry date is 2020-10-01
+                DCMAW_ISSUER_STAGING,
+                Instant.ofEpochSecond(1601555400)); // NBF is set to 2020-10-01T13:30:00
     }
 
     static VerifiableCredential vcDcmawPassport() {

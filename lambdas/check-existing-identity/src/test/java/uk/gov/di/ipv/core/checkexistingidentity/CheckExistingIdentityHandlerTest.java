@@ -18,6 +18,8 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -72,6 +74,10 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -114,11 +120,14 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredSameDayAsNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -1110,6 +1119,146 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(
                     ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
                     journeyResponse.getMessage());
+        }
+
+        @Test
+        void
+                shouldReturnNewIdentityResponseIfUserHasExpiredDrivingLicenceAndCurrentDateIsPastGracePeriod()
+                        throws Exception {
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(
+                            Map.of(
+                                    CURRENT,
+                                    List.of(
+                                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is
+                                            // 23/01/2024
+                                            vcWebDrivingPermitDvaExpired())));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
+                    .thenReturn(
+                            new VotMatchingResult(
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Gpg45Scores.builder().build()));
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+
+            try (MockedStatic<LocalDateTime> mockedStatic =
+                    Mockito.mockStatic(LocalDateTime.class, Mockito.CALLS_REAL_METHODS)) {
+                var fixedDateTime =
+                        LocalDateTime.of(LocalDate.parse("2025-12-12"), LocalTime.of(12, 30));
+                mockedStatic
+                        .when(() -> LocalDateTime.now(ZoneOffset.UTC))
+                        .thenReturn(fixedDateTime);
+                when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+
+                assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+            }
+        }
+
+        @Test
+        void
+                shouldReturnReuseResponseIfDcmawDrivingPermitIsExpiredAndCurrentDateIsWithinGracePeriod()
+                        throws Exception {
+            var testCredentialBundle =
+                    List.of(
+                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
+                            vcWebDrivingPermitDvaExpired());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2), testCredentialBundle, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+
+            try (MockedStatic<LocalDateTime> mockedStatic =
+                    Mockito.mockStatic(LocalDateTime.class, Mockito.CALLS_REAL_METHODS)) {
+                var fixedDateTime =
+                        LocalDateTime.of(LocalDate.parse("2024-01-24"), LocalTime.of(12, 30));
+                mockedStatic
+                        .when(() -> LocalDateTime.now(ZoneOffset.UTC))
+                        .thenReturn(fixedDateTime);
+                when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+
+                assertEquals(JOURNEY_REUSE, journeyResponse);
+                verify(mockEvcsService, never()).markHistoricInEvcs(any(), any());
+            }
+        }
+
+        @Test
+        void shouldReturnReuseResponseIfDcmawDrivingPermitExpiresTheSameDateAsVCIssueDate()
+                throws Exception {
+            var testCredentialBundle =
+                    List.of(
+                            vcDcmawDrivingPermitDvaExpiredSameDayAsNbf(), // VC issue date is
+                            // 2020-10-01T13:30:00
+                            vcWebDrivingPermitDvaExpired());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2), testCredentialBundle, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(null);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+            verify(mockEvcsService, never()).markHistoricInEvcs(any(), any());
+        }
+
+        @Test
+        void
+                shouldReturnReuseResponseGivenMissingGracePeriodConfigurationAndCredentialBundleMeetsVtr()
+                        throws Exception {
+            var testCredentialBundle =
+                    List.of(
+                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
+                            vcWebDrivingPermitDvaExpired());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(
+                            List.of(P2), testCredentialBundle, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(null);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+            verify(mockEvcsService, never()).markHistoricInEvcs(any(), any());
         }
     }
 

@@ -492,12 +492,8 @@ public class CheckExistingIdentityHandler
             String userId)
             throws EvcsServiceException {
         LocalDateTime vcIssueDate =
-                dcmawDlVc
-                        .getClaimsSet()
-                        .getNotBeforeTime()
-                        .toInstant()
-                        .atZone(ZoneOffset.UTC)
-                        .toLocalDateTime();
+                LocalDateTime.ofInstant(
+                        dcmawDlVc.getClaimsSet().getNotBeforeTime().toInstant(), ZoneOffset.UTC);
 
         var dlExpiryDateString =
                 ((IdentityCheckCredential) dcmawDlVc.getCredential())
@@ -518,7 +514,7 @@ public class CheckExistingIdentityHandler
                 LocalDateTime cutoffDate = vcIssueDate.plusDays(graceDays);
 
                 if (today.isAfter(cutoffDate)) {
-                    var vcsForUpdate = List.of(dcmawDlVc);
+                    var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc));
                     credentialBundle.stream()
                             .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
                             .findFirst()
