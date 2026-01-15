@@ -499,6 +499,7 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean checkForExpiredDcmawDrivingPermit(VerifiableCredential dcmawDlVc) {
+        LOGGER.info("Checking for expired DCMAW Driving Permit outside of grace period");
         LocalDateTime vcIssueDate =
                 LocalDateTime.ofInstant(
                         dcmawDlVc.getClaimsSet().getNotBeforeTime().toInstant(), ZoneOffset.UTC);
@@ -522,6 +523,8 @@ public class CheckExistingIdentityHandler
                 LocalDateTime cutoffDate = vcIssueDate.plusDays(graceDays);
 
                 if (today.isAfter(cutoffDate)) {
+                    LOGGER.info(
+                            "User's driving licence is expired and outside of the grace period.");
                     return true;
                 }
             }
