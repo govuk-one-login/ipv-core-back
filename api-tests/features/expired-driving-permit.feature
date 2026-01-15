@@ -13,6 +13,8 @@ Feature: Expired DCMAW/Async DCMAW Driving Permits
 
     Given I activate the 'disableStrategicApp' feature set
     And I start a new 'medium-confidence' journey
+    Then I get a 'reprove-identity-start' page response
+    When I submit a 'next' event
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response

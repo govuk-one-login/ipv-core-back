@@ -183,6 +183,8 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE =
@@ -1159,7 +1161,7 @@ class CheckExistingIdentityHandlerTest {
                                 checkExistingIdentityHandler.handleRequest(event, context),
                                 JourneyResponse.class);
 
-                assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+                assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM, journeyResponse);
             }
         }
 

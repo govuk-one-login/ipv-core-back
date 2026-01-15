@@ -390,6 +390,7 @@ public class CheckExistingIdentityHandler
 
             // Check for an expired driving licence only if the credential bundle does
             // not contain PENDING_RETURN VCs
+            var expiredDcmawDrivingPermit = false;
             if (!credentialBundle.isPendingReturn()) {
                 var dcmawDlVc =
                         credentialBundle.credentials.stream()
@@ -407,8 +408,19 @@ public class CheckExistingIdentityHandler
                                 .findFirst();
 
                 if (dcmawDlVc.isPresent()) {
-                    processDrivingPermitsIfExpired(
-                            credentialBundle.credentials, dcmawDlVc.get(), userId);
+                    expiredDcmawDrivingPermit = checkForExpiredDcmawDrivingPermit(dcmawDlVc.get());
+
+                    if (expiredDcmawDrivingPermit) {
+                        var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc.get()));
+                        credentialBundle.credentials.stream()
+                                .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
+                                .findFirst()
+                                .ifPresent(vcsForUpdate::add);
+
+                        evcsService.markHistoricInEvcs(userId, vcsForUpdate);
+
+                        vcsForUpdate.forEach(credentialBundle.credentials::remove);
+                    }
                 }
             }
 
@@ -463,7 +475,7 @@ public class CheckExistingIdentityHandler
             }
 
             // No relevant async CRI
-            return getNewIdentityJourney(targetVot);
+            return getNewIdentityJourney(targetVot, expiredDcmawDrivingPermit);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -486,11 +498,7 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    private void processDrivingPermitsIfExpired(
-            List<VerifiableCredential> credentialBundle,
-            VerifiableCredential dcmawDlVc,
-            String userId)
-            throws EvcsServiceException {
+    private boolean checkForExpiredDcmawDrivingPermit(VerifiableCredential dcmawDlVc) {
         LocalDateTime vcIssueDate =
                 LocalDateTime.ofInstant(
                         dcmawDlVc.getClaimsSet().getNotBeforeTime().toInstant(), ZoneOffset.UTC);
@@ -514,18 +522,12 @@ public class CheckExistingIdentityHandler
                 LocalDateTime cutoffDate = vcIssueDate.plusDays(graceDays);
 
                 if (today.isAfter(cutoffDate)) {
-                    var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc));
-                    credentialBundle.stream()
-                            .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
-                            .findFirst()
-                            .ifPresent(vcsForUpdate::add);
-
-                    evcsService.markHistoricInEvcs(userId, vcsForUpdate);
-
-                    vcsForUpdate.forEach(credentialBundle::remove);
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
     private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
@@ -719,17 +721,22 @@ public class CheckExistingIdentityHandler
         return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
-    private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
+    private JourneyResponse getNewIdentityJourney(
+            Vot preferredNewIdentityLevel, boolean hasExpiredDcmawDrivingPermit)
             throws HttpResponseExceptionWithErrorBody {
         EmbeddedMetricHelper.identityProving();
         switch (preferredNewIdentityLevel) {
             case P1 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-                return JOURNEY_IPV_GPG45_LOW;
+                return hasExpiredDcmawDrivingPermit
+                        ? JOURNEY_REPROVE_IDENTITY_GPG45_LOW
+                        : JOURNEY_IPV_GPG45_LOW;
             }
             case P2 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
-                return JOURNEY_IPV_GPG45_MEDIUM;
+                return hasExpiredDcmawDrivingPermit
+                        ? JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM
+                        : JOURNEY_IPV_GPG45_MEDIUM;
             }
             default -> {
                 LOGGER.info(LogHelper.buildLogMessage("Invalid preferredNewIdentityLevel"));
