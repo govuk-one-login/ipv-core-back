@@ -19,7 +19,6 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -70,14 +69,11 @@ import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,11 +89,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -121,7 +120,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredSameDayAsNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
@@ -1124,19 +1122,15 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void
-                shouldReturnNewIdentityResponseIfUserHasExpiredDrivingLicenceAndCurrentDateIsPastGracePeriod()
-                        throws Exception {
+        void shouldReturnNewIdentityResponseIfUserHasExpiredDcmawDrivingLicence() throws Exception {
+            var testCredentialBundle =
+                    List.of(
+                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
+                            vcWebDrivingPermitDvaExpired());
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(
-                            Map.of(
-                                    CURRENT,
-                                    List.of(
-                                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is
-                                            // 23/01/2024
-                                            vcWebDrivingPermitDvaExpired())));
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
@@ -1146,15 +1140,13 @@ class CheckExistingIdentityHandlerTest {
                                     Optional.empty(),
                                     Gpg45Scores.builder().build()));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
 
-            try (MockedStatic<LocalDateTime> mockedStatic =
-                    Mockito.mockStatic(LocalDateTime.class, Mockito.CALLS_REAL_METHODS)) {
-                var fixedDateTime =
-                        LocalDateTime.of(LocalDate.parse("2025-12-12"), LocalTime.of(12, 30));
-                mockedStatic
-                        .when(() -> LocalDateTime.now(ZoneOffset.UTC))
-                        .thenReturn(fixedDateTime);
-                when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(() -> VcHelper.hasExpiredDrivingPermitVc(any(), anyInt(), any()))
+                        .thenReturn(true);
 
                 var journeyResponse =
                         toResponseClass(
@@ -1162,13 +1154,14 @@ class CheckExistingIdentityHandlerTest {
                                 JourneyResponse.class);
 
                 assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM, journeyResponse);
+                verify(mockEvcsService, times(1))
+                        .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
             }
         }
 
         @Test
-        void
-                shouldReturnReuseResponseIfDcmawDrivingPermitIsExpiredAndCurrentDateIsWithinGracePeriod()
-                        throws Exception {
+        void shouldReturnReuseResponseIfUserDoesNotHaveAnExpiredDcmawDrivingLicence()
+                throws Exception {
             var testCredentialBundle =
                     List.of(
                             vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
@@ -1183,15 +1176,12 @@ class CheckExistingIdentityHandlerTest {
                             List.of(P2), testCredentialBundle, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-
-            try (MockedStatic<LocalDateTime> mockedStatic =
-                    Mockito.mockStatic(LocalDateTime.class, Mockito.CALLS_REAL_METHODS)) {
-                var fixedDateTime =
-                        LocalDateTime.of(LocalDate.parse("2024-01-24"), LocalTime.of(12, 30));
-                mockedStatic
-                        .when(() -> LocalDateTime.now(ZoneOffset.UTC))
-                        .thenReturn(fixedDateTime);
-                when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(() -> VcHelper.hasExpiredDrivingPermitVc(any(), anyInt(), any()))
+                        .thenReturn(false);
 
                 var journeyResponse =
                         toResponseClass(
@@ -1199,43 +1189,14 @@ class CheckExistingIdentityHandlerTest {
                                 JourneyResponse.class);
 
                 assertEquals(JOURNEY_REUSE, journeyResponse);
-                verify(mockEvcsService, never()).markHistoricInEvcs(any(), any());
+                verify(mockEvcsService, times(0))
+                        .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
             }
         }
 
         @Test
-        void shouldReturnReuseResponseIfDcmawDrivingPermitExpiresTheSameDateAsVCIssueDate()
-                throws Exception {
-            var testCredentialBundle =
-                    List.of(
-                            vcDcmawDrivingPermitDvaExpiredSameDayAsNbf(), // VC issue date is
-                            // 2020-10-01T13:30:00
-                            vcWebDrivingPermitDvaExpired());
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(emptyAsyncCriStatus);
-            when(mockVotMatcher.findStrongestMatches(
-                            List.of(P2), testCredentialBundle, List.of(), true))
-                    .thenReturn(buildMatchResultFor(P2, M1A));
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-
-            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(null);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-            verify(mockEvcsService, never()).markHistoricInEvcs(any(), any());
-        }
-
-        @Test
         void
-                shouldReturnReuseResponseGivenMissingGracePeriodConfigurationAndCredentialBundleMeetsVtr()
+                shouldReturnReuseResponseGivenMissingValidityPeriodConfigurationAndCredentialBundleMeetsVtr()
                         throws Exception {
             var testCredentialBundle =
                     List.of(
@@ -1596,18 +1557,25 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(() -> VcHelper.hasExpiredDrivingPermitVc(any(), anyInt(), any()))
+                        .thenReturn(false);
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-            assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+                assertEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
 
-            var expectedStoredVc = vcs.stream().filter(vc -> vc != fraudVc).toList();
-            verify(mockSessionCredentialService)
-                    .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
+                var expectedStoredVc = vcs.stream().filter(vc -> vc != fraudVc).toList();
+                verify(mockSessionCredentialService)
+                        .persistCredentials(
+                                expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
 
-            assertEquals(Vot.P0, ipvSessionItem.getVot());
+                assertEquals(Vot.P0, ipvSessionItem.getVot());
+            }
         }
 
         @Test
@@ -1623,21 +1591,28 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(100000000);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(() -> VcHelper.hasExpiredDrivingPermitVc(any(), anyInt(), any()))
+                        .thenReturn(false);
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-            assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+                assertNotEquals(JOURNEY_REPEAT_FRAUD_CHECK, journeyResponse);
 
-            verify(mockSessionCredentialService)
-                    .persistCredentials(VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
+                verify(mockSessionCredentialService)
+                        .persistCredentials(
+                                VCS_FROM_STORE, ipvSessionItem.getIpvSessionId(), false);
 
-            var inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
+                var inOrder = inOrder(ipvSessionItem, ipvSessionService);
+                inOrder.verify(ipvSessionItem).setVot(P2);
+                inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+                inOrder.verify(ipvSessionItem, never()).setVot(any());
+                assertEquals(P2, ipvSessionItem.getVot());
+            }
         }
     }
 

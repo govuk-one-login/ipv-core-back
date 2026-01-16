@@ -63,10 +63,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.IdentityCheckCredential;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -407,10 +404,20 @@ public class CheckExistingIdentityHandler
                                                                         .getDrivingPermit()))
                                 .findFirst();
 
-                if (dcmawDlVc.isPresent()) {
-                    expiredDcmawDrivingPermit = checkForExpiredDcmawDrivingPermit(dcmawDlVc.get());
+                var dcmawExpiredDrivingPermitValidityPeriod =
+                        configService.getDcmawExpiredDlValidityPeriodDays();
+                if (dcmawDlVc.isPresent() && dcmawExpiredDrivingPermitValidityPeriod != null) {
+
+                    expiredDcmawDrivingPermit =
+                            VcHelper.hasExpiredDrivingPermitVc(
+                                    dcmawDlVc.get(),
+                                    dcmawExpiredDrivingPermitValidityPeriod,
+                                    Clock.systemUTC());
 
                     if (expiredDcmawDrivingPermit) {
+                        LOGGER.info(
+                                LogHelper.buildLogMessage(
+                                        "DCMAW Driving Permit VC is expired and past validity period."));
                         var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc.get()));
                         credentialBundle.credentials.stream()
                                 .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
@@ -496,41 +503,6 @@ public class CheckExistingIdentityHandler
         } catch (MissingSecurityCheckCredential e) {
             return buildErrorResponse(ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL, e);
         }
-    }
-
-    private boolean checkForExpiredDcmawDrivingPermit(VerifiableCredential dcmawDlVc) {
-        LOGGER.info("Checking for expired DCMAW Driving Permit outside of grace period");
-        LocalDateTime vcIssueDate =
-                LocalDateTime.ofInstant(
-                        dcmawDlVc.getClaimsSet().getNotBeforeTime().toInstant(), ZoneOffset.UTC);
-
-        var dlExpiryDateString =
-                ((IdentityCheckCredential) dcmawDlVc.getCredential())
-                        .getCredentialSubject()
-                        .getDrivingPermit()
-                        .getFirst()
-                        .getExpiryDate();
-
-        // Apply grace period check only when DL expiry is same day or earlier than VC
-        // issue date
-        LocalDateTime dlExpiryDate =
-                LocalDateTime.of(LocalDate.parse(dlExpiryDateString), LocalTime.MIDNIGHT);
-
-        if (dlExpiryDate.isBefore(vcIssueDate)) {
-            Integer graceDays = configService.getDcmawExpiredDlValidityPeriodDays();
-            if (graceDays != null) {
-                LocalDateTime today = LocalDateTime.now(ZoneOffset.UTC);
-                LocalDateTime cutoffDate = vcIssueDate.plusDays(graceDays);
-
-                if (today.isAfter(cutoffDate)) {
-                    LOGGER.info(
-                            "User's driving licence is expired and outside of the grace period.");
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)

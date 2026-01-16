@@ -15,6 +15,10 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -28,6 +32,8 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredSameDayAsNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
@@ -351,5 +357,68 @@ class VcHelperTest {
 
         // Assert
         assertFalse(result);
+    }
+
+    private static Stream<Arguments> provideTestArgumentsForHasExpiredDrivingPermitVc() {
+        return Stream.of(
+                Arguments.of(
+                        "expired DL and past validity period, GMT current time",
+                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        // 2024-01-23T05:08:41
+                        5,
+                        "2024-02-01 00:00:00+0000",
+                        true),
+                Arguments.of(
+                        "expired DL but within validity period, GMT current time",
+                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        // 2024-01-23T05:08:41
+                        10,
+                        "2024-01-25 00:00:00+0000",
+                        false),
+                Arguments.of(
+                        "DL expires same day as NBF, GMT current time",
+                        vcDcmawDrivingPermitDvaExpiredSameDayAsNbf(), // expiry: 2020-10-01, nbf:
+                        // 2020-10-01T13:30:00
+                        180,
+                        "2020-10-02 00:00:00+0000",
+                        false),
+                Arguments.of(
+                        "expired DL but within validity period, BST current time",
+                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        // 2024-01-23T05:08:41
+                        1,
+                        "2024-01-24 00:10:00+0100",
+                        false),
+                Arguments.of(
+                        "expired DL and past validity period, BST current time",
+                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        // 2024-01-23T05:08:41
+                        1,
+                        "2024-01-24 01:00:00+0100",
+                        true));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestArgumentsForHasExpiredDrivingPermitVc")
+    void hasExpiredDrivingPermitVcShouldReturnCorrectValueForAGivenDrivingPermitVc(
+            String description,
+            VerifiableCredential dcmawVc,
+            int validityDurationDays,
+            String currentDateTime,
+            boolean expectedHasExpired) {
+        // Arrange
+        Clock currentTime =
+                Clock.fixed(
+                        ZonedDateTime.parse(
+                                        currentDateTime,
+                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssZ"))
+                                .toInstant(),
+                        ZoneOffset.UTC);
+
+        // Act
+        var result = VcHelper.hasExpiredDrivingPermitVc(dcmawVc, validityDurationDays, currentTime);
+
+        // Assert
+        assertEquals(expectedHasExpired, result, description);
     }
 }

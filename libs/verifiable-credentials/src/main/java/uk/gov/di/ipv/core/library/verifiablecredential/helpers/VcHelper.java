@@ -22,9 +22,12 @@ import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +48,7 @@ public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
+    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private VcHelper() {}
 
@@ -183,6 +187,35 @@ public class VcHelper {
 
         var now = Instant.now();
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
+    }
+
+    private static boolean hasExpired(
+            Instant vcIssueTime, int validityDurationInDays, Clock clock) {
+        var startOfIssueDay =
+                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
+
+        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
+        var now = ZonedDateTime.now(clock);
+
+        return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
+    }
+
+    public static boolean hasExpiredDrivingPermitVc(
+            VerifiableCredential drivingPermitVc, int validityDurationInDays, Clock clock) {
+        var vcIssueTime = drivingPermitVc.getClaimsSet().getNotBeforeTime().toInstant();
+
+        var dlExpiryDateString =
+                ((IdentityCheckCredential) drivingPermitVc.getCredential())
+                        .getCredentialSubject()
+                        .getDrivingPermit()
+                        .getFirst()
+                        .getExpiryDate();
+
+        var dlExpiryDate =
+                LocalDate.parse(dlExpiryDateString).atStartOfDay(LONDON_TIMEZONE).toInstant();
+
+        return dlExpiryDate.isBefore(vcIssueTime)
+                && hasExpired(vcIssueTime, validityDurationInDays, clock);
     }
 
     public static boolean hasUnavailableOrNotApplicableFraudCheck(List<VerifiableCredential> vcs) {
