@@ -1021,6 +1021,15 @@ public interface VcFixtures {
                 INSTANT_01_01_2099);
     }
 
+    static VerifiableCredential vcExperianFraud(Instant nbf) {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_FRAUD,
+                vcClaimExperianFraudScore1(),
+                FRAUD_ISSUER_INTEGRATION,
+                nbf);
+    }
+
     static VerifiableCredential vcExperianFraudMissingName() {
         var vcClaim = vcClaimExperianFraudScore1();
         vcClaim.getCredentialSubject().setName(Collections.emptyList());
