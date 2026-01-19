@@ -184,8 +184,7 @@ public class VcHelper {
             return true;
         }
 
-        var expiryPeriodInHours = configService.getFraudCheckExpiryPeriodHours();
-        int expiryPeriodInDays = expiryPeriodInHours / 24;
+        var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
         return hasExpired(nbf, expiryPeriodInDays, clock);
     }
 

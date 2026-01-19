@@ -187,7 +187,7 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueWhenAllVcsAreExpired() {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
         var vc = vcExperianFraudExpired();
 
@@ -198,7 +198,7 @@ class VcHelperTest {
 
     @Test
     void shouldReturnFalseWhenSomeVcsAreNotExpired() {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
         var vcExpired = vcExperianFraudExpired();
         var vcNotExpired = vcExperianFraudNotExpired();
@@ -210,7 +210,7 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueWhenAllVcsAreExpiredOrNotAvailable() {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
         var vcExpired = vcExperianFraudExpired();
         var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
@@ -281,7 +281,7 @@ class VcHelperTest {
             String vcCreationDateTime,
             String timeOfExpiryTest,
             boolean expectedIsExpired) {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(expiryPeriodInDays * 24);
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(expiryPeriodInDays);
 
         var vcCreationInstant =
                 ZonedDateTime.parse(

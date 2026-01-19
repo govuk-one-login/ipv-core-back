@@ -1444,7 +1444,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
+            when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
             var journeyResponse =
                     toResponseClass(
@@ -1471,7 +1471,7 @@ class CheckExistingIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-            when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(100000000);
+            when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(100000000);
 
             var journeyResponse =
                     toResponseClass(

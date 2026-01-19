@@ -410,7 +410,7 @@ class SisServiceTest {
         when(evcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, TEST_TOKEN, true, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, EVCS_SUCCESSFUL_VCS, PENDING_RETURN, List.of()));
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(-1 * 100 * 365 * 24);
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(-1 * 100 * 365);
 
         // Act
         sisService.compareStoredIdentityWithStoredVcs(clientOAuthSessionItem, auditEventUser);
