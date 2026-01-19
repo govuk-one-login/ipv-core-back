@@ -23,6 +23,7 @@ public class InternalOperationsConfig {
     @NonNull Long jwtTtlSeconds;
     @NonNull Long maxAllowedAuthClientTtl;
     @NonNull Integer fraudCheckExpiryPeriodHours;
+    Integer fraudCheckExpiryPeriodDays;
     @NonNull Long dcmawAsyncVcPendingReturnTtl;
     @NonNull Integer dcmawExpiredDlValidityPeriodDays;
     @NonNull String clientJarKmsEncryptionKeyAliasPrimary;
