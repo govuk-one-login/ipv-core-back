@@ -22,10 +22,12 @@ import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +47,7 @@ public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
+    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private VcHelper() {}
 
@@ -167,22 +170,34 @@ public class VcHelper {
                 .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
                 .allMatch(
                         vc ->
-                                VcHelper.isExpiredFraudVc(vc, configService)
+                                VcHelper.isExpiredFraudVc(vc, configService, Clock.systemUTC())
                                         || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
-    public static boolean isExpiredFraudVc(VerifiableCredential vc, ConfigService configService) {
+    public static boolean isExpiredFraudVc(
+            VerifiableCredential vc, ConfigService configService, Clock clock) {
         var jwtClaimsSet = vc.getClaimsSet();
-        var nbfClaim = jwtClaimsSet.getNotBeforeTime();
-        var nbf = nbfClaim.toInstant();
+        var nbfDate = jwtClaimsSet.getNotBeforeTime();
+        var nbf = nbfDate.toInstant();
         if (nbf == null) {
             LOGGER.error("VC does not have a nbf claim");
             return true;
         }
-        var expiryPeriod = configService.getFraudCheckExpiryPeriodHours();
 
-        var now = Instant.now();
-        return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
+        var expiryPeriodInHours = configService.getFraudCheckExpiryPeriodHours();
+        int expiryPeriodInDays = expiryPeriodInHours / 24;
+        return hasExpired(nbf, expiryPeriodInDays, clock);
+    }
+
+    private static boolean hasExpired(
+            Instant vcIssueTime, int validityDurationInDays, Clock clock) {
+        var startOfIssueDay =
+                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
+
+        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
+        var now = ZonedDateTime.now(clock);
+
+        return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
     }
 
     public static boolean hasUnavailableOrNotApplicableFraudCheck(List<VerifiableCredential> vcs) {

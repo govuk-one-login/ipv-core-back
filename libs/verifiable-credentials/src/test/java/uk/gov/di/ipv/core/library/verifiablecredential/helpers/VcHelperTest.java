@@ -15,6 +15,10 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,6 +34,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraud;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
@@ -66,6 +71,13 @@ class VcHelperTest {
                 Arguments.of("Verification DCMAW VC", vcDcmawDrivingPermitDvaM1b()),
                 Arguments.of("Verification F2F VC", vcF2fPassportPhotoM1a()),
                 Arguments.of("Verification Nino VC", vcNinoIdentityCheckSuccessful()));
+    }
+
+    private static Stream<Arguments> UnsuccessfulTestCases() {
+        return Stream.of(
+                Arguments.of("VC missing evidence", vcWebPassportM1aMissingEvidence()),
+                Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
+                Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
 
     @ParameterizedTest
@@ -174,24 +186,6 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldReturnTrueWhenVcIsExpired() {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
-
-        var vc = vcExperianFraudExpired();
-
-        assertTrue(VcHelper.isExpiredFraudVc(vc, configService));
-    }
-
-    @Test
-    void shouldReturnFalseWhenVcIsNotExpired() {
-        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
-
-        var vc = vcExperianFraudNotExpired();
-
-        assertFalse(VcHelper.isExpiredFraudVc(vc, configService));
-    }
-
-    @Test
     void shouldReturnTrueWhenAllVcsAreExpired() {
         when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(1);
 
@@ -226,11 +220,89 @@ class VcHelperTest {
                         List.of(vcExpired, vcNotAvailable), configService));
     }
 
-    private static Stream<Arguments> UnsuccessfulTestCases() {
+    private static Stream<Arguments> FraudVcExpiryCases() {
+        // In 2025 BST started at 01:00 on 30th March and ended at 01:00 26th October
         return Stream.of(
-                Arguments.of("VC missing evidence", vcWebPassportM1aMissingEvidence()),
-                Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
-                Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
+                Arguments.of(
+                        "GMT -> GMT valid",
+                        3,
+                        "2025-01-29 10:30:00+0000",
+                        "2025-01-31 23:59:59+0000",
+                        false),
+                Arguments.of(
+                        "GMT -> GMT expired",
+                        3,
+                        "2025-01-29 10:30:00+0000",
+                        "2025-02-01 00:00:00+0000",
+                        true),
+                Arguments.of(
+                        "GMT -> BST valid",
+                        3,
+                        "2025-03-29 10:30:00+0000",
+                        "2025-03-31 23:59:59+0100",
+                        false),
+                Arguments.of(
+                        "GMT -> BST expired",
+                        3,
+                        "2025-03-29 10:30:00+0000",
+                        "2025-04-01 00:00:00+0100",
+                        true),
+                Arguments.of(
+                        "BST -> BST valid",
+                        3,
+                        "2025-07-29 10:30:00+0100",
+                        "2025-07-31 23:59:59+0100",
+                        false),
+                Arguments.of(
+                        "BST -> BST expired",
+                        3,
+                        "2025-07-29 10:30:00+0100",
+                        "2025-08-01 00:00:00+0100",
+                        true),
+                Arguments.of(
+                        "BST -> GMT valid",
+                        3,
+                        "2025-10-25 10:30:00+0100",
+                        "2025-10-27 23:59:59+0000",
+                        false),
+                Arguments.of(
+                        "BST -> GMT expired",
+                        3,
+                        "2025-10-25 10:30:00+0100",
+                        "2025-11-01 00:00:00+0000",
+                        true));
+    }
+
+    @ParameterizedTest
+    @MethodSource("FraudVcExpiryCases")
+    void shouldReturnTrueWhenVcHasExpiredCrossingFromGmtToBst(
+            String description,
+            int expiryPeriodInDays,
+            String vcCreationDateTime,
+            String timeOfExpiryTest,
+            boolean expectedIsExpired) {
+        when(configService.getFraudCheckExpiryPeriodHours()).thenReturn(expiryPeriodInDays * 24);
+
+        var vcCreationInstant =
+                ZonedDateTime.parse(
+                                vcCreationDateTime,
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssZ"))
+                        .toInstant();
+
+        Clock currentTime =
+                Clock.fixed(
+                        ZonedDateTime.parse(
+                                        timeOfExpiryTest,
+                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssZ"))
+                                .toInstant(),
+                        ZoneOffset.UTC);
+
+        var fraudVc = vcExperianFraud(vcCreationInstant);
+
+        assertEquals(
+                expectedIsExpired,
+                VcHelper.isExpiredFraudVc(fraudVc, configService, currentTime),
+                description);
     }
 
     @Test
