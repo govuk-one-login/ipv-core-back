@@ -171,8 +171,8 @@ public abstract class ConfigService {
         return getConfiguration().getClientConfig(clientId).getIssuer();
     }
 
-    public Integer getFraudCheckExpiryPeriodHours() {
-        return getConfiguration().getSelf().getFraudCheckExpiryPeriodHours();
+    public Integer getFraudCheckExpiryPeriodDays() {
+        return getConfiguration().getSelf().getFraudCheckExpiryPeriodDays();
     }
 
     public URI getSisApplicationUrl() {
