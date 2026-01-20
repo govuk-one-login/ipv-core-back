@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -171,22 +170,22 @@ public class VcHelper {
                 .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
                 .allMatch(
                         vc ->
-                                VcHelper.isExpiredFraudVc(vc, configService)
+                                VcHelper.isExpiredFraudVc(vc, configService, Clock.systemUTC())
                                         || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
-    public static boolean isExpiredFraudVc(VerifiableCredential vc, ConfigService configService) {
+    public static boolean isExpiredFraudVc(
+            VerifiableCredential vc, ConfigService configService, Clock clock) {
         var jwtClaimsSet = vc.getClaimsSet();
-        var nbfClaim = jwtClaimsSet.getNotBeforeTime();
-        var nbf = nbfClaim.toInstant();
+        var nbfDate = jwtClaimsSet.getNotBeforeTime();
+        var nbf = nbfDate.toInstant();
         if (nbf == null) {
             LOGGER.error("VC does not have a nbf claim");
             return true;
         }
-        var expiryPeriod = configService.getFraudCheckExpiryPeriodHours();
 
-        var now = Instant.now();
-        return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
+        var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
+        return hasExpired(nbf, expiryPeriodInDays, clock);
     }
 
     private static boolean hasExpired(

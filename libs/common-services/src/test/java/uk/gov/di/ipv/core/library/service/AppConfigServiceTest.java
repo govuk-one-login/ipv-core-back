@@ -149,8 +149,8 @@ class AppConfigServiceTest {
     }
 
     @Test
-    void getFraudCheckExpiryPeriodHours_returnsYamlValue() {
-        assertEquals(720, configService.getFraudCheckExpiryPeriodHours());
+    void getFraudCheckExpiryPeriodDays_returnsYamlValue() {
+        assertEquals(180, configService.getFraudCheckExpiryPeriodDays());
     }
 
     @Test

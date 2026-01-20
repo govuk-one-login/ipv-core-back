@@ -8,7 +8,7 @@ core:
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
-    fraudCheckExpiryPeriodHours: 720
+    fraudCheckExpiryPeriodDays: 180
     dcmawAsyncVcPendingReturnTtl: 1800
     dcmawExpiredDlValidityPeriodDays: 180
     clientJarKmsEncryptionKeyAliasPrimary: "CoreEncryptionKey1"
@@ -390,7 +390,7 @@ core:
         strategicAppEnabled: false
     zeroHourFraudVcExpiry:
       self:
-        fraudCheckExpiryPeriodHours: 0
+        fraudCheckExpiryPeriodDays: 0
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:
