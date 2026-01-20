@@ -829,17 +829,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: AllowGetDeleteCriResponseDynamoDbTable
               Effect: Allow
               Action:
@@ -1153,17 +1142,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1258,17 +1236,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBWritePolicy:
@@ -1369,17 +1336,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1504,17 +1460,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1658,17 +1603,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsSigningKeyPermission
               Effect: Allow
               Action:
@@ -1796,17 +1730,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Events:
         IPVCoreMobileAppCallback:
           Type: Api
@@ -1921,17 +1844,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Events:
         IPVCoreCheckMobileAppVcReceipt:
           Type: Api
@@ -2030,17 +1942,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
@@ -2150,17 +2051,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2402,17 +2292,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2518,17 +2397,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2641,17 +2509,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2765,17 +2622,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -2988,17 +2834,6 @@ Resources:
             Resource:
               - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
               - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   CheckGpg45ScoreFunctionLogGroup:
@@ -3041,18 +2876,6 @@ Resources:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
         - VPCAccessPolicy: { }
-        - Statement:
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   ValidateAppConfigFunctionLogGroup:
@@ -3255,17 +3078,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -3363,17 +3175,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
@@ -3461,17 +3262,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
