@@ -22,7 +22,6 @@ public class InternalOperationsConfig {
     @NonNull URI audienceForClients;
     @NonNull Long jwtTtlSeconds;
     @NonNull Long maxAllowedAuthClientTtl;
-    Integer fraudCheckExpiryPeriodHours;
     @NonNull Integer fraudCheckExpiryPeriodDays;
     @NonNull Long dcmawAsyncVcPendingReturnTtl;
     @NonNull Integer dcmawExpiredDlValidityPeriodDays;
