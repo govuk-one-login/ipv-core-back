@@ -64,10 +64,10 @@ Feature: TICF successful responses
 
     Scenario: TICF request returns a CI on reuse journey
       Given the subject already has the following credentials
-        | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
-        | address | kenneth-current              |
-        | fraud   | kenneth-score-2              |
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
+        | fraud   | kenneth-score-2        |
       And TICF CRI will respond with default parameters and
         | cis     | BREACHING                    |
       When I start a new 'medium-confidence' journey

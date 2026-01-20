@@ -6,10 +6,10 @@ Feature: Reprove Identity Journey
   Rule: P2 Journeys
     Background:
       Given the subject already has the following credentials
-        | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
-        | address | kenneth-current              |
-        | fraud   | kenneth-score-2              |
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
+        | fraud   | kenneth-score-2        |
       And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
@@ -66,9 +66,11 @@ Feature: Reprove Identity Journey
 
   Rule: P1 Journeys
     Background:
-      Given the subject already has the following credentials
+      Given the subject already has the following credentials with overridden document expiry date
+        | CRI     | scenario                     | documentType  |
+        | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
+      And the subject already has the following credentials
         | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
       And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result

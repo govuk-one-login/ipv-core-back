@@ -59,14 +59,16 @@ Feature: Audit Events
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And audit events for 'new-identity-p2-web-journey' are recorded [local only]
- 
+
   @QualityGateRegressionTest
   Scenario: Reuse journey
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
@@ -77,11 +79,13 @@ Feature: Audit Events
 
   @QualityGateRegressionTest
   Scenario: Reuse journey - identity is stored when SIS is enabled
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     And I activate the 'storedIdentityService' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
@@ -93,9 +97,11 @@ Feature: Audit Events
 
   @QualityGateRegressionTest
   Scenario: Reuse journey - identity is compared when SIS comparison is enabled
-    Given the subject already has the following credentials
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
       | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
     And I have an existing stored identity record with a 'P2' vot
@@ -267,11 +273,13 @@ Feature: Audit Events
 
   @QualityGateRegressionTest
   Scenario: Update name and address journey
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'update-details' event

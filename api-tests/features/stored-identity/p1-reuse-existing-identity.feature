@@ -5,9 +5,11 @@ Feature: Stored Identity - Update Existing Identity
 
   Rule: Non-update journey - no existing SI record
     Background: Existing user identity - start low-confidence journey
+      And the subject already has the following credentials with overridden document expiry date
+        | CRI     | scenario                     | documentType  |
+        | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
       And the subject already has the following credentials
         | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
       And I don't have a stored identity in EVCS
@@ -23,9 +25,11 @@ Feature: Stored Identity - Update Existing Identity
 
   Rule: Update journeys - no existing SI record
     Background: Existing identity - continue to update details
+      And the subject already has the following credentials with overridden document expiry date
+        | CRI     | scenario                     | documentType  |
+        | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
       And the subject already has the following credentials
         | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
 
@@ -108,9 +112,11 @@ Feature: Stored Identity - Update Existing Identity
 
   Rule: Update journey - existing SI record
     Scenario: Existing P2 identity - reuse P1 journey with update
-      Given the subject already has the following credentials
+      Given the subject already has the following credentials with overridden document expiry date
+        | CRI     | scenario                     | documentType  |
+        | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
+      And the subject already has the following credentials
         | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
       And I have an existing stored identity record with a 'P2' vot
@@ -141,9 +147,11 @@ Feature: Stored Identity - Update Existing Identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'valid'
 
     Scenario: Existing P1 credentials - details used for update meet P2
-      Given the subject already has the following credentials
+      Given the subject already has the following credentials with overridden document expiry date
+        | CRI     | scenario                     | documentType  |
+        | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
+      And the subject already has the following credentials
         | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-1              |
       And I have an existing stored identity record with a 'P1' vot

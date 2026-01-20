@@ -3,10 +3,10 @@ Feature: Identity reuse update details with Strategic App
     Rule: Successful journeys
         Background:
             Given the subject already has the following credentials
-                | CRI           | scenario                     |
-                | dcmawAsync    | kenneth-driving-permit-valid |
-                | address       | kenneth-current              |
-                | fraud         | kenneth-score-2              |
+                | CRI           | scenario               |
+                | dcmawAsync    | kenneth-passport-valid |
+                | address       | kenneth-current        |
+                | fraud         | kenneth-score-2        |
             When I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
             And I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -133,10 +133,10 @@ Feature: Identity reuse update details with Strategic App
     Rule: Unsuccessful journeys
         Background:
             Given the subject already has the following credentials
-                | CRI           | scenario                     |
-                | dcmawAsync    | kenneth-driving-permit-valid |
-                | address       | kenneth-current              |
-                | fraud         | kenneth-score-2              |
+                | CRI           | scenario               |
+                | dcmawAsync    | kenneth-passport-valid |
+                | address       | kenneth-current        |
+                | fraud         | kenneth-score-2        |
             When I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
             And I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
