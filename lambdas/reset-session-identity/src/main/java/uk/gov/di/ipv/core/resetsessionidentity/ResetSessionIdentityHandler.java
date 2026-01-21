@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -31,7 +32,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -42,7 +42,6 @@ import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINS
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -99,7 +98,7 @@ public class ResetSessionIdentityHandler
         configService.setFeatureSet(RequestHelper.getFeatureSet(input));
 
         try {
-            String ipvSessionId = getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -117,6 +116,12 @@ public class ResetSessionIdentityHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var sessionCredentialsResetType = RequestHelper.getSessionCredentialsResetType(input);
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Session credentials reset type: %s",
+                                    sessionCredentialsResetType)));
+
             sessionCredentialsService.deleteSessionCredentialsForResetType(
                     ipvSessionId, sessionCredentialsResetType);
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
@@ -138,8 +143,10 @@ public class ResetSessionIdentityHandler
                 doResetForPendingVc(clientOAuthSessionItem, F2F);
             }
 
-            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
-                doResetForPendingVc(clientOAuthSessionItem, DCMAW_ASYNC);
+            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)
+                    || sessionCredentialsResetType.equals(
+                            SessionCredentialsResetType.DCMAW_ASYNC)) {
+                doResetForPendingVc(clientOAuthSessionItem, Cri.DCMAW_ASYNC);
             }
 
             return JOURNEY_NEXT;
