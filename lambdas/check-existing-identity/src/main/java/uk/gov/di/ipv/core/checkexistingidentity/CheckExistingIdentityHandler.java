@@ -387,7 +387,7 @@ public class CheckExistingIdentityHandler
 
             // Check for an expired driving licence only if the credential bundle does
             // not contain PENDING_RETURN VCs
-            var expiredDcmawDrivingPermit = false;
+            var hasExpiredDcmawDrivingPermit = false;
             if (!credentialBundle.isPendingReturn()) {
                 var dcmawDlVc =
                         credentialBundle.credentials.stream()
@@ -404,17 +404,12 @@ public class CheckExistingIdentityHandler
                                                                         .getDrivingPermit()))
                                 .findFirst();
 
-                var dcmawExpiredDrivingPermitValidityPeriod =
-                        configService.getDcmawExpiredDlValidityPeriodDays();
-                if (dcmawDlVc.isPresent() && dcmawExpiredDrivingPermitValidityPeriod != null) {
+                if (dcmawDlVc.isPresent()) {
+                    hasExpiredDcmawDrivingPermit =
+                            VcHelper.isExpiredDrivingPermitVc(
+                                    dcmawDlVc.get(), configService, Clock.systemUTC());
 
-                    expiredDcmawDrivingPermit =
-                            VcHelper.hasExpiredDrivingPermitVc(
-                                    dcmawDlVc.get(),
-                                    dcmawExpiredDrivingPermitValidityPeriod,
-                                    Clock.systemUTC());
-
-                    if (expiredDcmawDrivingPermit) {
+                    if (hasExpiredDcmawDrivingPermit) {
                         LOGGER.info(
                                 LogHelper.buildLogMessage(
                                         "DCMAW Driving Permit VC is expired and past validity period."));
@@ -482,7 +477,7 @@ public class CheckExistingIdentityHandler
             }
 
             // No relevant async CRI
-            return getNewIdentityJourney(targetVot, expiredDcmawDrivingPermit);
+            return getNewIdentityJourney(targetVot, hasExpiredDcmawDrivingPermit);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {

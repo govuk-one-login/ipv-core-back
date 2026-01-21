@@ -427,7 +427,7 @@ class VcHelperTest {
         assertFalse(result);
     }
 
-    private static Stream<Arguments> provideTestArgumentsForHasExpiredDrivingPermitVc() {
+    private static Stream<Arguments> provideTestArgumentsForIsExpiredDrivingPermitVc() {
         return Stream.of(
                 Arguments.of(
                         "expired DL and past validity period, GMT current time",
@@ -467,14 +467,16 @@ class VcHelperTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideTestArgumentsForHasExpiredDrivingPermitVc")
-    void hasExpiredDrivingPermitVcShouldReturnCorrectValueForAGivenDrivingPermitVc(
+    @MethodSource("provideTestArgumentsForIsExpiredDrivingPermitVc")
+    void isExpiredDrivingPermitVcShouldReturnCorrectValueForAGivenDrivingPermitVc(
             String description,
             VerifiableCredential dcmawVc,
             int validityDurationDays,
             String currentDateTime,
             boolean expectedHasExpired) {
         // Arrange
+        when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(validityDurationDays);
+
         Clock currentTime =
                 Clock.fixed(
                         ZonedDateTime.parse(
@@ -484,9 +486,32 @@ class VcHelperTest {
                         ZoneOffset.UTC);
 
         // Act
-        var result = VcHelper.hasExpiredDrivingPermitVc(dcmawVc, validityDurationDays, currentTime);
+        var result = VcHelper.isExpiredDrivingPermitVc(dcmawVc, configService, currentTime);
 
         // Assert
         assertEquals(expectedHasExpired, result, description);
+    }
+
+    @Test
+    void isExpiredDrivingPermitVcShouldReturnFalseWhenMissingValidityPeriodDays() {
+        // Arrange
+        when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(null);
+
+        Clock currentTime =
+                Clock.fixed(
+                        ZonedDateTime.parse(
+                                        "2024-01-24 01:00:00+0100",
+                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssZ"))
+                                .toInstant(),
+                        ZoneOffset.UTC);
+
+        // Act
+        // The below DCMAW VC has expiry: "2020-10-01", nbf: 2024-01-23T05:08:41
+        var result =
+                VcHelper.isExpiredDrivingPermitVc(
+                        vcDcmawDrivingPermitDvaExpired(), configService, currentTime);
+
+        // Assert
+        assertFalse(result);
     }
 }

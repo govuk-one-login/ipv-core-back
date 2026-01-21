@@ -188,19 +188,14 @@ public class VcHelper {
         return hasExpired(nbf, expiryPeriodInDays, clock);
     }
 
-    private static boolean hasExpired(
-            Instant vcIssueTime, int validityDurationInDays, Clock clock) {
-        var startOfIssueDay =
-                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
+    public static boolean isExpiredDrivingPermitVc(
+            VerifiableCredential drivingPermitVc, ConfigService configService, Clock clock) {
+        var validityDurationInDays = configService.getDcmawExpiredDlValidityPeriodDays();
 
-        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
-        var now = ZonedDateTime.now(clock);
+        if (validityDurationInDays == null) {
+            return false;
+        }
 
-        return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
-    }
-
-    public static boolean hasExpiredDrivingPermitVc(
-            VerifiableCredential drivingPermitVc, int validityDurationInDays, Clock clock) {
         var vcIssueTime = drivingPermitVc.getClaimsSet().getNotBeforeTime().toInstant();
 
         var dlExpiryDateString =
@@ -215,6 +210,17 @@ public class VcHelper {
 
         return dlExpiryDate.isBefore(vcIssueTime)
                 && hasExpired(vcIssueTime, validityDurationInDays, clock);
+    }
+
+    private static boolean hasExpired(
+            Instant vcIssueTime, int validityDurationInDays, Clock clock) {
+        var startOfIssueDay =
+                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
+
+        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
+        var now = ZonedDateTime.now(clock);
+
+        return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
     }
 
     public static boolean hasUnavailableOrNotApplicableFraudCheck(List<VerifiableCredential> vcs) {
