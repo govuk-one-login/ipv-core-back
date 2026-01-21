@@ -36,6 +36,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermi
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredSameDayAsNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNullNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraud;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
@@ -510,6 +511,28 @@ class VcHelperTest {
         var result =
                 VcHelper.isExpiredDrivingPermitVc(
                         vcDcmawDrivingPermitDvaExpired(), configService, currentTime);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void isExpiredDrivingPermitVcShouldReturnFalseWhenVcIsMissingNbf() {
+        // Arrange
+        when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+
+        Clock currentTime =
+                Clock.fixed(
+                        ZonedDateTime.parse(
+                                        "2024-01-24 01:00:00+0100",
+                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ssZ"))
+                                .toInstant(),
+                        ZoneOffset.UTC);
+        // Act
+        // The below DCMAW VC has expiry: "2020-10-01", nbf: null
+        var result =
+                VcHelper.isExpiredDrivingPermitVc(
+                        vcDrivingPermitNullNbf(), configService, currentTime);
 
         // Assert
         assertFalse(result);

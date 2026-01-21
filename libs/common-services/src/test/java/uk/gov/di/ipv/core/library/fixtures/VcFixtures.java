@@ -1297,6 +1297,15 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcDrivingPermitNullNbf() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimWebDrivingLicenceDvaExpired(),
+                DCMAW_ISSUER_STAGING,
+                null);
+    }
+
     static VerifiableCredential vcDcmawDrivingPermitDvaExpiredSameDayAsNbf() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
