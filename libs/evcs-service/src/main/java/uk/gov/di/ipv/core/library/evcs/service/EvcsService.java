@@ -335,7 +335,7 @@ public class EvcsService {
 
     public void markHistoricInEvcs(String userId, List<VerifiableCredential> vcs)
             throws EvcsServiceException {
-        var update =
+        var vcsToUpdate =
                 vcs.stream()
                         .map(
                                 vc ->
@@ -344,8 +344,8 @@ public class EvcsService {
                                                 EvcsVCState.HISTORIC,
                                                 null))
                         .toList();
-        if (!update.isEmpty()) {
-            evcsClient.updateUserVCs(userId, update);
+        if (!vcsToUpdate.isEmpty()) {
+            evcsClient.updateUserVCs(userId, vcsToUpdate);
         }
     }
 
