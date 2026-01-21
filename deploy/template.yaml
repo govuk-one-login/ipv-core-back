@@ -1088,9 +1088,14 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issue-client-access-token-${Environment}"
-      Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
+      # Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
+      # PackageType: Zip
+      # CodeUri: ../lambdas/issue-client-access-token
+      Handler: index.handler
       PackageType: Zip
-      CodeUri: ../lambdas/issue-client-access-token
+      CodeUri: ../lambdas/issue-client-access-token-v2
+      Runtime: nodejs20.x
+      SnapStart: !Ref AWS::NoValue
       Tracing: Active
       DeploymentPreference:
         Alarms: !If
@@ -1162,6 +1167,15 @@ Resources:
             Path: /token
             Method: POST
       AutoPublishAlias: live
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        UseNpmCi: true
+        Minify: true
+        Target: "node20"
+        Sourcemap: true  # Required to preserve error stack traces to TS source
+        EntryPoints:
+          - src/index.ts
 
   IssueClientAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
