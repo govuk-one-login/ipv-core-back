@@ -68,3 +68,15 @@ jacocoTestReport {
 		xml.required.set(true)
 	}
 }
+
+configurations {
+	tests.extendsFrom(testImplementation)
+}
+
+tasks.register('jarTest', Jar) {
+	from sourceSets.test.output
+	archiveClassifier.set('tests')
+}
+artifacts {
+	tests jarTest
+}

@@ -81,4 +81,34 @@ public class TestData {
                     .auditLevel(AisAuditLevel.STANDARD)
                     .history(new AccountInterventionStatusDto.InterventionHistory[0])
                     .build();
+
+    public static AccountInterventionState createNoInterventionAisState() {
+        return createAisState(false, false, false, false);
+    }
+
+    public static AccountInterventionState createReproveIdentityAisState() {
+        return createAisState(true, true, false, false);
+    }
+
+    public static AccountInterventionState createBlockedIdentityAisState() {
+        return createAisState(false, false, false, true);
+    }
+
+    public static AccountInterventionState createSuspendedIdentityAisState() {
+        return createAisState(false, true, false, false);
+    }
+
+    public static AccountInterventionState createResetPasswordAisState() {
+        return createAisState(false, false, true, false);
+    }
+
+    private static AccountInterventionState createAisState(
+            boolean reprove, boolean suspended, boolean resetPassword, boolean blocked) {
+        return AccountInterventionState.builder()
+                .isReproveIdentity(reprove)
+                .isSuspended(suspended)
+                .isResetPassword(resetPassword)
+                .isBlocked(blocked)
+                .build();
+    }
 }

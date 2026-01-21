@@ -1,8 +1,11 @@
 package uk.gov.di.ipv.core.library.ais.helper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
@@ -13,6 +16,7 @@ import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTER
 public final class AccountInterventionEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private AccountInterventionEvaluator() {
         // prevent initialisation
@@ -87,5 +91,83 @@ public final class AccountInterventionEvaluator {
         return AIS_NO_INTERVENTION.equals(aisInterventionType)
                 || AIS_ACCOUNT_UNBLOCKED.equals(aisInterventionType)
                 || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
+    }
+
+    public static boolean hasMidJourneyIntervention(
+            boolean isReproveIdentity, AccountInterventionState currentAccountInterventionState) {
+        var noAisIntervention = hasNoInterventionFlag(currentAccountInterventionState);
+        // If the user is currently reproving their identity then the suspended and reprove identity
+        // flags may not have been reset yet.
+        var bothReprove = isReproveIdentity && isReprove(currentAccountInterventionState);
+
+        if (noAisIntervention || bothReprove) {
+            return false;
+        }
+
+        // Otherwise an intervention flag has been set for some other reason
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Mid journey intervention detected. Is reprove: %s AIS state: %s"
+                                    .formatted(
+                                            isReproveIdentity,
+                                            OBJECT_MAPPER.writeValueAsString(
+                                                    currentAccountInterventionState))));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error converting account intervention state to string", e));
+            LOGGER.info(LogHelper.buildLogMessage("Mid journey intervention detected."));
+        }
+        return true;
+    }
+
+    public static boolean hasTicfIntervention(
+            AccountInterventionState currentAisState, AisInterventionType ticfIntervention) {
+        var bothValid =
+                hasNoInterventionFlag(currentAisState)
+                        && isNotACurrentIntervention(ticfIntervention);
+        var bothReprove =
+                isReprove(currentAisState)
+                        && AIS_FORCED_USER_IDENTITY_VERIFY.equals(ticfIntervention);
+        var reproveToValid =
+                isReprove(currentAisState) && isNotACurrentIntervention(ticfIntervention);
+
+        if (bothValid || bothReprove || reproveToValid) {
+            return false;
+        }
+
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "TICF intervention detected. Current intervention: %s TICF intervention: %s"
+                                    .formatted(
+                                            OBJECT_MAPPER.writeValueAsString(currentAisState),
+                                            ticfIntervention)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error converting account intervention state to string", e));
+            LOGGER.info(LogHelper.buildLogMessage("TICF intervention detected."));
+        }
+
+        return true;
+    }
+
+    private static boolean hasNoInterventionFlag(
+            AccountInterventionState accountInterventionState) {
+        return !accountInterventionState.isResetPassword()
+                && !accountInterventionState.isBlocked()
+                && !accountInterventionState.isReproveIdentity()
+                && !accountInterventionState.isSuspended();
+    }
+
+    private static boolean isReprove(AccountInterventionState accountInterventionState) {
+        // The suspended flag should be set whenever the reproveIdentity flag is set, but if it
+        // isn't for any reason we should still treat the state as reprove, so we don't check the
+        // suspended flag here.
+        return !accountInterventionState.isResetPassword()
+                && !accountInterventionState.isBlocked()
+                && accountInterventionState.isReproveIdentity();
     }
 }

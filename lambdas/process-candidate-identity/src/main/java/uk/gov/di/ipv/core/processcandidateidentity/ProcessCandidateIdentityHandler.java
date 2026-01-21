@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -79,6 +80,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_STATE_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
@@ -258,16 +260,25 @@ public class ProcessCandidateIdentityHandler
 
             // default - assuming no intervention
             var currentAccountInterventionType = AIS_NO_INTERVENTION;
+            var currentAccountInterventionState = AisService.createNoInterventionState();
 
             // We skip AIS checks for reverification journeys or if we don't have a user ID to check
             // against (in some error cases)
             if (!SKIP_AIS_TYPES.contains(processIdentityType) && !StringUtils.isBlank(userId)) {
-                currentAccountInterventionType = aisService.fetchAisInterventionType(userId);
                 var isReproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
 
-                if (AccountInterventionEvaluator.hasMidJourneyIntervention(
-                        isReproveIdentity, currentAccountInterventionType)) {
-                    throw new AccountInterventionException();
+                if (configService.enabled(AIS_STATE_CHECK)) {
+                    currentAccountInterventionState = aisService.fetchAisState(userId);
+                    if (AccountInterventionEvaluator.hasMidJourneyIntervention(
+                            isReproveIdentity, currentAccountInterventionState)) {
+                        throw new AccountInterventionException();
+                    }
+                } else {
+                    currentAccountInterventionType = aisService.fetchAisInterventionType(userId);
+                    if (AccountInterventionEvaluator.hasMidJourneyIntervention(
+                            isReproveIdentity, currentAccountInterventionType)) {
+                        throw new AccountInterventionException();
+                    }
                 }
             }
 
@@ -286,7 +297,8 @@ public class ProcessCandidateIdentityHandler
                     ipAddress,
                     sessionVcs,
                     auditEventUser,
-                    currentAccountInterventionType);
+                    currentAccountInterventionType,
+                    currentAccountInterventionState);
         } catch (AccountInterventionException e) {
             ipvSessionService.invalidateSession(ipvSessionItem, "Account intervention detected");
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
@@ -364,7 +376,8 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser,
-            AisInterventionType currentAccountInterventionType)
+            AisInterventionType currentAccountInterventionType,
+            AccountInterventionState currentAccountInterventionState)
             throws EvcsServiceException,
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
@@ -438,7 +451,8 @@ public class ProcessCandidateIdentityHandler
                             clientOAuthSessionItem,
                             ipAddress,
                             auditEventParameters,
-                            currentAccountInterventionType);
+                            currentAccountInterventionType,
+                            currentAccountInterventionState);
 
             if (journey != null) {
                 // We still store a pending identity - it might be mitigating an existing CI
@@ -581,7 +595,8 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
             SharedAuditEventParameters sharedAuditEventParameters,
-            AisInterventionType currentAccountInterventionType)
+            AisInterventionType currentAccountInterventionType,
+            AccountInterventionState currentAccountInterventionState)
             throws AccountInterventionException {
         try {
             // If we have an invalid ClientOauthSessionItem (e.g. as a result of failed JAR request
@@ -629,7 +644,8 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     sharedAuditEventParameters.auditEventUser());
 
-            if (checkHasRelevantIntervention(currentAccountInterventionType, ticfVcs)) {
+            if (checkHasRelevantIntervention(
+                    currentAccountInterventionType, currentAccountInterventionState, ticfVcs)) {
                 throw new AccountInterventionException();
             }
 
@@ -687,23 +703,34 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean checkHasRelevantIntervention(
-            AisInterventionType currentInterventionType, List<VerifiableCredential> ticfVcs) {
+            AisInterventionType currentAccountInterventionType,
+            AccountInterventionState currentAccountInterventionState,
+            List<VerifiableCredential> ticfVcs) {
 
-        return ticfVcs.stream()
-                .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
-                .flatMap(
-                        vc ->
-                                ((RiskAssessmentCredential) vc.getCredential())
-                                        .getEvidence().stream())
-                .map(RiskAssessment::getIntervention)
-                .filter(Objects::nonNull)
-                .map(Intervention::getInterventionCode)
-                .filter(Objects::nonNull)
-                .map(aisDescriptionByTicfCode::get)
-                .anyMatch(
-                        aisInterventionType ->
-                                AccountInterventionEvaluator.hasTicfIntervention(
-                                        currentInterventionType, aisInterventionType));
+        var ticfCodesAsAisDescriptions =
+                ticfVcs.stream()
+                        .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
+                        .flatMap(
+                                vc ->
+                                        ((RiskAssessmentCredential) vc.getCredential())
+                                                .getEvidence().stream())
+                        .map(RiskAssessment::getIntervention)
+                        .filter(Objects::nonNull)
+                        .map(Intervention::getInterventionCode)
+                        .filter(Objects::nonNull)
+                        .map(aisDescriptionByTicfCode::get);
+
+        if (configService.enabled(AIS_STATE_CHECK)) {
+            return ticfCodesAsAisDescriptions.anyMatch(
+                    ticfIntervention ->
+                            AccountInterventionEvaluator.hasTicfIntervention(
+                                    currentAccountInterventionState, ticfIntervention));
+        } else {
+            return ticfCodesAsAisDescriptions.anyMatch(
+                    ticfIntervention ->
+                            AccountInterventionEvaluator.hasTicfIntervention(
+                                    currentAccountInterventionType, ticfIntervention));
+        }
     }
 
     private void sendProfileMatchedAuditEvent(
