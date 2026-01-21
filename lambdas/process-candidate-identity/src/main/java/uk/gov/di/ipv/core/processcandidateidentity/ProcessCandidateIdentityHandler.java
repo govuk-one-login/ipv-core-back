@@ -124,7 +124,7 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
-    private static final Map<String, AisInterventionType> interventionCodeTypes =
+    private static final Map<String, AisInterventionType> aisDescriptionByTicfCode =
             Map.of(
                     "00", AIS_NO_INTERVENTION,
                     "01", AIS_ACCOUNT_SUSPENDED,
@@ -699,7 +699,7 @@ public class ProcessCandidateIdentityHandler
                 .filter(Objects::nonNull)
                 .map(Intervention::getInterventionCode)
                 .filter(Objects::nonNull)
-                .map(interventionCodeTypes::get)
+                .map(aisDescriptionByTicfCode::get)
                 .anyMatch(
                         aisInterventionType ->
                                 AccountInterventionEvaluator.hasTicfIntervention(

@@ -19,7 +19,7 @@ public final class AccountInterventionEvaluator {
     }
 
     public static boolean hasStartOfJourneyIntervention(AisInterventionType interventionType) {
-        if (isValidIntervention(interventionType)
+        if (isNotACurrentIntervention(interventionType)
                 || AIS_FORCED_USER_IDENTITY_VERIFY.equals(interventionType)) {
             return false;
         }
@@ -37,8 +37,8 @@ public final class AccountInterventionEvaluator {
 
         var bothReprove =
                 isReproveIdentity && AIS_FORCED_USER_IDENTITY_VERIFY.equals(aisInterventionType);
-        var reproveToValid = isReproveIdentity && isValidIntervention(aisInterventionType);
-        var isValid = isValidIntervention(aisInterventionType);
+        var reproveToValid = isReproveIdentity && isNotACurrentIntervention(aisInterventionType);
+        var isValid = isNotACurrentIntervention(aisInterventionType);
 
         if (bothReprove || reproveToValid || isValid) {
             return false;
@@ -55,7 +55,8 @@ public final class AccountInterventionEvaluator {
             AisInterventionType currentIntervention, AisInterventionType ticfIntervention) {
 
         var bothValid =
-                isValidIntervention(currentIntervention) && isValidIntervention(ticfIntervention);
+                isNotACurrentIntervention(currentIntervention)
+                        && isNotACurrentIntervention(ticfIntervention);
         var bothReprove = isBothIdentityVerify(currentIntervention, ticfIntervention);
         var reproveToValid = isIdentityVerifyToValid(currentIntervention, ticfIntervention);
 
@@ -78,10 +79,11 @@ public final class AccountInterventionEvaluator {
 
     private static boolean isIdentityVerifyToValid(
             AisInterventionType initial, AisInterventionType current) {
-        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial) && isValidIntervention(current);
+        return AIS_FORCED_USER_IDENTITY_VERIFY.equals(initial)
+                && isNotACurrentIntervention(current);
     }
 
-    private static boolean isValidIntervention(AisInterventionType aisInterventionType) {
+    private static boolean isNotACurrentIntervention(AisInterventionType aisInterventionType) {
         return AIS_NO_INTERVENTION.equals(aisInterventionType)
                 || AIS_ACCOUNT_UNBLOCKED.equals(aisInterventionType)
                 || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
