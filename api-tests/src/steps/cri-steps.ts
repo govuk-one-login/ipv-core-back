@@ -37,8 +37,12 @@ import {
   enqueueVcFromDetails,
   getOAuthState,
 } from "../clients/dcmaw-async-cri-stub-client.js";
+import {
+  EXPIRED_NBF,
+  getDateStringPriorToExpiredNbf,
+  getFutureDateString,
+} from "../utils/dates.js";
 
-const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
   "sub",
   "shared_claims",
@@ -178,6 +182,58 @@ When(
         redirectUrl,
         expired ? EXPIRED_NBF : undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
+      ),
+      redirectUrl,
+    );
+
+    assertNoUnexpectedJarProperties(jarPayload);
+  },
+);
+
+// This step is used to provide an override to the document's expiry date. By default,
+// the document's expiry date is set to 180 days after the VC's nbf. If specified to be expired,
+// the document's expiry date is set to 180 days before the VC's issue date (specified
+// by EXPIRED_NBF). If the expiry date is not important for testing, the above step
+// /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/
+// can be used instead.
+When(
+  /^I submit (expired )?'([\w-]+)' (drivingPermit|ukPassport) details to the DCMAW CRI stub with overridden document expiry date$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    scenario: string,
+    documentType: "drivingPermit" | "ukPassport",
+  ) {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    if (this.lastJourneyEngineResponse.cri.id !== "dcmaw") {
+      throw new Error(
+        "Last journey engine response should be for the DCMAW CRI",
+      );
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
+        undefined,
+        undefined,
+        {
+          documentType,
+          customExpiryDate: expired
+            ? getDateStringPriorToExpiredNbf()
+            : getFutureDateString(),
+        },
       ),
       redirectUrl,
     );
@@ -418,11 +474,16 @@ When(
   },
 );
 
+// The "with overridden document expiry date" is used to override the expiry date one the document
+// with a date 180 days from now or 180 days before EXPIRED_NBF.
 When(
-  /^the subject already has the following (expired )?credentials$/,
+  /^the subject already has the following (expired )?credentials( with overridden document expiry date)?$/,
   async function (
     this: World,
     expired: "expired " | undefined,
+    overrideDocumentExpiryDate:
+      | " with overridden document expiry date"
+      | undefined,
     table: DataTable,
   ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
@@ -441,6 +502,14 @@ When(
               row.scenario,
               [],
               expired ? EXPIRED_NBF : undefined,
+              overrideDocumentExpiryDate && row.documentType
+                ? {
+                    documentType: row.documentType,
+                    customExpiryDate: expired
+                      ? getDateStringPriorToExpiredNbf()
+                      : getFutureDateString(),
+                  }
+                : undefined,
             ),
           );
         });
@@ -455,6 +524,16 @@ When(
               row.CRI,
               row.scenario,
               expired ? EXPIRED_NBF : undefined,
+              overrideDocumentExpiryDate &&
+                row.CRI === "dcmaw" &&
+                row.documentType
+                ? {
+                    documentType: row.documentType,
+                    customExpiryDate: expired
+                      ? getDateStringPriorToExpiredNbf()
+                      : getFutureDateString(),
+                  }
+                : undefined,
             ),
           );
         });

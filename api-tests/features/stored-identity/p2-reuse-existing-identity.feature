@@ -105,9 +105,11 @@ Feature: P2 reuse journeys
 
     Rule: Existing credentials that meets P2
       Background: User has existing identity that meets P2 identity
-        Given the subject already has the following credentials
+        Given the subject already has the following credentials with overridden document expiry date
+          | CRI     | scenario                     | documentType  |
+          | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
+        And the subject already has the following credentials
           | CRI     | scenario                     |
-          | dcmaw   | kenneth-driving-permit-valid |
           | address | kenneth-current              |
           | fraud   | kenneth-score-2              |
         And I have an existing stored identity record with a 'P2' vot

@@ -11,7 +11,7 @@ Feature: P2 Reuse journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    When I submit 'kenneth-driving-permit-valid' drivingPermit details to the DCMAW CRI stub with overridden document expiry date
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -63,9 +63,11 @@ Feature: P2 Reuse journey
     Then I get a 'P3' identity
 
   Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
-    Given the subject already has the following credentials
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI            | scenario                     | documentType  |
+      | dcmaw          | kenneth-driving-permit-valid | drivingPermit |
+    And the subject already has the following credentials
       | CRI            | scenario                     |
-      | dcmaw          | kenneth-driving-permit-valid |
       | address        | kenneth-current              |
       | fraud          | kenneth-score-2              |
       | drivingLicence | kenneth-driving-permit-valid |

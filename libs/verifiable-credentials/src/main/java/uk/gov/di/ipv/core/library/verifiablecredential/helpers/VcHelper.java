@@ -188,6 +188,30 @@ public class VcHelper {
         return hasExpired(nbf, expiryPeriodInDays, clock);
     }
 
+    public static boolean isExpiredDrivingPermitVc(
+            VerifiableCredential drivingPermitVc, ConfigService configService, Clock clock) {
+        var validityDurationInDays = configService.getDcmawExpiredDlValidityPeriodDays();
+        var nbf = drivingPermitVc.getClaimsSet().getNotBeforeTime();
+
+        if (validityDurationInDays != null && nbf != null) {
+            var vcIssueTime = nbf.toInstant();
+
+            var dlExpiryDateString =
+                    ((IdentityCheckCredential) drivingPermitVc.getCredential())
+                            .getCredentialSubject()
+                            .getDrivingPermit()
+                            .getFirst()
+                            .getExpiryDate();
+
+            var dlExpiryDate =
+                    LocalDate.parse(dlExpiryDateString).atStartOfDay(LONDON_TIMEZONE).toInstant();
+
+            return dlExpiryDate.isBefore(vcIssueTime)
+                    && hasExpired(vcIssueTime, validityDurationInDays, clock);
+        }
+        return false;
+    }
+
     private static boolean hasExpired(
             Instant vcIssueTime, int validityDurationInDays, Clock clock) {
         var startOfIssueDay =

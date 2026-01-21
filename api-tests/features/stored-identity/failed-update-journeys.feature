@@ -2,9 +2,11 @@
 Feature: Failed update details
   Background: Create user with existing credentials and SI record
     Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    And the subject already has the following credentials with overridden document expiry date
+      | CRI     | scenario                     | documentType  |
+      | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
     And the subject already has the following credentials
       | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
 
   Rule: Reuse journey

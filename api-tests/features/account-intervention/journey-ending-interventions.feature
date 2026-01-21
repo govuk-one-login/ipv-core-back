@@ -109,10 +109,10 @@ Feature: Journey ending interventions
 
   Scenario: Blocked intervention at end of update identity journey
     Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+      | CRI     | scenario               |
+      | dcmaw   | kenneth-passport-valid |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     And The AIS stub will return an 'AIS_NO_INTERVENTION' result
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
@@ -127,7 +127,7 @@ Feature: Journey ending interventions
     When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
-      | evidence_requested | {"identityFraudScore":2} |
+      | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
 
   Scenario: Blocked intervention at end of initial F2F journey
