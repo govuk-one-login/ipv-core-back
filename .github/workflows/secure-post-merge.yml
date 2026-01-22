@@ -42,12 +42,24 @@ jobs:
             echo "$file was changed"
           done
 
-  build-test-images-if-needed:
+  build-test-images-if-needed-build:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    with:
+      environment: 'build'
+    secrets: inherit # pragma: allowlist secret
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+
+  build-test-images-if-needed-dev01:
     needs: check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
-      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
+      environment: 'dev01'
     secrets: inherit # pragma: allowlist secret
     permissions:
       id-token: write
@@ -91,7 +103,8 @@ jobs:
 
   deploy:
     needs:
-      - build-test-images-if-needed
+      - build-test-images-if-needed-build
+      - build-test-images-if-needed-dev01
       - check-if-deploy-needed
     if: |
       !failure() &&
