@@ -45,22 +45,28 @@ jobs:
   build-test-images-if-needed-build:
     needs: check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
-    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@dee13b402a32bb7ba9e4d3610288cc11f9658389
     with:
       environment: 'build'
-    secrets: inherit # pragma: allowlist secret
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
+      CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
     permissions:
       id-token: write
       packages: read
       contents: read
 
-  build-test-images-if-needed-dev01:
+  build-test-images-if-needed-shared-dev:
     needs: check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
-    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@dee13b402a32bb7ba9e4d3610288cc11f9658389
     with:
       environment: 'dev01'
-    secrets: inherit # pragma: allowlist secret
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV }}
+      CONTAINER_SIGN_KMS_KEY_DEV: ${{ secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
     permissions:
       id-token: write
       packages: read
@@ -104,7 +110,7 @@ jobs:
   deploy:
     needs:
       - build-test-images-if-needed-build
-      - build-test-images-if-needed-dev01
+      - build-test-images-if-needed-shared-dev
       - check-if-deploy-needed
     if: |
       !failure() &&
