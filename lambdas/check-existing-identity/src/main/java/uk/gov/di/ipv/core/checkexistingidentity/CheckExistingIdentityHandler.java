@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -64,6 +65,7 @@ import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.IdentityCheckCredential;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -422,6 +424,25 @@ public class CheckExistingIdentityHandler
                         evcsService.markHistoricInEvcs(userId, vcsForUpdate);
 
                         vcsForUpdate.forEach(credentialBundle.credentials::remove);
+
+                        var dlVcExpiryPeriodMs =
+                                Duration.ofDays(configService.getDcmawExpiredDlValidityPeriodDays())
+                                        .toMillis();
+
+                        var dcmawDlVcIssueTimeMs =
+                                dcmawDlVc
+                                        .get()
+                                        .getClaimsSet()
+                                        .getNotBeforeTime()
+                                        .toInstant()
+                                        .toEpochMilli();
+
+                        sendAuditEventWithExtension(
+                                AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
+                                auditEventUser,
+                                deviceInformation,
+                                new AuditExtensionExpiredDcmawDlVcFound(
+                                        dlVcExpiryPeriodMs, dcmawDlVcIssueTimeMs));
                     }
                 }
             }
