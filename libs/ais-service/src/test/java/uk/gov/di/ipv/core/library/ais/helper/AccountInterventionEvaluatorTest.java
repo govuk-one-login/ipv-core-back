@@ -166,6 +166,31 @@ class AccountInterventionEvaluatorTest {
 
     // Equivalent tests to the above but using AIS state
     @ParameterizedTest
+    @MethodSource("aisStatesToTriggerStartOfJourneyIntervention")
+    void shouldReturnTrueWhenProvideInvalidAccountState(AccountInterventionState aisState) {
+        assertTrue(AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisState));
+    }
+
+    private static Stream<Arguments> aisStatesToTriggerStartOfJourneyIntervention() {
+        return Stream.of(
+                Arguments.of(createSuspendedIdentityAisState()),
+                Arguments.of(createBlockedIdentityAisState()),
+                Arguments.of(createResetPasswordAisState()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("aisStatesToNotTriggerStartOfJourneyIntervention")
+    void shouldReturnFalseWhenProvideValidAccountState(AccountInterventionState aisState) {
+        assertFalse(AccountInterventionEvaluator.hasStartOfJourneyIntervention(aisState));
+    }
+
+    private static Stream<Arguments> aisStatesToNotTriggerStartOfJourneyIntervention() {
+        return Stream.of(
+                Arguments.of(createNoInterventionAisState()),
+                Arguments.of(createReproveIdentityAisState()));
+    }
+
+    @ParameterizedTest
     @MethodSource("aisStatesToTriggerMidJourneyIntervention")
     void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionTypes(
             boolean isReproveJourney, AccountInterventionState finalAisInterventionType) {

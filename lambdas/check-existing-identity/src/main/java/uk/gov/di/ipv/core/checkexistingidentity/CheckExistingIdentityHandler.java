@@ -71,6 +71,7 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_STATE_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -259,17 +260,31 @@ public class CheckExistingIdentityHandler
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
-            if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
-                    fetchedAisInterventionType)) {
-                ipvSessionService.invalidateSession(
-                        ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
-                throw new AccountInterventionException();
+            var isReproveIdentity = false;
+
+            if (configService.enabled(AIS_STATE_CHECK)) {
+                var fetchedAisState = aisService.fetchAisState(userId);
+                if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(fetchedAisState)) {
+                    ipvSessionService.invalidateSession(
+                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+                    throw new AccountInterventionException();
+                }
+
+                isReproveIdentity = AccountInterventionEvaluator.isReprove(fetchedAisState);
+            } else {
+                var fetchedAisInterventionType = aisService.fetchAisInterventionType(userId);
+                if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(
+                        fetchedAisInterventionType)) {
+                    ipvSessionService.invalidateSession(
+                            ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);
+                    throw new AccountInterventionException();
+                }
+
+                isReproveIdentity =
+                        AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
+                                fetchedAisInterventionType);
             }
 
-            var isReproveIdentity =
-                    AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY.equals(
-                            fetchedAisInterventionType);
             clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
             clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
 

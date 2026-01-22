@@ -31,6 +31,7 @@ dependencies {
 			libs.junitJupiter,
 			libs.mockitoJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:ais-service', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
 	mockitoAgent(libs.mockitoCore) {

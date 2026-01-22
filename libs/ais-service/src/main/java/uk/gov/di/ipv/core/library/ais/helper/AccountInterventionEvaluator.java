@@ -93,6 +93,28 @@ public final class AccountInterventionEvaluator {
                 || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
     }
 
+    public static boolean hasStartOfJourneyIntervention(AccountInterventionState aisState) {
+        var noIntervention = hasNoInterventionFlag(aisState);
+        var isReprove = isReprove(aisState);
+
+        if (noIntervention || isReprove) {
+            return false;
+        }
+
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Start of journey intervention detected. Intervention state: %s"
+                                    .formatted(OBJECT_MAPPER.writeValueAsString(aisState))));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error converting account intervention state to string", e));
+            LOGGER.info(LogHelper.buildLogMessage("Start of journey intervention detected."));
+        }
+        return true;
+    }
+
     public static boolean hasMidJourneyIntervention(
             boolean isReproveIdentity, AccountInterventionState currentAccountInterventionState) {
         var noAisIntervention = hasNoInterventionFlag(currentAccountInterventionState);
@@ -162,7 +184,7 @@ public final class AccountInterventionEvaluator {
                 && !accountInterventionState.isSuspended();
     }
 
-    private static boolean isReprove(AccountInterventionState accountInterventionState) {
+    public static boolean isReprove(AccountInterventionState accountInterventionState) {
         // The suspended flag should be set whenever the reproveIdentity flag is set, but if it
         // isn't for any reason we should still treat the state as reprove, so we don't check the
         // suspended flag here.
