@@ -3,7 +3,7 @@ Feature: Audit Events
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
-  # TEST: comment to test workflow  - if you see this please delete!
+  # TEST: comment to test workflow  - if you see this please delete!!
   @QualityGateRegressionTest
   Scenario: New identity - p2 app journey
     Given I activate the 'storedIdentityService' feature set
