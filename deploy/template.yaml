@@ -2905,6 +2905,7 @@ Resources:
 #  App Config Pipeline
 #  This may fail on first deployment due to not existing alias.
 #  Simply comment it out to deploy and then uncomment and update the stack to give app config pipeline permissions to invoke validation lambda
+#  When this comment is no longer needed please also remove the debugging instructions in ipv-core-common-infra/utils/dev-deploy/docs/cli-userguide.md
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
