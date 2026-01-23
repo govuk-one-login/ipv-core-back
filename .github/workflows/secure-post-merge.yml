@@ -26,6 +26,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@5250492686b253f06fa55861556d1027b067aeb5 # v9.0.2
+
+      - uses: nrwl/nx-set-shas@3e9ad7370203c1e93d109be57f3b72eb0eb511b1 # v4.4.0
+        id: last_successful_commit_push_on_main
+        with:
+          main-branch-name: ${{ steps.branch-name.outputs.default_branch }}
+
       - name: Get changed api-tests files
         id: get-changed-files
         uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
@@ -33,6 +42,7 @@ jobs:
           files: |
             api-tests/**
             .github/workflows/secure-pipeline-api-tests-image.yml
+          base_sha: ${{ steps.last_successful_commit_push_on_main.outputs.base }}
 
       - name: List changed files
         env:
@@ -42,13 +52,31 @@ jobs:
             echo "$file was changed"
           done
 
-  build-test-images-if-needed:
+  build-test-images-if-needed-build:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    with:
+      environment: 'build'
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
+      CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+
+  build-test-images-if-needed-shared-dev:
     needs: check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
-      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
-    secrets: inherit # pragma: allowlist secret
+      environment: 'dev01'
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV }}
+      CONTAINER_SIGN_KMS_KEY_DEV: ${{ secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
     permissions:
       id-token: write
       packages: read
@@ -91,7 +119,8 @@ jobs:
 
   deploy:
     needs:
-      - build-test-images-if-needed
+      - build-test-images-if-needed-build
+      - build-test-images-if-needed-shared-dev
       - check-if-deploy-needed
     if: |
       !failure() &&
