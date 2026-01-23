@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -30,6 +31,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -256,5 +258,18 @@ public class VcHelper {
                             });
         }
         return false;
+    }
+
+    public static Optional<Instant> extractNbf(VerifiableCredential vc) {
+        return Optional.ofNullable(vc)
+                .map(VerifiableCredential::getClaimsSet)
+                .map(JWTClaimsSet::getNotBeforeTime)
+                .map(Date::toInstant)
+                .or(
+                        () -> {
+                            LOGGER.warn(
+                                    LogHelper.buildLogMessage("Failed to extract nbf from VC."));
+                            return Optional.empty();
+                        });
     }
 }
