@@ -17,6 +17,8 @@ public final class AccountInterventionEvaluator {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String OBJECT_MAPPING_ERROR_MESSAGE =
+            "Error converting account intervention state to string";
 
     private AccountInterventionEvaluator() {
         // prevent initialisation
@@ -107,9 +109,7 @@ public final class AccountInterventionEvaluator {
                             "Start of journey intervention detected. Intervention state: %s"
                                     .formatted(OBJECT_MAPPER.writeValueAsString(aisState))));
         } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Error converting account intervention state to string", e));
+            LOGGER.error(LogHelper.buildErrorMessage(OBJECT_MAPPING_ERROR_MESSAGE, e));
             LOGGER.info(LogHelper.buildLogMessage("Start of journey intervention detected."));
         }
         return true;
@@ -136,9 +136,7 @@ public final class AccountInterventionEvaluator {
                                             OBJECT_MAPPER.writeValueAsString(
                                                     currentAccountInterventionState))));
         } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Error converting account intervention state to string", e));
+            LOGGER.error(LogHelper.buildErrorMessage(OBJECT_MAPPING_ERROR_MESSAGE, e));
             LOGGER.info(LogHelper.buildLogMessage("Mid journey intervention detected."));
         }
         return true;
@@ -167,9 +165,7 @@ public final class AccountInterventionEvaluator {
                                             OBJECT_MAPPER.writeValueAsString(currentAisState),
                                             ticfIntervention)));
         } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Error converting account intervention state to string", e));
+            LOGGER.error(LogHelper.buildErrorMessage(OBJECT_MAPPING_ERROR_MESSAGE, e));
             LOGGER.info(LogHelper.buildLogMessage("TICF intervention detected."));
         }
 
