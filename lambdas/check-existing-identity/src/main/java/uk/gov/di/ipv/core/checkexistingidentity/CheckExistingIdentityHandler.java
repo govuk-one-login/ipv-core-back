@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -28,6 +29,7 @@ import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -690,6 +692,29 @@ public class CheckExistingIdentityHandler
                     false);
 
             EmbeddedMetricHelper.identityProving();
+
+            credentialBundle.credentials.stream()
+                    .filter(vc -> vc.getCri().equals(Cri.EXPERIAN_FRAUD))
+                    .findFirst()
+                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, Clock.systemUTC()))
+                    .flatMap(VcHelper::extractNbf)
+                    .ifPresent(
+                            nbfInstant -> {
+                                var vcExpiryPeriodMs =
+                                        Duration.ofDays(
+                                                        configService
+                                                                .getFraudCheckExpiryPeriodDays())
+                                                .toMillis();
+                                var nbfMs = nbfInstant.toEpochMilli();
+
+                                sendAuditEventWithExtension(
+                                        AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
+                                        auditEventUser,
+                                        deviceInformation,
+                                        new AuditExtensionExpiredFraudVcFound(
+                                                vcExpiryPeriodMs, nbfMs));
+                            });
+
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
