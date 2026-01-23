@@ -272,8 +272,8 @@ Feature: Audit Events
       | drivingLicence | kenneth-driving-permit-valid   |
       | address        | kenneth-current                |
       | fraud          | kenneth-score-2                |
-    Given I activate the 'disableStrategicApp' feature set
-    And I start a new 'medium-confidence' journey
+    And I activate the 'disableStrategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'live-in-uk' page response
@@ -296,6 +296,30 @@ Feature: Audit Events
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And audit events for 'reprove-identity-journey-expired-dl' are recorded [local only]
+
+  @QualityGateNewFeatureTest
+  Scenario: Fraud 6 Months Expiry + No Update
+    # Repeat fraud check with no update
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+    And the subject already has the following expired credentials
+      | CRI   | scenario        |
+      | fraud | kenneth-score-2 |
+    When I start a new 'medium-confidence' journey
+    Then I get a 'confirm-your-details' page response
+    When I submit a 'next' event
+    Then I get a 'fraud' CRI response
+    When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And audit events for 'repeat-fraud-check-no-update' are recorded [local only]
 
   @QualityGateRegressionTest
   Scenario: No photo ID
