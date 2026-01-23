@@ -427,24 +427,23 @@ public class CheckExistingIdentityHandler
 
                         vcsForUpdate.forEach(credentialBundle.credentials::remove);
 
-                        var dlVcExpiryPeriodMs =
-                                Duration.ofDays(configService.getDcmawExpiredDlValidityPeriodDays())
-                                        .toMillis();
+                        VcHelper.extractNbf(dcmawDlVc.get())
+                                .ifPresent(
+                                        nbfInstant -> {
+                                            var nbfMs = nbfInstant.toEpochMilli();
+                                            var dlVcExpiryPeriodMs =
+                                                    Duration.ofDays(
+                                                                    configService
+                                                                            .getDcmawExpiredDlValidityPeriodDays())
+                                                            .toMillis();
 
-                        var dcmawDlVcIssueTimeMs =
-                                dcmawDlVc
-                                        .get()
-                                        .getClaimsSet()
-                                        .getNotBeforeTime()
-                                        .toInstant()
-                                        .toEpochMilli();
-
-                        sendAuditEventWithExtension(
-                                AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
-                                auditEventUser,
-                                deviceInformation,
-                                new AuditExtensionExpiredDcmawDlVcFound(
-                                        dlVcExpiryPeriodMs, dcmawDlVcIssueTimeMs));
+                                            sendAuditEventWithExtension(
+                                                    AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
+                                                    auditEventUser,
+                                                    deviceInformation,
+                                                    new AuditExtensionExpiredDcmawDlVcFound(
+                                                            dlVcExpiryPeriodMs, nbfMs));
+                                        });
                     }
                 }
             }
