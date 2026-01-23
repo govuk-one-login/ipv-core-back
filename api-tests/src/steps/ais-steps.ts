@@ -19,10 +19,55 @@ When(
     }
 
     if (desiredApiResult === "AIS_PASSWORD_RESET_CLEARED") {
-      // Mimic the case where an intervention has been cleared, but the description has not been updated.
+      // Mimic the case where a password reset has happened, but the description has not been updated.
       await primeCustomResponseForUser(
         this.userId,
         AisValidResponseTypes.AIS_FORCED_USER_PASSWORD_RESET,
+        {
+          blocked: false,
+          resetPassword: false,
+          reproveIdentity: false,
+          suspended: false,
+        },
+      );
+      return;
+    }
+
+    if (desiredApiResult === "AIS_REVERIFY_CLEARED") {
+      // Mimic the case where a reverification has happened, but the description has not been updated.
+      await primeCustomResponseForUser(
+        this.userId,
+        AisValidResponseTypes.AIS_FORCED_USER_IDENTITY_VERIFY,
+        {
+          blocked: false,
+          resetPassword: false,
+          reproveIdentity: false,
+          suspended: false,
+        },
+      );
+      return;
+    }
+
+    if (desiredApiResult === "AIS_PASSWORD_RESET_CLEARED_AND_REVERIFY") {
+      // Mimic the case where a password reset has happened, but the description has not been updated and the user still needs to reverify.
+      await primeCustomResponseForUser(
+        this.userId,
+        AisValidResponseTypes.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+        {
+          blocked: false,
+          resetPassword: false,
+          reproveIdentity: true,
+          suspended: true,
+        },
+      );
+      return;
+    }
+
+    if (desiredApiResult === "AIS_PASSWORD_RESET_AND_REVERIFY_CLEARED") {
+      // Mimic the case where a password reset and reverification has happened, but the description has not been updated.
+      await primeCustomResponseForUser(
+        this.userId,
+        AisValidResponseTypes.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
         {
           blocked: false,
           resetPassword: false,

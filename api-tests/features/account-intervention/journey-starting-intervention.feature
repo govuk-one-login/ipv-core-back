@@ -52,8 +52,10 @@ Feature: First Account Intervention call
 
   #    Reprove identity is handled in separate file
       Examples:
-        | intervention                        | response                                            |
-        | No intervention                     | AIS_NO_INTERVENTION                                 |
-        | Unsuspended                         | AIS_ACCOUNT_UNSUSPENDED                             |
-        | Unblocked                           | AIS_ACCOUNT_UNBLOCKED                               |
-        | Password reset cleared              | AIS_PASSWORD_RESET_CLEARED                          |
+        | intervention                        | response                                |
+        | No intervention                     | AIS_NO_INTERVENTION                     |
+        | Unsuspended                         | AIS_ACCOUNT_UNSUSPENDED                 |
+        | Unblocked                           | AIS_ACCOUNT_UNBLOCKED                   |
+        | Password reset cleared              | AIS_PASSWORD_RESET_CLEARED              |
+        | Password reset and reverify cleared | AIS_PASSWORD_RESET_AND_REVERIFY_CLEARED |
+        | Ewvweification cleared              | AIS_REVERIFY_CLEARED                    |

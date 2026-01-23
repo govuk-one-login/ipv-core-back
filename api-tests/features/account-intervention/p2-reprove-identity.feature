@@ -162,13 +162,13 @@ Feature: Reprove Identity Journey
     Background: Enable AIS description checking
       Given I activate the 'aisStateCheck' feature set
 
-    Scenario: User reproves identity with AIS
+    Scenario Outline: User reproves identity with AIS (<intervention>)
       Given the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-      And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
+      And The AIS stub will return an '<ais_response>' result
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
       When I submit a 'next' event
@@ -192,6 +192,11 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+
+      Examples:
+        | intervention                        | ais_response                            |
+        | Reverify                            | AIS_FORCED_USER_IDENTITY_VERIFY         |
+        | Password reset cleared and reverify | AIS_PASSWORD_RESET_CLEARED_AND_REVERIFY |
 
     Scenario: User reproves with F2F with AIS
       Given the subject already has the following credentials
