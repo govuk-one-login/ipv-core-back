@@ -253,11 +253,37 @@ Resources:
       # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
       # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled
       LoadBalancerArn: !Ref LoadBalancer
-      Protocol: HTTP
+      Protocol: HTTPS
       Port: 80
+      Certificates:
+        - CertificateArn: !Ref JourneyMapSSLCert
       DefaultActions:
-        - TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+        - Order: 1
+          Type: authenticate-oidc
+          AuthenticateOidcConfig:
+            Issuer: https://accounts.google.com
+            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
+            ClientId: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_ID:SecretString}}' # pragma: allowlist secret
+            TokenEndpoint: https://oauth2.googleapis.com/token
+            ClientSecret: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
+            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
+            Scope: "openid email"
+            OnUnauthenticatedRequest: authenticate
+        - Order: 2
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
           Type: forward
+
+  HealthCheckAllowRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+      Conditions:
+        - Field: path-pattern
+          Values: [ "/healthcheck" ]
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
 
   # ECS cluster, service, task and autoscaling definition
   JourneyMapCluster:
