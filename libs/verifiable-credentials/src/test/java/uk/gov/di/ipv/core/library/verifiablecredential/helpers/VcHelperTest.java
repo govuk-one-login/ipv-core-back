@@ -13,12 +13,12 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -89,7 +89,7 @@ class VcHelperTest {
     }
 
     private final Clock fixedLondonClock =
-            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), ZoneId.of("Europe/London"));
+            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), DateAndTimeHelper.LONDON_TIMEZONE);
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")

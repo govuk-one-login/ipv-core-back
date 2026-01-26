@@ -27,7 +27,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,6 +39,7 @@ import java.util.stream.Stream;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper.LONDON_TIMEZONE;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.model.CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE;
@@ -49,7 +49,6 @@ public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
-    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private VcHelper() {}
 

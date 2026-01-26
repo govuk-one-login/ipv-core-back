@@ -45,6 +45,7 @@ import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -68,7 +69,6 @@ import uk.gov.di.model.IdentityCheckCredential;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -152,8 +152,6 @@ public class CheckExistingIdentityHandler
 
     private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
             "Account intervention detected";
-
-    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -686,11 +684,11 @@ public class CheckExistingIdentityHandler
                 credentialBundle.credentials.stream()
                         .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
                         .toList();
-        var clock = Clock.fixed(Instant.now(), LONDON_TIMEZONE);
+        var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
 
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        fraudVcs, configService, clock)) {
+                        fraudVcs, configService, fixedClock)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));
@@ -703,7 +701,7 @@ public class CheckExistingIdentityHandler
 
             fraudVcs.stream()
                     .findFirst()
-                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, clock))
+                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
                     .flatMap(VcHelper::extractNbf)
                     .ifPresent(
                             nbfInstant -> {
