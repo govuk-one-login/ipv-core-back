@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -68,6 +67,8 @@ import uk.gov.di.model.IdentityCheckCredential;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +152,8 @@ public class CheckExistingIdentityHandler
 
     private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
             "Account intervention detected";
+
+    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -679,9 +682,15 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
+        var fraudVcs =
+                credentialBundle.credentials.stream()
+                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
+                        .toList();
+        var clock = Clock.fixed(Instant.now(), LONDON_TIMEZONE);
+
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        credentialBundle.credentials, configService)) {
+                        fraudVcs, configService, clock)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));
@@ -692,10 +701,9 @@ public class CheckExistingIdentityHandler
 
             EmbeddedMetricHelper.identityProving();
 
-            credentialBundle.credentials.stream()
-                    .filter(vc -> vc.getCri().equals(Cri.EXPERIAN_FRAUD))
+            fraudVcs.stream()
                     .findFirst()
-                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, Clock.systemUTC()))
+                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, clock))
                     .flatMap(VcHelper::extractNbf)
                     .ifPresent(
                             nbfInstant -> {

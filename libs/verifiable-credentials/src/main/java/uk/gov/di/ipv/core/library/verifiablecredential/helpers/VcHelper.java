@@ -176,6 +176,16 @@ public class VcHelper {
                                         || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
+    public static boolean allFraudVcsAreExpiredOrFromUnavailableSource(
+            List<VerifiableCredential> vcs, ConfigService configService, Clock clock) {
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
+                .allMatch(
+                        vc ->
+                                VcHelper.isExpiredFraudVc(vc, configService, clock)
+                                        || VcHelper.hasUnavailableFraudCheck(vc));
+    }
+
     public static boolean isExpiredFraudVc(
             VerifiableCredential vc, ConfigService configService, Clock clock) {
         var jwtClaimsSet = vc.getClaimsSet();

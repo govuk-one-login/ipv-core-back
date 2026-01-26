@@ -17,6 +17,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -85,6 +87,9 @@ class VcHelperTest {
                 Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
+
+    private final Clock fixedLondonClock =
+            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), ZoneId.of("Europe/London"));
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
@@ -224,6 +229,47 @@ class VcHelperTest {
         assertTrue(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
                         List.of(vcExpired, vcNotAvailable), configService));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vc = vcExperianFraudExpired();
+
+        // Act & Assert
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vc, vc), configService, fixedLondonClock));
+    }
+
+    @Test
+    void shouldReturnFalseWhenSomeVcsAreNotExpiredUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotExpired = vcExperianFraudNotExpired();
+
+        // Act & Assert
+        assertFalse(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotExpired), configService, fixedLondonClock));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredOrNotAvailableUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+
+        // Act & Assert
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotAvailable), configService, fixedLondonClock));
     }
 
     private static Stream<Arguments> FraudVcExpiryCases() {
