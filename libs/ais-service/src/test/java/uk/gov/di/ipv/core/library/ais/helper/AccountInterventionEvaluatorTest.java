@@ -139,7 +139,7 @@ class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("getValidTicfAccountInterventionTypes")
-    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
+    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypesFromTicf(
             AisInterventionType currentAccountInterventionType,
             AisInterventionType ticfAccountInterventionType) {
         assertFalse(
@@ -192,7 +192,7 @@ class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("aisStatesToTriggerMidJourneyIntervention")
-    void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionTypes(
+    void shouldReturnTrueWhenProvideInvalidMidJourneyAccountInterventionState(
             boolean isReproveJourney, AccountInterventionState finalAisInterventionType) {
         assertTrue(
                 AccountInterventionEvaluator.hasMidJourneyIntervention(
@@ -212,7 +212,7 @@ class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("aisStatesToNotTriggerMidJourneyIntervention")
-    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
+    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionState(
             boolean isReproveIdentity, AccountInterventionState finalAisInterventionType) {
         assertFalse(
                 AccountInterventionEvaluator.hasMidJourneyIntervention(
@@ -228,7 +228,7 @@ class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("ticfCodesToTriggerMidJourneyIntervention")
-    void shouldReturnTrueWhenProvideInvalidTicfAccountInterventionTypes(
+    void shouldReturnTrueWhenProvideInvalidMidJourneyTicfCode(
             AccountInterventionState currentAccountInterventionType,
             AisInterventionType ticfAccountInterventionType) {
         assertTrue(
@@ -255,7 +255,7 @@ class AccountInterventionEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("ticfCodesToNotTriggerMidJourneyIntervention")
-    void shouldReturnFalseWhenProvideValidMidJourneyAccountInterventionTypes(
+    void shouldReturnFalseWhenProvideValidMidJourneyTicfCode(
             AccountInterventionState currentAccountInterventionType,
             AisInterventionType ticfAccountInterventionType) {
         assertFalse(
