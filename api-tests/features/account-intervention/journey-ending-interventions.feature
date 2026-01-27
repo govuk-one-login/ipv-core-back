@@ -215,7 +215,7 @@ Feature: Journey ending interventions
         | No intervention                     | AIS_NO_INTERVENTION            | AIS_NO_INTERVENTION        |
         | Unsuspended                         | AIS_NO_INTERVENTION            | AIS_ACCOUNT_UNSUSPENDED    |
         | Unblocked                           | AIS_NO_INTERVENTION            | AIS_ACCOUNT_UNBLOCKED      |
-        | Password reset cleared              | AIS_NO_INTERVENTION            | AIS_PASSWORD_RESET_CLEARED |
+        | Password reset cleared              | AIS_NO_INTERVENTION            | PASSWORD_RESET_CLEARED     |
 
     Scenario Outline: TICF <intervention> result during identity proving journey
       Given I activate the 'disableStrategicApp' feature set

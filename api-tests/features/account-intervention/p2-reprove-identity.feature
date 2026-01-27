@@ -64,7 +64,7 @@ Feature: Reprove Identity Journey
           | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-          | Attribute          | Values                                          |
+          | Attribute          | Values                                      |
           | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -93,7 +93,7 @@ Feature: Reprove Identity Journey
           | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-          | Attribute          | Values                                          |
+          | Attribute          | Values                                      |
           | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -133,7 +133,7 @@ Feature: Reprove Identity Journey
           | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-          | Attribute          | Values                                          |
+          | Attribute          | Values                                      |
           | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -194,9 +194,9 @@ Feature: Reprove Identity Journey
       Then I get a 'P2' identity
 
       Examples:
-        | intervention                        | ais_response                            |
-        | Reverify                            | AIS_FORCED_USER_IDENTITY_VERIFY         |
-        | Password reset cleared and reverify | AIS_PASSWORD_RESET_CLEARED_AND_REVERIFY |
+        | intervention                        | ais_response                        |
+        | Reverify                            | AIS_FORCED_USER_IDENTITY_VERIFY     |
+        | Password reset cleared and reverify | PASSWORD_RESET_CLEARED_AND_REVERIFY |
 
     Scenario: User reproves with F2F with AIS
       Given the subject already has the following credentials
@@ -224,7 +224,7 @@ Feature: Reprove Identity Journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-        | Attribute          | Values                                          |
+        | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -253,7 +253,7 @@ Feature: Reprove Identity Journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-        | Attribute          | Values                                          |
+        | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -294,7 +294,7 @@ Feature: Reprove Identity Journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
-        | Attribute          | Values                                          |
+        | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 

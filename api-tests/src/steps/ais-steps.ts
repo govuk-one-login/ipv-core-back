@@ -18,7 +18,7 @@ When(
       return;
     }
 
-    if (desiredApiResult === "AIS_PASSWORD_RESET_CLEARED") {
+    if (desiredApiResult === "PASSWORD_RESET_CLEARED") {
       // Mimic the case where a password reset has happened, but the description has not been updated.
       await primeCustomResponseForUser(
         this.userId,
@@ -33,7 +33,7 @@ When(
       return;
     }
 
-    if (desiredApiResult === "AIS_REVERIFY_CLEARED") {
+    if (desiredApiResult === "REVERIFY_CLEARED") {
       // Mimic the case where a reverification has happened, but the description has not been updated.
       await primeCustomResponseForUser(
         this.userId,
@@ -48,7 +48,7 @@ When(
       return;
     }
 
-    if (desiredApiResult === "AIS_PASSWORD_RESET_CLEARED_AND_REVERIFY") {
+    if (desiredApiResult === "PASSWORD_RESET_CLEARED_AND_REVERIFY") {
       // Mimic the case where a password reset has happened, but the description has not been updated and the user still needs to reverify.
       await primeCustomResponseForUser(
         this.userId,
@@ -63,7 +63,7 @@ When(
       return;
     }
 
-    if (desiredApiResult === "AIS_PASSWORD_RESET_AND_REVERIFY_CLEARED") {
+    if (desiredApiResult === "PASSWORD_RESET_AND_REVERIFY_CLEARED") {
       // Mimic the case where a password reset and reverification has happened, but the description has not been updated.
       await primeCustomResponseForUser(
         this.userId,
