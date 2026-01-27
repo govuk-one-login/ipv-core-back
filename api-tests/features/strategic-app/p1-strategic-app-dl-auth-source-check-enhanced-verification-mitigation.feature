@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI and driving licence authoritative source check
   Background:
     # Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
@@ -207,6 +207,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -243,6 +247,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -263,6 +271,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -287,6 +299,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -316,6 +332,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -336,6 +356,10 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.

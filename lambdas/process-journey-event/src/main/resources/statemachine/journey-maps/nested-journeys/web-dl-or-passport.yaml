@@ -44,6 +44,9 @@ nestedJourneyStates:
         checkFeatureFlag:
           sorryTechnicalErrorEnabled:
             targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
+            checkMitigation:
+              alternate-doc-invalid-dl:
+                targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_UK_PASSPORT
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT:
     response:
       type: page
@@ -55,6 +58,16 @@ nestedJourneyStates:
         exitEventToEmit: try-again-app
       postOffice:
         exitEventToEmit: try-again-post-office
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_UK_PASSPORT:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      context: dlOrPassportMitigation
+    events:
+      tryAgain:
+        targetState: CRI_UK_PASSPORT
       returnToRp:
         exitEventToEmit: return-to-rp-cri-error
   ADDRESS_AND_FRAUD_AFTER_PASSPORT:
@@ -106,6 +119,9 @@ nestedJourneyStates:
         checkFeatureFlag:
           sorryTechnicalErrorEnabled:
             targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
+            checkMitigation:
+              alternate-doc-invalid-passport:
+                targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_DRIVING_LICENCE
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE:
     response:
       type: page
@@ -117,6 +133,16 @@ nestedJourneyStates:
         exitEventToEmit: try-again-app
       postOffice:
         exitEventToEmit: try-again-post-office
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_DRIVING_LICENCE:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      context: dlOrPassportMitigation
+    events:
+      tryAgain:
+        targetState: CRI_DRIVING_LICENCE
       returnToRp:
         exitEventToEmit: return-to-rp-cri-error
   ADDRESS_AND_FRAUD_AFTER_DL:

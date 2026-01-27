@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Repeat fraud check failures
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
@@ -6,9 +6,9 @@ Feature: Repeat fraud check failures
   Rule: Given name change only
     Background:
       Given the subject already has the following credentials
-        | CRI     | scenario                     |
-        | dcmaw   | kenneth-driving-permit-valid |
-        | address | kenneth-current              |
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
       And the subject already has the following expired credentials
         | CRI   | scenario        |
         | fraud | kenneth-score-2 |

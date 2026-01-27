@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -614,5 +615,30 @@ class EvcsServiceTest {
 
         // Assert
         verify(mockEvcsClient, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
+    }
+
+    @Test
+    void markVcsAsHistoricInEvcsShouldUpdateEvcsWithHistoricVcs() throws Exception {
+        // Act
+        evcsService.markHistoricInEvcs(TEST_USER_ID, List.of(VC_DRIVING_PERMIT_TEST));
+
+        // Assert
+        verify(mockEvcsClient, times(1))
+                .updateUserVCs(eq(TEST_USER_ID), evcsUpdateUserVCsDtosCaptor.capture());
+        var evcsUserVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
+        assertEquals(
+                1,
+                (evcsUserVCsToUpdate.stream()
+                        .filter(dto -> dto.state().equals(EvcsVCState.HISTORIC))
+                        .count()));
+    }
+
+    @Test
+    void markVcsAsHistoricInEvcsShouldNotCallEvcsIfGivenEmptyList() throws Exception {
+        // Act
+        evcsService.markHistoricInEvcs(TEST_USER_ID, List.of());
+
+        // Assert
+        verify(mockEvcsClient, times(0)).updateUserVCs(eq(TEST_USER_ID), any());
     }
 }

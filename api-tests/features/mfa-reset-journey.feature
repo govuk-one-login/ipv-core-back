@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: MFA reset journey
   Rule: User has an existing identity
     Background: There is an existing user and they start an MFA reset journey

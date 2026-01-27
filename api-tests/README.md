@@ -63,6 +63,15 @@ MANAGEMENT_CIMIT_STUB_API_KEY="example-value" # pragma: allowlist secret
 - Don't create new steps unless you're sure one doesn't already exist that fits your need.
 - Annotate tests with `@Build` to also be run against the build environment.
 
+### Quality Gate Tags
+
+All api tests should be tagged with `@QualityGateIntegrationTest`. If a test runs in our pipelines (ie in Build), and tests live features, we should tag them with `@QualityGateRegressionTest`.
+If the test is for an in-development feature, we should tag it with `@QualityGateNewFeatureTest`.
+
+Once a feature goes live, `@QualityGateNewFeatureTest` tags need to be updated to `@QualityGateRegressionTest`.
+To facilitate this update, api tests for in-development work should be placed in their own feature files, if possible, so the tests can be tagged at the Feature level rather than the Scenario level.
+Ideally, tests tagged with `@QualityGateNewFeatureTest` should be marked with a TODO and reference a post-go-live clean-up ticket so they can be easily identified and updated.
+
 ## IDE integration
 
 It's a good idea to add the relevant plugins for your IDE or it will struggle to understand the structure of the project.

@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 @TrafficGeneration
 Feature: P2 App journey
   Background:

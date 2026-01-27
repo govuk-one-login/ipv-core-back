@@ -116,6 +116,10 @@ public abstract class ConfigService {
         return getConfiguration().getSelf().getDcmawAsyncVcPendingReturnTtl();
     }
 
+    public Integer getDcmawExpiredDlValidityPeriodDays() {
+        return getConfiguration().getSelf().getDcmawExpiredDlValidityPeriodDays();
+    }
+
     public long getCriResponseTtl() {
         return getConfiguration().getSelf().getCriResponseTtl();
     }
@@ -167,8 +171,8 @@ public abstract class ConfigService {
         return getConfiguration().getClientConfig(clientId).getIssuer();
     }
 
-    public Integer getFraudCheckExpiryPeriodHours() {
-        return getConfiguration().getSelf().getFraudCheckExpiryPeriodHours();
+    public Integer getFraudCheckExpiryPeriodDays() {
+        return getConfiguration().getSelf().getFraudCheckExpiryPeriodDays();
     }
 
     public URI getSisApplicationUrl() {

@@ -829,17 +829,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: AllowGetDeleteCriResponseDynamoDbTable
               Effect: Allow
               Action:
@@ -1153,17 +1142,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1258,17 +1236,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBWritePolicy:
@@ -1369,17 +1336,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1504,17 +1460,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -1658,17 +1603,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsSigningKeyPermission
               Effect: Allow
               Action:
@@ -1796,17 +1730,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Events:
         IPVCoreMobileAppCallback:
           Type: Api
@@ -1921,17 +1844,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Events:
         IPVCoreCheckMobileAppVcReceipt:
           Type: Api
@@ -2030,17 +1942,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
@@ -2150,17 +2051,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2402,17 +2292,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2518,17 +2397,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2603,8 +2471,6 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          # We're temporarily disabling this for lower envs to investigate the effect it has on IOExceptions
-          # https://govukverify.atlassian.net/browse/PYIC-8220
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/otel-handler
@@ -2643,17 +2509,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2767,17 +2622,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
@@ -2990,17 +2834,6 @@ Resources:
             Resource:
               - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
               - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   CheckGpg45ScoreFunctionLogGroup:
@@ -3043,18 +2876,6 @@ Resources:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
         - VPCAccessPolicy: { }
-        - Statement:
-          - Sid: EnforceStayinSpecificVpc
-            Effect: Allow
-            Action:
-              - 'lambda:CreateFunction'
-              - 'lambda:UpdateFunctionConfiguration'
-            Resource:
-              - "*"
-            Condition:
-              StringEquals:
-                "lambda:VpcIds":
-                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       AutoPublishAlias: live
 
   ValidateAppConfigFunctionLogGroup:
@@ -3084,6 +2905,7 @@ Resources:
 #  App Config Pipeline
 #  This may fail on first deployment due to not existing alias.
 #  Simply comment it out to deploy and then uncomment and update the stack to give app config pipeline permissions to invoke validation lambda
+#  When this comment is no longer needed please also remove the debugging instructions in ipv-core-common-infra/utils/dev-deploy/docs/cli-userguide.md
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -3257,17 +3079,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -3365,17 +3176,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
@@ -3463,17 +3263,6 @@ Resources:
               Resource:
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
                 - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -4096,31 +3885,6 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  IOExceptionAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: IsNotDevelopment
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmName: !Sub ${AWS::StackName}-IOExceptionInLogs
-      InsufficientDataActions: []
-      EvaluationPeriods: 1
-      DatapointsToAlarm: 1
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-      Metrics:
-        - Id: ioExceptionMetric
-          Label: IOException Count
-          ReturnData: true
-          MetricStat:
-            Metric:
-              Namespace: Custom/Lambda
-              MetricName: IOExceptionCount
-            Period: 60
-            Stat: Sum
-
   DwpKbvCriReturnRateAlarm:
     Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
@@ -4161,206 +3925,6 @@ Resources:
           Expression: "returned / redirect"
           Label: "DWP KBV CRI Return Rate"
           ReturnData: true
-
-  IssueClientAccessTokenFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ManualF2fPendingResetFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ManualF2fPendingResetFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  BuildClientOauthResponseFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  InitialiseIpvSessionFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  BuildCriOauthRequestFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ProcessCriCallbackIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ProcessCriCallbackLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ProcessMobileAppCallbackIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  CheckMobileAppVcReceiptIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref CheckMobileAppVcReceiptLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  BuildUserIdentityFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  UserReverificationFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref UserReverificationFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  JourneyEngineStepFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  IPVProcessJourneyEventFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  BuildProvenUserIdentityDetailsFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref BuildProvenUserIdentityDetailsFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  CheckExistingIdentityFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ProcessAsyncCriCredentialFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  CheckGpg45ScoreFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  CallDcmawAsyncCriFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref CallDcmawAsyncCriFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ResetSessionIdentityFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ResetSessionIdentityFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  CheckReverificationIdentityFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref CheckReverificationIdentityFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
-
-  ProcessCandidateIdentityFunctionIOExceptionMetricFilter:
-    Type: AWS::Logs::MetricFilter
-    Properties:
-      LogGroupName: !Ref ProcessCandidateIdentityFunctionLogGroup
-      FilterPattern: '{ $.message.errorDescription = "java.io.IOException: <init>" }'
-      MetricTransformations:
-        - MetricValue: "1"
-          MetricNamespace: Custom/Lambda
-          MetricName: IOExceptionCount
 
   ####################################################################
   #                                                                  #

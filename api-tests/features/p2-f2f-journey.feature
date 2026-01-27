@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 F2F journey
   Rule: Pending F2F journey
     Background: User has pending f2f verification
@@ -27,34 +27,6 @@ Feature: P2 F2F journey
       # Initial journey
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-pending' page response
-
-    Scenario: Pending F2F request delete identity
-      # Initial journey
-      Given I activate the 'pendingF2FResetEnabled' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
-      When I submit a 'next' event
-      Then I get a 'pyi-f2f-delete-details' page response
-      When I submit a 'next' event
-      Then I get a 'pyi-confirm-delete-details' page response
-      When I submit a 'next' event
-      Then I get a 'pyi-details-deleted' page response with context 'f2f'
-
-    Scenario: Pending F2F request continue without delete identity
-      # Initial journey
-      Given I activate the 'pendingF2FResetEnabled' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
-      When I submit a 'next' event
-      Then I get a 'pyi-f2f-delete-details' page response
-      When I submit a 'end' event
-      Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
-      When I submit a 'next' event
-      Then I get a 'pyi-f2f-delete-details' page response
-      When I submit a 'next' event
-      Then I get a 'pyi-confirm-delete-details' page response
-      When I submit a 'end' event
-      Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
 
   Rule: Successful F2F journeys
     Scenario Outline: Successful P2 identity via F2F using <doc> - <journey-type>

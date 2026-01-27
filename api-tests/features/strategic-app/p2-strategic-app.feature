@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: M2B Strategic App Journeys
 
   Scenario: User initially clicks international then changes their mind and can continue to a different identity proving method
@@ -59,7 +59,7 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    Scenario: Happy path MAM journey declared iphone
+    Scenario: Multiple callbacks do not incorrectly progress the journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -70,6 +70,7 @@ Feature: M2B Strategic App Journeys
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
+      # Repeat callback
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
 
@@ -99,6 +100,10 @@ Feature: M2B Strategic App Journeys
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -130,6 +135,10 @@ Feature: M2B Strategic App Journeys
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.
@@ -169,6 +178,10 @@ Feature: M2B Strategic App Journeys
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
       Then I get an OAuth response with error code 'access_denied'
       # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
       # has managed to log back in to the site.

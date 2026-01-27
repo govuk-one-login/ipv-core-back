@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,8 +61,9 @@ import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.IdentityCheckCredential;
 
-import java.io.UncheckedIOException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +75,9 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
@@ -311,12 +315,6 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_NOT_FOUND, ErrorResponse.IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -366,6 +364,7 @@ public class CheckExistingIdentityHandler
             // journey
             if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
+                EmbeddedMetricHelper.identityProving();
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
@@ -384,6 +383,47 @@ public class CheckExistingIdentityHandler
                             .getCiMitigationEvent(contraIndicators, targetVot)
                             .isEmpty()) {
                 return JOURNEY_FAIL_WITH_CI;
+            }
+
+            // Check for an expired driving licence only if the credential bundle does
+            // not contain PENDING_RETURN VCs
+            var hasExpiredDcmawDrivingPermit = false;
+            if (!credentialBundle.isPendingReturn()) {
+                var dcmawDlVc =
+                        credentialBundle.credentials.stream()
+                                .filter(vc -> List.of(DCMAW_ASYNC, DCMAW).contains(vc.getCri()))
+                                .filter(
+                                        vc ->
+                                                vc.getCredential()
+                                                                instanceof
+                                                                IdentityCheckCredential
+                                                                        identityCheckCredential
+                                                        && ObjectUtils.isNotEmpty(
+                                                                identityCheckCredential
+                                                                        .getCredentialSubject()
+                                                                        .getDrivingPermit()))
+                                .findFirst();
+
+                if (dcmawDlVc.isPresent()) {
+                    hasExpiredDcmawDrivingPermit =
+                            VcHelper.isExpiredDrivingPermitVc(
+                                    dcmawDlVc.get(), configService, Clock.systemUTC());
+
+                    if (hasExpiredDcmawDrivingPermit) {
+                        LOGGER.info(
+                                LogHelper.buildLogMessage(
+                                        "DCMAW Driving Permit VC is expired and past validity period."));
+                        var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc.get()));
+                        credentialBundle.credentials.stream()
+                                .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
+                                .findFirst()
+                                .ifPresent(vcsForUpdate::add);
+
+                        evcsService.markHistoricInEvcs(userId, vcsForUpdate);
+
+                        vcsForUpdate.forEach(credentialBundle.credentials::remove);
+                    }
+                }
             }
 
             // No breaching CIs.
@@ -437,7 +477,7 @@ public class CheckExistingIdentityHandler
             }
 
             // No relevant async CRI
-            return getNewIdentityJourney(targetVot);
+            return getNewIdentityJourney(targetVot, hasExpiredDcmawDrivingPermit);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -628,6 +668,7 @@ public class CheckExistingIdentityHandler
                     auditEventUser.getSessionId(),
                     false);
 
+            EmbeddedMetricHelper.identityProving();
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -650,16 +691,22 @@ public class CheckExistingIdentityHandler
         return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
-    private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
+    private JourneyResponse getNewIdentityJourney(
+            Vot preferredNewIdentityLevel, boolean hasExpiredDcmawDrivingPermit)
             throws HttpResponseExceptionWithErrorBody {
+        EmbeddedMetricHelper.identityProving();
         switch (preferredNewIdentityLevel) {
             case P1 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-                return JOURNEY_IPV_GPG45_LOW;
+                return hasExpiredDcmawDrivingPermit
+                        ? JOURNEY_REPROVE_IDENTITY_GPG45_LOW
+                        : JOURNEY_IPV_GPG45_LOW;
             }
             case P2 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
-                return JOURNEY_IPV_GPG45_MEDIUM;
+                return hasExpiredDcmawDrivingPermit
+                        ? JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM
+                        : JOURNEY_IPV_GPG45_MEDIUM;
             }
             default -> {
                 LOGGER.info(LogHelper.buildLogMessage("Invalid preferredNewIdentityLevel"));

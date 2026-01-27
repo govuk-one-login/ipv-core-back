@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -31,7 +32,10 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.journeys.Events;
+import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -58,6 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -67,6 +73,7 @@ import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_I
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.UPDATE_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 
 @ExtendWith(MockitoExtension.class)
@@ -249,6 +256,21 @@ class ProcessJourneyEventHandlerTest {
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
         assertEquals(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE, output.get("journey"));
+    }
+
+    @Test
+    void shouldReturnCrossBrowserProblemPageForCrossBrowserProblemEvent() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JourneyUris.JOURNEY_CROSS_BROWSER_PATH)
+                        .ipvSessionId(null)
+                        .build();
+
+        Map<String, Object> output =
+                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+
+        assertEquals(Events.PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT, output.get("page"));
     }
 
     @Test
@@ -1314,6 +1336,55 @@ class ProcessJourneyEventHandlerTest {
         assertThat(logMessage, containsString("Test error"));
     }
 
+    @Test
+    void shouldRecordIdentityProvingMetricIfTransitioningToAnUpdateJourney() throws Exception {
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+        spyIpvSessionItem.setJourneyContext("someContext");
+
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventToTransitionToUpdateSubJourney")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        try (MockedStatic<EmbeddedMetricHelper> mockEmbeddedMetricHelper =
+                mockStatic(EmbeddedMetricHelper.class)) {
+            var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+            mockEmbeddedMetricHelper.verify(EmbeddedMetricHelper::identityProving);
+            assertEquals("update-name", output.get("page"));
+        }
+    }
+
+    @Test
+    void shouldNotRecordIdentityProvingMetricIfTransitioningToAnUpdateJourneyDuringRfc()
+            throws Exception {
+        var spyIpvSessionItem = mockIpvSessionItemAndTimeout("PAGE_STATE");
+        spyIpvSessionItem.setJourneyContext("rfc");
+
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventToTransitionToUpdateSubJourney")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
+
+        try (MockedStatic<EmbeddedMetricHelper> mockEmbeddedMetricHelper =
+                mockStatic(EmbeddedMetricHelper.class)) {
+            var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+            mockEmbeddedMetricHelper.verify(EmbeddedMetricHelper::identityProving, never());
+            assertEquals("update-name", output.get("page"));
+        }
+    }
+
     private IpvSessionItem mockIpvSessionItemAndTimeout(String userState) throws Exception {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
@@ -1350,7 +1421,7 @@ class ProcessJourneyEventHandlerTest {
 
         var journeyTypes =
                 stateMachineInitializerMode.equals(StateMachineInitializerMode.TEST)
-                        ? List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR)
+                        ? List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR, UPDATE_NAME)
                         : List.of(IpvJourneyTypes.values());
 
         var nestedJourneyTypes =

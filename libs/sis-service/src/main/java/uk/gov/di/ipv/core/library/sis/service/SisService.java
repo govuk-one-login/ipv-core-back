@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.sis.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -36,6 +37,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class SisService {
     private final SisClient sisClient;
@@ -168,6 +170,7 @@ public class SisService {
                     sisRequestedVot,
                     storedIdentityResult.identityDetails().isValid());
 
+            LOGGER.info(LogHelper.buildLogMessage("Successfully verified SIS and EVCS identities"));
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
@@ -181,7 +184,9 @@ public class SisService {
                     evcsVcSignatures,
                     sisVcSignatures);
         } catch (SisMatchException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Comparison between SIS and EVCS failed", e));
+            LOGGER.warn(
+                    LogHelper.buildErrorMessage(
+                            "Mismatch found comparing SIS and EVCS identities", e));
             sendComparisonAuditEvent(
                     auditEventUser,
                     storedIdentityResult,
@@ -347,7 +352,12 @@ public class SisService {
             List<ContraIndicator> contraIndicators = new ArrayList<>();
             var cimitVcList = evcsCredentials.stream().filter(vc -> vc.getCri() == CIMIT).toList();
             if (cimitVcList.size() != 1) {
-                LOGGER.warn("Stored credentials do not contain exactly one CIMIT VC");
+                LOGGER.warn(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "EVCS VCs do not contain exactly one CIMIT VC")
+                                .with("cimitVcCount", cimitVcList.size()));
             } else {
                 contraIndicators =
                         cimitUtilityService.getContraIndicatorsFromVc(

@@ -5,9 +5,14 @@ on:
     branches:
       - main
     paths-ignore:
-      - '**/README.md'
+      # If you are adding or removing from this list, also update 'files_ignore' in check-if-deploy-needed job
+      - '**/*.md'
       - 'lambdas/*/src/test/**'
+      - 'libs/*/src/test/**'
+      - 'libs/test-data/**'
+      - 'libs/test-helpers/**'
       - 'journey-map/**'
+      - 'local-running/**'
   workflow_dispatch:
 
 jobs:
@@ -17,17 +22,27 @@ jobs:
       api-tests-changed: ${{ steps.get-changed-files.outputs.any_changed }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@5250492686b253f06fa55861556d1027b067aeb5 # v9.0.2
+
+      - uses: nrwl/nx-set-shas@3e9ad7370203c1e93d109be57f3b72eb0eb511b1 # v4.4.0
+        id: last_successful_commit_push_on_main
+        with:
+          main-branch-name: ${{ steps.branch-name.outputs.default_branch }}
+
       - name: Get changed api-tests files
         id: get-changed-files
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         with:
           files: |
             api-tests/**
             .github/workflows/secure-pipeline-api-tests-image.yml
+          base_sha: ${{ steps.last_successful_commit_push_on_main.outputs.base }}
 
       - name: List changed files
         env:
@@ -37,21 +52,79 @@ jobs:
             echo "$file was changed"
           done
 
-  build-test-images-if-needed:
+  build-test-images-if-needed-build:
     needs: check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
-      environment: ${{ github.event_name == 'workflow_dispatch' && 'dev01' || 'build' }}
-    secrets: inherit # pragma: allowlist secret
+      environment: 'build'
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
+      CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
     permissions:
       id-token: write
       packages: read
       contents: read
 
+  build-test-images-if-needed-shared-dev:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    with:
+      environment: 'dev01'
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV }}
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV }}
+      CONTAINER_SIGN_KMS_KEY_DEV: ${{ secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+
+  check-if-deploy-needed:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-needed: ${{ steps.check-if-should-deploy.outputs.any_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get relevant changed files
+        id: check-if-should-deploy
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        with:
+          files: |
+            **
+          # We want to skip api-tests folder here as we don't want it to trigger deployment.
+          files_ignore: |
+            api-tests/**
+            **/*.md
+            lambdas/*/src/test/**
+            libs/*/src/test/**
+            libs/test-data/**
+            libs/test-helpers/**
+            journey-map/**
+            local-running/**
+
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.check-if-should-deploy.outputs.all_changed_files }}
+        run: |
+          for file in $CHANGED_FILES; do
+            echo "$file was changed"
+          done
+
   deploy:
-    needs: build-test-images-if-needed
-    if: '!failure()'
+    needs:
+      - build-test-images-if-needed-build
+      - build-test-images-if-needed-shared-dev
+      - check-if-deploy-needed
+    if: |
+      !failure() &&
+      (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -62,7 +135,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 

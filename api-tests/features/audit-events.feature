@@ -1,7 +1,9 @@
+@QualityGateIntegrationTest
 Feature: Audit Events
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
+  @QualityGateRegressionTest
   Scenario: New identity - p2 app journey
     Given I activate the 'storedIdentityService' feature set
     And I start a new 'medium-confidence' journey
@@ -26,6 +28,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: New identity - p2 web journey
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -59,12 +62,15 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'new-identity-p2-web-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reuse journey
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
@@ -73,12 +79,15 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reuse journey - identity is stored when SIS is enabled
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     And I activate the 'storedIdentityService' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
@@ -88,18 +97,21 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reuse journey - identity is compared when SIS comparison is enabled
-    Given the subject already has the following credentials
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
       | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I activate the 'storedIdentityService,sisVerification' feature sets
     And I have an existing stored identity record with a 'P2' vot
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     And audit events for 'reuse-journey-identity-compared' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -135,6 +147,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
+  @QualityGateNewFeatureTest
   Scenario: Delete pending F2F
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -168,6 +181,7 @@ Feature: Audit Events
     Then I get a 'pyi-details-deleted' page response with context 'f2f'
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Alternate doc mitigation
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -185,6 +199,7 @@ Feature: Audit Events
     Then I get a 'ukPassport' CRI response
     And audit events for 'alternate-doc-mitigation-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reprove identity journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -216,6 +231,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reprove identity journey with AIS
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -247,6 +263,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: No photo ID
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -256,12 +273,15 @@ Feature: Audit Events
     Then I get a 'claimedIdentity' CRI response
     And audit events for 'no-photo-id-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Update name and address journey
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'update-details' event
@@ -302,6 +322,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: International address journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -311,6 +332,7 @@ Feature: Audit Events
     Then I get a 'dcmaw' CRI response
     And audit events for 'international-address-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Strategic app journey
     Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
@@ -327,7 +349,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     And audit events for 'strategic-app-journey' are recorded [local only]
 
-  @InitialisesDCMAWSessionState
+  @InitialisesDCMAWSessionState @QualityGateRegressionTest
   Scenario: MAM journey cross-browser scenario
     Given I override the existing feature sets and activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
@@ -345,6 +367,10 @@ Feature: Audit Events
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
+    Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+    When I submit a 'build-client-oauth-response' event in a separate session
     Then I get an OAuth response with error code 'access_denied'
     # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
     # has managed to log back in to the site.
@@ -365,6 +391,7 @@ Feature: Audit Events
     Then I get a 'P2' identity
     And audit events for 'strategic-app-cross-browser-journey' are recorded [local only]
 
+  @QualityGateRegressionTest
   Scenario: Reverification - failed journey
     Given the subject already has the following credentials
       | CRI     | scenario                     |
@@ -408,6 +435,7 @@ Feature: Audit Events
       When I submit a 'next' event
       Then I get a 'dwpKbv' CRI response
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - successful response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                          |
@@ -415,6 +443,7 @@ Feature: Audit Events
       Then I get a 'page-ipv-success' page response
       And audit events for 'dwp-kbv-successful-journey' are recorded [local only]
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - dropout via thin file
       When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
         | Attribute          | Values                                          |
@@ -422,6 +451,7 @@ Feature: Audit Events
       Then I get a 'page-different-security-questions' page response
       And audit events for 'dwp-kbv-dropout-via-thin-file' are recorded [local only]
 
+    @QualityGateNewFeatureTest
     Scenario: DWP KBV - user abandons CRI
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
         | Attribute          | Values                                          |

@@ -116,6 +116,11 @@ class AppConfigServiceTest {
     }
 
     @Test
+    void getDcmawExpiredDlValidityPeriodDays() {
+        assertEquals(180, configService.getDcmawExpiredDlValidityPeriodDays());
+    }
+
+    @Test
     void getBackendSessionTimeout_returnsYamlValue() {
         assertEquals(3600L, configService.getBackendSessionTimeout());
     }
@@ -144,8 +149,8 @@ class AppConfigServiceTest {
     }
 
     @Test
-    void getFraudCheckExpiryPeriodHours_returnsYamlValue() {
-        assertEquals(720, configService.getFraudCheckExpiryPeriodHours());
+    void getFraudCheckExpiryPeriodDays_returnsYamlValue() {
+        assertEquals(180, configService.getFraudCheckExpiryPeriodDays());
     }
 
     @Test
@@ -271,11 +276,11 @@ class AppConfigServiceTest {
     @Test
     void featureSetsOverrideConfigurationInCorrectOrder() {
         // Act & Assert
-        configService.setFeatureSet(List.of("accountInterventions", "disableAccountInterventions"));
-        assertFalse(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("disableTestFeatureFlag", "enableTestFeatureFlag"));
+        assertTrue(configService.enabled("testFeatureFlag"));
 
-        configService.setFeatureSet(List.of("disableAccountInterventions", "accountInterventions"));
-        assertTrue(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("enableTestFeatureFlag", "disableTestFeatureFlag"));
+        assertFalse(configService.enabled("testFeatureFlag"));
     }
 
     @Test
@@ -297,8 +302,8 @@ class AppConfigServiceTest {
 
     @Test
     void enabledTrueIfFeatureFlagSetEnabled() {
-        configService.setFeatureSet(List.of("accountInterventions"));
-        assertTrue(configService.enabled("accountInterventionsEnabled"));
+        configService.setFeatureSet(List.of("enableTestFeatureFlag"));
+        assertTrue(configService.enabled("testFeatureFlag"));
     }
 
     @Test

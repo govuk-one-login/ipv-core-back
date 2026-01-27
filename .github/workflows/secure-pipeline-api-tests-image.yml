@@ -6,6 +6,25 @@ on:
       environment:
         required: true
         type: string
+    secrets:
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN:
+        description: 'The GHA role for pushing to the ECR repo in build'
+        required: false
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME:
+        description: 'The ECR repo name in build to push the api test image to'
+        required: false
+      CONTAINER_SIGN_KMS_KEY:
+        description: 'The KMS key used to sign the container with in build'
+        required: false
+      BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN_DEV:
+        description: 'The GHA role for pushing to the ECR repo in dev01'
+        required: false
+      BUILD_API_TESTS_IMAGE_ECR_REPO_NAME_DEV:
+        description: 'The ECR repo name in dev01 to push the api test image to'
+        required: false
+      CONTAINER_SIGN_KMS_KEY_DEV:
+        description: 'The KMS key used to sign the container with in dev01'
+        required: false
 
 jobs:
   build-image-and-push:
@@ -19,7 +38,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0

@@ -71,7 +71,6 @@ import uk.gov.di.model.Intervention;
 import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
-import java.io.UncheckedIOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -335,12 +334,6 @@ public class ProcessCandidateIdentityHandler
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

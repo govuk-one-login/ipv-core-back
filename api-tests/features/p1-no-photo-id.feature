@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey
@@ -280,6 +280,7 @@ Feature: P1 No Photo Id Journey
 
   Scenario: P1 No suitable ID
     When I start a new 'low-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'

@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Authoritative source checks with driving licence CRI
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
@@ -266,9 +266,11 @@ Feature: Authoritative source checks with driving licence CRI
 
   Scenario Outline: Change of details journey through DCMAW with driving licence requires auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
+    And the subject already has the following credentials with overridden document expiry date
+      | CRI     | scenario                     | documentType  |
+      | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
     And the subject already has the following credentials
       | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
     When I start a new 'medium-confidence' journey
@@ -293,9 +295,11 @@ Feature: Authoritative source checks with driving licence CRI
 
   Scenario Outline: Change of details journey that attracts an invalid doc CI from auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
+    And the subject already has the following credentials with overridden document expiry date
+      | CRI     | scenario                     | documentType  |
+      | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
     And the subject already has the following credentials
       | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
     When I start a new 'medium-confidence' journey

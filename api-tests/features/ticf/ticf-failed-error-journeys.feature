@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: TICF failed/error journeys
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

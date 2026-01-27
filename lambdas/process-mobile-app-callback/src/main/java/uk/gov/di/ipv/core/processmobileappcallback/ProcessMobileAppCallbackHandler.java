@@ -37,11 +37,10 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 import uk.gov.di.ipv.core.processmobileappcallback.exception.InvalidMobileAppCallbackRequestException;
 
-import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.Set;
 
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CROSS_BROWSER_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -98,7 +97,10 @@ public class ProcessMobileAppCallbackHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
         } catch (InvalidMobileAppCallbackRequestException e) {
-            if (Set.of(ErrorResponse.INVALID_OAUTH_STATE, ErrorResponse.MISSING_IPV_SESSION_ID)
+            if (Set.of(
+                            ErrorResponse.INVALID_OAUTH_STATE,
+                            ErrorResponse.MISSING_IPV_SESSION_ID,
+                            ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND)
                     .contains(e.getErrorResponse())) {
                 return buildErrorResponse(
                         e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
@@ -117,12 +119,6 @@ public class ProcessMobileAppCallbackHandler
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse(), Level.ERROR);
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -209,8 +205,7 @@ public class ProcessMobileAppCallbackHandler
                             new AuditRestrictedDeviceInformation(
                                     callbackRequest.getDeviceInformation())));
 
-            return new JourneyResponse(
-                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, clientOAuthSessionId);
+            return new JourneyResponse(JOURNEY_CROSS_BROWSER_PATH, clientOAuthSessionId);
         }
 
         // Validate cri response item

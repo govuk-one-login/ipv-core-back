@@ -16,6 +16,7 @@ import {
   ProcessCriCallbackRequest,
 } from "../types/internal-api.js";
 import { EvcsStubPostVcsRequest } from "../types/evcs-stub.js";
+import { IdentityCheckSubjectClass } from "@govuk-one-login/data-vocab/credentials.js";
 
 const ORCHESTRATOR_CLIENT_ID = "orchApiTest";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -71,6 +72,10 @@ export const generateCriStubBody = async (
     sendErrorToQueue: boolean;
   },
   mitigatedCis?: string[],
+  overrideDocumentExpiry?: {
+    documentType: string;
+    customExpiryDate: string;
+  },
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
   const f2fRequest = f2f
@@ -89,12 +94,21 @@ export const generateCriStubBody = async (
       }
     : undefined;
 
+  let credentialSubject = scenario
+    ? await readJsonFile(criId, scenario, "credentialSubject")
+    : undefined;
+
+  if (overrideDocumentExpiry && credentialSubject) {
+    credentialSubject = overrideDocumentExpiryDate(
+      JSON.parse(credentialSubject) as IdentityCheckSubjectClass,
+      overrideDocumentExpiry,
+    );
+  }
+
   return {
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
-    credentialSubjectJson: scenario
-      ? await readJsonFile(criId, scenario, "credentialSubject")
-      : undefined,
+    credentialSubjectJson: credentialSubject,
     evidenceJson: scenario
       ? await readJsonFile(criId, scenario, "evidence")
       : undefined,
@@ -102,6 +116,29 @@ export const generateCriStubBody = async (
     f2f: f2fRequest,
     mitigations,
   };
+};
+
+const overrideDocumentExpiryDate = (
+  credentialSubject: IdentityCheckSubjectClass,
+  overrideDocumentExpiry: { documentType: string; customExpiryDate: string },
+) => {
+  if (overrideDocumentExpiry.documentType === "drivingPermit") {
+    if (
+      credentialSubject.drivingPermit &&
+      credentialSubject.drivingPermit.length > 0
+    ) {
+      credentialSubject.drivingPermit[0] = {
+        ...credentialSubject.drivingPermit[0],
+        expiryDate: overrideDocumentExpiry.customExpiryDate,
+      };
+    }
+  } else {
+    throw new Error(
+      "Unsupported document type when attempting to override document expiry date",
+    );
+  }
+
+  return JSON.stringify(credentialSubject);
 };
 
 export const generateCriStubOAuthErrorBody = (
@@ -168,15 +205,27 @@ export const generateVcRequestBody = async (
   criId: string,
   scenario: string,
   nbf?: number,
+  overrideDocumentExpiry?: {
+    documentType: string;
+    customExpiryDate: string;
+  },
 ): Promise<CriStubGenerateVcRequest> => {
+  let credentialSubject = await readJsonFile(
+    criId,
+    scenario,
+    "credentialSubject",
+  );
+  if (credentialSubject && overrideDocumentExpiry) {
+    credentialSubject = overrideDocumentExpiryDate(
+      JSON.parse(credentialSubject) as IdentityCheckSubjectClass,
+      overrideDocumentExpiry,
+    );
+  }
+
   return {
     userId: userId,
     clientId: config.core.criClientId,
-    credentialSubjectJson: await readJsonFile(
-      criId,
-      scenario,
-      "credentialSubject",
-    ),
+    credentialSubjectJson: credentialSubject,
     evidenceJson: await readJsonFile(criId, scenario, "evidence"),
     nbf: nbf ?? Math.floor(Date.now() / 1000),
   };
@@ -199,12 +248,24 @@ export const generateDcmawAsyncVcCreationBodyFromScenario = async (
   scenario: string,
   mitigatedCis: string[] = [],
   nbf?: number,
+  overrideDocumentExpiry?: {
+    documentType: string;
+    customExpiryDate: string;
+  },
 ): Promise<CriStubGenerateDcmawAsyncVcScenarioRequest> => {
+  let credentialSubject = JSON.parse(
+    await readJsonFile(criId, scenario, "credentialSubject"),
+  ) as IdentityCheckSubjectClass;
+
+  if (overrideDocumentExpiry) {
+    credentialSubject = JSON.parse(
+      overrideDocumentExpiryDate(credentialSubject, overrideDocumentExpiry),
+    );
+  }
+
   return {
     user_id: userId,
-    credential_subject: JSON.parse(
-      await readJsonFile(criId, scenario, "credentialSubject"),
-    ),
+    credential_subject: credentialSubject,
     evidence: JSON.parse(await readJsonFile(criId, scenario, "evidence")),
     queue_name: config.asyncQueue.name,
     nbf: nbf,

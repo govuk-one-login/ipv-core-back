@@ -11,8 +11,9 @@ core:
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
-    fraudCheckExpiryPeriodHours: 720
+    fraudCheckExpiryPeriodDays: 180
     dcmawAsyncVcPendingReturnTtl: 1800
+    dcmawExpiredDlValidityPeriodDays: 180
     coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
     backendSessionTimeout: 3600
     backendSessionTtl: 3600
@@ -360,15 +361,12 @@ core:
     drivingLicenceAuthCheck: true
     sorryTechnicalErrorEnabled: false
     storedIdentityServiceEnabled: true
-    sisVerificationEnabled: false
+    sisVerificationEnabled: true
 
   features:
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    sisVerification:
-      featureFlags:
-        sisVerificationEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
@@ -386,7 +384,7 @@ core:
         strategicAppEnabled: false
     zeroHourFraudVcExpiry:
       self:
-        fraudCheckExpiryPeriodHours: 0
+        fraudCheckExpiryPeriodDays: 0
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:

@@ -70,3 +70,6 @@ journey-map/.env*
 !journey-map/.env.template
 
 journey-map/public/application.js*
+
+# Ignore local running docker compose file
+local-running/compose.yaml

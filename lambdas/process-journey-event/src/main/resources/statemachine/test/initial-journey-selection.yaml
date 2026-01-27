@@ -39,6 +39,9 @@ states:
       eventWithUnsetJourneyContext:
         targetState: ANOTHER_PAGE_STATE
         journeyContextToUnset: someContext
+      eventToTransitionToUpdateSubJourney:
+        targetJourney: UPDATE_NAME
+        targetState: START
 
   CRI_STATE:
     response:

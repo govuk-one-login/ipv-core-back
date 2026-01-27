@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Disabled CRI journeys
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set

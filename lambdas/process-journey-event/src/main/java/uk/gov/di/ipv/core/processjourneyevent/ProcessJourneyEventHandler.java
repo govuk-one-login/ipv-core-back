@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -54,19 +55,22 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.UPDATE_ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.UPDATE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 import static uk.gov.di.ipv.core.library.journeys.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
+import static uk.gov.di.ipv.core.library.journeys.Events.PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
@@ -76,7 +80,12 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
+    private static final StepResponse PROBLEM_DIFFERENT_BROWSER_PAGE_RESPONSE =
+            new PageStepResponse("problem-different-browser", null, null);
     private static final String BACK_EVENT = "back";
+    private static final Set<IpvJourneyTypes> UPDATE_JOURNEY_TYPES =
+            Set.of(UPDATE_NAME, UPDATE_ADDRESS);
+    private static final String REPEAT_FRAUD_CHECK_JOURNEY_CONTEXT = "rfc";
 
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -141,6 +150,15 @@ public class ProcessJourneyEventHandler
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
 
             // Special case
+            // Handle route to problem-different-browser page directly as user will
+            // have a missing ipv-session header
+            if (journeyEvent.equals(PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT)) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Directing user to cross-browser problem page"));
+                return PROBLEM_DIFFERENT_BROWSER_PAGE_RESPONSE.value();
+            }
+
+            // Special case
             // Handle route direct back to RP (used for recoverable timeouts and cross browser
             // callbacks).
             // Users sending this event may not have a valid IPV session
@@ -195,12 +213,6 @@ public class ProcessJourneyEventHandler
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -244,6 +256,17 @@ public class ProcessJourneyEventHandler
                                 .with(
                                         LOG_USER_STATE.getFieldName(),
                                         journeyChangeState.getInitialState()));
+
+                // We don't want to record another identityProving metric for a user
+                // starting an update journey if they require a repeat fraud check (RFC)
+                // as this would only count as a single identity proving journey (we
+                // already record this metric at the start of the RFC journey).
+                if (UPDATE_JOURNEY_TYPES.contains(journeyChangeState.getJourneyType())
+                        && !ipvSessionItem
+                                .getActiveJourneyContexts()
+                                .contains(REPEAT_FRAUD_CHECK_JOURNEY_CONTEXT)) {
+                    EmbeddedMetricHelper.identityProving();
+                }
 
                 sendSubJourneyStartAuditEvent(
                         auditEventUser, journeyChangeState.getJourneyType(), deviceInformation);

@@ -1,4 +1,4 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 CIMIT - Alternate doc
   Background: Disable strategic app
     Given I activate the 'disableStrategicApp' feature set
@@ -15,13 +15,13 @@ Feature: P2 CIMIT - Alternate doc
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario Outline: Alternate doc mitigation via passport or DL
-      When I submit an <initialCri> event
-      Then I get a <initialCri> CRI response
-      When I submit <initialInvalidDoc> details to the CRI stub
-      Then I get a <noMatchPage> page response
+      When I submit an '<initialCri>' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
       When I submit a 'next' event
-      Then I get a <mitigatingCri> CRI response
-      When I submit <mitigatingDoc> details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
@@ -43,26 +43,26 @@ Feature: P2 CIMIT - Alternate doc
       Then I get a 'P2' identity
 
       Examples:
-        | initialCri          | initialInvalidDoc                            | noMatchPage                                | mitigatingCri   | mitigatingDoc                  |
-        | 'drivingLicence'    | 'kenneth-driving-permit-needs-alternate-doc' | 'pyi-driving-licence-no-match-another-way' | 'ukPassport'    | 'kenneth-passport-valid'       |
-        | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport    | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence| kenneth-driving-permit-valid |
 
     Scenario Outline: Alternate doc mitigation via passport or DL - separate session
-      When I submit an <initialCri> event
-      Then I get a <initialCri> CRI response
-      When I submit <initialInvalidDoc> details to the CRI stub
-      Then I get a <noMatchPage> page response
+      When I submit an '<initialCri>' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
       When I submit a 'next' event
-      Then I get a <mitigatingCri> CRI response
+      Then I get a '<mitigatingCri>' CRI response
 
       # User drops out of previous CRI without mitigating and starts a new journey
       Given I start a new 'medium-confidence' journey
-      Then I get a <separateSessionNoMatch> page response
+      Then I get a '<separateSessionNoMatch>' page response
       When I submit a 'next' event
-      Then I get a <mitigationStart> page response
+      Then I get a '<mitigationStart>' page response
       When I submit a 'next' event
-      Then I get a <mitigatingCri> CRI response
-      When I submit <mitigatingDoc> details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
@@ -359,13 +359,13 @@ Feature: P2 CIMIT - Alternate doc
       Then I get a 'dcmaw' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
-      When I submit an <initialCri> event
-      Then I get a <initialCri> CRI response
-      When I submit <initialInvalidDoc> details to the CRI stub
-      Then I get a <noMatchPage> page response
+      When I submit an '<initialCri>' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
       When I submit a 'next' event
-      Then I get a <mitigatingCri> CRI response
-      When I submit <mitigatingDoc> details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
@@ -387,6 +387,6 @@ Feature: P2 CIMIT - Alternate doc
       Then I get a 'P2' identity
 
       Examples:
-        | initialCri          | initialInvalidDoc                            | noMatchPage                                | mitigatingCri   | mitigatingDoc                  |
-        | 'drivingLicence'    | 'kenneth-driving-permit-needs-alternate-doc' | 'pyi-driving-licence-no-match-another-way' | 'ukPassport'    | 'kenneth-passport-valid'       |
-        | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid |

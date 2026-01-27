@@ -1,13 +1,13 @@
 [versions]
-awsSdk = "2.38.2"
+awsSdk = "2.41.0"
 jackson = "2.20.0"
-log4j = "2.25.0"
-mockito = "5.20.0"
-pact = "4.6.17"
-powertools = "2.7.0"
+log4j = "2.25.3"
+mockito = "5.21.0"
+pact = "4.6.19"
+powertools = "2.9.0"
 
 [libraries]
-apacheHttpCore = "org.apache.httpcomponents.core5:httpcore5:5.3.3"
+apacheHttpCore = "org.apache.httpcomponents.core5:httpcore5:5.4"
 aspectj = "org.aspectj:aspectjrt:1.9.21.2"
 assertJ = "org.assertj:assertj-core:3.27.3"
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.4.0"
@@ -22,7 +22,7 @@ awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-cl
 awsSdkAppConfigData = { module = "software.amazon.awssdk:appconfigdata" }
 commonsCodec = "commons-codec:commons-codec:1.20.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
-diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.3"
+diVocab = "uk.gov.di.model:di-data-model-jackson:2.0.0"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
@@ -35,8 +35,8 @@ log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.30"
-openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.20.1-alpha"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.31"
+openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.22.0-alpha"
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
@@ -53,6 +53,6 @@ awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
 pact = { id = "au.com.dius.pact", version.ref = "pact" }
-postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:9.1.0"
-sonar = "org.sonarqube:7.0.1.6134"
-spotless = "com.diffplug.spotless:8.0.0"
+postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:9.2.0"
+sonar = "org.sonarqube:7.2.0.6526"
+spotless = "com.diffplug.spotless:8.1.0"

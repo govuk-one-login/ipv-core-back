@@ -1,12 +1,12 @@
-@Build
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Identity reuse update details failures
     Rule: Update given name only
         Background:
             Given the subject already has the following credentials
-                | CRI     | scenario                     |
-                | dcmaw   | kenneth-driving-permit-valid |
-                | address | kenneth-current              |
-                | fraud   | kenneth-score-2              |
+                | CRI     | scenario               |
+                | dcmaw   | kenneth-passport-valid |
+                | address | kenneth-current        |
+                | fraud   | kenneth-score-2        |
             And I activate the 'disableStrategicApp' feature set
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -60,7 +60,7 @@ Feature: Identity reuse update details failures
             Then I get a 'delete-handover' page response
 
         Scenario: Zero score in fraud CRI - receives old identity (P2)
-            When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' drivingPermit details to the DCMAW CRI stub with overridden document expiry date
             Then I get a 'drivingLicence' CRI response
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
@@ -80,7 +80,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
         Scenario: Breaching CI received from fraud CRI - doesn't receive old identity
-            When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' drivingPermit details to the DCMAW CRI stub with overridden document expiry date
             Then I get a 'drivingLicence' CRI response
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
@@ -135,7 +135,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
         Scenario: Fraud access denied OAuth error - receives old identity (P2)
-            When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' drivingPermit details to the DCMAW CRI stub with overridden document expiry date
             Then I get a 'drivingLicence' CRI response
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
@@ -157,10 +157,10 @@ Feature: Identity reuse update details failures
     Rule: Update address only
         Background:
             Given the subject already has the following credentials
-                | CRI     | scenario                     |
-                | dcmaw   | kenneth-driving-permit-valid |
-                | address | kenneth-current              |
-                | fraud   | kenneth-score-2              |
+                | CRI     | scenario               |
+                | dcmaw   | kenneth-passport-valid |
+                | address | kenneth-current        |
+                | fraud   | kenneth-score-2        |
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
             When I submit an 'update-details' event

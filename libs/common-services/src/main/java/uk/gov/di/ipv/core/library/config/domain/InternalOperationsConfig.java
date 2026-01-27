@@ -22,8 +22,9 @@ public class InternalOperationsConfig {
     @NonNull URI audienceForClients;
     @NonNull Long jwtTtlSeconds;
     @NonNull Long maxAllowedAuthClientTtl;
-    @NonNull Integer fraudCheckExpiryPeriodHours;
+    @NonNull Integer fraudCheckExpiryPeriodDays;
     @NonNull Long dcmawAsyncVcPendingReturnTtl;
+    @NonNull Integer dcmawExpiredDlValidityPeriodDays;
     @NonNull String clientJarKmsEncryptionKeyAliasPrimary;
     @NonNull String clientJarKmsEncryptionKeyAliasSecondary;
     @NonNull URI coreVtmClaim;

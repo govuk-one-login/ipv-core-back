@@ -6,6 +6,7 @@ WORKDIR /app
 # Install packages
 COPY journey-map/package.json ./
 COPY journey-map/package-lock.json ./
+COPY journey-map/.npmrc ./
 RUN npm ci
 
 # Copy public assets

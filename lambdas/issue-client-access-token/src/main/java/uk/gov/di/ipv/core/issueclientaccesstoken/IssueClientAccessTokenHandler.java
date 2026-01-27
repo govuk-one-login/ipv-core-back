@@ -38,7 +38,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
-import java.io.UncheckedIOException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -224,12 +223,6 @@ public class IssueClientAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
-        } catch (UncheckedIOException e) {
-            // Temporary mitigation to force lambda instance to crash and restart by explicitly
-            // exiting the program on fatal IOException - see PYIC-8220 and incident INC0014398.
-            LOGGER.error("Crashing on UncheckedIOException", e);
-            System.exit(1);
-            return null;
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

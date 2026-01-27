@@ -103,9 +103,13 @@ public class VerifiableCredentialGenerator {
                     new JWTClaimsSet.Builder()
                             .claim(SUBJECT, userId)
                             .claim(ISSUER, issuer)
-                            .claim(NOT_BEFORE, nbf.getEpochSecond())
-                            .claim(ISSUED_AT, nbf.getEpochSecond())
                             .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class));
+
+            if (nbf != null) {
+                claimSetBuilder
+                        .claim(NOT_BEFORE, nbf.getEpochSecond())
+                        .claim(ISSUED_AT, nbf.getEpochSecond());
+            }
 
             if (vot != null) {
                 claimSetBuilder.claim(VC_VOT, vot);
