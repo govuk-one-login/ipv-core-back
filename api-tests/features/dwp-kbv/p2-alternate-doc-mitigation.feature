@@ -1,7 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P2 CIMIT - Alternate doc
   Background: Disable strategic app
-    Given I activate the 'disableStrategicApp,dwpKbvTest' feature set
+    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

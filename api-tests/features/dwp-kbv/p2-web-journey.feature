@@ -2,7 +2,7 @@
 Feature: P2 Web document journey
 
   Background: Start web journey
-    Given I activate the 'disableStrategicApp,dwpKbvTest' feature set
+    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
