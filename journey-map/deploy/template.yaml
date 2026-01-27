@@ -121,10 +121,10 @@ Resources:
       SecurityGroupIngress:
         - CidrIp:
             Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
-          Description: Allow vpc cidr ingress to port 80
-          FromPort: 80
+          Description: Allow vpc cidr ingress to port 443
+          FromPort: 443
           IpProtocol: tcp
-          ToPort: 80
+          ToPort: 443
       VpcId:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
 
@@ -208,6 +208,28 @@ Resources:
       ApiId: !Ref ApiGwHttpEndpoint
       StageName: $default
       AutoDeploy: true
+      AccessLogSettings:
+        DestinationArn: !GetAtt APIGWAccessLogsGroup.Arn
+        Format: >-
+          {
+          "requestId":"$context.requestId",
+          "ip": "$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "path": "$context.path",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLength":"$context.responseLength",
+          "responseLatency":"$context.responseLatency"
+          }
+
+  APIGWAccessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-API-GW-AccessLogs
+      RetentionInDays: 30
 
   # Private Application Load Balancer
   LoadBalancer:
@@ -229,6 +251,10 @@ Resources:
           - Key: deletion_protection.enabled
             Value: false
           - !Ref AWS::NoValue
+        - Key: "access_logs.s3.enabled"
+          Value: "true"
+        - Key: "access_logs.s3.bucket"
+          Value: "ipv-core-dev02-access-logs"
 
   LoadBalancerListenerTargetGroupECS:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -254,36 +280,49 @@ Resources:
       # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled
       LoadBalancerArn: !Ref LoadBalancer
       Protocol: HTTPS
-      Port: 80
+      Port: 443
       Certificates:
         - CertificateArn: !Ref JourneyMapSSLCert
       DefaultActions:
-        - Order: 1
-          Type: authenticate-oidc
-          AuthenticateOidcConfig:
-            Issuer: https://accounts.google.com
-            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
-            ClientId: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_ID:SecretString}}' # pragma: allowlist secret
-            TokenEndpoint: https://oauth2.googleapis.com/token
-            ClientSecret: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
-            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
-            Scope: "openid email"
-            OnUnauthenticatedRequest: authenticate
-        - Order: 2
-          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+#        - Order: 1
+#          Type: authenticate-oidc
+#          AuthenticateOidcConfig:
+#            Issuer: https://accounts.google.com
+#            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
+#            ClientId: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_ID:SecretString}}' # pragma: allowlist secret
+#            TokenEndpoint: https://oauth2.googleapis.com/token
+#            ClientSecret: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
+#            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
+#            Scope: "openid email"
+#            OnUnauthenticatedRequest: authenticate
+#        - Order: 2
+        - TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
           Type: forward
 
-  HealthCheckAllowRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+#  HealthCheckAllowRule:
+#    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+#    Properties:
+#      Actions:
+#        - Type: forward
+#          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+#      Conditions:
+#        - Field: path-pattern
+#          Values: [ "/healthcheck" ]
+#      ListenerArn: !Ref LoadBalancerListener
+#      Priority: 1
+
+  LoadBalancerListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
-      Conditions:
-        - Field: path-pattern
-          Values: [ "/healthcheck" ]
-      ListenerArn: !Ref LoadBalancerListener
-      Priority: 1
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: '443'
+            StatusCode: HTTP_301
 
   # ECS cluster, service, task and autoscaling definition
   JourneyMapCluster:
