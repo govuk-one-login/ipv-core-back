@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.enums.TicfCode;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -102,6 +103,14 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
@@ -126,16 +135,17 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
-    private static final Map<String, AisInterventionType> aisDescriptionByTicfCode =
+    private static final Map<TicfCode, AisInterventionType> aisDescriptionByTicfCode =
             Map.of(
-                    "00", AIS_NO_INTERVENTION,
-                    "01", AIS_ACCOUNT_SUSPENDED,
-                    "02", AIS_ACCOUNT_UNSUSPENDED,
-                    "03", AIS_ACCOUNT_BLOCKED,
-                    "04", AIS_FORCED_USER_PASSWORD_RESET,
-                    "05", AIS_FORCED_USER_IDENTITY_VERIFY,
-                    "06", AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
-                    "07", AIS_ACCOUNT_UNBLOCKED);
+                    NO_INTERVENTION, AIS_NO_INTERVENTION,
+                    ACCOUNT_SUSPENDED, AIS_ACCOUNT_SUSPENDED,
+                    ACCOUNT_UNSUSPENDED, AIS_ACCOUNT_UNSUSPENDED,
+                    ACCOUNT_BLOCKED, AIS_ACCOUNT_BLOCKED,
+                    FORCED_USER_PASSWORD_RESET, AIS_FORCED_USER_PASSWORD_RESET,
+                    FORCED_USER_IDENTITY_VERIFY, AIS_FORCED_USER_IDENTITY_VERIFY,
+                    FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+                            AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY,
+                    ACCOUNT_UNBLOCKED, AIS_ACCOUNT_UNBLOCKED);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -707,7 +717,7 @@ public class ProcessCandidateIdentityHandler
             AccountInterventionState currentAccountInterventionState,
             List<VerifiableCredential> ticfVcs) {
 
-        var ticfCodesAsAisDescriptions =
+        var ticfCodes =
                 ticfVcs.stream()
                         .filter(vc -> vc.getCredential() instanceof RiskAssessmentCredential)
                         .flatMap(
@@ -718,18 +728,20 @@ public class ProcessCandidateIdentityHandler
                         .filter(Objects::nonNull)
                         .map(Intervention::getInterventionCode)
                         .filter(Objects::nonNull)
-                        .map(aisDescriptionByTicfCode::get);
+                        .map(TicfCode::fromCode);
 
         if (configService.enabled(AIS_STATE_CHECK)) {
-            return ticfCodesAsAisDescriptions.anyMatch(
-                    ticfIntervention ->
+            return ticfCodes.anyMatch(
+                    ticfCode ->
                             AccountInterventionEvaluator.hasTicfIntervention(
-                                    currentAccountInterventionState, ticfIntervention));
+                                    currentAccountInterventionState, ticfCode));
         } else {
-            return ticfCodesAsAisDescriptions.anyMatch(
-                    ticfIntervention ->
-                            AccountInterventionEvaluator.hasTicfIntervention(
-                                    currentAccountInterventionType, ticfIntervention));
+            return ticfCodes
+                    .map(aisDescriptionByTicfCode::get)
+                    .anyMatch(
+                            ticfIntervention ->
+                                    AccountInterventionEvaluator.hasTicfIntervention(
+                                            currentAccountInterventionType, ticfIntervention));
         }
     }
 

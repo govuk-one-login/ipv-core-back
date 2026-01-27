@@ -6,12 +6,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
+import uk.gov.di.ipv.core.library.enums.TicfCode;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNBLOCKED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_UNSUSPENDED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.NO_INTERVENTION;
 
 public final class AccountInterventionEvaluator {
 
@@ -95,6 +100,12 @@ public final class AccountInterventionEvaluator {
                 || AIS_ACCOUNT_UNSUSPENDED.equals(aisInterventionType);
     }
 
+    private static boolean isNotACurrentIntervention(TicfCode ticfInterventionType) {
+        return NO_INTERVENTION.equals(ticfInterventionType)
+                || ACCOUNT_UNBLOCKED.equals(ticfInterventionType)
+                || ACCOUNT_UNSUSPENDED.equals(ticfInterventionType);
+    }
+
     public static boolean hasStartOfJourneyIntervention(AccountInterventionState aisState) {
         var noIntervention = hasNoInterventionFlag(aisState);
         var isReprove = isReprove(aisState);
@@ -143,13 +154,12 @@ public final class AccountInterventionEvaluator {
     }
 
     public static boolean hasTicfIntervention(
-            AccountInterventionState currentAisState, AisInterventionType ticfIntervention) {
+            AccountInterventionState currentAisState, TicfCode ticfIntervention) {
         var bothValid =
                 hasNoInterventionFlag(currentAisState)
                         && isNotACurrentIntervention(ticfIntervention);
         var bothReprove =
-                isReprove(currentAisState)
-                        && AIS_FORCED_USER_IDENTITY_VERIFY.equals(ticfIntervention);
+                isReprove(currentAisState) && FORCED_USER_IDENTITY_VERIFY.equals(ticfIntervention);
         var reproveToValid =
                 isReprove(currentAisState) && isNotACurrentIntervention(ticfIntervention);
 

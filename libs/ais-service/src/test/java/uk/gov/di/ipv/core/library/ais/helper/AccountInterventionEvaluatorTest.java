@@ -5,6 +5,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
+import uk.gov.di.ipv.core.library.enums.TicfCode;
 
 import java.util.stream.Stream;
 
@@ -23,6 +24,14 @@ import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_U
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_BLOCKED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_SUSPENDED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNBLOCKED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.ACCOUNT_UNSUSPENDED;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
+import static uk.gov.di.ipv.core.library.enums.TicfCode.NO_INTERVENTION;
 
 class AccountInterventionEvaluatorTest {
 
@@ -230,7 +239,7 @@ class AccountInterventionEvaluatorTest {
     @MethodSource("ticfCodesToTriggerMidJourneyIntervention")
     void shouldReturnTrueWhenProvideInvalidMidJourneyTicfCode(
             AccountInterventionState currentAccountInterventionType,
-            AisInterventionType ticfAccountInterventionType) {
+            TicfCode ticfAccountInterventionType) {
         assertTrue(
                 AccountInterventionEvaluator.hasTicfIntervention(
                         currentAccountInterventionType, ticfAccountInterventionType));
@@ -238,26 +247,26 @@ class AccountInterventionEvaluatorTest {
 
     private static Stream<Arguments> ticfCodesToTriggerMidJourneyIntervention() {
         return Stream.of(
-                Arguments.of(createNoInterventionAisState(), AIS_ACCOUNT_BLOCKED),
-                Arguments.of(createNoInterventionAisState(), AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(createNoInterventionAisState(), AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(createNoInterventionAisState(), AIS_FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(createNoInterventionAisState(), ACCOUNT_BLOCKED),
+                Arguments.of(createNoInterventionAisState(), ACCOUNT_SUSPENDED),
+                Arguments.of(createNoInterventionAisState(), FORCED_USER_PASSWORD_RESET),
+                Arguments.of(createNoInterventionAisState(), FORCED_USER_IDENTITY_VERIFY),
                 Arguments.of(
                         createNoInterventionAisState(),
-                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
-                Arguments.of(createReproveIdentityAisState(), AIS_ACCOUNT_BLOCKED),
-                Arguments.of(createReproveIdentityAisState(), AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(createReproveIdentityAisState(), AIS_FORCED_USER_PASSWORD_RESET),
+                        FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY),
+                Arguments.of(createReproveIdentityAisState(), ACCOUNT_BLOCKED),
+                Arguments.of(createReproveIdentityAisState(), ACCOUNT_SUSPENDED),
+                Arguments.of(createReproveIdentityAisState(), FORCED_USER_PASSWORD_RESET),
                 Arguments.of(
                         createReproveIdentityAisState(),
-                        AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
+                        FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
     }
 
     @ParameterizedTest
     @MethodSource("ticfCodesToNotTriggerMidJourneyIntervention")
     void shouldReturnFalseWhenProvideValidMidJourneyTicfCode(
             AccountInterventionState currentAccountInterventionType,
-            AisInterventionType ticfAccountInterventionType) {
+            TicfCode ticfAccountInterventionType) {
         assertFalse(
                 AccountInterventionEvaluator.hasTicfIntervention(
                         currentAccountInterventionType, ticfAccountInterventionType));
@@ -265,12 +274,12 @@ class AccountInterventionEvaluatorTest {
 
     private static Stream<Arguments> ticfCodesToNotTriggerMidJourneyIntervention() {
         return Stream.of(
-                Arguments.of(createNoInterventionAisState(), AIS_NO_INTERVENTION),
-                Arguments.of(createNoInterventionAisState(), AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(createNoInterventionAisState(), AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(createReproveIdentityAisState(), AIS_FORCED_USER_IDENTITY_VERIFY),
-                Arguments.of(createReproveIdentityAisState(), AIS_ACCOUNT_UNBLOCKED),
-                Arguments.of(createReproveIdentityAisState(), AIS_ACCOUNT_UNSUSPENDED),
-                Arguments.of(createReproveIdentityAisState(), AIS_NO_INTERVENTION));
+                Arguments.of(createNoInterventionAisState(), NO_INTERVENTION),
+                Arguments.of(createNoInterventionAisState(), ACCOUNT_UNSUSPENDED),
+                Arguments.of(createNoInterventionAisState(), ACCOUNT_UNBLOCKED),
+                Arguments.of(createReproveIdentityAisState(), FORCED_USER_IDENTITY_VERIFY),
+                Arguments.of(createReproveIdentityAisState(), ACCOUNT_UNBLOCKED),
+                Arguments.of(createReproveIdentityAisState(), ACCOUNT_UNSUSPENDED),
+                Arguments.of(createReproveIdentityAisState(), NO_INTERVENTION));
     }
 }
