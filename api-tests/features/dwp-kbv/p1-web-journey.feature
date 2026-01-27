@@ -1,7 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P1 Web Journeys
   Background: Set feature sets
-    Given I activate the 'disableStrategicApp,dwpKbvTest' feature sets
+    Given I activate the 'disableStrategicApp' feature sets
 
   Rule: Passport/DL web journey
     Background: Start P1 journey ineligible for app
