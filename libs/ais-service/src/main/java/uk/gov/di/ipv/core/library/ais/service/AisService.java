@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.ais.client.AisClient;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.AisInterventionType;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
@@ -33,5 +34,23 @@ public class AisService {
             LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
             return AIS_NO_INTERVENTION;
         }
+    }
+
+    public AccountInterventionState fetchAisState(String userId) {
+        try {
+            return aisClient.getAccountInterventionStatus(userId).getState();
+        } catch (Exception e) {
+            LOGGER.error(AIS_FAIL_OPEN_ERROR_DESCRIPTION, e);
+            return createNoInterventionState();
+        }
+    }
+
+    public static AccountInterventionState createNoInterventionState() {
+        return AccountInterventionState.builder()
+                .isBlocked(false)
+                .isReproveIdentity(false)
+                .isResetPassword(false)
+                .isSuspended(false)
+                .build();
     }
 }

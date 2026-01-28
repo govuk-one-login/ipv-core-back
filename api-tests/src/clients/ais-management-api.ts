@@ -1,7 +1,15 @@
 import config from "../config/config.js";
 
+interface AisState {
+  blocked: boolean;
+  suspended: boolean;
+  reproveIdentity: boolean;
+  resetPassword: boolean;
+}
+
 interface AisManagementRequestBody {
   intervention: string;
+  state?: AisState;
   statusCode?: number;
 }
 
@@ -11,6 +19,19 @@ export const primeResponseForUser = async (
 ) => {
   const requestBody: AisManagementRequestBody = {
     intervention: AisValidResponseTypes[desiredResponse],
+  };
+
+  await sendManagementRequest(userId, requestBody);
+};
+
+export const primeCustomResponseForUser = async (
+  userId: string,
+  baseResponse: AisValidResponseTypes,
+  customState: AisState,
+) => {
+  const requestBody: AisManagementRequestBody = {
+    intervention: AisValidResponseTypes[baseResponse],
+    state: customState,
   };
 
   await sendManagementRequest(userId, requestBody);
@@ -44,8 +65,9 @@ async function sendManagementRequest(
   });
 
   if (!response.ok) {
+    const errorBody = await response.text();
     throw new Error(
-      `AIS Management API request failed: ${response.statusText}`,
+      `AIS Management API request failed: ${response.statusText}: ${errorBody}`,
     );
   }
 }

@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
@@ -100,6 +101,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.ais.TestData.createBlockedIdentityAisState;
+import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
+import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_STATE_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -108,6 +113,7 @@ import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
+import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
 import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -241,6 +247,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
         lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
+        lenient().when(configService.enabled(AIS_STATE_CHECK)).thenReturn(false);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -1620,7 +1627,37 @@ class CheckExistingIdentityHandlerTest {
         return Stream.of(
                 Arguments.of(AIS_ACCOUNT_BLOCKED),
                 Arguments.of(AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_FORCED_USER_PASSWORD_RESET));
+                Arguments.of(AIS_FORCED_USER_PASSWORD_RESET),
+                Arguments.of(AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
+    }
+
+    @ParameterizedTest
+    @MethodSource("aisStatesToTriggerIntervention")
+    void shouldInvalidateSession(AccountInterventionState aisState)
+            throws IpvSessionNotFoundException, ClientOauthSessionNotFoundException {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(aisState);
+        when(configService.enabled(AIS_STATE_CHECK)).thenReturn(true);
+
+        // Act
+        var journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        // Assert
+        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(JOURNEY_ACCOUNT_INTERVENTION, journeyResponse);
+    }
+
+    private static Stream<Arguments> aisStatesToTriggerIntervention() {
+        return Stream.of(
+                Arguments.of(createBlockedIdentityAisState()),
+                Arguments.of(createSuspendedIdentityAisState()),
+                Arguments.of(createResetPasswordAisState()));
     }
 
     @Test
