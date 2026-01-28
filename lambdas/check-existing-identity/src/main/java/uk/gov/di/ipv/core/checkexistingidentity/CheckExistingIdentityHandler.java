@@ -17,6 +17,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -43,6 +45,7 @@ import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -64,6 +67,8 @@ import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.IdentityCheckCredential;
 
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -437,6 +442,24 @@ public class CheckExistingIdentityHandler
                         evcsService.markHistoricInEvcs(userId, vcsForUpdate);
 
                         vcsForUpdate.forEach(credentialBundle.credentials::remove);
+
+                        VcHelper.extractNbf(dcmawDlVc.get())
+                                .ifPresent(
+                                        nbfInstant -> {
+                                            var nbfMs = nbfInstant.toEpochMilli();
+                                            var dlVcExpiryPeriodMs =
+                                                    Duration.ofDays(
+                                                                    configService
+                                                                            .getDcmawExpiredDlValidityPeriodDays())
+                                                            .toMillis();
+
+                                            sendAuditEventWithExtension(
+                                                    AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
+                                                    auditEventUser,
+                                                    deviceInformation,
+                                                    new AuditExtensionExpiredDcmawDlVcFound(
+                                                            dlVcExpiryPeriodMs, nbfMs));
+                                        });
                     }
                 }
             }
@@ -672,9 +695,15 @@ public class CheckExistingIdentityHandler
             String deviceInformation)
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
+        var fraudVcs =
+                credentialBundle.credentials.stream()
+                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
+                        .toList();
+        var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
+
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        credentialBundle.credentials, configService)) {
+                        fraudVcs, configService, fixedClock)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));
@@ -684,6 +713,28 @@ public class CheckExistingIdentityHandler
                     false);
 
             EmbeddedMetricHelper.identityProving();
+
+            fraudVcs.stream()
+                    .findFirst()
+                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
+                    .flatMap(VcHelper::extractNbf)
+                    .ifPresent(
+                            nbfInstant -> {
+                                var vcExpiryPeriodMs =
+                                        Duration.ofDays(
+                                                        configService
+                                                                .getFraudCheckExpiryPeriodDays())
+                                                .toMillis();
+                                var nbfMs = nbfInstant.toEpochMilli();
+
+                                sendAuditEventWithExtension(
+                                        AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
+                                        auditEventUser,
+                                        deviceInformation,
+                                        new AuditExtensionExpiredFraudVcFound(
+                                                vcExpiryPeriodMs, nbfMs));
+                            });
+
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 

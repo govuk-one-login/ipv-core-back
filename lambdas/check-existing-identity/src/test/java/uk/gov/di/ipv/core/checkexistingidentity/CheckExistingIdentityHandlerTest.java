@@ -26,6 +26,8 @@ import uk.gov.di.ipv.core.library.ais.service.AisService;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -1128,7 +1130,8 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnNewIdentityResponseIfUserHasExpiredDcmawDrivingLicence() throws Exception {
+        void shouldReturnNewIdentityResponseIfUserHasExpiredDcmawDrivingLicenceAndSendAuditEvent()
+                throws Exception {
             var testCredentialBundle =
                     List.of(
                             vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
@@ -1146,6 +1149,7 @@ class CheckExistingIdentityHandlerTest {
                                     Optional.empty(),
                                     Gpg45Scores.builder().build()));
             when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
 
             try (MockedStatic<VcHelper> mockVcHelper =
                     mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
@@ -1165,6 +1169,15 @@ class CheckExistingIdentityHandlerTest {
                 verify(mockEvcsService, times(1))
                         .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
             }
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            var extension = (AuditExtensionExpiredDcmawDlVcFound) auditEvent.getExtensions();
+            assertEquals(AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND, auditEvent.getEventName());
+            assertEquals(
+                    1705986521000L, // 23/01/2024 timestamp in ms
+                    extension.vcIssueDate());
+            assertEquals(15552000000L, extension.vcExpiryPeriodMs()); // 180 days in ms
         }
 
         @Test
@@ -1558,6 +1571,14 @@ class CheckExistingIdentityHandlerTest {
                                 expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
 
                 assertEquals(Vot.P0, ipvSessionItem.getVot());
+                verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+                var auditEvent = auditEventArgumentCaptor.getValue();
+                var extension = (AuditExtensionExpiredFraudVcFound) auditEvent.getExtensions();
+                assertEquals(AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND, auditEvent.getEventName());
+                assertEquals(
+                        1658829758000L, // 26/07/2022 timestamp in ms
+                        extension.vcIssueDate());
+                assertEquals(86400000L, extension.vcExpiryPeriodMs()); // 1 day in ms
             }
         }
 
