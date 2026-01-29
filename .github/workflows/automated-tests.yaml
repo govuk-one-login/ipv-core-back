@@ -211,7 +211,7 @@ jobs:
         with:
           gradle-version: "8.13"
 
-      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/setup-sam@c2a20b1822cc4a6bc594ff7f1dbb658758e383c3
         with:
           use-installer: true
 

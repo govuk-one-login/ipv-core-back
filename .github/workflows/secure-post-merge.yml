@@ -171,7 +171,7 @@ jobs:
           gradle-version: "8.13"
 
       - name: Set up SAM CLI
-        uses: aws-actions/setup-sam@v2
+        uses: aws-actions/setup-sam@c2a20b1822cc4a6bc594ff7f1dbb658758e383c3
 
       - name: Fix SAM cryptography issue https://github.com/aws/aws-sam-cli/issues/4527
         run: |
