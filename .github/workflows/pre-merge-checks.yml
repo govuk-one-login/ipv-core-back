@@ -1,9 +1,6 @@
 name: build and test
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types:
       - opened
@@ -15,190 +12,21 @@ env:
   SAM_CLI_TELEMETRY: "0"
 
 jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11.2'
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-        with:
-          extra_args: "detect-secrets --all-files"
-
-  test-java:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-
-      - name: Build and unit tests
-        run: ./gradlew clean build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
-
-      - name: Perform Static Analysis
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar
-
-  api-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  # Run the automated tests.
+  automatedTests:
+    uses: ./.github/workflows/automated-tests.yaml
     permissions:
       id-token: write
       packages: read
       contents: read
-    defaults:
-      run:
-        working-directory: ./api-tests
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Setup .npmrc
-        run: |
-          cp .npmrc.template .npmrc && \
-          sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/"${{ secrets.GITHUB_TOKEN }}"/ .npmrc
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Linting
-        run: npm run lint
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-
-      - name: Calculate queue name
-        env:
-          # https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
-          SAFE_BRANCH_NAME: ${{ github.head_ref || github.sha }}
-        # SQS queue names have a max length of 80 and cannot contain special characters
-        run: |
-          queue_name=$(echo "$SAFE_BRANCH_NAME" | sed 's/[^[:alnum:]-]/\_/g' | cut -c1-60)
-          echo "queue_name=stubQueue_branch_$queue_name" >> "$GITHUB_OUTPUT"
-        id: extract_queue_name
-
-      - name: Setup app secrets
-        run: |
-          cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
-          sed -i s/CIMIT_API_KEY/"${{ secrets.API_KEY_CIMIT }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/EVCS_API_KEY/"${{ secrets.API_KEY_EVCS }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/SIS_API_KEY/"${{ secrets.API_KEY_SIS }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/ASYNC_QUEUE_API_KEY/"${{ secrets.ASYNC_QUEUE_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/ASYNC_QUEUE_NAME/"${{ steps.extract_queue_name.outputs.queue_name }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/TICF_API_KEY/"${{ secrets.TICF_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/DCMAW_ASYNC_SECRET/"${{ secrets.DCMAW_ASYNC_SECRET }}"/ ../local-running/core.local.secrets.yaml
-
-      - name: Local API tests
-        env:
-          ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
-          EVCS_STUB_API_KEY: ${{ secrets.API_KEY_EVCS }}
-          CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
-          MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
-          CIMIT_INTERNAL_API_KEY: ${{ secrets.API_KEY_CIMIT }}
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
-        run: npm run test:ci
-
-      - name: Upload API test report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: API test report
-          path: api-tests/reports/
-          retention-days: 7
-
-      - name: Upload Application logs
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
-        with:
-          name: Application logs
-          path: api-tests/core-back-output.log
-          retention-days: 7
-
-  sam-build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
-        with:
-          gradle-version: "8.13"
-
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-
-      - run: sam build -t deploy/template.yaml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    secrets:
+      API_KEY_CIMIT: ${{ secrets.API_KEY_CIMIT }}
+      API_KEY_EVCS: ${{ secrets.API_KEY_EVCS }}
+      API_KEY_SIS: ${{ secrets.API_KEY_SIS }}
+      ASYNC_QUEUE_API_KEY: ${{ secrets.ASYNC_QUEUE_API_KEY }}
+      CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
+      DCMAW_ASYNC_SECRET: ${{ secrets.DCMAW_ASYNC_SECRET }}
+      MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      TICF_API_KEY: ${{ secrets.TICF_API_KEY }}
+      MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}

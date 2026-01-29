@@ -4,18 +4,28 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      # If you are adding or removing from this list, also update 'files_ignore' in check-if-deploy-needed job
-      - '**/*.md'
-      - 'lambdas/*/src/test/**'
-      - 'libs/*/src/test/**'
-      - 'libs/test-data/**'
-      - 'libs/test-helpers/**'
-      - 'journey-map/**'
-      - 'local-running/**'
   workflow_dispatch:
 
 jobs:
+  # Always run the automated tests and stop if they fail.
+  automatedTests:
+    uses: ./.github/workflows/automated-tests.yaml
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+    secrets:
+      API_KEY_CIMIT: ${{ secrets.API_KEY_CIMIT }}
+      API_KEY_EVCS: ${{ secrets.API_KEY_EVCS }}
+      API_KEY_SIS: ${{ secrets.API_KEY_SIS }}
+      ASYNC_QUEUE_API_KEY: ${{ secrets.ASYNC_QUEUE_API_KEY }}
+      CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
+      DCMAW_ASYNC_SECRET: ${{ secrets.DCMAW_ASYNC_SECRET }}
+      MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      TICF_API_KEY: ${{ secrets.TICF_API_KEY }}
+      MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
+
   check-if-api-tests-changed:
     runs-on: ubuntu-latest
     outputs:
@@ -52,8 +62,10 @@ jobs:
             echo "$file was changed"
           done
 
-  build-test-images-if-needed-build:
-    needs: check-if-api-tests-changed
+  build-api-test-images-if-changed:
+    needs:
+      - automatedTests
+      - check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
@@ -67,8 +79,10 @@ jobs:
       packages: read
       contents: read
 
-  build-test-images-if-needed-shared-dev:
-    needs: check-if-api-tests-changed
+  build-api-test-images-if-changed-shared-dev:
+    needs:
+      - automatedTests
+      - check-if-api-tests-changed
     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
@@ -98,7 +112,6 @@ jobs:
         with:
           files: |
             **
-          # We want to skip api-tests folder here as we don't want it to trigger deployment.
           files_ignore: |
             api-tests/**
             **/*.md
@@ -119,8 +132,9 @@ jobs:
 
   deploy:
     needs:
-      - build-test-images-if-needed-build
-      - build-test-images-if-needed-shared-dev
+      - automatedTests
+      - build-api-test-images-if-changed
+      - build-api-test-images-if-changed-shared-dev
       - check-if-deploy-needed
     if: |
       !failure() &&
@@ -157,7 +171,7 @@ jobs:
           gradle-version: "8.13"
 
       - name: Set up SAM CLI
-        uses: aws-actions/setup-sam@v2
+        uses: aws-actions/setup-sam@c2a20b1822cc4a6bc594ff7f1dbb658758e383c3
 
       - name: Fix SAM cryptography issue https://github.com/aws/aws-sam-cli/issues/4527
         run: |
