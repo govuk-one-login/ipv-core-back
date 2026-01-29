@@ -105,12 +105,14 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Setup .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp .npmrc.template .npmrc && \
-          sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/"${{ secrets.GITHUB_TOKEN }}"/ .npmrc
+          sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/"$GITHUB_TOKEN"/ .npmrc
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts # the .npmrc should already stop scripts, but no harm in having this too
 
       - name: Linting
         run: npm run lint
@@ -140,15 +142,23 @@ jobs:
         id: extract_queue_name
 
       - name: Setup app secrets
+        env:
+          API_KEY_CIMIT: ${{ secrets.API_KEY_CIMIT }}
+          API_KEY_EVCS: ${{ secrets.API_KEY_EVCS }}
+          API_KEY_SIS: ${{ secrets.API_KEY_SIS }}
+          ASYNC_QUEUE_API_KEY: ${{ secrets.ASYNC_QUEUE_API_KEY }}
+          TICF_API_KEY: ${{ secrets.TICF_API_KEY }}
+          DCMAW_ASYNC_SECRET: ${{ secrets.DCMAW_ASYNC_SECRET }}
         run: |
           cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
-          sed -i s/CIMIT_API_KEY/"${{ secrets.API_KEY_CIMIT }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/EVCS_API_KEY/"${{ secrets.API_KEY_EVCS }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/SIS_API_KEY/"${{ secrets.API_KEY_SIS }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/ASYNC_QUEUE_API_KEY/"${{ secrets.ASYNC_QUEUE_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/CIMIT_API_KEY/"$API_KEY_CIMIT"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/EVCS_API_KEY/"$API_KEY_EVCS"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/SIS_API_KEY/"$API_KEY_SIS"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/ASYNC_QUEUE_API_KEY/"$ASYNC_QUEUE_API_KEY"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/ASYNC_QUEUE_NAME/"${{ steps.extract_queue_name.outputs.queue_name }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/TICF_API_KEY/"${{ secrets.TICF_API_KEY }}"/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/DCMAW_ASYNC_SECRET/"${{ secrets.DCMAW_ASYNC_SECRET }}"/ ../local-running/core.local.secrets.yaml
+          sed -i s/TICF_API_KEY/"$TICF_API_KEY"/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/DCMAW_ASYNC_SECRET/"$DCMAW_ASYNC_SECRET"/ ../local-running/core.local.secrets.yaml
+
 
       - name: Local API tests
         env:
