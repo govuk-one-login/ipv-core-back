@@ -24,7 +24,7 @@ on:
       - synchronize
 
 jobs:
-  contract-testing-consumer:
+  contract-testing:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
