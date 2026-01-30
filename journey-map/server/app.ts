@@ -1,5 +1,4 @@
 import express from "express";
-import { authorise } from "./auth-middleware.js";
 import {
   fetchJourneyTransitionsHandler,
   fetchSystemSettingsHandler,
@@ -14,8 +13,6 @@ app.use(express.json());
 app.get("/healthcheck", (req, res) => {
   res.status(200).send("OK");
 });
-
-app.use(authorise);
 
 app.post("/journey-transitions", fetchJourneyTransitionsHandler);
 app.get("/system-settings/:environment", fetchSystemSettingsHandler);
