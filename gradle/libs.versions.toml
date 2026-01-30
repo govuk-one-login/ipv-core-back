@@ -9,7 +9,7 @@ powertools = "2.9.0"
 [libraries]
 apacheHttpCore = "org.apache.httpcomponents.core5:httpcore5:5.4"
 aspectj = "org.aspectj:aspectjrt:1.9.21.2"
-assertJ = "org.assertj:assertj-core:3.27.3"
+assertJ = "org.assertj:assertj-core:3.27.7"
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.4.0"
 awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.16.0"
 awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
