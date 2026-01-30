@@ -303,10 +303,6 @@ Resources:
           Image: CONTAINER-IMAGE-PLACEHOLDER
           Name: app
           Environment:
-            - Name: JOURNEY_MAP_USERNAME
-              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_USERNAME}}'
-            - Name: JOURNEY_MAP_PASSWORD
-              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_PASSWORD}}'
             - Name: MAXIMUM_TIME_RANGE_MS
               Value: '{{resolve:ssm:/journey-map/MAXIMUM_TIME_RANGE_MS}}'
             - Name: JOURNEY_TRANSITIONS_ENDPOINT_PRODUCTION
