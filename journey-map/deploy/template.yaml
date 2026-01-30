@@ -221,32 +221,32 @@ Resources:
       Certificates:
         - CertificateArn: !Ref JourneyMapSSLCert
       DefaultActions:
-#        - Order: 1
-#          Type: authenticate-oidc
-#          AuthenticateOidcConfig:
-#            Issuer: https://accounts.google.com
-#            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
-#            ClientId: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_ID:SecretString}}' # pragma: allowlist secret
-#            TokenEndpoint: https://oauth2.googleapis.com/token
-#            ClientSecret: '{{resolve:secretsmanager:/journey-map/OAUTH_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
-#            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
-#            Scope: "openid email"
-#            OnUnauthenticatedRequest: authenticate
-#        - Order: 2
-        - TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+        - Order: 1
+          Type: authenticate-oidc
+          AuthenticateOidcConfig:
+            Issuer: https://accounts.google.com
+            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
+            ClientId: '{{resolve:secretsmanager:/journey-map/OIDC_CLIENT_ID:SecretString}}' # pragma: allowlist secret
+            TokenEndpoint: https://oauth2.googleapis.com/token
+            ClientSecret: '{{resolve:secretsmanager:/journey-map/OIDC_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
+            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
+            Scope: "openid email"
+            OnUnauthenticatedRequest: authenticate
+        - Order: 2
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
           Type: forward
 
-#  HealthCheckAllowRule:
-#    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-#    Properties:
-#      Actions:
-#        - Type: forward
-#          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
-#      Conditions:
-#        - Field: path-pattern
-#          Values: [ "/healthcheck" ]
-#      ListenerArn: !Ref LoadBalancerListener
-#      Priority: 1
+  HealthCheckAllowRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+      Conditions:
+        - Field: path-pattern
+          Values: [ "/healthcheck" ]
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
 
   # ECS cluster, service, task and autoscaling definition
   JourneyMapCluster:
