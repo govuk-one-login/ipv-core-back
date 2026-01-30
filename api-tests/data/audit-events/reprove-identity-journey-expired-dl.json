@@ -1,0 +1,313 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_EXPIRED_DCMAW_DL_VC_FOUND",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "vc_expiry_period_ms": 15552000000,
+      "vc_issue_date": 1658829758000
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "NEW_P2_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://dcmaw-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 1,
+          "checkDetails": [
+            {
+              "checkMethod": "vri"
+            },
+            {
+              "biometricVerificationProcessLevel": 3,
+              "checkMethod": "bvr"
+            }
+          ],
+          "strengthScore": 4,
+          "type": "IdentityCheck",
+          "validityScore": 3
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "dcmaw",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://address-cri.stubs.account.gov.uk",
+      "evidence": null,
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "address",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://fraud-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 1,
+          "checkDetails": [
+            {
+              "activityFrom": "1963-01-01",
+              "checkMethod": "data",
+              "identityCheckPolicy": "none"
+            },
+            {
+              "checkMethod": "data",
+              "fraudCheck": "mortality_check"
+            },
+            {
+              "checkMethod": "data",
+              "fraudCheck": "identity_theft_check"
+            },
+            {
+              "checkMethod": "data",
+              "fraudCheck": "synthetic_identity_check"
+            },
+            {
+              "checkMethod": "data",
+              "fraudCheck": "impersonation_risk_check"
+            }
+          ],
+          "ci": [],
+          "identityFraudScore": 2,
+          "type": "IdentityCheck"
+        }
+      ],
+      "successful": true,
+      "age": "type[number]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "fraud",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD",
+      "successful": true
+    },
+    "restricted": {
+      "newName": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "KENNETH"
+            },
+            {
+              "type": "FamilyName",
+              "value": "DECERQUEIRA"
+            }
+          ]
+        }
+      ],
+      "newBirthDate": [
+        {
+          "value": "1965-07-08"
+        }
+      ],
+      "oldAddress": [
+        {
+          "addressCountry": "GB",
+          "uprn": 100120012077,
+          "buildingName": "",
+          "streetName": "HADLEY ROAD",
+          "postalCode": "BA2 5AA",
+          "buildingNumber": "8",
+          "addressLocality": "BATH",
+          "validFrom": "1000-01-01",
+          "subBuildingName": ""
+        }
+      ],
+      "newAddress": [
+        {
+          "addressCountry": "GB",
+          "uprn": 100120012077,
+          "buildingName": "",
+          "streetName": "HADLEY ROAD",
+          "postalCode": "BA2 5AA",
+          "buildingNumber": "8",
+          "addressLocality": "BATH",
+          "validFrom": "1000-01-01",
+          "subBuildingName": ""
+        }
+      ],
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_GPG45_PROFILE_MATCHED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "gpg45Profile": "M1A",
+      "gpg45Scores": {
+        "evidences": [
+          {
+            "strength": 4,
+            "validity": 3
+          }
+        ],
+        "activity": 1,
+        "fraud": 2,
+        "verification": 3
+      },
+      "vcTxnIds": []
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://ticf.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "type": "RiskAssessment"
+        }
+      ],
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "ticf",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "new",
+      "vot": "P3",
+      "sis_record_created": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_JOURNEY_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_ISSUED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "levelOfConfidence": "P2",
+      "ciFail": false,
+      "hasMitigations": false,
+      "returnCodes": []
+    }
+  }
+]
