@@ -20,7 +20,7 @@ awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkLogs = "com.amazonaws:aws-java-sdk-logs:1.12.664"
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 awsSdkAppConfigData = { module = "software.amazon.awssdk:appconfigdata" }
-commonsCodec = "commons-codec:commons-codec:1.20.0"
+commonsCodec = "commons-codec:commons-codec:1.21.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
 diVocab = "uk.gov.di.model:di-data-model-jackson:2.0.0"
 hamcrest = "org.hamcrest:hamcrest:3.0"
