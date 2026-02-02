@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,13 +13,16 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -28,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
@@ -82,6 +87,9 @@ class VcHelperTest {
                 Arguments.of("Failed passport VC", vcWebPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
+
+    private final Clock fixedLondonClock =
+            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), DateAndTimeHelper.LONDON_TIMEZONE);
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
@@ -221,6 +229,47 @@ class VcHelperTest {
         assertTrue(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
                         List.of(vcExpired, vcNotAvailable), configService));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vc = vcExperianFraudExpired();
+
+        // Act & Assert
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vc, vc), configService, fixedLondonClock));
+    }
+
+    @Test
+    void shouldReturnFalseWhenSomeVcsAreNotExpiredUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotExpired = vcExperianFraudNotExpired();
+
+        // Act & Assert
+        assertFalse(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotExpired), configService, fixedLondonClock));
+    }
+
+    @Test
+    void shouldReturnTrueWhenAllVcsAreExpiredOrNotAvailableUsingClock() {
+        // Arrange
+        when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
+
+        var vcExpired = vcExperianFraudExpired();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+
+        // Act & Assert
+        assertTrue(
+                VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                        List.of(vcExpired, vcNotAvailable), configService, fixedLondonClock));
     }
 
     private static Stream<Arguments> FraudVcExpiryCases() {
@@ -536,5 +585,61 @@ class VcHelperTest {
 
         // Assert
         assertFalse(result);
+    }
+
+    @Test
+    void extractNbfShouldReturnEmptyWhenVcIsNull() {
+        // Arrange & Act
+        var result = VcHelper.extractNbf(null);
+
+        // Assert
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void extractNbfShouldReturnEmptyWhenClaimsSetIsNull() {
+        // Arrange
+        var vc = mock(VerifiableCredential.class);
+        when(vc.getClaimsSet()).thenReturn(null);
+
+        // Act
+        var result = VcHelper.extractNbf(vc);
+
+        // Assert
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void extractNbfShouldReturnEmptyWhenNotBeforeTimeIsNull() {
+        // Arrange
+        var claimsSet = mock(JWTClaimsSet.class);
+        when(claimsSet.getNotBeforeTime()).thenReturn(null);
+
+        var vc = mock(VerifiableCredential.class);
+        when(vc.getClaimsSet()).thenReturn(claimsSet);
+
+        // Act
+        var result = VcHelper.extractNbf(vc);
+
+        // Assert
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void extractNbfShouldReturnInstantWhenNotBeforeTimeIsPresent() {
+        // Arrange
+        var nbfDate = new Date();
+        var claimsSet = mock(JWTClaimsSet.class);
+        when(claimsSet.getNotBeforeTime()).thenReturn(nbfDate);
+
+        var vc = mock(VerifiableCredential.class);
+        when(vc.getClaimsSet()).thenReturn(claimsSet);
+
+        // Act
+        var result = VcHelper.extractNbf(vc);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(nbfDate.toInstant(), result.get());
     }
 }

@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -26,10 +27,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +39,7 @@ import java.util.stream.Stream;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper.LONDON_TIMEZONE;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.model.CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE;
@@ -47,7 +49,6 @@ public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
-    private static final ZoneId LONDON_TIMEZONE = ZoneId.of("Europe/London");
 
     private VcHelper() {}
 
@@ -174,6 +175,16 @@ public class VcHelper {
                                         || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
+    public static boolean allFraudVcsAreExpiredOrFromUnavailableSource(
+            List<VerifiableCredential> vcs, ConfigService configService, Clock clock) {
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
+                .allMatch(
+                        vc ->
+                                VcHelper.isExpiredFraudVc(vc, configService, clock)
+                                        || VcHelper.hasUnavailableFraudCheck(vc));
+    }
+
     public static boolean isExpiredFraudVc(
             VerifiableCredential vc, ConfigService configService, Clock clock) {
         var jwtClaimsSet = vc.getClaimsSet();
@@ -256,5 +267,18 @@ public class VcHelper {
                             });
         }
         return false;
+    }
+
+    public static Optional<Instant> extractNbf(VerifiableCredential vc) {
+        return Optional.ofNullable(vc)
+                .map(VerifiableCredential::getClaimsSet)
+                .map(JWTClaimsSet::getNotBeforeTime)
+                .map(Date::toInstant)
+                .or(
+                        () -> {
+                            LOGGER.warn(
+                                    LogHelper.buildLogMessage("Failed to extract nbf from VC."));
+                            return Optional.empty();
+                        });
     }
 }
