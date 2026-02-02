@@ -6,7 +6,7 @@ This is a small JavaScript-based tool to display the journey map in an interacti
 
 - Node and NPM installed
 
-## Running the map
+## Running the map locally
 
 - Copy the `.env.template` file to `.env` and add the API gateway IDs and keys for any environments you want to query data from (note that production is currently used to get the default feature configuration).
   - For local dev you will need to find the ID of the API gateway hosted in relevant account. You can find this in `AWS Console / API Gateway / APIs` then copy the ID of the `IPV Core Analytics API Gateway <env>` gateway.
@@ -33,6 +33,24 @@ To build
 Use `npm start` to run the built code.
 
 In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
+
+## Running the map in a dev environment
+
+To test the journey map deployed to AWS, it can be deployed to your dev environment.
+Note that a deployed journey-map requires authentication via Google SSO. To get this working,
+ask a member of the team with edit access to the `IPV Core Journey Map Link` Google Cloud Project to:
+
+- add your journey-map dev URI as a valid redirect URI. Your dev redirect URI will take a form like `https://dev-{username}-journey-map.02.core.dev.stubs.account.gov.uk/oauth2/idresponse`.
+- (optionally) add you as a principal to give you access to the project
+
+The journey map can be deployed to your dev environment with the dev-deploy tool:
+
+```
+dev-deploy deploy -u <username> -s journey-map
+```
+
+Replace `<username>` with your dev-deploy username e.g. `theab`. For more information about the `dev-deploy` tool,
+including how to set it up, see the documentation [here](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md).
 
 ## Using the map
 
