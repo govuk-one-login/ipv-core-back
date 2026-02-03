@@ -38,10 +38,10 @@ In production, the journey map uses `../journey-map.Dockerfile` to run these ste
 
 To test the journey map deployed to AWS, it can be deployed to your dev environment.
 Note that a deployed journey-map requires authentication via Google SSO. To get this working,
-ask a member of the team with edit access to the `IPV Core Journey Map Link` Google Cloud Project to:
+ask a member of the team with edit access to the [IPV Core Journey Map Link Google Cloud Project](https://console.cloud.google.com/welcome?project=ipv-core-journey-map-link) to:
 
 - add your journey-map dev URI as a valid redirect URI. Your dev redirect URI will take a form like `https://dev-{username}-journey-map.02.core.dev.stubs.account.gov.uk/oauth2/idresponse`.
-- (optionally) add you as a principal to give you access to the project
+- add you to the `Identity-IPV-Core` Google Group to give you access to the project
 
 The journey map can be deployed to your dev environment with the dev-deploy tool:
 
