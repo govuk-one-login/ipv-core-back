@@ -49,6 +49,8 @@ task pactConsumerTests (type: Test) {
 	useJUnitPlatform()
 	include 'uk/gov/di/ipv/core/calldcmawasynccri/pact/**'
 	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
+	classpath = sourceSets.test.runtimeClasspath
+	testClassesDirs = sourceSets.test.output.classesDirs
 }
 
 jacocoTestReport {
