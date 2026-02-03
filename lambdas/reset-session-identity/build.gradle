@@ -12,6 +12,7 @@ configurations {
 dependencies {
 	implementation libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
+			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:cri-response-service"),

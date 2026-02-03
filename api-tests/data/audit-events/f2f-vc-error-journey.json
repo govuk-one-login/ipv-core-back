@@ -250,8 +250,38 @@
     }
   },
   {
-    "event_name": "IPV_F2F_USER_CANCEL_START",
+    "event_name": "IPV_F2F_CRI_VC_ERROR",
     "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "error_code": "access_denied",
+      "error_description": "Something went wrong"
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_ERROR",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "error_code": "access_denied",
+      "error_description": "Something went wrong",
+      "credential_issuer_id": "f2f"
+    }
+  },
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "F2F_FAILED"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -264,10 +294,20 @@
     }
   },
   {
-    "event_name": "IPV_F2F_USER_CANCEL_END",
+    "event_name": "IPV_JOURNEY_END",
     "component_id": "https://identity.local.account.gov.uk",
     "restricted": {
       "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_ISSUED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "levelOfConfidence": "P0",
+      "ciFail": false,
+      "hasMitigations": false,
+      "returnCodes": []
     }
   }
 ]

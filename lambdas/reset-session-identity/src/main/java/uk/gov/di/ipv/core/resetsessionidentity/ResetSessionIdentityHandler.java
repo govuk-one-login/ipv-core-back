@@ -7,6 +7,10 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.FlushMetrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -23,6 +27,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -42,6 +47,7 @@ import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINS
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -53,6 +59,7 @@ public class ResetSessionIdentityHandler
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private static final int INTERNAL_SERVER_ERROR = 500;
 
+    private final AuditService auditService;
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final SessionCredentialsService sessionCredentialsService;
@@ -61,12 +68,14 @@ public class ResetSessionIdentityHandler
     private final EvcsService evcsService;
 
     public ResetSessionIdentityHandler(
+            AuditService auditService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
             SessionCredentialsService sessionCredentialsService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             EvcsService evcsService) {
+        this.auditService = auditService;
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.sessionCredentialsService = sessionCredentialsService;
@@ -83,6 +92,7 @@ public class ResetSessionIdentityHandler
     @ExcludeFromGeneratedCoverageReport
     public ResetSessionIdentityHandler(ConfigService configService) {
         this.configService = configService;
+        this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
@@ -100,6 +110,7 @@ public class ResetSessionIdentityHandler
 
         try {
             String ipvSessionId = getIpvSessionId(input);
+            String ipAddress = getIpAddress(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -107,6 +118,10 @@ public class ResetSessionIdentityHandler
                             ipvSessionItem.getClientOAuthSessionId());
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            String userId = clientOAuthSessionItem.getUserId();
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             if (configService.enabled(STORED_IDENTITY_SERVICE)
                     && !clientOAuthSessionItem.isReverification()) {
@@ -136,6 +151,13 @@ public class ResetSessionIdentityHandler
 
             if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
                 doResetForPendingVc(clientOAuthSessionItem, F2F);
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithDeviceInformation(
+                                AuditEventTypes.IPV_F2F_RESTART,
+                                configService.getComponentId(),
+                                auditEventUser,
+                                new AuditRestrictedDeviceInformation(
+                                        input.getDeviceInformation())));
             }
 
             if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
@@ -172,6 +194,8 @@ public class ResetSessionIdentityHandler
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

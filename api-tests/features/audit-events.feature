@@ -149,7 +149,7 @@ Feature: Audit Events
 
   @QualityGateNewFeatureTest
   Scenario: Delete pending F2F
-    And I start a new 'medium-confidence' journey
+    When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -180,6 +180,35 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get a 'pyi-details-deleted' page response with context 'f2f'
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
+  Scenario: F2F return after VC error
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit a 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'f2f' CRI response
+    When I get an error from the async CRI stub
+    Then I get a 'page-face-to-face-handoff' page response
+
+    # Return journey
+    When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+    When I submit a 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity without a TICF VC
+    And audit events for 'f2f-vc-error-journey' are recorded [local only]
 
   @QualityGateRegressionTest
   Scenario: Alternate doc mitigation
