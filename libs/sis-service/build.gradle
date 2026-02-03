@@ -30,6 +30,8 @@ dependencies {
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
+	testRuntimeOnly libs.junitPlatform
+
 	mockitoAgent(libs.mockitoCore) {
 		transitive = false
 	}
@@ -65,6 +67,9 @@ task pactConsumerTests (type: Test) {
 	useJUnitPlatform()
 	include 'uk/gov/di/ipv/core/library/sis/pact/**'
 	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
+
+	classpath = sourceSets.test.runtimeClasspath
+	testClassesDirs = sourceSets.test.output.classesDirs
 }
 
 jacocoTestReport {
