@@ -124,13 +124,13 @@ Feature: P2 F2F journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
 
-    Scenario: Oauth server_error error F2F
+    #Scenario: Oauth server_error error F2F
     # This scenario can be removed when the sorryTechnicalError flag is turned on or
     # cleaned up as the flag-on behaviour is tested in unexpected-cri-error.feature
-      When I call the CRI stub with attributes and get a 'server_error' OAuth error
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
-      Then I get a 'pyi-technical' page response
+    #  When I call the CRI stub with attributes and get a 'server_error' OAuth error
+    #    | Attribute          | Values                                      |
+    #    | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+    #  Then I get a 'pyi-technical' page response
 
     Scenario: Oauth access_denied error F2F
       # Initial journey
