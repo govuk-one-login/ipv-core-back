@@ -151,6 +151,8 @@ public class ResetSessionIdentityHandler
 
             if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
                 doResetForPendingVc(clientOAuthSessionItem, F2F);
+                // This audit event is relied on and consumed by the F2F team. Do not remove or
+                // change it without talking to them first.
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
                                 AuditEventTypes.IPV_F2F_RESTART,
