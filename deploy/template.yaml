@@ -195,8 +195,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-collector-arm64-0_16_0:1
-      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-javawrapper-0_14_0:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-collector-arm64-0_16_0:3
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:175872367215:layer:opentelemetry-javawrapper-0_14_0:3
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:175872367215:secret:dynatrace_api_token_otlp # pragma: allowlist secret
       didStoredIdentityId: "did:web:api.02.dev.identity.account.gov.uk:.well-known/stored-identity"
     "457601271792": # Build
@@ -212,8 +212,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "not-used"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-collector-arm64-0_16_0:1
-      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-javawrapper-0_14_0:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-collector-arm64-0_16_0:3
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:457601271792:layer:opentelemetry-javawrapper-0_14_0:3
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:457601271792:secret:dynatrace_api_token_otlp # pragma: allowlist secret
       didStoredIdentityId: "did:web:api.identity.build.account.gov.uk:.well-known/stored-identity"
     "335257547869": # Staging
@@ -229,8 +229,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:730335288219:key/d2326cb1-e2fc-4a81-98dc-3b6101bdb01f"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-collector-arm64-0_16_0:1
-      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-javawrapper-0_14_0:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-collector-arm64-0_16_0:2
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:335257547869:layer:opentelemetry-javawrapper-0_14_0:2
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:335257547869:secret:/staging/core/dynatrace/openTelemetryApiKey-T2LX5E # pragma: allowlist secret
       didStoredIdentityId: "did:web:api.identity.staging.account.gov.uk:.well-known/stored-identity"
     "991138514218": # Integration
@@ -246,8 +246,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:992382392501:key/c3d600cd-bde4-4595-a5e2-991c46802cbb"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
-      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-collector-arm64-0_16_0:1
-      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-javawrapper-0_14_0:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-collector-arm64-0_16_0:2
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:991138514218:layer:opentelemetry-javawrapper-0_14_0:2
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:991138514218:secret:/integration/core/dynatrace/openTelemetryApiKey-ACu0S2 # pragma: allowlist secret
       didStoredIdentityId: "did:web:api.identity.integration.account.gov.uk:.well-known/stored-identity"
     "075701497069": # Production
@@ -263,8 +263,8 @@ Mappings:
       dcmawAsyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:339712924890:key/24e580d2-ea02-4e41-986b-1a53242480a5"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceProductionVariables
-      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-collector-arm64-0_16_0:1
-      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-javawrapper-0_14_0:1
+      opentelemetryCollectorLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-collector-arm64-0_16_0:2
+      opentelemetryJavaWrapperLayerArn: arn:aws:lambda:eu-west-2:075701497069:layer:opentelemetry-javawrapper-0_14_0:2
       dynatraceOtlpSecretArn: arn:aws:secretsmanager:eu-west-2:075701497069:secret:/production/core/dynatrace/openTelemetryApiKey-xj1sKg # pragma: allowlist secret
       didStoredIdentityId: "did:web:api.identity.account.gov.uk:.well-known/stored-identity"
   SecurityGroups:
