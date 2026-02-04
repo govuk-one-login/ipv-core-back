@@ -66,7 +66,7 @@ jobs:
     needs:
       - automatedTests
       - check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
+    if: success() && needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push'
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
       environment: 'build'
@@ -83,7 +83,7 @@ jobs:
     needs:
       - automatedTests
       - check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    if: success() && needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true'
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
       environment: 'dev01'
@@ -137,7 +137,7 @@ jobs:
       - build-api-test-images-if-changed-shared-dev
       - check-if-deploy-needed
     if: |
-      !failure() &&
+      success() &&
       (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
