@@ -356,7 +356,6 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
-    sorryTechnicalErrorEnabled: true
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
     aisStateCheckEnabled: false
@@ -380,9 +379,6 @@ core:
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
-    sorryTechnicalError:
-      featureFlags:
-        sorryTechnicalErrorEnabled: true
     strategicApp:
       featureFlags:
         strategicAppEnabled: true

@@ -39,14 +39,10 @@ nestedJourneyStates:
             auditContext:
               mitigationType: invalid-passport
       error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-        checkFeatureFlag:
-          sorryTechnicalErrorEnabled:
-            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
-            checkMitigation:
-              alternate-doc-invalid-dl:
-                targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_UK_PASSPORT
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_UK_PASSPORT
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_UK_PASSPORT:
     response:
       type: page
@@ -114,14 +110,10 @@ nestedJourneyStates:
             auditContext:
               mitigationType: invalid-dl
       error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-        checkFeatureFlag:
-          sorryTechnicalErrorEnabled:
-            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
-            checkMitigation:
-              alternate-doc-invalid-passport:
-                targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_DRIVING_LICENCE
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_MITIGATION_DRIVING_LICENCE
   SORRY_CRI_TECHNICAL_PROBLEM_CRI_DRIVING_LICENCE:
     response:
       type: page

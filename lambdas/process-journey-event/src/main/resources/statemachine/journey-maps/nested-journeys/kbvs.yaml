@@ -44,11 +44,7 @@ nestedJourneyStates:
       fail-with-ci:
         exitEventToEmit: fail-with-ci
       error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-        checkFeatureFlag:
-          sorryTechnicalErrorEnabled:
-            targetState: SORRY_CRI_TECHNICAL_PROBLEM_EXPERIAN_KBV_CRI
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_EXPERIAN_KBV_CRI
   SORRY_CRI_TECHNICAL_PROBLEM_EXPERIAN_KBV_CRI:
     response:
       type: page
