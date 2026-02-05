@@ -206,6 +206,7 @@ Resources:
   LoadBalancerListenerTargetGroupECS:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
+      Name: !Sub "${AWS::StackName}-ecs-tg"
       HealthCheckEnabled: TRUE
       HealthCheckProtocol: HTTP
       HealthCheckPort: 8080
