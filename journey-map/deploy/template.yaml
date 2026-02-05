@@ -244,6 +244,7 @@ Resources:
             UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
             Scope: "openid email"
             OnUnauthenticatedRequest: authenticate
+            SessionTimeout: "43200"
         - Order: 2
           TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
           Type: forward
