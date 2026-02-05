@@ -32,6 +32,8 @@ dependencies {
 			because "this version patches the vulnerability CVE-2025-55163"
 		}
 
+		// TODO: remove when new version of au.com.dius.pact.consumer:junit5
+		// is able to resolve this vulnerability
 		testImplementation('io.netty:netty-codec-http:4.1.129.Final') {
 			because "this version patches the vulnerabilities CVE-2025-67735 and CVE-2025-58056"
 		}
