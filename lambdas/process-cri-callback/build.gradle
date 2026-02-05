@@ -33,14 +33,6 @@ dependencies {
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(':libs:test-helpers',)
 
-	constraints {
-		// TODO: remove when new version of au.com.dius.pact.consumer:junit5
-		// is able to resolve this vulnerability
-		testImplementation('io.netty:netty-codec-http2:4.1.124.Final') {
-			because "this version patches the vulnerability CVE-2025-55163"
-		}
-	}
-
 	mockitoAgent(libs.mockitoCore) {
 		transitive = false
 	}
