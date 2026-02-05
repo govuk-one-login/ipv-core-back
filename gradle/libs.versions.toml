@@ -3,6 +3,10 @@ awsSdk = "2.41.0"
 jackson = "2.21.0"
 log4j = "2.25.3"
 mockito = "5.21.0"
+# Before updating the pact version, check whether the new version
+# resolves old vulnerabilities and if we can remove some of our
+# overrides. See comment above the pact libraries below.
+# Once the overrides are removed, remove comments where necessary.
 pact = "4.6.19"
 powertools = "2.9.0"
 
@@ -38,8 +42,15 @@ mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mo
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.32"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.24.0-alpha"
 openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
+
+# The pact libraries below transitively depend on vulnerable packages.
+# To resolve them, we override those packages in each build.gradle file which
+# use the below libraries. When updating to a new version these pact libraries,
+# check if the new version resolves the vulnerabilities and remove package overrides.
+# Once the overrides are removed, remove comments where necessary.
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
+
 powertoolsLogging = { module = "software.amazon.lambda:powertools-logging-log4j", version.ref = "powertools" }
 powertoolsMetrics = { module = "software.amazon.lambda:powertools-metrics", version.ref = "powertools" }
 powertoolsParameters = { module = "software.amazon.lambda:powertools-parameters", version.ref = "powertools" }
