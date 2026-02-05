@@ -28,6 +28,17 @@ Conditions:
   UsePermissionsBoundary: !Not
     - !Equals [!Ref PermissionsBoundary, "none"]
 
+Mappings:
+  EnvironmentConfiguration:
+    "130355686670":
+      albAccessLogBucket: "ipv-core-dev01-access-logs"
+    "175872367215":
+      albAccessLogBucket: "ipv-core-dev02-access-logs"
+    "616199614141":
+      albAccessLogBucket: "ipv-stubs-build-access-logs"
+    "388905755587":
+      albAccessLogBucket: "ipv-stubs-production-access-logs"
+
 Resources:
   # ssl cert
   JourneyMapSSLCert:
@@ -66,11 +77,12 @@ Resources:
               - !ImportValue BuildPublicHostedZoneId
       ValidationMethod: DNS
 
-  # api domain entries / mapping
-  JourneyMapApiDomain:
-    Type: AWS::ApiGatewayV2::DomainName
+  # dns rcord
+  JourneyMapDNSRecord:
+    Type: AWS::Route53::RecordSet
     Properties:
-      DomainName: !If
+      Type: A
+      Name: !If
         - IsDevelopment
         - !If
           - IsDev01
@@ -80,24 +92,6 @@ Resources:
           - IsProduction
           - "journey-map.stubs.account.gov.uk"
           - !Sub "journey-map.${Environment}.stubs.account.gov.uk"
-      DomainNameConfigurations:
-        - CertificateArn: !Ref JourneyMapSSLCert
-          EndpointType: REGIONAL
-          SecurityPolicy: TLS_1_2
-
-  JourneyMapApiMapping:
-    Type: AWS::ApiGatewayV2::ApiMapping
-    Properties:
-      DomainName: !Ref JourneyMapApiDomain
-      ApiId: !Ref ApiGwHttpEndpoint
-      Stage: !Ref ApiGwStage
-
-  # dns rcord
-  JourneyMapDNSRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Type: A
-      Name: !Ref JourneyMapApiDomain
       HostedZoneId: !If
         - IsDevelopment
         - !If
@@ -109,8 +103,8 @@ Resources:
           - !ImportValue RootPublicHostedZoneId
           - !ImportValue BuildPublicHostedZoneId
       AliasTarget:
-        DNSName: !GetAtt JourneyMapApiDomain.RegionalDomainName
-        HostedZoneId: !GetAtt JourneyMapApiDomain.RegionalHostedZoneId
+        DNSName: !GetAtt LoadBalancer.DNSName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
 
   # Security Groups for the ECS service and load balancer
   LoadBalancerSG:
@@ -119,12 +113,11 @@ Resources:
       GroupDescription: >-
         Journey map load balancer Security Group
       SecurityGroupIngress:
-        - CidrIp:
-            Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
-          Description: Allow vpc cidr ingress to port 80
-          FromPort: 80
+        - CidrIp: 0.0.0.0/0
+          Description: Allow traffic from the internet to port 443
+          FromPort: 443
           IpProtocol: tcp
-          ToPort: 80
+          ToPort: 443
       VpcId:
         Fn::ImportValue: !Sub ${VpcStackName}-VpcId
 
@@ -139,6 +132,18 @@ Resources:
       IpProtocol: tcp
       FromPort: 8080
       ToPort: 8080
+
+  LoadBalancerSGEgressToInternetSecurityGroup:
+    Type: "AWS::EC2::SecurityGroupEgress"
+    Properties:
+      GroupId: !GetAtt LoadBalancerSG.GroupId
+      Description: >-
+        Egress between the Journey Map load balancer and
+        the internet on port 443
+      CidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
 
   JourneyMapECSSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -173,52 +178,16 @@ Resources:
       GroupId: !GetAtt JourneyMapECSSecurityGroup.GroupId
       SourceSecurityGroupId: !GetAtt LoadBalancerSG.GroupId
 
-  # http api gateway - which does nothing other than route everything to LB
-  ApiGwHttpEndpoint:
-    Type: "AWS::ApiGatewayV2::Api"
-    Properties:
-      Name: !Sub ${AWS::StackName}-journey-map-api-gw
-      ProtocolType: HTTP
-
-  ApiGwHttpEndpointIntegration:
-    Type: "AWS::ApiGatewayV2::Integration"
-    Properties:
-      ApiId: !Ref ApiGwHttpEndpoint
-      IntegrationType: HTTP_PROXY
-      ConnectionId:
-        Fn::ImportValue: !Sub "${VpcStackName}-VpcLinkId"
-      ConnectionType: VPC_LINK
-      IntegrationMethod: ANY
-      IntegrationUri: !Ref LoadBalancerListener
-      PayloadFormatVersion: "1.0"
-
-  ApiGwRoute:
-    Type: "AWS::ApiGatewayV2::Route"
-    Properties:
-      ApiId: !Ref ApiGwHttpEndpoint
-      RouteKey: "ANY /{proxy+}"
-      Target: !Join
-        - /
-        - - integrations
-          - !Ref ApiGwHttpEndpointIntegration
-
-  ApiGwStage:
-    Type: "AWS::ApiGatewayV2::Stage"
-    Properties:
-      ApiId: !Ref ApiGwHttpEndpoint
-      StageName: $default
-      AutoDeploy: true
-
-  # Private Application Load Balancer
+  # Application Load Balancer
   LoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
-      Scheme: internal
+      Scheme: internet-facing
       SecurityGroups:
         - !GetAtt LoadBalancerSG.GroupId
       Subnets:
-        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
-        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+        - Fn::ImportValue: !Sub ${VpcStackName}-FirewallSubnetIdA
+        - Fn::ImportValue: !Sub ${VpcStackName}-FirewallSubnetIdB
       Type: application
       #checkov:skip=CKV_AWS_91:ALB access logging is disabled in developer environments to make them easier to manage.
       LoadBalancerAttributes:
@@ -229,12 +198,17 @@ Resources:
           - Key: deletion_protection.enabled
             Value: false
           - !Ref AWS::NoValue
+        - Key: "access_logs.s3.enabled"
+          Value: "true"
+        - Key: "access_logs.s3.bucket"
+          Value: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, albAccessLogBucket ]
 
   LoadBalancerListenerTargetGroupECS:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: TRUE
       HealthCheckProtocol: HTTP
+      HealthCheckPort: 8080
       HealthCheckPath: /healthcheck
       Matcher:
         HttpCode: 200
@@ -253,11 +227,37 @@ Resources:
       # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
       # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled
       LoadBalancerArn: !Ref LoadBalancer
-      Protocol: HTTP
-      Port: 80
+      Protocol: HTTPS
+      Port: 443
+      Certificates:
+        - CertificateArn: !Ref JourneyMapSSLCert
       DefaultActions:
-        - TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+        - Order: 1
+          Type: authenticate-oidc
+          AuthenticateOidcConfig:
+            Issuer: https://accounts.google.com
+            AuthorizationEndpoint: https://accounts.google.com/o/oauth2/v2/auth
+            ClientId: '{{resolve:secretsmanager:/journey-map/OIDC_CLIENT_ID:SecretString}}' # pragma: allowlist secret
+            TokenEndpoint: https://oauth2.googleapis.com/token
+            ClientSecret: '{{resolve:secretsmanager:/journey-map/OIDC_CLIENT_SECRET:SecretString}}' # pragma: allowlist secret
+            UserInfoEndpoint: https://openidconnect.googleapis.com/v1/userinfo
+            Scope: "openid email"
+            OnUnauthenticatedRequest: authenticate
+        - Order: 2
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
           Type: forward
+
+  HealthCheckAllowRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+      Conditions:
+        - Field: path-pattern
+          Values: [ "/healthcheck" ]
+      ListenerArn: !Ref LoadBalancerListener
+      Priority: 1
 
   # ECS cluster, service, task and autoscaling definition
   JourneyMapCluster:
@@ -314,10 +314,6 @@ Resources:
           Image: CONTAINER-IMAGE-PLACEHOLDER
           Name: app
           Environment:
-            - Name: JOURNEY_MAP_USERNAME
-              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_USERNAME}}'
-            - Name: JOURNEY_MAP_PASSWORD
-              Value: '{{resolve:ssm:/journey-map/JOURNEY_MAP_PASSWORD}}'
             - Name: MAXIMUM_TIME_RANGE_MS
               Value: '{{resolve:ssm:/journey-map/MAXIMUM_TIME_RANGE_MS}}'
             - Name: JOURNEY_TRANSITIONS_ENDPOINT_PRODUCTION
@@ -451,6 +447,3 @@ Outputs:
   JourneyMapDomain:
     Description: Journey Map DNS Domain
     Value: !Ref JourneyMapDNSRecord
-  JourneyMapApiDomain:
-    Description: Journey Map API Domain
-    Value: !Ref JourneyMapApiDomain
