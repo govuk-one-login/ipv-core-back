@@ -66,7 +66,9 @@ jobs:
     needs:
       - automatedTests
       - check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push' }}
+    if: |
+      needs.automatedTests.result == 'success' &&
+      needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' && github.event_name == 'push'
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
       environment: 'build'
@@ -83,7 +85,9 @@ jobs:
     needs:
       - automatedTests
       - check-if-api-tests-changed
-    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    if: |
+      needs.automatedTests.result == 'success' &&
+      needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true'
     uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
     with:
       environment: 'dev01'
@@ -136,8 +140,10 @@ jobs:
       - build-api-test-images-if-changed
       - build-api-test-images-if-changed-shared-dev
       - check-if-deploy-needed
+#    !failure() will return true if steps are cancelled or skipped. We need the tests to explicitly succeed
     if: |
       !failure() &&
+      needs.automatedTests.result == 'success' &&
       (needs.check-if-deploy-needed.outputs.deploy-needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
