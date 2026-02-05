@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -77,6 +78,7 @@ class ResetSessionIdentityHandlerTest {
     private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
+    @Mock private AuditService mockAuditService;
     @Mock private ConfigService mockConfigService;
     @Mock private Config mockConfig;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
@@ -417,6 +419,7 @@ class ResetSessionIdentityHandlerTest {
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
+                        .ipAddress("127.0.0.1")
                         .lambdaInput(Map.of("resetType", "SAUSAGES"))
                         .build();
 
