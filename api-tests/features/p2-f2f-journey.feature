@@ -66,16 +66,21 @@ Feature: P2 F2F journey
         | medium-confidence      | passport | kenneth-passport-valid       |
         | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
-    Scenario Outline: Successful P2 identity via F2F using <doc> - DCMAW access_denied
+    Scenario Outline: Successful P2 identity via F2F using <doc> - no valid device to go through app
       # Initial journey
-      Given I activate the 'disableStrategicApp' feature set
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'end' event
       Then I get a 'pyi-post-office' page response
@@ -159,13 +164,18 @@ Feature: P2 F2F journey
 
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification
-      Given I activate the 'disableStrategicApp' feature set
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'end' event
       Then I get a 'pyi-post-office' page response
