@@ -86,7 +86,7 @@ jobs:
 
   api-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       id-token: write
       packages: read
