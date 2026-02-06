@@ -194,11 +194,6 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'no-photo-id-abandon-find-another-way' page response
 
-    Scenario: P2 no photo id journey - Abandon - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'mobileApp' event
-      Then I get a 'dcmaw' CRI response
-
     Scenario: P2 no photo id journey - Abandon - Strategic app
       Given I activate the 'strategicApp' feature set
       When I submit an 'mobileApp' event
@@ -292,11 +287,6 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response
 
-    Scenario: P2 no photo id journey - KBV mitigation - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-
     Scenario: P2 no photo id journey - KBV mitigation - Strategic app
       Given I activate the 'strategicApp' feature set
       When I submit an 'appTriage' event
@@ -343,11 +333,6 @@ Feature: P2 no photo id journey
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
-
-    Scenario: P2 no photo id journey - KBV dropout - DCMAW
-      Given I activate the 'disableStrategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
 
     Scenario: P2 no photo id journey - KBV dropout - Strategic app
       Given I activate the 'strategicApp' feature set
