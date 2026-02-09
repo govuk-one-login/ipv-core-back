@@ -1,7 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 reuse journeys
   Background: Enable feature sets
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature sets
+    Given I activate the 'storedIdentityService' feature sets
 
   Rule: Existing credentials that meet P3
       Background: Create user with existing credentials
@@ -44,11 +44,23 @@ Feature: P2 reuse journeys
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'dcmaw' CRI response
+        Then I get an 'identify-device' page response
         # SI record invalidated as part of reset-session-identity lambda
         And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
-        When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+        When I submit an 'appTriage' event
+        Then I get a 'pyi-triage-select-device' page response
+        When I submit a 'smartphone' event
+        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+        When I submit an 'iphone' event
+        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+        When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      # And the user returns from the app to core-front
+        And I pass on the DCMAW callback
+        Then I get a 'check-mobile-app-result' page response
+        When I poll for async DCMAW credential receipt
+        Then the poll returns a '201'
+        When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
@@ -82,10 +94,23 @@ Feature: P2 reuse journeys
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'dcmaw' CRI response
+        Then I get an 'identify-device' page response
         # SI record invalidated as part of reset-session-identity lambda
         And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
-        When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+
+        When I submit an 'appTriage' event
+        Then I get a 'pyi-triage-select-device' page response
+        When I submit a 'smartphone' event
+        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+        When I submit an 'iphone' event
+        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+        When the async DCMAW CRI produces a 'kenneth-changed-given-name-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+        And I pass on the DCMAW callback
+        Then I get a 'check-mobile-app-result' page response
+        When I poll for async DCMAW credential receipt
+        Then the poll returns a '201'
+        When I submit the returned journey event
         Then I get a 'drivingLicence' CRI response
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
           | Attribute | Values          |
@@ -122,10 +147,22 @@ Feature: P2 reuse journeys
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'dcmaw' CRI response
+        Then I get an 'identify-device' page response
         # SI record invalidated as part of reset-session-identity lambda
         And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
-        When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+        When I submit an 'appTriage' event
+        Then I get a 'pyi-triage-select-device' page response
+        When I submit a 'smartphone' event
+        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+        When I submit an 'iphone' event
+        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+        When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+        # And the user returns from the app to core-front
+        And I pass on the DCMAW callback
+        Then I get a 'check-mobile-app-result' page response
+        When I poll for async DCMAW credential receipt
+        Then the poll returns a '201'
+        When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
