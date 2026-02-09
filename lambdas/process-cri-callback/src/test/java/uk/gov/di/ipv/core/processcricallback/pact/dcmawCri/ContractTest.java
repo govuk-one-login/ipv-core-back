@@ -2767,7 +2767,7 @@ class ContractTest {
                       "documentNumber": "ZR8016200",
                       "expiryDate": "2024-02-25",
                       "icaoIssuerCode": "GBR",
-                      "documentType": "IR"
+                      "documentType": "CR"
                     }
                   ]
                 },
@@ -2798,7 +2798,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "dIXAu4yrIN0YGFisw8nhrJdS4mHrWR_BFAmveloHEwloM5nXQLk9cPfPPbWDtvd_ZwLIexnSrTdXNm1FgB_N5g"; // pragma: allowlist secret
+            "yGgpft2Kl3Xt9O8lC-bHrAgxQCX3ks8bTEQvD2IJWrrbBcrCnSZ4adRq4h1G9EYhaU5LD6VAR4El2b1Fbf3Qww"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
@@ -2815,6 +2815,10 @@ class ContractTest {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -2836,24 +2840,20 @@ class ContractTest {
                       "value": "1980-01-01"
                     }
                   ],
-                  "residencePermit": [
-                    {
-                      "icaoIssuerCode": "GBR",
-                      "documentNumber": "ZR8016200",
-                      "expiryDate": "2024-02-25",
-                      "documentType": "IR"
-                    }
-                  ],
                   "deviceId": [
                     {
                       "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
+                  ],
+                  "residencePermit": [
+                    {
+                      "documentNumber": "ZR8016200",
+                      "expiryDate": "2024-02-25",
+                      "icaoIssuerCode": "GBR",
+                      "documentType": "IR"
+                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2884,7 +2884,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRP_VC_SIGNATURE =
-            "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg"; // pragma: allowlist secret
+            "2rdyetzKV4FPL9p6OZzjewd8nwqfF1MKfBBGmTN1xEcKTPgAR-hWgcwiHDN_KA3ZdMGrZxnYQBck0DImsixSIA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRC DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRP
@@ -2902,6 +2902,10 @@ class ContractTest {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -2923,24 +2927,20 @@ class ContractTest {
                       "value": "1980-01-01"
                     }
                   ],
-                  "residencePermit": [
-                    {
-                      "icaoIssuerCode": "GBR",
-                      "documentNumber": "ZR8016200",
-                      "expiryDate": "2024-02-25",
-                      "documentType": "CR"
-                    }
-                  ],
                   "deviceId": [
                     {
                       "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
+                  ],
+                  "residencePermit": [
+                    {
+                      "documentNumber": "ZR8016200",
+                      "expiryDate": "2024-02-25",
+                      "icaoIssuerCode": "GBR",
+                      "documentType": "CR"
+                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2968,7 +2968,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRC_VC_SIGNATURE =
-            "254TQIjoodWhV_ij2QvLleVFzRpMDnLLPw8-Lr_WAxdxfLPTs-5mnXPa0n-GsNvYPl7FZx7rJInnficNaWlygQ"; // pragma: allowlist secret
+            "HtbCDCsMJFtTI1XZf-lEydXCr_GZf98sY8h8tX9-41rpk7KjXAK-ciP7uknct5g7eKX2keKCMExz59-eMD6lrg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC2
@@ -2985,6 +2985,10 @@ class ContractTest {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -3006,24 +3010,20 @@ class ContractTest {
                       "value": "1980-01-01"
                     }
                   ],
-                  "residencePermit": [
-                    {
-                      "icaoIssuerCode": "GBR",
-                      "documentNumber": "ZR8016200",
-                      "expiryDate": "2024-02-25",
-                      "documentType": "CR"
-                    }
-                  ],
                   "deviceId": [
                     {
                       "value": "7d8f0d3c-6a0a-4298-afe5-0cf23633618c"
                     }
+                  ],
+                  "residencePermit": [
+                    {
+                      "documentNumber": "ZR8016200",
+                      "expiryDate": "2024-02-25",
+                      "icaoIssuerCode": "GBR",
+                      "documentType": "CR"
+                    }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -3052,5 +3052,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BRC_VC_SIGNATURE =
-            "2Ubk2LfcqMTOCgKJg7bJSwr8CqZHCptZpzxLX6qyYOgQpYxVHhwxs16lCugG811Ho7QRD5Oy28Qubh7hJwQxAA"; // pragma: allowlist secret
+            "KsFSlV6PysyG5LJYGFQ9e1uVTdnSfdNjOsJCOsd8zxYrR0lK5f-Zu4UH3dxhwqvFzG2nn0zixkpo6CvMhapbcA"; // pragma: allowlist secret
 }
