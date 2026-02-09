@@ -1,14 +1,23 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P1 app journey
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: P1 App Journey
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -26,20 +35,3 @@ Feature: P1 app journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-
-  Scenario Outline: <error> from DCMAW
-    When I start a new 'low-confidence' journey
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an '<error>' OAuth error
-    Then I get a '<expected_page>' page response with context '<context>'
-
-    Examples:
-      | error                     | expected_page           | context |
-      | server_error              | pyi-technical           | null    |
-      | temporarily_unavailable   | page-multiple-doc-check | nino    |
-      | invalid_request           | pyi-no-match            | null    |
-      | unauthorized_client       | pyi-technical           | null    |
-      | unsupported_response_type | pyi-technical           | null    |
-      | invalid_scope             | pyi-technical           | null    |
