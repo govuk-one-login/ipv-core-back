@@ -62,7 +62,7 @@ Feature: Failed update details
       Then I get an 'identify-device' page response
       # SI record invalidated as part of reset-session-identity lambda
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
-      Then I get an 'identify-device' page response
+
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
