@@ -1,15 +1,21 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity Service - CIMIT journeys
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: P1 - D02 Mitigation
     Background:
       Given I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -96,8 +102,14 @@ Feature: Stored Identity Service - CIMIT journeys
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -182,8 +194,14 @@ Feature: Stored Identity Service - CIMIT journeys
       Given I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
