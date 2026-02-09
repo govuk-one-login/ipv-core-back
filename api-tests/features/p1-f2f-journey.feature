@@ -1,14 +1,17 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P1 F2F journey
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: P1 Face to Face after DCMAW dropout
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'end' event
     Then I get a 'pyi-post-office' page response
@@ -31,8 +34,14 @@ Feature: P1 F2F journey
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'end' event
     Then I get a 'pyi-post-office' page response
