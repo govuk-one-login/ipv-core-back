@@ -1,16 +1,28 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - P2 journeys
   Background: Enabled stored identity service flag and start p1 journey
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature sets
+    Given I activate the 'storedIdentityService' feature sets
 
   Scenario: Successful stored identity storage - P2 app international journey - medium-confidence journey
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     And I submit an 'international' event
-    Then I get a 'non-uk-app-intro' page response
-    When I submit a 'useApp' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get a 'non-uk-passport' page response
+    When I submit a 'next' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -37,8 +49,14 @@ Feature: Stored Identity - P2 journeys
 
     Scenario: Successful stored identity storage - P2 web journey
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
@@ -66,8 +84,20 @@ Feature: Stored Identity - P2 journeys
 
     Scenario: Successful stored identity storage - P2 app journey that meets P3
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -154,8 +184,20 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
