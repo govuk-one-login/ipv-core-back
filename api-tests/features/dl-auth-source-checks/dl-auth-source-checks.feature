@@ -1,15 +1,24 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Authoritative source checks with driving licence CRI
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: Journey through DCMAW with driving licence requires authoritative source check low-confidence
     Given I activate the 'drivingLicenceAuthCheck' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -23,8 +32,20 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -36,8 +57,20 @@ Feature: Authoritative source checks with driving licence CRI
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -55,8 +88,20 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -80,8 +125,20 @@ Feature: Authoritative source checks with driving licence CRI
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit '<dl_details>' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
       | Attribute | Values          |
@@ -99,8 +156,14 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -121,8 +184,20 @@ Feature: Authoritative source checks with driving licence CRI
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'photo-id-security-questions-find-another-way' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit '<dl_details>' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
       | Attribute | Values          |
@@ -140,8 +215,14 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -162,8 +243,20 @@ Feature: Authoritative source checks with driving licence CRI
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit '<dl_details>' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -181,8 +274,14 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -203,8 +302,20 @@ Feature: Authoritative source checks with driving licence CRI
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'photo-id-security-questions-find-another-way' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-ipv-success' page response
 
   Scenario: Auth source check is required if doc identifiers do not match
@@ -214,8 +325,14 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -236,8 +353,20 @@ Feature: Authoritative source checks with driving licence CRI
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'photo-id-security-questions-find-another-way' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -264,37 +393,8 @@ Feature: Authoritative source checks with driving licence CRI
       | context   | "check_details" |
     Then I get a 'we-matched-you-to-your-one-login' page response
 
-  Scenario Outline: Change of details journey through DCMAW with driving licence requires auth source check
-    Given I activate the 'drivingLicenceAuthCheck' feature set
-    And the subject already has the following credentials with overridden document expiry date
-      | CRI     | scenario                     | documentType  |
-      | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
-    And the subject already has the following credentials
-      | CRI     | scenario                     |
-      | address | kenneth-current              |
-      | fraud   | kenneth-score-2              |
-    When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-reuse' page response
-    When I submit a 'update-details' event
-    Then I get a 'update-details' page response
-    When I submit a '<update-type>' event
-    Then I get a 'page-update-name' page response
-    When I submit a 'update-name' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-    Then I get a 'drivingLicence' CRI response
-    When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
-      | Attribute | Values          |
-      | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context '<context>'
-
-    Examples:
-      | update-type             | context      |
-      | given-names-only        | coiNoAddress |
-      | given-names-and-address | coiAddress   |
-
   Scenario Outline: Change of details journey that attracts an invalid doc CI from auth source check
-    Given I activate the 'drivingLicenceAuthCheck' feature set
+    Given I activate the 'drivingLicenceAuthCheck,disableStrategicApp' feature set
     And the subject already has the following credentials with overridden document expiry date
       | CRI     | scenario                     | documentType  |
       | dcmaw   | kenneth-driving-permit-valid | drivingPermit |
