@@ -1,15 +1,18 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P1 CIMIT - Alternate doc
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Rule: No existing identity
     Background:
       Given I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -281,6 +284,7 @@ Feature: P1 CIMIT - Alternate doc
         | address     | kenneth-current        |
         | fraud       | kenneth-score-2        |
         | experianKbv | kenneth-score-2        |
+      And I activate the 'disableStrategicApp' feature set
 
       # First return journey that collects a CI
       And I activate the 'drivingLicenceAuthCheck' feature set
@@ -299,7 +303,7 @@ Feature: P1 CIMIT - Alternate doc
         | context   | "check_details" |
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
 
-      # Seconds return journey to mitigate CI
+      # Second return journey to mitigate CI
       Given I start a new 'low-confidence' journey
       Then I get a 'pyi-driving-licence-no-match' page response
       When I submit a 'next' event
