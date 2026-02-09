@@ -1,8 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 @TrafficGeneration
 Feature: P2 App journey
-  Background:
-    Given I activate the 'disableStrategicApp' feature set
 
   Scenario Outline: Successful <attained-vot> identity via DCMAW using <doc> - <journey-type>
     When I start a new '<journey-type>' journey
@@ -10,8 +8,20 @@ Feature: P2 App journey
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit '<details>' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a '<details>' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -41,8 +51,20 @@ Feature: P2 App journey
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -72,8 +94,20 @@ Feature: P2 App journey
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'pyi-no-match' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -85,41 +119,24 @@ Feature: P2 App journey
       | high-medium-confidence |
       | medium-confidence      |
 
-  Scenario: DCMAW returns a 404 from user-info endpoint
-    When I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    Given the CRI stub returns a 404 from its user-info endpoint
-    Then I get a 'page-multiple-doc-check' page response
-
-  Scenario Outline: <error> from DCMAW
-    When I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an '<error>' OAuth error
-    Then I get a '<expected-page>' page response
-
-    Examples:
-      | error                     | expected-page           |
-      | server_error              | pyi-technical           |
-      | temporarily_unavailable   | page-multiple-doc-check |
-      | invalid_request           | pyi-no-match            |
-      | unauthorized_client       | pyi-technical           |
-      | unsupported_response_type | pyi-technical           |
-      | invalid_scope             | pyi-technical           |
-
   Scenario: Fail DCMAW with no CI
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-fail-no-ci' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-multiple-doc-check' page response
