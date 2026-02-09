@@ -36,12 +36,17 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
-    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit a 'nino' event
     Then I get a 'claimedIdentity' CRI response
@@ -89,7 +94,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'no-photo-id-abandon-find-another-way' page response
 
   Scenario: P1 No Photo Id Journey - DCMAW after Experian KBV thin file
-    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -119,8 +123,20 @@ Feature: P1 No Photo Id Journey
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -240,7 +256,6 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
-    Given I activate the 'disableStrategicApp' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -266,8 +281,20 @@ Feature: P1 No Photo Id Journey
     When I submit a 'end' event
     Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
