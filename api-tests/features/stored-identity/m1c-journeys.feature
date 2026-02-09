@@ -1,7 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - M1C Outcomes
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
   Rule: New Identities - UK Address
     Background:
@@ -10,10 +10,19 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
 
-    Scenario: Successful M1C P2 identity via DCMAW using chipped passport
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+    Scenario Outline: Successful M1C P2 identity via DCMAW via <details>
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a '<details>' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -29,25 +38,15 @@ Feature: Stored Identity - M1C Outcomes
       Then I get a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
-    Scenario: Successful M1C P2 identity via DCMAW using chipped BRP
-      When I submit 'kenneth-brp-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Examples:
+        | details                |
+        | kenneth-passport-valid |
+        | kenneth-brp-valid      |
 
     Scenario: No stored identity - unsuccessful M1C journey
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'drivingLicence' event
       Then I get a 'drivingLicence' CRI response
@@ -70,12 +69,21 @@ Feature: Stored Identity - M1C Outcomes
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'international' event
-      Then I get a 'non-uk-app-intro' page response
-      When I submit a 'useApp' event
-      Then I get a 'dcmaw' CRI response
+      Then I get a 'non-uk-passport' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped passport
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -107,8 +115,17 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a '<selected-name-change>' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit '<details>' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a '<details>' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get a 'address' CRI response
