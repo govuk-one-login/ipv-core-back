@@ -1,8 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Repeat fraud check journeys
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: User is sent on RFC journey to remedy unavailable fraud check
     Given the subject already has the following credentials
       | CRI     | scenario               |
@@ -43,8 +40,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -64,8 +70,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'family-name-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
@@ -96,8 +111,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'family-name-and-address' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
@@ -125,8 +149,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-and-address' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get a 'address' CRI response
@@ -210,8 +243,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -246,8 +288,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-and-address' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get a 'address' CRI response
@@ -294,8 +345,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -328,8 +388,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-and-address' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get a 'address' CRI response
@@ -381,8 +450,17 @@ Feature: Repeat fraud check journeys
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
