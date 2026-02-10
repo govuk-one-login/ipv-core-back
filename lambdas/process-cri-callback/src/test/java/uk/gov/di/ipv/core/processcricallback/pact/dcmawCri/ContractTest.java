@@ -309,7 +309,7 @@ class ContractTest {
                                         "Doe The Ball", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "DOE99802085J99FG",
                                         drivingPermitNode.get("personalNumber").asText());
@@ -417,13 +417,15 @@ class ContractTest {
 
                                 assertEquals("CH1 1AQ", addressNode.get("postalCode").asText());
 
-                                assertEquals(1, nameParts.size());
-                                assertEquals("FamilyName", nameParts.get(0).get("type").asText());
+                                assertEquals(2, nameParts.size());
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("", nameParts.get(0).get("value").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals(
-                                        "Doe The Ball", nameParts.get(0).get("value").asText());
+                                        "Doe The Ball", nameParts.get(1).get("value").asText());
 
                                 assertEquals(
-                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "DOE99802085J99FG",
                                         drivingPermitNode.get("personalNumber").asText());
@@ -540,7 +542,7 @@ class ContractTest {
                                 assertEquals("Doe", nameParts.get(1).get("value").asText());
 
                                 assertEquals(
-                                        "2028-08-07", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "DOEDO861281JF9DH",
                                         drivingPermitNode.get("personalNumber").asText());
@@ -659,7 +661,7 @@ class ContractTest {
                                 assertEquals("MORGAN", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2023-01-18", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "MORGA753116SM9IJ",
                                         drivingPermitNode.get("personalNumber").asText());
@@ -776,7 +778,7 @@ class ContractTest {
                                 assertEquals("KULYK", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2028-02-20", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "2022-05-29", drivingPermitNode.get("issueDate").asText());
                                 assertEquals(
@@ -894,7 +896,7 @@ class ContractTest {
                                 assertEquals("Boe", nameParts.get(2).get("value").asText());
 
                                 assertEquals(
-                                        "2028-08-07", drivingPermitNode.get("expiryDate").asText());
+                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
                                 assertEquals(
                                         "BOEJJ861281TP9DH",
                                         drivingPermitNode.get("personalNumber").asText());
@@ -1340,7 +1342,7 @@ class ContractTest {
                                 assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
-                                assertEquals("IR", brp.get("documentType").asText());
+                                assertEquals("CR", brp.get("documentType").asText());
 
                                 assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
