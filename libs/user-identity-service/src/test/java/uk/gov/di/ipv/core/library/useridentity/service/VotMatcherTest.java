@@ -25,7 +25,8 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.enums.Vot.P3;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMortalityFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.H1A;
@@ -207,7 +208,35 @@ class VotMatcherTest {
     @Test
     void shouldMatchM1cIfFraudCheckAuthoritativeUnavailable() {
         // Arrange
-        var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudAvailableAuthoritativeFailed());
+        var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudAvailableAuthoritativeSourceFailed());
+        var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
+        when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
+        when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
+                        GPG_45_SCORES, P3.getSupportedGpg45Profiles(true)))
+                .thenReturn(Optional.empty());
+        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
+                .thenReturn(Optional.of(Gpg45Profile.M1C));
+
+        // Act
+        var votMatch =
+                votMatcher.findStrongestMatches(
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true);
+
+        // Assert
+        verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
+        assertEquals(
+                new VotMatchingResult(
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        Optional.of(new VotMatchingResult.VotAndProfile(P2, Optional.of(M1C))),
+                        GPG_45_SCORES),
+                votMatch);
+    }
+
+    @Test
+    void shouldMatchM1cIfFraudCheckIsFailedMortality() {
+        // Arrange
+        var vcs = List.of(vcExperianKbvM1a(), vcExperianFraudMortalityFailed());
         var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);

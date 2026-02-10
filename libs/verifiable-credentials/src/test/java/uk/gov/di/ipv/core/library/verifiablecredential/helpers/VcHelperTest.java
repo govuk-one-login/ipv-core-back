@@ -44,10 +44,11 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNullNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraud;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMortalityFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
@@ -224,7 +225,7 @@ class VcHelperTest {
         when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
         var vcExpired = vcExperianFraudExpired();
-        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeSourceFailed();
 
         assertTrue(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
@@ -264,7 +265,7 @@ class VcHelperTest {
         when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
         var vcExpired = vcExperianFraudExpired();
-        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeFailed();
+        var vcNotAvailable = vcExperianFraudAvailableAuthoritativeSourceFailed();
 
         // Act & Assert
         assertTrue(
@@ -362,15 +363,10 @@ class VcHelperTest {
             hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
 
         // Arrange
-        var vcs =
-                List.of(
-                        vcDcmawPassport(),
-                        vcAddressM1a(),
-                        vcExperianFraudApplicableAuthoritativeSourceFailed(),
-                        vcExperianKbvM1a());
+        var vc = vcExperianFraudApplicableAuthoritativeSourceFailed();
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vc);
 
         // Assert
         assertTrue(result);
@@ -381,22 +377,73 @@ class VcHelperTest {
             hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
 
         // Arrange
-        var vcs =
-                List.of(
-                        vcDcmawPassport(),
-                        vcAddressM1a(),
-                        vcExperianFraudAvailableAuthoritativeFailed(),
-                        vcExperianKbvM1a());
+        var vc = vcExperianFraudAvailableAuthoritativeSourceFailed();
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vc);
 
         // Assert
         assertTrue(result);
     }
 
     @Test
-    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForOtherFailedFraudCheck() {
+    void
+            isFraudScoreOptionalForGpg45EvaluationShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudApplicableAuthoritativeSourceFailed(),
+                        vcExperianKbvM1a());
+
+        // Act
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void
+            isFraudScoreOptionalForGpg45EvaluationShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudAvailableAuthoritativeSourceFailed(),
+                        vcExperianKbvM1a());
+
+        // Act
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void isFraudScoreOptionalForGpg45EvaluationShouldReturnTrueForFailedMortalityCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudMortalityFailed(),
+                        vcExperianKbvM1a());
+
+        // Act
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void isFraudScoreOptionalForGpg45EvaluationShouldReturnFalseForOtherFailedFraudCheck() {
 
         // Arrange
         var vcs =
@@ -407,14 +454,14 @@ class VcHelperTest {
                         vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForSuccessfulFraudCheck() {
+    void isFraudScoreOptionalForGpg45EvaluationShouldReturnFalseForSuccessfulFraudCheck() {
 
         // Arrange
         var vcs =
@@ -425,20 +472,20 @@ class VcHelperTest {
                         vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
+    void isFraudScoreOptionalForGpg45EvaluationShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
         var vcs = List.of(vcDcmawPassport(), vcAddressM1a(), vcExperianKbvM1a());
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
 
         // Assert
         assertFalse(result);
@@ -448,7 +495,7 @@ class VcHelperTest {
     void hasUnavailableFraudCheckShouldReturnTrueForUnavailableFraudCheck() {
 
         // Arrange
-        var vc = vcExperianFraudAvailableAuthoritativeFailed();
+        var vc = vcExperianFraudAvailableAuthoritativeSourceFailed();
 
         // Act
         var result = VcHelper.hasUnavailableFraudCheck(vc);

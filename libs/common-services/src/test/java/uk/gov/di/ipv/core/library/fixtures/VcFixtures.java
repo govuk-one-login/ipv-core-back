@@ -1073,7 +1073,7 @@ public interface VcFixtures {
                 INSTANT_01_01_2099);
     }
 
-    static VerifiableCredential vcExperianFraudAvailableAuthoritativeFailed() {
+    static VerifiableCredential vcExperianFraudAvailableAuthoritativeSourceFailed() {
         var vcClaim = vcClaimExperianFraudScore0();
         vcClaim.getEvidence()
                 .get(0)
@@ -1084,6 +1084,25 @@ public interface VcFixtures {
                                         .withFraudCheck(
                                                 CheckDetails.FraudCheckType
                                                         .AVAILABLE_AUTHORITATIVE_SOURCE)
+                                        .build()));
+
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_FRAUD,
+                vcClaim,
+                FRAUD_ISSUER_INTEGRATION,
+                INSTANT_01_01_2099);
+    }
+
+    static VerifiableCredential vcExperianFraudMortalityFailed() {
+        var vcClaim = vcClaimExperianFraudScore0();
+        vcClaim.getEvidence()
+                .get(0)
+                .setFailedCheckDetails(
+                        List.of(
+                                CheckDetails.builder()
+                                        .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                        .withFraudCheck(CheckDetails.FraudCheckType.MORTALITY_CHECK)
                                         .build()));
 
         return generateVerifiableCredential(

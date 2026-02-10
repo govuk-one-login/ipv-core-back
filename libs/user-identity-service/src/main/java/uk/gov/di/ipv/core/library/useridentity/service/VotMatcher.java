@@ -88,7 +88,7 @@ public class VotMatcher {
             Gpg45Scores gpg45Scores,
             List<ContraIndicator> contraIndicators) {
 
-        var isFraudScoreRequired = !VcHelper.hasUnavailableOrNotApplicableFraudCheck(gpg45Vcs);
+        var isFraudScoreRequired = !VcHelper.isFraudScoreOptionalForGpg45Evaluation(gpg45Vcs);
         var achievableProfiles = requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired);
 
         Optional<Gpg45Profile> matchedGpg45Profile =
