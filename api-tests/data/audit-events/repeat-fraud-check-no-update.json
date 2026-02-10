@@ -194,7 +194,7 @@
         "fraud": 2,
         "verification": 3
       },
-      "vcTxnIds": ["RB000117420948", "RB000117420948"]
+      "vcTxnIds": ["type[string]", "type[string]"]
     },
     "restricted": {
       "device_information": {}

@@ -2,6 +2,10 @@
   {
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "vtr": ["P2"]
     },
@@ -12,6 +16,10 @@
   {
     "event_name": "IPV_SUBJOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "journey_type": "NEW_P2_IDENTITY"
     },
@@ -22,13 +30,10 @@
   {
     "event_name": "IPV_INTERNATIONAL_ADDRESS_START",
     "component_id": "https://identity.local.account.gov.uk",
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_REDIRECT_TO_CRI",
-    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
