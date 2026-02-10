@@ -1,8 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 CIMIT - Alternate doc
-  Background: Disable strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Rule: No existing identity
     Background:
       Given I start a new 'medium-confidence' journey
@@ -10,8 +7,14 @@ Feature: P2 CIMIT - Alternate doc
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -127,8 +130,14 @@ Feature: P2 CIMIT - Alternate doc
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit an '<initialCri>' event
       Then I get a '<initialCri>' CRI response
@@ -176,8 +185,14 @@ Feature: P2 CIMIT - Alternate doc
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit an '<initialCri>' event
       Then I get a '<initialCri>' CRI response
@@ -217,8 +232,14 @@ Feature: P2 CIMIT - Alternate doc
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit an '<initialCri>' event
       Then I get a '<initialCri>' CRI response
@@ -309,7 +330,7 @@ Feature: P2 CIMIT - Alternate doc
         | experianKbv | kenneth-score-2        |
 
       # First return journey that collects a CI
-      And I activate the 'drivingLicenceAuthCheck' feature set
+      And I activate the 'drivingLicenceAuthCheck,disableStrategicApp' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-reuse' page response
       When I submit an 'update-details' event
@@ -356,8 +377,14 @@ Feature: P2 CIMIT - Alternate doc
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit an '<initialCri>' event
       Then I get a '<initialCri>' CRI response
