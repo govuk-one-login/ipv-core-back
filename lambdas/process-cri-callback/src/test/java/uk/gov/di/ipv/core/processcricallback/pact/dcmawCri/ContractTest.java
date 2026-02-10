@@ -2557,6 +2557,10 @@ class ContractTest {
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
                 "credentialSubject": {
                   "name": [
                     {
@@ -2588,16 +2592,12 @@ class ContractTest {
                   ],
                   "passport": [
                     {
-                      "icaoIssuerCode": "NLD",
                       "documentNumber": "NXC65LP76",
-                      "expiryDate": "2026-04-01"
+                      "expiryDate": "2026-04-01",
+                      "icaoIssuerCode": "NLD"
                     }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2625,7 +2625,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NLD_PASSPORT_VC_SIGNATURE =
-            "1xYHkbBWWdoNJIYW9tZ9yQ2Z4pacWFj8BvEmFHN9kY4tdETqDu9rz2lf7f1WjLJK6Wf99lPuSTX49exQTCHQYQ"; // pragma: allowlist secret
+            "gmw-0o2_MlM5SqG71TE3EjUHlhPogqJ5uojMMT9-DsZFJMID09h9XItLKdGITABT49rQzoDOyedTSG7ZRAGl2w"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3171-AC2
@@ -2642,6 +2642,10 @@ class ContractTest {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -2674,16 +2678,12 @@ class ContractTest {
                   ],
                   "passport": [
                     {
-                      "icaoIssuerCode": "GBR",
                       "documentNumber": "549364783",
-                      "expiryDate": "2027-08-01"
+                      "expiryDate": "2027-08-01",
+                      "icaoIssuerCode": "GBR"
                     }
                   ]
                 },
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "evidence": [
                   {
                     "type": "IdentityCheck",
@@ -2714,7 +2714,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_PASSPORT_VC_WITH_CI_SIGNATURE =
-            "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A"; // pragma: allowlist secret
+            "aRNWqaeF5-_T7D5RZuX0r1Z-jV3a0ql0OY0C-61JeFa_BO-ITho1N5Cz9p-0oyLsU_GzNEH3thQPqTEzpjj2DA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From BRP DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRC
