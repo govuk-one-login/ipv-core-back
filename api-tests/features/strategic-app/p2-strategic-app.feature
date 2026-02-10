@@ -13,51 +13,15 @@ Feature: M2B Strategic App Journeys
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get an 'identify-device' page response
-    When I submit an 'appTriage' event
-    Then I get a 'pyi-triage-select-device' page response
-    When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
-    When I submit a 'neither' event
-    Then I get a 'pyi-triage-buffer' page response
-
 
   Rule: UK user
     Background: Start journey
-      Given I activate the 'strategicApp' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
-
-    Scenario: Happy path MAM journey declared iphone
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
 
     Scenario: Multiple callbacks do not incorrectly progress the journey
       When I submit an 'appTriage' event
@@ -193,38 +157,6 @@ Feature: M2B Strategic App Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-    Scenario: MAM journey credential fails with no ci and continues to other methods
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get an 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get an 'page-multiple-doc-check' page response
-
-    Scenario: MAM journey credential fails with ci and goes to no match page
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get an 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get an 'pyi-no-match' page response
-
     Scenario: MAM journey abandoned without a VC
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -336,7 +268,7 @@ Feature: M2B Strategic App Journeys
       When I submit the returned journey event
       Then I get an 'pyi-no-match' page response
 
-    Scenario: DAD journey credential fails with fails with no ci and continues to other methods
+    Scenario: DAD journey credential fails with with no ci and continues to other methods
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
@@ -365,61 +297,12 @@ Feature: M2B Strategic App Journeys
       When I submit a 'back' event
       Then I get a 'page-ipv-identity-document-start' page response
 
-  Rule: No photo ID
-    Scenario: Strategic app no photo ID goes to F2F
-      Given I activate the 'strategicApp' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'live-in-uk' page response
-      When I submit a 'uk' event
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-
   Rule: International user
     Background: Start journey
-      Given I activate the 'strategicApp' feature sets
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'international' event
       Then I get a 'non-uk-passport' page response
-
-    Scenario: Happy path successful P2 identity
-      When I submit a 'next' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
-      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
-      # And the user returns from the app to core-front
-      And I pass on the DCMAW callback
-      Then I get a 'check-mobile-app-result' page response
-      When I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-    Scenario: Strategic app non-uk address user abandons due to no biometric passport
-      When I submit a 'abandon' event
-      Then I get a 'non-uk-no-passport' page response
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
 
     Scenario: Strategic app non-uk address user abandons due to no biometric passport then returns
       When I submit a 'abandon' event

@@ -1,5 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P2 Web document journey
+Feature: P2 Web document journey - DWP KBV
 
   Background: Start web journey
     When I start a new 'medium-confidence' journey
@@ -224,7 +224,7 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       | access_denied           |
       | ukPassport     | kenneth-passport-valid       | server_error            |
 
-  Scenario Outline: User drops out of DWP KBV due to a <error> error
+  Scenario: User drops out of DWP KBV due to a temporarily_unavailable error
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -239,7 +239,7 @@ Feature: P2 Web document journey
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'dwpKbv' CRI response
-    When I call the CRI stub with attributes and get an '<error>' OAuth error
+    When I call the CRI stub with attributes and get an 'temporarily_unavailable' OAuth error
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'pyi-technical' page response
@@ -247,10 +247,6 @@ Feature: P2 Web document journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
-
-    Examples:
-      | error                     |
-      | temporarily_unavailable   |
 
   Scenario: Experian KBV is offered first if DWP is disabled
     When I submit a 'ukPassport' event
@@ -263,18 +259,4 @@ Feature: P2 Web document journey
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-pre-experian-kbv-transition' page response
-
-  Scenario: Experian KBV is offered if DWP KBV unsuitable
-    When I submit a 'ukPassport' event
-    Then I get a 'ukPassport' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
-    Then I get an 'address' CRI response
-    When I submit 'kenneth-current' details to the CRI stub
-    Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details with attributes to the CRI stub
-      | Attribute          | Values                   |
-      | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'personal-independence-payment' page response
-    When I submit an 'end' event
     Then I get a 'page-pre-experian-kbv-transition' page response

@@ -1,7 +1,7 @@
 @Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: M2B Strategic App Journeys with DL authoritative source check
   Scenario: Cross-browser scenario
-    Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
+    Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -46,7 +46,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
 
   Rule: Uk user
     Background: Get to the DL check
-      Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
+      Given I activate the 'drivingLicenceAuthCheck' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -67,24 +67,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
-
-    Scenario: Successful auth check
-      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
 
     Scenario: Auth check access_denied
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -141,16 +123,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'pyi-no-match' page response
-
-    Scenario: CI on auth check asks for alternative document
-      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'pyi-driving-licence-no-match-another-way' page response
-      When I submit a 'end' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
 
   Rule: Non-uk user
     Scenario: Non-uk user tries to use driving licence and gets a P0

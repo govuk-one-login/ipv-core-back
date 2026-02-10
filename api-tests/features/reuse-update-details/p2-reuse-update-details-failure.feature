@@ -19,11 +19,17 @@ Feature: Identity reuse update details failures
             Then I get an 'identify-device' page response
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
-            When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
-            When I submit a 'neither' event
-            Then I get a 'pyi-triage-buffer' page response
-            When I submit an 'anotherWay' event
+            When I submit a 'smartphone' event
+            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+            When I submit an 'iphone' event
+            Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+            When the async DCMAW CRI produces an 'access_denied' error response
+            # This will probably need to change once the polling is working
+            And I pass on the DCMAW callback
+            Then I get a 'check-mobile-app-result' page response
+            When I poll for async DCMAW credential receipt
+            Then the poll returns a '201'
+            When I submit the returned journey event
             Then I get an 'update-details-failed' page response
             When I submit a 'continue' event
             Then I get an OAuth response

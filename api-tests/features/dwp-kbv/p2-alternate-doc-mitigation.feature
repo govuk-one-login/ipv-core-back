@@ -1,6 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P2 CIMIT - Alternate doc
-  Background: Disable strategic app
+Feature: P2 CIMIT - Alternate doc - DWP KBV
+  Background: Start web journey
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

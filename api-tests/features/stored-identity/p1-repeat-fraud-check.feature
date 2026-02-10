@@ -85,7 +85,7 @@ Rule: No existing SI record for user
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
     When the async DCMAW CRI produces a '<details>' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback

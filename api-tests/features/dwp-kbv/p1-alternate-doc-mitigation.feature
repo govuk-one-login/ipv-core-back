@@ -1,5 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P1 CIMIT - Alternate doc
+Feature: P1 CIMIT - Alternate doc - DWP KBV
   Background: Start web journey
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response

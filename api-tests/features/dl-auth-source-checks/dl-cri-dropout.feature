@@ -511,23 +511,11 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
         | context   | "check_details" |
       Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
 
-    Scenario: User is able to return to DCMAW
-      When I submit a 'next' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-
     Scenario: User is able to mitigate via F2f
       When I submit an 'end' event
       Then I get a 'prove-identity-another-way' page response
       When I submit a 'postOffice' event
       Then I get a 'pyi-post-office' page response
-
-    Scenario: User returns to RP without identity
-      When I submit an 'end' event
-      Then I get a 'prove-identity-another-way' page response
-      When I submit an 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
 
   Rule: Same session enhanced verification mitigation with DCMAW + DL auth source check
     Background: User gets an enhanced verification CI in the same session
@@ -584,20 +572,8 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
         | context   | "check_details" |
       Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
 
-    Scenario: User is able to return to DCMAW
-      When I submit a 'next' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-
     Scenario: User is able to mitigate via F2f
       When I submit an 'end' event
       Then I get a 'prove-identity-another-way' page response
       When I submit a 'postOffice' event
       Then I get a 'pyi-post-office' page response
-
-    Scenario: User returns to RP without identity
-      When I submit an 'end' event
-      Then I get a 'prove-identity-another-way' page response
-      When I submit an 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity

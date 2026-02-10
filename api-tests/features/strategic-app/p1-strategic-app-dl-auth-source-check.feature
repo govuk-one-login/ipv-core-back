@@ -63,24 +63,6 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
 
-    Scenario: Successful auth check
-      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
-
     Scenario: Auth check access_denied
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'

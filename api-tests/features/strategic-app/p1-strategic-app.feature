@@ -202,11 +202,3 @@ Feature: M2B Strategic App Journeys
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
-
-  Rule: No photo ID
-    Scenario: Strategic app no photo ID goes to F2F
-      Given I activate the 'strategicApp' feature set
-      When I start a new 'low-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino'

@@ -61,7 +61,7 @@ Feature: Repeat fraud check failures
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-    Scenario: Applicable authoritative source failed check evidence too weak
+    Scenario: Available authoritative source failed check evidence too weak
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event

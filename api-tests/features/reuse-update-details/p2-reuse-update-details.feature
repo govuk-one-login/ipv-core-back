@@ -136,6 +136,20 @@ Feature: Identity reuse update details
             | Attribute | Values          |
             | context   | "check_details" |
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+        When I submit a 'next' event
+        Then I get a 'address' CRI response
+        When I submit 'kenneth-changed' details to the CRI stub
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+            | Attribute          | Values                   |
+            | evidence_requested | {"identityFraudScore":2} |
+        Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P2' identity
+        And my identity 'GivenName' is 'Ken'
+        And my address 'addressLocality' is 'Bristol'
 
     Scenario: Unsupported Changes
         When I start a new 'medium-confidence' journey

@@ -1,5 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P1 Web Journeys
+Feature: P1 Web Journeys - DWP KBV
   Rule: Passport/DL web journey
     Background: Start P1 journey ineligible for app
       When I start a new 'low-confidence' journey
@@ -81,7 +81,7 @@ Feature: P1 Web Journeys
         | drivingLicence | kenneth-driving-permit-valid |
         | ukPassport     | kenneth-passport-valid       |
 
-    Scenario Outline: P1 journey - <error> from DWP CRI
+    Scenario: P1 journey - temporarily_unavailable from DWP CRI
       When I submit an 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -96,7 +96,7 @@ Feature: P1 Web Journeys
       Then I get a 'page-pre-dwp-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'dwpKbv' CRI response
-      When I call the CRI stub with attributes and get an '<error>' OAuth error
+      When I call the CRI stub with attributes and get an 'temporarily_unavailable' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
       Then I get a 'pyi-technical' page response
@@ -104,10 +104,6 @@ Feature: P1 Web Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-
-      Examples:
-        | error                     |
-        | temporarily_unavailable   |
 
   Rule: No Photo ID web journey
     Background: Start no photo ID journey to DWP KBV
