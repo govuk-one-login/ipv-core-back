@@ -1879,7 +1879,7 @@ class ContractTest {
                   "drivingPermit": [
                     {
                       "personalNumber": "DOE99802085J99FG",
-                      "expiryDate": "2023-01-18",
+                      "expiryDate": "2046-11-07",
                       "issueDate": "2022-05-29",
                       "issueNumber": null,
                       "issuedBy": "DVLA",
@@ -1905,6 +1905,10 @@ class ContractTest {
                 },
                 "evidence": [
                   {
+                    "type": "IdentityCheck",
+                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
+                    "strengthScore": 3,
+                    "validityScore": 2,
                     "activityHistoryScore": 1,
                     "checkDetails": [
                       {
@@ -1916,11 +1920,7 @@ class ContractTest {
                         "biometricVerificationProcessLevel": 3,
                         "checkMethod": "bvr"
                       }
-                    ],
-                    "strengthScore": 3,
-                    "validityScore": 2,
-                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
-                    "type": "IdentityCheck"
+                    ]
                   }
                 ]
               },
@@ -1931,7 +1931,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_SIGNATURE =
-            "mlvF1U-39OcV1Dic-OYVgIxuCW6Q59Qyytrj1hfTuXcjstY0K7NWX0RM3ni_2PV9Dw-JlLspo9qpzyrPYhqxzw"; // pragma: allowlist secret
+            "XNCcDilpQRNjZuCKrt-Vw11UiVlf8l-Vif_UjFZGqrWhk1G8XtxI058z5nFRZllticAwW6esu51m7ER-gEx4jQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // Based on DCMAW-410-AC1 with given names removed
@@ -1958,8 +1958,12 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Doe The Ball",
-                          "type": "FamilyName"
+                          "type": "GivenName",
+                          "value": ""
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Doe The Ball"
                         }
                       ]
                     }
@@ -1972,6 +1976,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOE99802085J99FG",
+                      "expiryDate": "2046-11-07",
+                      "issueDate": "2022-05-29",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
                     }
                   ],
                   "address": [
@@ -1989,16 +2003,6 @@ class ContractTest {
                       "postalCode": "CH1 1AQ",
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "DOE99802085J99FG",
-                      "expiryDate": "2023-01-18",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "issueDate": "2022-05-29",
-                      "fullAddress": "WHATEVER STREET, WIRRAL, CH1 1AQ"
-                    }
                   ]
                 },
                 "evidence": [
@@ -2015,8 +2019,8 @@ class ContractTest {
                         "activityFrom": "2022-05-29"
                       },
                       {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
+                        "biometricVerificationProcessLevel": 3,
+                        "checkMethod": "bvr"
                       }
                     ]
                   }
@@ -2029,7 +2033,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVLA_VC_NO_GIVEN_NAME_SIGNATURE =
-            "lRGorJP0byCFDhXiHjPYSvaEZ5dDX2QwYeKogOvfBECwuGJ-4jfxfsPQ7TxODB_B32uZ0IAIMliyutZ1rqsD9Q"; // pragma: allowlist secret
+            "nw_Am3oXGUFrPYNCTxwZBib-FCKaNSE2UVUyiA1_FBn2DXfAVjZvaw_IMDfRgiFhXL87-fK-ue7sop82DhPuLw"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -2056,12 +2060,12 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "Jane"
                         },
                         {
-                          "value": "Doe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "Doe"
                         }
                       ]
                     }
@@ -2074,6 +2078,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOEDO861281JF9DH",
+                      "expiryDate": "2046-11-07",
+                      "issueDate": null,
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
                     }
                   ],
                   "address": [
@@ -2091,16 +2105,6 @@ class ContractTest {
                       "postalCode": "CH62 6AQ",
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "DOEDO861281JF9DH",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "issueDate": null,
-                      "expiryDate": "2028-08-07",
-                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
-                    }
                   ]
                 },
                 "evidence": [
@@ -2109,10 +2113,10 @@ class ContractTest {
                     "txn": "bcd2346",
                     "strengthScore": 3,
                     "validityScore": 0,
+                    "activityHistoryScore": 0,
                     "ci": [
                       "V01"
                     ],
-                    "activityHistoryScore": 0,
                     "failedCheckDetails": [
                       {
                         "checkMethod": "vri",
@@ -2134,7 +2138,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVLA_VC_WITH_CI_SIGNATURE =
-            "_hXmVCbpsxoMZFyape27lYfcu0X_QAbkKwhVBRCuPNz9YqqdP97zltkDknArWmW7H9KDt0WwUc04yl_uDxL5Yw"; // pragma: allowlist secret
+            "eipWy-RiHykq209fYHa65bhqBKpng2BmTFYVqQiqPJDQTU8HN6lYdSwOhjn1CyO41VaaPvlnDAy4v0ZGSz1XRQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1045-AC1
@@ -2161,16 +2165,16 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "SARAH",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "SARAH"
                         },
                         {
-                          "value": "MEREDYTH",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "MEREDYTH"
                         },
                         {
-                          "value": "MORGAN",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "MORGAN"
                         }
                       ]
                     }
@@ -2183,6 +2187,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "MORGA753116SM9IJ",
+                      "expiryDate": "2046-11-07",
+                      "issueDate": null,
+                      "issueNumber": null,
+                      "issuedBy": "DVA",
+                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP"
                     }
                   ],
                   "address": [
@@ -2200,16 +2214,6 @@ class ContractTest {
                       "postalCode": "EH1 9GP",
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "MORGA753116SM9IJ",
-                      "issueNumber": null,
-                      "issuedBy": "DVA",
-                      "issueDate": null,
-                      "expiryDate": "2023-01-18",
-                      "fullAddress": "122 BURNS CRESCENT EDINBURGH EH1 9GP"
-                    }
                   ]
                 },
                 "evidence": [
@@ -2218,8 +2222,8 @@ class ContractTest {
                     "txn": "bcd2346",
                     "strengthScore": 3,
                     "validityScore": 0,
-                    "ci": [],
                     "activityHistoryScore": 0,
+                    "ci": [],
                     "failedCheckDetails": [
                       {
                         "checkMethod": "vri",
@@ -2241,7 +2245,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_DVA_VC_NO_CI_SIGNATURE =
-            "eOwpmHQD8b-zLrkk35jzay56-3J17VFYR7gE1z9ZWx0XtIDG0VNwByMmzWA4HiCTzei8SHxbTClrdMpG7zBnEg"; // pragma: allowlist secret
+            "vvS_jP4Jap_FF3GhA3A8QPnib6PH032IxyQErWNDu5h6xK7ddSa5NGNOzPz4E61SNuuL-aKhVjMIqfA2hdKCPQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-1559-AC2
@@ -2268,16 +2272,16 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "OLGA",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "OLGA"
                         },
                         {
-                          "value": "A",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "A"
                         },
                         {
-                          "value": "KULYK",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "KULYK"
                         }
                       ]
                     }
@@ -2290,6 +2294,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "a3017511-b639-46ff-ab73-66e5ab0193c9"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "5823131861",
+                      "expiryDate": "2046-11-07",
+                      "issueDate": "2022-05-29",
+                      "issueNumber": null,
+                      "issuedBy": "DVA",
+                      "fullAddress": null
                     }
                   ],
                   "address": [
@@ -2307,16 +2321,6 @@ class ContractTest {
                       "postalCode": null,
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "expiryDate": "2028-02-20",
-                      "issueDate": "2022-05-29",
-                      "issueNumber": null,
-                      "issuedBy": "DVA",
-                      "personalNumber": "5823131861",
-                      "fullAddress": null
-                    }
                   ]
                 },
                 "evidence": [
@@ -2333,8 +2337,8 @@ class ContractTest {
                         "activityFrom": "2022-05-29"
                       },
                       {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
+                        "biometricVerificationProcessLevel": 3,
+                        "checkMethod": "bvr"
                       }
                     ]
                   }
@@ -2347,7 +2351,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
-            "nXWlQ20h1h8KMaX5C09P0krYwYS5R7m9dEVHJf7TP3Tw4cZZEj8Ss1vvqnsF0gv3c7wWaiAp8OcbWNDgdM8jPA"; // pragma: allowlist secret
+            "band-kIzrrEO8DEnDhxdFGcF9BaiifWEt1qW4_Cc657YtvfIlVFFV_mg3NyOmCm4ZLIcTrHe5xy9a_0ZUkHD4g"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-4733-AC1
@@ -2374,16 +2378,16 @@ class ContractTest {
                     {
                       "nameParts": [
                         {
-                          "value": "Jane",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "Jane"
                         },
                         {
-                          "value": "Julian",
-                          "type": "GivenName"
+                          "type": "GivenName",
+                          "value": "Julian"
                         },
                         {
-                          "value": "Boe",
-                          "type": "FamilyName"
+                          "type": "FamilyName",
+                          "value": "Boe"
                         }
                       ]
                     }
@@ -2396,6 +2400,16 @@ class ContractTest {
                   "deviceId": [
                     {
                       "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "BOEJJ861281TP9DH",
+                      "expiryDate": "2046-11-07",
+                      "issueDate": "2022-05-29",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "fullAddress": "102 ROVER ROAD, WIRRAL, CH62 2AQ"
                     }
                   ],
                   "address": [
@@ -2413,16 +2427,6 @@ class ContractTest {
                       "postalCode": "CH62 2AQ",
                       "addressCountry": null
                     }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "BOEJJ861281TP9DH",
-                      "expiryDate": "2028-08-07",
-                      "issueNumber": null,
-                      "issuedBy": null,
-                      "issueDate": "2022-05-29",
-                      "fullAddress": "102 ROVER ROAD, WIRRAL, CH62 2AQ"
-                    }
                   ]
                 },
                 "evidence": [
@@ -2439,8 +2443,8 @@ class ContractTest {
                         "activityFrom": "2022-05-29"
                       },
                       {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
+                        "biometricVerificationProcessLevel": 3,
+                        "checkMethod": "bvr"
                       }
                     ]
                   }
@@ -2453,7 +2457,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
-            "NUDPh22c35rtjMukSbD027MZFO5zYP67ldqseOjPzMqZE19fzGeQEoG9PqReLAzCWsbMh10kPAhWtmeasHnrbw"; // pragma: allowlist secret
+            "KCr0lmThH8quu1rYTodSrt012HuBJ9s0pTRFsKLDbmNxL8emvYQE23zuNRyGYvW-yInQcz01nCtO4Y6K-PQBtA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
