@@ -91,12 +91,6 @@ export const callbackFromStrategicApp = async (
     body: JSON.stringify({ state: world.oauthState }),
   });
 
-  if (!response.ok) {
-    throw new Error(
-      `callbackFromStrategicApp request failed: ${response.statusText}`,
-    );
-  }
-
   const body = await response.json();
 
   world.clientOAuthSessionId = body?.clientOAuthSessionId;
