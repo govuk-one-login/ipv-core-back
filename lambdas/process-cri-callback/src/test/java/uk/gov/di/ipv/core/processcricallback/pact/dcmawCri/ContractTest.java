@@ -798,46 +798,30 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsDrivingLicenceCredential(
+    public RequestResponsePact invalidUserInfoRequestReturns404Error(
             PactDslWithProvider builder) {
         return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("VC is from DCMAW-4733-AC1")
-                .uponReceiving("Valid credential request for driving licence VC with no issuer")
+                .given("vendor response has issuedBy not present")
+                .uponReceiving("Credential request for driving licence VC with no issuer")
                 .path("/userinfo/v2")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
-                .status(200)
+                .status(404)
                 .body(
-                        newJsonBody(
-                                        body -> {
-                                            var jwtBuilder =
-                                                    new PactJwtBuilder(
-                                                            VALID_VC_HEADER,
-                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY,
-                                                            VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE);
-
-                                            body.stringValue("sub", "test-subject");
-                                            body.minMaxArrayLike(
-                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
-                                                    1,
-                                                    1,
-                                                    PactDslJsonRootValue.stringMatcher(
-                                                            jwtBuilder
-                                                                    .buildRegexMatcherIgnoringSignature(),
-                                                            jwtBuilder.buildJwt()),
-                                                    1);
-                                        })
-                                .build())
+                        newJsonBody(body -> {
+                                body.stringValue("https://vocab.account.gov.uk/v1/credentialStatus", "failed");
+                        })
+                        .build())
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsDrivingLicenceCredential")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_retrievesAValidDvaVcWithNoIssuer(
+    @PactTestFor(pactMethod = "invalidUserInfoRequestReturns404Error")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawCri_forDvaVcWithNoIssuer_throwsAnException(
             MockServer mockServer)
             throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
@@ -851,68 +835,20 @@ class ContractTest {
                         mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
-        var verifiableCredentialResponse =
-                underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () ->
+                                underTest.fetchVerifiableCredential(
+                                        new BearerAccessToken("dummyAccessToken"),
+                                        DCMAW,
+                                        CRI_OAUTH_SESSION_ITEM));
 
         // Assert
-        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
-        verifiableCredentialResponse
-                .getVerifiableCredentials()
-                .forEach(
-                        credential -> {
-                            try {
-                                var vc =
-                                        verifiableCredentialJwtValidator.parseAndValidate(
-                                                TEST_USER,
-                                                DCMAW,
-                                                credential,
-                                                EC_PRIVATE_KEY_JWK,
-                                                TEST_ISSUER,
-                                                false);
-
-                                JsonNode vcClaim =
-                                        OBJECT_MAPPER
-                                                .readTree(vc.getClaimsSet().toString())
-                                                .get("vc");
-
-                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
-                                JsonNode evidence = vcClaim.get("evidence").get(0);
-
-                                JsonNode addressNode = credentialSubject.get("address").get(0);
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-                                JsonNode drivingPermitNode =
-                                        credentialSubject.get("drivingPermit").get(0);
-
-                                assertEquals("CH62 2AQ", addressNode.get("postalCode").asText());
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("GivenName", nameParts.get(1).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(2).get("type").asText());
-                                assertEquals("Jane", nameParts.get(0).get("value").asText());
-                                assertEquals("Julian", nameParts.get(1).get("value").asText());
-                                assertEquals("Boe", nameParts.get(2).get("value").asText());
-
-                                assertEquals(
-                                        "2046-11-07", drivingPermitNode.get("expiryDate").asText());
-                                assertEquals(
-                                        "BOEJJ861281TP9DH",
-                                        drivingPermitNode.get("personalNumber").asText());
-                                assertEquals(
-                                        JsonNodeType.NULL,
-                                        drivingPermitNode.get("issuedBy").getNodeType());
-
-                                assertEquals("2011-11-28", birthDateNode.get("value").asText());
-
-                                assertEquals(3, evidence.get("strengthScore").asInt());
-                                assertEquals(2, evidence.get("validityScore").asInt());
-                                assertEquals(1, evidence.get("activityHistoryScore").asInt());
-                            } catch (VerifiableCredentialException | JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+        assertThat(
+                exception.getErrorResponse(),
+                is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_NOT_FOUND));
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
@@ -2354,112 +2290,6 @@ class ContractTest {
     // change each time we run the tests.
     private static final String VALID_DVA_VC_SIGNATURE =
             "band-kIzrrEO8DEnDhxdFGcF9BaiifWEt1qW4_Cc657YtvfIlVFFV_mg3NyOmCm4ZLIcTrHe5xy9a_0ZUkHD4g"; // pragma: allowlist secret
-
-    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-4733-AC1
-    private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_BODY =
-            """
-            {
-              "iat": 1712228728,
-              "iss": "dummyDcmawComponentId",
-              "aud": "issuer",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
-              "vc": {
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
-                ],
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Jane"
-                        },
-                        {
-                          "type": "GivenName",
-                          "value": "Julian"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Boe"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "2011-11-28"
-                    }
-                  ],
-                  "deviceId": [
-                    {
-                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
-                    }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "BOEJJ861281TP9DH",
-                      "expiryDate": "2046-11-07",
-                      "issueDate": "2022-05-29",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "fullAddress": "102 ROVER ROAD, WIRRAL, CH62 2AQ"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": null,
-                      "organisationName": null,
-                      "subBuildingName": null,
-                      "buildingNumber": null,
-                      "buildingName": null,
-                      "dependentStreetName": null,
-                      "streetName": null,
-                      "doubleDependentAddressLocality": null,
-                      "dependentAddressLocality": null,
-                      "addressLocality": null,
-                      "postalCode": "CH62 2AQ",
-                      "addressCountry": null
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "type": "IdentityCheck",
-                    "txn": "ea2feefe-45a3-4a29-923f-604cd4017ec0",
-                    "strengthScore": 3,
-                    "validityScore": 2,
-                    "activityHistoryScore": 1,
-                    "checkDetails": [
-                      {
-                        "checkMethod": "vri",
-                        "identityCheckPolicy": "published",
-                        "activityFrom": "2022-05-29"
-                      },
-                      {
-                        "biometricVerificationProcessLevel": 3,
-                        "checkMethod": "bvr"
-                      }
-                    ]
-                  }
-                ]
-              },
-              "exp": 4070909400
-            }
-            """;
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_DRIVING_LICENCE_NO_ISSUER_VC_SIGNATURE =
-            "KCr0lmThH8quu1rYTodSrt012HuBJ9s0pTRFsKLDbmNxL8emvYQE23zuNRyGYvW-yInQcz01nCtO4Y6K-PQBtA"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-3079-AC1
