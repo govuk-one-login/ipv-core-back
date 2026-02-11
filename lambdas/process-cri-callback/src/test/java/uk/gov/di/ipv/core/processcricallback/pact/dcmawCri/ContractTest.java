@@ -798,8 +798,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidUserInfoRequestReturns404Error(
-            PactDslWithProvider builder) {
+    public RequestResponsePact invalidUserInfoRequestReturns404Error(PactDslWithProvider builder) {
         return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
@@ -812,10 +811,13 @@ class ContractTest {
                 .willRespondWith()
                 .status(404)
                 .body(
-                        newJsonBody(body -> {
-                                body.stringValue("https://vocab.account.gov.uk/v1/credentialStatus", "failed");
-                        })
-                        .build())
+                        newJsonBody(
+                                        body -> {
+                                            body.stringValue(
+                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
+                                                    "failed");
+                                        })
+                                .build())
                 .toPact();
     }
 
