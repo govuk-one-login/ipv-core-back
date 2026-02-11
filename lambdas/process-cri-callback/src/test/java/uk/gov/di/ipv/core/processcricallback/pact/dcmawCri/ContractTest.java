@@ -1342,7 +1342,7 @@ class ContractTest {
                                 assertEquals("2024-02-25", brp.get("expiryDate").asText());
                                 assertEquals("ZR8016200", brp.get("documentNumber").asText());
                                 assertEquals("GBR", brp.get("icaoIssuerCode").asText());
-                                assertEquals("CR", brp.get("documentType").asText());
+                                assertEquals("IR", brp.get("documentType").asText());
 
                                 assertEquals("1980-01-01", birthDateNode.get("value").asText());
 
@@ -2773,7 +2773,7 @@ class ContractTest {
                       "documentNumber": "ZR8016200",
                       "expiryDate": "2024-02-25",
                       "icaoIssuerCode": "GBR",
-                      "documentType": "CR"
+                      "documentType": "IR"
                     }
                   ]
                 },
@@ -2804,7 +2804,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BRP_VC_SIGNATURE =
-            "yGgpft2Kl3Xt9O8lC-bHrAgxQCX3ks8bTEQvD2IJWrrbBcrCnSZ4adRq4h1G9EYhaU5LD6VAR4El2b1Fbf3Qww"; // pragma: allowlist secret
+            "uOWSIKd-MufE0KCYoSxKy8nXApOmje5Gk6SqurLmZWdylX9otKt1PYJ3ePjsQsp4edeWBWqoXrdAAwOpfBqk-w"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5175-AC1
