@@ -825,7 +825,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "invalidUserInfoRequestReturns404Error")
     void fetchVerifiableCredential_whenCalledAgainstDcmawCri_forDvaVcWithNoIssuer_throwsAnException(
             MockServer mockServer)
-            throws URISyntaxException, CriApiException, JsonProcessingException {
+            throws URISyntaxException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         configureMockConfigService(credentialIssuerConfig);
