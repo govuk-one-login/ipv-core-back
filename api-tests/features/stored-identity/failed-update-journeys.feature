@@ -40,6 +40,7 @@ Feature: Failed update details
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'valid'
 
     Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
+      # TODO: Update to use strategic app once PYIC-8940 has been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
@@ -129,6 +130,7 @@ Feature: Failed update details
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - fail with CI (invalid identity)
+      # TODO: Update to use strategic app once PYIC-8940 has been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'

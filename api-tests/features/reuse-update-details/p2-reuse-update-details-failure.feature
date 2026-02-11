@@ -90,7 +90,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
         Scenario: Breaching CI received from DCMAW - doesn't receive old identity
-            # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
+            # TODO: update this to use the strategic app once PYIC-8769/8941/8940 have been resolved
             When I activate the 'disableStrategicApp' feature set
             And I submit an 'update-name' event
             Then I get a 'dcmaw' CRI response
@@ -114,11 +114,15 @@ Feature: Identity reuse update details failures
                 | Attribute | Values          |
                 | context   | "check_details" |
             Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+            When I submit a 'returnToRp' event
+            Then I get an OAuth response
+            When I use the OAuth response to get my identity
+            Then I get a 'P0' identity
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-driving-licence-no-match' page response
 
         Scenario: User is able to delete account from sorry-could-not-confirm-details page
-            # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
+            # TODO: update this to use the strategic app once PYIC-8940 has been resolved
             When I activate the 'disableStrategicApp' feature set
             And I submit an 'update-name' event
             Then I get a 'dcmaw' CRI response

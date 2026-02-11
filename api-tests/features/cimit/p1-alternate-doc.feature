@@ -148,6 +148,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
         | address     | kenneth-current        |
         | fraud       | kenneth-score-2        |
         | experianKbv | kenneth-score-2        |
+      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
       And I activate the 'disableStrategicApp' feature set
 
       # First return journey that collects a CI

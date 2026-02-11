@@ -105,6 +105,7 @@ Feature: Repeat fraud check failures
       Then I get a 'delete-handover' page response
 
     Scenario: Breaching CI received from DCMAW
+      # TODO: update this to use the strategic app once PYIC-8769/8941/8940 have been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit an 'update-name' event
       Then I get a 'dcmaw' CRI response
@@ -118,6 +119,7 @@ Feature: Repeat fraud check failures
       Then I get a 'pyi-no-match' page response
 
     Scenario: User is able to delete account from sorry-could-not-confirm-details screen
+      # TODO: update this to use the strategic app once PYIC-8940 has been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit an 'update-name' event
       Then I get a 'dcmaw' CRI response
@@ -127,6 +129,7 @@ Feature: Repeat fraud check failures
       Then I get a 'delete-handover' page response
 
     Scenario: Zero score in fraud CRI
+      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit an 'update-name' event
       Then I get a 'dcmaw' CRI response
@@ -182,6 +185,7 @@ Feature: Repeat fraud check failures
       Then I get a 'pyi-no-match' page response
 
     Scenario: Failed COI check
+      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
@@ -232,6 +236,7 @@ Feature: Repeat fraud check failures
         | type | RiskAssessment |
 
     Scenario: Fraud access denied OAuth error
+      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
       When I activate the 'disableStrategicApp' feature set
       And I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response

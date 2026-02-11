@@ -1,8 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P3 journeys
-  Background: Enable feature sets
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: Only P3 in VTR results in an error
     When I start a new 'high-confidence' journey
     Then I get a 'pyi-technical' page response

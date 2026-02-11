@@ -152,6 +152,7 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
         | experianKbv | kenneth-score-2        |
 
       # First return journey that collects a CI
+      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
       And I activate the 'drivingLicenceAuthCheck,disableStrategicApp' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-reuse' page response

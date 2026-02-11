@@ -1,5 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Disabled CRI journeys
+  # TODO: Leaving this test suite for PYIC-8932 when adding failover routing for the V2 app
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
