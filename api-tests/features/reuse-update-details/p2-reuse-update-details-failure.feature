@@ -38,6 +38,22 @@ Feature: Identity reuse update details failures
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
+        Scenario: Decide not to use app - fails update, but keeps old identity
+            When I submit a 'update-name' event
+            Then I get an 'identify-device' page response
+            When I submit an 'appTriage' event
+            Then I get a 'pyi-triage-select-device' page response
+            When I submit a 'smartphone' event
+            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+            When I submit an 'iphone' event
+            Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+            When I submit an 'anotherWay' event
+            Then I get an 'update-details-failed' page response
+            When I submit a 'continue' event
+            Then I get an OAuth response
+            When I use the OAuth response to get my identity
+            Then I get a 'P2' identity
+
         Scenario: User is able to delete account from update-details-failed page
             When I submit an 'update-name' event
             Then I get an 'identify-device' page response
@@ -74,6 +90,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
         Scenario: Breaching CI received from DCMAW - doesn't receive old identity
+            # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
             When I activate the 'disableStrategicApp' feature set
             And I submit an 'update-name' event
             Then I get a 'dcmaw' CRI response
@@ -86,7 +103,22 @@ Feature: Identity reuse update details failures
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
 
+        Scenario: Breaching CI from DL auth source check - doesn't receive old identity
+            # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
+            When I activate the 'disableStrategicApp' feature set
+            When I submit a 'update-name' event
+            Then I get a 'dcmaw' CRI response
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            Then I get a 'drivingLicence' CRI response
+            When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+                | Attribute | Values          |
+                | context   | "check_details" |
+            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+            When I start a new 'medium-confidence' journey
+            Then I get a 'pyi-driving-licence-no-match' page response
+
         Scenario: User is able to delete account from sorry-could-not-confirm-details page
+            # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
             When I activate the 'disableStrategicApp' feature set
             And I submit an 'update-name' event
             Then I get a 'dcmaw' CRI response

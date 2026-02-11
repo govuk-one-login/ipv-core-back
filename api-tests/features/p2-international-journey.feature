@@ -83,6 +83,38 @@ Feature: P2 International Address
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
+    Scenario: International user abandons due to no biometric passport then returns
+      When I submit an 'international' event
+      Then I get a 'non-uk-passport' page response
+      When I submit a 'abandon' event
+      Then I get a 'non-uk-no-passport' page response
+      When I submit a 'useApp' event
+      Then I get an 'identify-device' page response
+
+    Scenario: International user wants to prove identity another way from download page
+      When I submit an 'international' event
+      Then I get a 'non-uk-passport' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      When I submit a 'preferNoApp' event
+      Then I get a 'non-uk-no-app-options' page response
+      # Change their mind and go back
+      When I submit a 'useApp' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      # Decide to abandon again
+      When I submit a 'preferNoApp' event
+      Then I get a 'non-uk-no-app-options' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
   Rule: High-medium confidence journeys
     Background: Start high-medium confidence journey
       And I start a new 'high-medium-confidence' journey
