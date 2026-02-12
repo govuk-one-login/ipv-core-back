@@ -1,8 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Reprove Identity Journey
-  Background: Disable strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Rule: Flag from AIS
     Background: Enable AIS description checking
       Given I activate the 'disableAisStateCheck' feature set
@@ -21,8 +18,17 @@ Feature: Reprove Identity Journey
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -176,8 +182,17 @@ Feature: Reprove Identity Journey
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response

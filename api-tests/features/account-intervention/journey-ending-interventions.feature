@@ -6,15 +6,23 @@ Feature: Journey ending interventions
       Given I activate the 'disableAisStateCheck' feature set
 
     Scenario Outline: <intervention> intervention at of identity proving journey
-      Given I activate the 'disableStrategicApp' feature set
       And The AIS stub will return an '<first_ais_response>' result
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -36,14 +44,22 @@ Feature: Journey ending interventions
         | Password reset and reprove identity | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
     Scenario Outline: TICF <intervention> result during identity proving journey
-      Given I activate the 'disableStrategicApp' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -66,7 +82,6 @@ Feature: Journey ending interventions
         | Password reset and reprove identity | 06                     |
 
     Scenario Outline: <intervention> intervention at of reprove identity journey
-      Given I activate the 'disableStrategicApp' feature set
       And the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
@@ -80,8 +95,17 @@ Feature: Journey ending interventions
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -160,15 +184,23 @@ Feature: Journey ending interventions
       Given I activate the 'aisStateCheck' feature set
 
     Scenario Outline: <intervention> intervention during identity proving journey invalidates session
-      Given I activate the 'disableStrategicApp' feature set
       And The AIS stub will return an '<first_ais_response>' result
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -190,15 +222,23 @@ Feature: Journey ending interventions
         | Password reset and reprove identity | AIS_NO_INTERVENTION            | AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY |
 
     Scenario Outline: <intervention> intervention during identity proving journey doesn't invalidate session
-      Given I activate the 'disableStrategicApp' feature set
       And The AIS stub will return an '<first_ais_response>' result
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -218,14 +258,22 @@ Feature: Journey ending interventions
         | Password reset cleared              | AIS_NO_INTERVENTION            | PASSWORD_RESET_CLEARED     |
 
     Scenario Outline: TICF <intervention> result during identity proving journey
-      Given I activate the 'disableStrategicApp' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response
@@ -248,7 +296,6 @@ Feature: Journey ending interventions
         | Password reset and reprove identity | 06                     |
 
     Scenario Outline: <intervention> intervention during reprove identity journey
-      Given I activate the 'disableStrategicApp' feature set
       And the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
@@ -262,8 +309,17 @@ Feature: Journey ending interventions
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get an 'address' CRI response

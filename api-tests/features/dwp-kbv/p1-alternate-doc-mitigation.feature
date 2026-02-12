@@ -1,12 +1,17 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P1 CIMIT - Alternate doc
+Feature: P1 CIMIT - Alternate doc - DWP KBV
   Background: Start web journey
-    Given I activate the 'disableStrategicApp' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
   Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV

@@ -1,15 +1,21 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity Service - CIMIT journeys
   Background:
-    Given I activate the 'storedIdentityService,disableStrategicApp' feature set
+    Given I activate the 'storedIdentityService' feature set
 
-  Rule: P1 - D02 Mitigation
+  Rule: P1 - Alternate Doc Mitigation
     Background:
       Given I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -89,15 +95,21 @@ Feature: Stored Identity Service - CIMIT journeys
         | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
         | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
 
-  Rule: P2 - D02 Mitigation
+  Rule: P2 - Alternate Doc Mitigation
     Background:
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario Outline: Alternate doc mitigation via passport or DL
@@ -177,13 +189,19 @@ Feature: Stored Identity Service - CIMIT journeys
         | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
         | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
 
-  Rule: P1 - V03 Enhanced Verification
+  Rule: P1 - Enhanced Verification
     Background:
       Given I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response

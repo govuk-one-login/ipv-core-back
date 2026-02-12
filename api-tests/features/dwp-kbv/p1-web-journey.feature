@@ -1,15 +1,18 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
-Feature: P1 Web Journeys
-  Background: Set feature sets
-    Given I activate the 'disableStrategicApp' feature sets
-
+Feature: P1 Web Journeys - DWP KBV
   Rule: Passport/DL web journey
     Background: Start P1 journey ineligible for app
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
 
     Scenario Outline: Successful P1 journey - via <cri> and DWP KBV
@@ -78,7 +81,7 @@ Feature: P1 Web Journeys
         | drivingLicence | kenneth-driving-permit-valid |
         | ukPassport     | kenneth-passport-valid       |
 
-    Scenario Outline: P1 journey - <error> from DWP CRI
+    Scenario: P1 journey - temporarily_unavailable from DWP CRI
       When I submit an 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -93,7 +96,7 @@ Feature: P1 Web Journeys
       Then I get a 'page-pre-dwp-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'dwpKbv' CRI response
-      When I call the CRI stub with attributes and get an '<error>' OAuth error
+      When I call the CRI stub with attributes and get an 'temporarily_unavailable' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
       Then I get a 'pyi-technical' page response
@@ -101,10 +104,6 @@ Feature: P1 Web Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-
-      Examples:
-        | error                     |
-        | temporarily_unavailable   |
 
   Rule: No Photo ID web journey
     Background: Start no photo ID journey to DWP KBV
@@ -183,8 +182,20 @@ Feature: P1 Web Journeys
       When I submit a 'end' event
       Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |

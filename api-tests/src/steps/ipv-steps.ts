@@ -391,9 +391,10 @@ Then(
 );
 
 Then(
-  /I have a dcmaw VC (with|without) '(passport|drivingPermit)' details/,
+  /I have a (dcmaw|dcmawAsync) VC (with|without) '(passport|drivingPermit)' details/,
   async function (
     this: World,
+    vcIssuer: "dcmaw" | "dcmawAsync",
     withOrWithout: "with" | "without",
     passportOrDrivingPermit: "passport" | "drivingPermit",
   ): Promise<void> {
@@ -405,14 +406,14 @@ Then(
       throw new Error("No credentials found.");
     }
 
-    const dcmawVc = this.vcs[buildCredentialIssuerUrl("dcmaw")];
+    const dcmawVc = this.vcs[buildCredentialIssuerUrl(vcIssuer)];
     if (!dcmawVc) {
-      throw new Error("Identity does not have a dcmaw VC");
+      throw new Error(`Identity does not have a ${vcIssuer} VC`);
     }
 
     const credentialSubject = dcmawVc.vc.credentialSubject;
     if (!credentialSubject) {
-      throw new Error("dcmaw VC does not have a credential subject");
+      throw new Error(`${vcIssuer} VC does not have a credential subject`);
     }
 
     const ispassportOrDrivingPermitInVc =
@@ -422,7 +423,7 @@ Then(
       withOrWithout === "with"
         ? ispassportOrDrivingPermitInVc
         : !ispassportOrDrivingPermitInVc,
-      `dcmaw VC does${withOrWithout === "with" ? " not" : " "}contain ${passportOrDrivingPermit}.`,
+      `${vcIssuer} VC does${withOrWithout === "with" ? " not" : " "}contain ${passportOrDrivingPermit}.`,
     );
   },
 );

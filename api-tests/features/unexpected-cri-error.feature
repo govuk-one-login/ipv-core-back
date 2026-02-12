@@ -2,14 +2,19 @@
 Feature: Handling unexpected CRI errors
   Rule: Driving Licence and Passport CRIs
     Background: Go through web route
-      Given I activate the 'disableStrategicApp' feature sets
-      When  I start a new 'medium-confidence' journey
+      Given  I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario Outline: Unexpected error from <cri> - try CRI again
@@ -48,7 +53,6 @@ Feature: Handling unexpected CRI errors
     Scenario Outline: Unexpected error from <cri> - try app route
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
-      When I override the existing feature sets and activate the 'strategicApp' feature sets
       And I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
       When I submit an 'app' event
@@ -88,8 +92,7 @@ Feature: Handling unexpected CRI errors
     Scenario Outline: Unexpected error from <cri> - try post office route
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
-      When I override the existing feature sets and activate the 'strategicApp' feature set
-      And I call the CRI stub and get a 'server_error' OAuth error
+      When I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
       When I submit an 'postOffice' event
       Then I get a 'claimedIdentity' CRI response
@@ -244,14 +247,19 @@ Feature: Handling unexpected CRI errors
 
   Rule: Experian KBV
     Background: Route to sorry-technical-problem Experian KBV CRI error page
-      Given I activate the 'disableStrategicApp' feature set
-      When  I start a new 'medium-confidence' journey
+      Given  I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
@@ -287,8 +295,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'P2' identity
 
     Scenario: Unexpected error from Experian KBV CRI - try app route
-      When I override the existing feature sets and activate the 'strategicApp' feature set
-      And I submit a 'app' event
+      When I submit a 'app' event
       Then I get a 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -376,9 +383,8 @@ Feature: Handling unexpected CRI errors
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    Scenario: Unexpected error from F2F CRI - try app route
-      When I override the existing feature sets and activate the 'strategicApp' feature set
-      And I submit a 'app' event
+    Scenario: Unexpected error from F2F CRI - try app routeWhen I submit a 'app' event
+      When I submit a 'app' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'identify-device' page response
@@ -443,12 +449,18 @@ Feature: Handling unexpected CRI errors
 
   Rule: F2F CRI - P1
     Background: Route to sorry-technical-problem F2F CRI error page
-      Given I activate the 'p1Journeys,disableStrategicApp' feature set
+      Given I activate the 'p1Journeys' feature set
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response with context 'nino'
       When I submit an 'end' event
       Then I get a 'pyi-post-office' page response
@@ -470,8 +482,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'sorry-technical-problem' page response with context 'f2fCriError'
 
     Scenario: Unexpected error from F2F CRI - try app route
-      When I override the existing feature sets and activate the 'strategicApp' feature set
-      And I submit a 'app' event
+      When I submit a 'app' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'identify-device' page response

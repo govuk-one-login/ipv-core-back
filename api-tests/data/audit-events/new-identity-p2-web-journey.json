@@ -5,8 +5,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "vtr": ["P2"]
@@ -21,8 +20,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "journey_type": "NEW_P2_IDENTITY"
@@ -37,39 +35,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_CRI_AUTH_RESPONSE_RECEIVED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
-    },
-    "extensions": {
-      "error_code": "access_denied",
-      "error_description": "No error description provided",
-      "credential_issuer_id": null
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_REDIRECT_TO_CRI",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -81,8 +47,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "iss": "https://driving-licence-cri.stubs.account.gov.uk",
@@ -115,8 +80,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "cri": "drivingLicence",
@@ -132,8 +96,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -145,8 +108,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "iss": "https://address-cri.stubs.account.gov.uk",
@@ -163,8 +125,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "cri": "address",
@@ -180,8 +141,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -193,8 +153,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "iss": "https://fraud-cri.stubs.account.gov.uk",
@@ -242,8 +201,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "cri": "fraud",
@@ -259,8 +217,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -272,8 +229,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -285,8 +241,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "iss": "https://experian-kbv-cri.stubs.account.gov.uk",
@@ -326,8 +281,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "cri": "experianKbv",
@@ -343,8 +297,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "type": "STANDARD"
@@ -359,8 +312,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "type": "STANDARD",
@@ -408,8 +360,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "gpg45Profile": "M1B",
@@ -436,8 +387,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "iss": "https://ticf.stubs.account.gov.uk",
@@ -458,8 +408,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "cri": "ticf",
@@ -475,13 +424,13 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
       "identity_type": "new",
       "sis_record_created": true,
-      "vot": "P2"
+      "vot": "P2",
+      "max_vot": "P2"
     },
     "restricted": {
       "device_information": {}
@@ -493,8 +442,7 @@
     "user": {
       "user_id": "type[string]",
       "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}

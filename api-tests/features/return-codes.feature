@@ -1,16 +1,25 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Return exit codes
-  Background: Disable the strategic app
-    Given I activate the 'disableStrategicApp' feature set
-
   Scenario: Successful journey with identity and no CIs - no return codes
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -49,8 +58,14 @@ Feature: Return exit codes
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -94,8 +109,20 @@ Feature: Return exit codes
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -113,8 +140,20 @@ Feature: Return exit codes
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -136,8 +175,14 @@ Feature: Return exit codes
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -173,8 +218,20 @@ Feature: Return exit codes
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -196,8 +253,20 @@ Feature: Return exit codes
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response

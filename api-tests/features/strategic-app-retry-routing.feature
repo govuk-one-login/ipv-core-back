@@ -1,7 +1,7 @@
 @Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Strategic App Retry Journeys
   Background: Trying again goes directly to the correct download page
-    Given I activate the 'strategicApp,drivingLicenceAuthCheck' feature set
+    Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
 

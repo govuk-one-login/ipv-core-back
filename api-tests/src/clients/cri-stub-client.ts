@@ -9,6 +9,7 @@ const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   ticf: "ticf",
   experianKbv: "experian-kbv-cri",
   dcmaw: "dcmaw-cri",
+  dcmawAsync: "dcmaw-async",
   address: "address-cri",
   fraud: "fraud-cri",
   ukPassport: "passport-cri",

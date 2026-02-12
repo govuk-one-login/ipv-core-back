@@ -2,6 +2,10 @@
   {
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "vtr": ["P2"]
     },
@@ -12,6 +16,10 @@
   {
     "event_name": "IPV_SUBJOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "journey_type": "NEW_P2_IDENTITY"
     },
@@ -22,25 +30,10 @@
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_CRI_AUTH_RESPONSE_RECEIVED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "error_code": "access_denied",
-      "error_description": "No error description provided",
-      "credential_issuer_id": null
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
     },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_REDIRECT_TO_CRI",
-    "component_id": "https://identity.local.account.gov.uk",
     "restricted": {
       "device_information": {}
     }
@@ -48,6 +41,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://driving-licence-cri.stubs.account.gov.uk",
       "evidence": [
@@ -76,6 +73,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "drivingLicence",
       "type": "vc"
@@ -87,6 +88,10 @@
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -94,6 +99,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://address-cri.stubs.account.gov.uk",
       "evidence": null,
@@ -106,6 +115,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "address",
       "type": "vc"
@@ -117,6 +130,10 @@
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -124,6 +141,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://fraud-cri.stubs.account.gov.uk",
       "evidence": [
@@ -167,6 +188,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "fraud",
       "type": "vc"
@@ -180,9 +205,7 @@
     "component_id": "https://identity.local.account.gov.uk",
     "user": {
       "user_id": "type[string]",
-      "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]",
-      "ip_address": "type[string]"
+      "govuk_signin_journey_id": "type[string]"
     },
     "restricted": {
       "device_information": {}
@@ -191,6 +214,10 @@
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -198,6 +225,10 @@
   {
     "event_name": "IPV_DWP_KBV_CRI_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -205,6 +236,10 @@
   {
     "event_name": "IPV_DWP_KBV_CRI_VC_ISSUED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://dwp-kbv-cri.stubs.account.gov.uk",
       "evidence": [
@@ -240,6 +275,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://dwp-kbv-cri.stubs.account.gov.uk",
       "evidence": [
@@ -275,6 +314,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "dwpKbv",
       "type": "vc"
@@ -286,6 +329,10 @@
   {
     "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "type": "STANDARD"
     },
@@ -296,6 +343,10 @@
   {
     "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "type": "STANDARD",
       "successful": true
@@ -329,6 +380,7 @@
           "postalCode": "BA2 5AA",
           "streetName": "HADLEY ROAD",
           "subBuildingName": "",
+          "uprn": 100120012077,
           "validFrom": "1000-01-01"
         }
       ],
@@ -338,6 +390,10 @@
   {
     "event_name": "IPV_GPG45_PROFILE_MATCHED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "gpg45Profile": "M1B",
       "gpg45Scores": {
@@ -350,7 +406,8 @@
         "activity": 1,
         "fraud": 2,
         "verification": 2
-      }
+      },
+      "vcTxnIds": ["type[string]", "type[string]", "type[string]"]
     },
     "restricted": {
       "device_information": {}
@@ -359,6 +416,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://ticf.stubs.account.gov.uk",
       "evidence": [
@@ -375,6 +436,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "ticf",
       "type": "vc"
@@ -386,10 +451,15 @@
   {
     "event_name": "IPV_IDENTITY_STORED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "identity_type": "new",
+      "sis_record_created": true,
       "vot": "P2",
-      "sis_record_created": true
+      "max_vot": "P2"
     },
     "restricted": {
       "device_information": {}

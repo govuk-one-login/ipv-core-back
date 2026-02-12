@@ -2,6 +2,10 @@
   {
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "vtr": ["P2"]
     },
@@ -12,14 +16,25 @@
   {
     "event_name": "IPV_EXPIRED_DCMAW_DL_VC_FOUND",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "vc_expiry_period_ms": 15552000000,
       "vc_issue_date": 1658829758000
+    },
+    "restricted": {
+      "device_information": {}
     }
   },
   {
     "event_name": "IPV_SUBJOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "journey_type": "NEW_P2_IDENTITY"
     },
@@ -28,23 +43,45 @@
     }
   },
   {
-    "event_name": "IPV_REDIRECT_TO_CRI",
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "cri": "dcmawAsync",
+      "type": "pending"
+    },
     "restricted": {
       "device_information": {}
     }
   },
   {
-    "event_name": "IPV_VC_RECEIVED",
+    "event_name": "IPV_APP_HANDOFF_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]"
+    },
     "extensions": {
-      "iss": "https://dcmaw-cri.stubs.account.gov.uk",
+      "iss": "https://dcmaw-async.stubs.account.gov.uk",
       "evidence": [
         {
-          "activityHistoryScore": 1,
           "checkDetails": [
             {
-              "checkMethod": "vri"
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
             },
             {
               "biometricVerificationProcessLevel": 3,
@@ -58,26 +95,65 @@
       ],
       "successful": true,
       "isUkIssued": true,
-      "age": "type[number]"
-    },
-    "restricted": {
-      "device_information": {}
+      "age": "type[number]",
+      "credential_issuer_id": "dcmawAsync"
     }
   },
   {
-    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "event_name": "IPV_ASYNC_CRI_VC_CONSUMED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]"
+    },
     "extensions": {
-      "cri": "dcmaw",
-      "type": "vc"
+      "iss": "https://dcmaw-async.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "checkDetails": [
+            {
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "biometricVerificationProcessLevel": 3,
+              "checkMethod": "bvr"
+            }
+          ],
+          "strengthScore": 4,
+          "type": "IdentityCheck",
+          "validityScore": 3
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]",
+      "credential_issuer_id": "dcmawAsync"
     },
     "restricted": {
-      "device_information": {}
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "Kenneth"
+            },
+            {
+              "type": "FamilyName",
+              "value": "Decerqueira"
+            }
+          ]
+        }
+      ],
+      "docExpiryDate": "2030-01-01"
     }
   },
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -85,6 +161,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://address-cri.stubs.account.gov.uk",
       "evidence": null,
@@ -97,6 +177,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "address",
       "type": "vc"
@@ -108,6 +192,10 @@
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -115,6 +203,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://fraud-cri.stubs.account.gov.uk",
       "evidence": [
@@ -158,6 +250,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "fraud",
       "type": "vc"
@@ -169,6 +265,10 @@
   {
     "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "type": "STANDARD"
     },
@@ -179,6 +279,10 @@
   {
     "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "type": "STANDARD",
       "successful": true
@@ -189,11 +293,11 @@
           "nameParts": [
             {
               "type": "GivenName",
-              "value": "KENNETH"
+              "value": "Kenneth"
             },
             {
               "type": "FamilyName",
-              "value": "DECERQUEIRA"
+              "value": "Decerqueira"
             }
           ]
         }
@@ -206,27 +310,27 @@
       "oldAddress": [
         {
           "addressCountry": "GB",
-          "uprn": 100120012077,
-          "buildingName": "",
-          "streetName": "HADLEY ROAD",
-          "postalCode": "BA2 5AA",
-          "buildingNumber": "8",
           "addressLocality": "BATH",
-          "validFrom": "1000-01-01",
-          "subBuildingName": ""
+          "buildingName": "",
+          "buildingNumber": "8",
+          "postalCode": "BA2 5AA",
+          "streetName": "HADLEY ROAD",
+          "subBuildingName": "",
+          "uprn": 100120012077,
+          "validFrom": "1000-01-01"
         }
       ],
       "newAddress": [
         {
           "addressCountry": "GB",
-          "uprn": 100120012077,
-          "buildingName": "",
-          "streetName": "HADLEY ROAD",
-          "postalCode": "BA2 5AA",
-          "buildingNumber": "8",
           "addressLocality": "BATH",
-          "validFrom": "1000-01-01",
-          "subBuildingName": ""
+          "buildingName": "",
+          "buildingNumber": "8",
+          "postalCode": "BA2 5AA",
+          "streetName": "HADLEY ROAD",
+          "subBuildingName": "",
+          "uprn": 100120012077,
+          "validFrom": "1000-01-01"
         }
       ],
       "device_information": {}
@@ -235,6 +339,10 @@
   {
     "event_name": "IPV_GPG45_PROFILE_MATCHED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "gpg45Profile": "M1A",
       "gpg45Scores": {
@@ -248,7 +356,7 @@
         "fraud": 2,
         "verification": 3
       },
-      "vcTxnIds": []
+      "vcTxnIds": ["type[string]", "type[string]"]
     },
     "restricted": {
       "device_information": {}
@@ -257,6 +365,10 @@
   {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "iss": "https://ticf.stubs.account.gov.uk",
       "evidence": [
@@ -273,6 +385,10 @@
   {
     "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "cri": "ticf",
       "type": "vc"
@@ -284,10 +400,15 @@
   {
     "event_name": "IPV_IDENTITY_STORED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "identity_type": "new",
+      "sis_record_created": true,
       "vot": "P3",
-      "sis_record_created": true
+      "max_vot": "P3"
     },
     "restricted": {
       "device_information": {}
@@ -296,6 +417,10 @@
   {
     "event_name": "IPV_JOURNEY_END",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "restricted": {
       "device_information": {}
     }
@@ -303,6 +428,10 @@
   {
     "event_name": "IPV_IDENTITY_ISSUED",
     "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
     "extensions": {
       "levelOfConfidence": "P2",
       "ciFail": false,
