@@ -1627,7 +1627,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns401(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
@@ -1640,12 +1640,12 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(401)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
     void fetchVerifiableCredential_whenCalledAgainstDcmawCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException {
         // Arrange
@@ -1672,7 +1672,7 @@ class ContractTest {
         assertThat(
                 exception.getErrorResponse(),
                 is(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
-        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
     }
 
     @NotNull
