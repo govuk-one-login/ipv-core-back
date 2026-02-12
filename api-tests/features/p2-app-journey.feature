@@ -287,3 +287,31 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'back' event
       Then I get a 'page-ipv-identity-document-start' page response
+
+    Scenario Outline: <error> from DCMAW
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces an '<error>' error response
+      When I wait for 1 seconds for the async credential to be processed
+      # This will probably need to change once the polling is working
+      And I pass on the DCMAW callback
+      Then I get a 'pyi-technical' page response
+
+      Examples:
+        | error                     |
+        | server_error              |
+        | temporarily_unavailable   |
+        | invalid_request           |
+        | unauthorized_client       |
+        | unsupported_response_type |
+        | invalid_scope             |

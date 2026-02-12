@@ -326,6 +326,9 @@ nestedJourneyStates:
             targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE:
     response:
@@ -343,6 +346,9 @@ nestedJourneyStates:
             targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
@@ -388,6 +394,9 @@ nestedJourneyStates:
             targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE:
     response:
@@ -405,6 +414,9 @@ nestedJourneyStates:
             targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
