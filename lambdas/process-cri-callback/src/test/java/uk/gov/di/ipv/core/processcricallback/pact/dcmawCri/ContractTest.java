@@ -148,7 +148,8 @@ class ContractTest {
 
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAuthCodeRequestReturns401(PactDslWithProvider builder) {
-        return builder.given("dummyDcmawComponentId is the DCMAW CRI component ID")
+        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
+                .given("dummyDcmawComponentId is the DCMAW CRI component ID")
                 .given(
                         "DCMAW CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
                 .uponReceiving("Invalid auth code")
@@ -810,14 +811,6 @@ class ContractTest {
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
                 .status(404)
-                .body(
-                        newJsonBody(
-                                        body -> {
-                                            body.stringValue(
-                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
-                                                    "failed");
-                                        })
-                                .build())
                 .toPact();
     }
 
