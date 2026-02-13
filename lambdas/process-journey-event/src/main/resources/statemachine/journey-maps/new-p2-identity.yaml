@@ -34,7 +34,7 @@ states:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
             targetEntryEvent: appTriage
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
@@ -142,7 +142,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       end:
         targetState: F2F_START_PAGE
@@ -378,7 +378,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
@@ -579,7 +579,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       end:
@@ -612,7 +612,7 @@ states:
             targetState: STRATEGIC_APP_TRIAGE
             targetEntryEvent: appTriage
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       passport:
@@ -646,7 +646,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       end:
@@ -666,7 +666,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       end:
@@ -781,7 +781,7 @@ states:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
-          dcmaw:
+          dcmawAsync:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
