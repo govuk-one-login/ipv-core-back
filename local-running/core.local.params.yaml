@@ -409,10 +409,6 @@ core:
       credentialIssuers:
         drivingLicence:
           enabled: false
-    dcmawOffTest:
-      credentialIssuers:
-        dcmaw:
-          enabled: false
     dcmawAsyncDisabled:
       credentialIssuers:
         dcmawAsync:

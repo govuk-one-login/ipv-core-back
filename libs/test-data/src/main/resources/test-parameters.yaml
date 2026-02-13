@@ -415,9 +415,9 @@ core:
       credentialIssuers:
         drivingLicence:
           enabled: false
-    dcmawOffTest:
+    dcmawAsyncDisabled:
       credentialIssuers:
-        dcmaw:
+        dcmawAsync:
           enabled: false
     # Enabling CRIs
     ticfCriBeta:
