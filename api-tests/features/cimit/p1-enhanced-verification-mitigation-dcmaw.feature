@@ -65,7 +65,6 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       When I submit an 'iphone' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
       When the async DCMAW CRI produces an 'access_denied' error response
-      # This will probably need to change once the polling is working
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt
