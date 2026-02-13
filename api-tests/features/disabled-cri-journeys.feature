@@ -1,20 +1,19 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Disabled CRI journeys
-  # TODO: Leaving this test suite for PYIC-8932 when adding failover routing for the V2 app
   Background: Disable the strategic app
     Given I activate the 'disableStrategicApp' feature set
 
   Rule: DCMAW is disabled
 
-    Scenario: A P1 journey takes the user on a no photo ID journey
-      Given I activate the 'dcmawOffTest' feature sets
+    Scenario: A P1 journey takes the user down the no photo ID NINO route instead
+      Given I activate the 'dcmawAsyncDisabled' feature set
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
 
-    Scenario: A P2 journey takes the user to the document select page
-      Given I activate the 'dcmawOffTest' feature set
+    Scenario: A P2 journey takes the user down the web route instead
+      Given I activate the 'dcmawAsyncDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -23,7 +22,7 @@ Feature: Disabled CRI journeys
       Then I get a 'page-multiple-doc-check' page response
 
     Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure
-      Given I activate the 'dcmawOffTest' feature set
+      Given I activate the 'dcmawAsyncDisabled' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -58,14 +57,14 @@ Feature: Disabled CRI journeys
         | address     | kenneth-current                     |
         | fraud       | kenneth-score-2                     |
         | experianKbv | kenneth-needs-enhanced-verification |
-      And I activate the 'dcmawOffTest' feature set
+      And I activate the 'dcmawAsyncDisabled' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-technical' page response
 
     Scenario: Same session enhanced verification mitigation with DCMAW leads to technical failure
-      Given I activate the 'dcmawOffTest' feature set
+      Given I activate the 'dcmawAsyncDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

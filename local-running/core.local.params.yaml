@@ -413,6 +413,10 @@ core:
       credentialIssuers:
         dcmaw:
           enabled: false
+    dcmawAsyncDisabled:
+      credentialIssuers:
+        dcmawAsync:
+          enabled: false
     # Enabling CRIs
     ticfCriBeta:
       credentialIssuers:
