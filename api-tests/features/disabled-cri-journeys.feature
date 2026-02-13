@@ -1,6 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Disabled CRI journeys
   Background: Disable the strategic app
+    # TODO: remove this once strategicApp feature flag is removed in PYIC-8928
     Given I activate the 'disableStrategicApp' feature set
 
   Rule: DCMAW is disabled
