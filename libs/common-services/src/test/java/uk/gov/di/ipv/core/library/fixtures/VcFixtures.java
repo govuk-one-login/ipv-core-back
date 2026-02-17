@@ -1113,6 +1113,26 @@ public interface VcFixtures {
                 INSTANT_01_01_2099);
     }
 
+    // Note that this VC is unrealistic and only for specific testsing
+    static VerifiableCredential vcExperianFraudMortalityNonZeroScore() {
+        var vcClaim = vcClaimExperianFraudScore1();
+        vcClaim.getEvidence()
+                .get(0)
+                .setFailedCheckDetails(
+                        List.of(
+                                CheckDetails.builder()
+                                        .withCheckMethod(CheckDetails.CheckMethodType.DATA)
+                                        .withFraudCheck(CheckDetails.FraudCheckType.MORTALITY_CHECK)
+                                        .build()));
+
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_FRAUD,
+                vcClaim,
+                FRAUD_ISSUER_INTEGRATION,
+                INSTANT_01_01_2099);
+    }
+
     static VerifiableCredential vcWebDrivingPermitDvaValid() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",

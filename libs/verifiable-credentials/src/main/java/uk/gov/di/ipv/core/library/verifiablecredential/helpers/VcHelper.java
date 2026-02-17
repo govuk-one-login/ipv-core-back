@@ -191,10 +191,6 @@ public class VcHelper {
         var jwtClaimsSet = vc.getClaimsSet();
         var nbfDate = jwtClaimsSet.getNotBeforeTime();
         var nbf = nbfDate.toInstant();
-        if (nbf == null) {
-            LOGGER.error("VC does not have a nbf claim");
-            return true;
-        }
 
         var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
         return hasExpired(nbf, expiryPeriodInDays, clock);
@@ -243,7 +239,7 @@ public class VcHelper {
                                 hasUnavailableOrNotApplicableFraudCheck(vc)
                                         || (VcHelper.hasFailedFraudCheck(
                                                         vc, Set.of(MORTALITY_CHECK))
-                                                && getExperianFraudScore(vc) == 0));
+                                                && getIdentityCheckFraudScore(vc) == 0));
     }
 
     public static boolean hasUnavailableOrNotApplicableFraudCheck(VerifiableCredential vc) {
@@ -255,23 +251,9 @@ public class VcHelper {
         return hasFailedFraudCheck(vc, Set.of(AVAILABLE_AUTHORITATIVE_SOURCE));
     }
 
-    private static int getExperianFraudScore(VerifiableCredential vc) {
-        if (vc.getCri() != EXPERIAN_FRAUD) {
-            throw new IllegalArgumentException("Supplied VC was not an Experian fraud VC");
-        }
-
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            var evidence = identityCheckCredential.getEvidence();
-            if (evidence.isEmpty()) {
-                LOGGER.warn("Experian fraud VC contained no evidence");
-                return 0;
-            }
-
-            return evidence.getFirst().getIdentityFraudScore();
-        }
-
-        throw new IllegalArgumentException(
-                "Supplied VC was not an instance of IdentityCheckCredential");
+    private static int getIdentityCheckFraudScore(VerifiableCredential vc) {
+        var identityCheckCredential = (IdentityCheckCredential) vc.getCredential();
+        return identityCheckCredential.getEvidence().getFirst().getIdentityFraudScore();
     }
 
     private static boolean hasFailedFraudCheck(

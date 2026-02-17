@@ -49,6 +49,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvid
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMortalityFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMortalityNonZeroScore;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
@@ -451,6 +452,25 @@ class VcHelperTest {
                         vcDcmawPassport(),
                         vcAddressM1a(),
                         vcExperianFraudEvidenceFailed(),
+                        vcExperianKbvM1a());
+
+        // Act
+        var result = VcHelper.isFraudScoreOptionalForGpg45Evaluation(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void
+            isFraudScoreOptionalForGpg45EvaluationShouldReturnFalseForailedMortalityCheckWithNonZeroFraudScore() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDcmawPassport(),
+                        vcAddressM1a(),
+                        vcExperianFraudMortalityNonZeroScore(),
                         vcExperianKbvM1a());
 
         // Act
