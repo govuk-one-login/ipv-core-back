@@ -63,6 +63,51 @@ Feature: P2 Web document journey
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
+    Scenario: Successful web journey with driving licence CRI - dva
+      When I submit an 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-dva-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+
+    Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score
+      When I submit an 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
+      Examples:
+      | driving-licence-type | details                          |
+      | dva                  | kenneth-driving-permit-dva-valid |
+      | dvla                 | kenneth-driving-permit-valid     |
+
     Scenario: P2 fallback for users who fail KBV and F2F but can successfully prove their identity
       When I submit an 'ukPassport' event
       Then I get a 'ukPassport' CRI response
