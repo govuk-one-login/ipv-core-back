@@ -1,0 +1,31 @@
+{
+  "activityHistoryScore": 0,
+  "checkDetails": [
+    {
+      "checkMethod": "data",
+      "fraudCheck": "applicable_authoritative_source"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "available_authoritative_source"
+    }
+  ],
+  "failedCheckDetails": [
+    {
+      "checkMethod": "data",
+      "fraudCheck": "mortality_check"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "identity_theft_check"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "synthetic_identity_check"
+    }
+  ],
+  "ci": ["BREACHING"],
+  "txn": "RB000117420948",
+  "identityFraudScore": 0,
+  "type": "IdentityCheck"
+}
