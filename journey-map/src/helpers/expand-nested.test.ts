@@ -300,6 +300,88 @@ describe("expandNested", () => {
     expect(states).toEqual(expected);
   });
 
+  it("should expand doubly-nested journeys with event overrides", () => {
+    // Arrange
+    const states: Record<string, JourneyState> = yaml.parse(`
+      ENTRY_STATE:
+        events:
+          next:
+            targetState: NESTED_STATE
+            targetEntryEvent: entryEventOverride
+
+      NESTED_STATE:
+        nestedJourney: OUTER_NESTED
+        exitEvents:
+          next:
+            targetState: END_STATE
+      END_STATE:
+        response:
+          type: page
+          pageId: test-page
+    `);
+
+    const outerNestedDefinition: NestedJourneyMap = yaml.parse(`
+      name: Outer test
+      description: Test nested journey
+      entryEvents:
+        entryEventOverride:
+          targetState: OUTER_FIRST_STATE
+          targetEntryEvent: entryEventOverride2
+
+      nestedJourneyStates:
+        OUTER_FIRST_STATE:
+          nestedJourney: INNER_NESTED
+          exitEvents:
+            outerNestedNext:
+              exitEventToEmit: next
+    `);
+
+    const innerNestedDefinition: NestedJourneyMap = yaml.parse(`
+      name: Inner test
+      description: Test nested journey
+      entryEvents:
+        entryEventOverride2:
+          targetState: INNER_FIRST_STATE
+      nestedJourneyStates:
+        INNER_FIRST_STATE:
+          response:
+            type: page
+            pageId: test-page
+          events:
+            innerNestedNext:
+              exitEventToEmit: outerNestedNext
+    `);
+
+    const expected: Record<string, JourneyState> = yaml.parse(`
+      ENTRY_STATE:
+        events:
+          next:
+            targetState: NESTED_STATE/OUTER_FIRST_STATE/INNER_FIRST_STATE
+      NESTED_STATE/OUTER_FIRST_STATE/INNER_FIRST_STATE:
+        response:
+          type: page
+          pageId: test-page
+        events:
+          innerNestedNext:
+            targetState: END_STATE
+      END_STATE:
+        response:
+          type: page
+          pageId: test-page
+    `);
+
+    const nestedJourneys = {
+      OUTER_NESTED: outerNestedDefinition,
+      INNER_NESTED: innerNestedDefinition,
+    };
+
+    // Act
+    expandNestedJourneys(states, nestedJourneys);
+
+    // Assert
+    expect(states).toEqual(expected);
+  });
+
   it("should expand chained nested journeys", () => {
     // Arrange
     const states: Record<string, JourneyState> = yaml.parse(`
