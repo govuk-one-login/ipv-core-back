@@ -2906,14 +2906,10 @@ Resources:
       Principal: "appconfig.amazonaws.com"
       SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
 
-#  App Config Pipeline
-#  This may fail on first deployment due to not existing alias.
-#  Simply comment it out to deploy and then uncomment and update the stack to give app config pipeline permissions to invoke validation lambda
-#  When this comment is no longer needed please also remove the debugging instructions in ipv-core-common-infra/utils/dev-deploy/docs/cli-userguide.md
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub "${ValidateAppConfigFunction.Arn}:live"
+      FunctionName: !Ref ValidateAppConfigFunction.Alias
       Action: lambda:InvokeFunction
       Principal: appconfig.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
