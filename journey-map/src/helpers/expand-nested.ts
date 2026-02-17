@@ -81,8 +81,8 @@ export const expandNestedJourneys = (
                   (!t.targetEntryEvent && implicitEntryEvent === entryEvent),
               )
               .forEach((t) => {
+                delete t.targetEntryEvent; // Clear any resolved target entry event
                 Object.assign(t, entryEventDef);
-                delete t.targetEntryEvent;
               });
           });
         });
