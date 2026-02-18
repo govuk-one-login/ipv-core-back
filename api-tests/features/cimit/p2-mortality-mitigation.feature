@@ -1,7 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: Mortality check failures
   Background:
-    Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
