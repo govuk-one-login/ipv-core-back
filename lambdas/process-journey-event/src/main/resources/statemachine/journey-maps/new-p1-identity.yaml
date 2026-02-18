@@ -27,12 +27,8 @@ states:
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
       next:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriage
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -107,12 +103,8 @@ states:
         resetType: ALL
     events:
       next:
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
       error:
         targetState: APP_DOC_CHECK
         targetEntryEvent: next
@@ -136,11 +128,7 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
           dcmawAsync:
             targetState: NINO_START_PAGE
@@ -336,12 +324,8 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
       try-again-app:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
       try-again-post-office:
         targetState: CRI_CLAIMED_IDENTITY_J4
       return-to-rp-cri-error:
@@ -365,11 +349,7 @@ states:
       context: dropout
     events:
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -552,11 +532,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -571,12 +547,8 @@ states:
       pageId: no-photo-id-abandon-find-another-way
     events:
       mobileApp:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -606,11 +578,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -720,11 +688,7 @@ states:
       pageId: photo-id-security-questions-find-another-way
     events:
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR

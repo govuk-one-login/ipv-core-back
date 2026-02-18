@@ -83,12 +83,9 @@ states:
         resetType: NAME_ONLY_CHANGE
     events:
       next:
-        targetState: APP_DOC_CHECK_NAMES_ONLY
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
-            targetEntryEvent: appTriage
-            journeyContextToSet: appOnly
+        targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
+        targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
 
   APP_DOC_CHECK_NAMES_ONLY:
     nestedJourney: APP_DOC_CHECK
@@ -230,12 +227,9 @@ states:
         resetType: ALL
     events:
       next:
-        targetState: APP_DOC_CHECK_NAMES_WITH_ADDRESS
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
-            targetEntryEvent: appTriage
-            journeyContextToSet: appOnly
+        targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
+        targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
