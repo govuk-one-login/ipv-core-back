@@ -87,32 +87,6 @@ states:
         targetEntryEvent: appTriage
         journeyContextToSet: appOnly
 
-  APP_DOC_CHECK_NAMES_ONLY:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_NAMES_ONLY
-      incomplete:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-      context: noF2f
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_NAMES_ONLY
-        targetEntryEvent: next
-      returnToRp:
-        targetState: RETURN_TO_RP
-
   STRATEGIC_APP_TRIAGE_NAMES_ONLY:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:

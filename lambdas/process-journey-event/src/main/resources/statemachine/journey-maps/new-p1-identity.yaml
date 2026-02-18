@@ -106,8 +106,8 @@ states:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
       error:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   RESET_SESSION_IDENTITY:
     response:
@@ -234,57 +234,6 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
-
-  APP_DOC_CHECK:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      incomplete:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-        checkMitigation:
-          enhanced-verification:
-            targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
-      alternate-doc-invalid-dl:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl-another-way
-        checkMitigation:
-          enhanced-verification:
-            targetJourney: FAILED
-            targetState: FAILED
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: invalid-dl
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-      postOffice:
-        targetState: F2F_START_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_ESCAPE
-            checkMitigation:
-              enhanced-verification:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-        checkMitigation:
-          enhanced-verification:
-            targetState: PYI_POST_OFFICE
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -639,40 +588,6 @@ states:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         targetEntryEvent: appTriage
-      postOffice:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  APP_DOC_CHECK_PYI_ESCAPE:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: PROCESS_NEW_IDENTITY
-      incomplete:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
       postOffice:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
