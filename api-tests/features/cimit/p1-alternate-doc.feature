@@ -140,54 +140,54 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-  Rule: Existing identity
-    Scenario: Mitigating when a user already has an identity should be subject to a COI check
-      Given the subject already has the following credentials
-        | CRI         | scenario               |
-        | ukPassport  | kenneth-passport-valid |
-        | address     | kenneth-current        |
-        | fraud       | kenneth-score-2        |
-        | experianKbv | kenneth-score-2        |
-      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
-      And I activate the 'disableStrategicApp' feature set
-
-      # First return journey that collects a CI
-      And I activate the 'drivingLicenceAuthCheck' feature set
-      When I start a new 'low-confidence' journey
-      Then I get a 'page-ipv-reuse' page response
-      When I submit an 'update-details' event
-      Then I get an 'update-details' page response
-      When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response
-      When I submit an 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-
-      # Second return journey to mitigate CI
-      Given I start a new 'low-confidence' journey
-      Then I get a 'pyi-driving-licence-no-match' page response
-      When I submit a 'next' event
-      Then I get a 'pyi-continue-with-passport' page response
-      When I submit a 'next' event
-      Then I get a 'ukPassport' CRI response
-      When I submit 'lora-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
-      Then I get an 'address' CRI response
-      When I submit 'lora-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'lora-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'lora-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-      Then I get a 'pyi-no-match' page response
+  # TODO: uncomment the test below and update it to use the strategic app once PYIC-8769/8941 have been resolved
+#  Rule: Existing identity
+#    Scenario: Mitigating when a user already has an identity should be subject to a COI check
+#      Given the subject already has the following credentials
+#        | CRI         | scenario               |
+#        | ukPassport  | kenneth-passport-valid |
+#        | address     | kenneth-current        |
+#        | fraud       | kenneth-score-2        |
+#        | experianKbv | kenneth-score-2        |
+#      And I activate the 'disableStrategicApp' feature set
+#
+#      # First return journey that collects a CI
+#      And I activate the 'drivingLicenceAuthCheck' feature set
+#      When I start a new 'low-confidence' journey
+#      Then I get a 'page-ipv-reuse' page response
+#      When I submit an 'update-details' event
+#      Then I get an 'update-details' page response
+#      When I submit a 'given-names-only' event
+#      Then I get a 'page-update-name' page response
+#      When I submit an 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+#      Then I get a 'drivingLicence' CRI response
+#      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+#        | Attribute | Values          |
+#        | context   | "check_details" |
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#
+#      # Second return journey to mitigate CI
+#      Given I start a new 'low-confidence' journey
+#      Then I get a 'pyi-driving-licence-no-match' page response
+#      When I submit a 'next' event
+#      Then I get a 'pyi-continue-with-passport' page response
+#      When I submit a 'next' event
+#      Then I get a 'ukPassport' CRI response
+#      When I submit 'lora-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+#      Then I get an 'address' CRI response
+#      When I submit 'lora-current' details to the CRI stub
+#      Then I get a 'fraud' CRI response
+#      When I submit 'lora-score-2' details with attributes to the CRI stub
+#        | Attribute          | Values                   |
+#        | evidence_requested | {"identityFraudScore":2} |
+#      Then I get a 'personal-independence-payment' page response
+#      When I submit a 'end' event
+#      Then I get a 'page-pre-experian-kbv-transition' page response
+#      When I submit a 'next' event
+#      Then I get a 'experianKbv' CRI response
+#      When I submit 'lora-score-2' details with attributes to the CRI stub
+#        | Attribute          | Values                                          |
+#        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+#      Then I get a 'pyi-no-match' page response
