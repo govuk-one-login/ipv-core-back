@@ -75,7 +75,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermi
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawFailedPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudApplicableAuthoritativeSourceFailed;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudAvailableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
@@ -1478,7 +1478,8 @@ class UserIdentityServiceTest {
         var validAddress = vcAddressOne();
         var validFraudApplicableAuthoritativeSource =
                 vcExperianFraudApplicableAuthoritativeSourceFailed();
-        var validFraudAvailableAuthoritativeSource = vcExperianFraudAvailableAuthoritativeFailed();
+        var validFraudAvailableAuthoritativeSource =
+                vcExperianFraudAvailableAuthoritativeSourceFailed();
         var vcs =
                 List.of(
                         validDrivingPermit,

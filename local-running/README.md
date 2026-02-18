@@ -74,12 +74,29 @@ All of the running containers expose a debug port to connect to. This allows you
 what's going on. The debug port is 2000 ports above the http port the services are listening on. Look at the Docker
 compose file to see which port to use for which service.
 
-## Using local CRIs
+## Using local stubs
 
 By default, the local configuration is set up to use deployed stubs for CRIs (and CIMIT, EVCS).
 
 To use a local version, the `core.local.params.yaml` configuration needs to be updated to point to your local instance.
 This typically means updating the URLs and possibly the dev signing and encryption keys.
+
+## Using stubs deployed to a developer environment
+
+By default, the local configuration is set up to use deployed stubs for CRIs (and CIMIT, EVCS).
+
+To use a dev env version, the `core.local.params.yaml` configuration needs to be updated to point to your dev env.
+This typically means updating the URLs and possibly the dev signing and encryption keys.
+
+e.g. to use a CIMIT stub deployed to a dev env you need to update:
+- `apiBaseUrl` in `core.local.params.yaml` to something like `https://cimit-api-dev-danc.02.core.dev.stubs.account.gov.uk`
+- `core/cimitApi/apiKey` in `core.local.secrets.yaml` to the internal API key of the dev env CIMIT stub (find this in AWS console - see below)
+
+### Finding API keys
+At time of writing, the process for this is so bad it deserves documenting. To find an API key for a specific API you need to go to
+`API Gateway / API Keys` in AWS Console and then filter by the key prefix (e.g. cimit). If you know when the key was created you can use
+the date to find the right one. Otherwise you will just need to click on each one until you find the one with the right
+`Associated Stage` value.
 
 ## Future improvements
 

@@ -16,7 +16,7 @@
 
 ## Running the tests
 
-There are 3 presets that can be used:
+There are 4 presets that can be used:
 
 - `npm run test:build` - runs against the deployed build environment
 - `npm run test:local` - runs against an already-running local instance of core-back
@@ -41,20 +41,42 @@ To run against dev environments copy `.env.dev.template` to `.env.dev` and provi
 It is also possible to set up other `.env.<name>` files,
 which can be selected by setting `CORE_ENV=<name>` when running the tests.
 
-As an example, to run against a deployment in the dev01 account you could create a `.env.dev01` file something like:
+As an example, to run against a deployment in the dev02 account you could create a `.env.dev02` file something like:
 
 ```
-CORE_BACK_COMPONENT_ID="https://dev-chrisw.01.dev.identity.account.gov.uk"
-CORE_BACK_INTERNAL_API_URL="https://internal-test-api-dev-chrisw.01.dev.identity.account.gov.uk"
-CORE_BACK_INTERNAL_API_KEY=<get from CoreBackInternalTestingApiKey secret in secrets manager>-dev-chrisw
-CORE_BACK_EXTERNAL_API_URL="https://api-dev-chrisw.01.dev.identity.account.gov.uk"
+CORE_BACK_COMPONENT_ID="https://dev-danc.02.dev.identity.account.gov.uk"
+CORE_BACK_INTERNAL_API_URL="https://internal-test-api-dev-danc.02.dev.identity.account.gov.uk"
+CORE_BACK_INTERNAL_API_KEY=<get from CoreBackInternalTestingApiKey secret in secrets manager>-dev-danc
+CORE_BACK_EXTERNAL_API_URL="https://api-dev-danc.02.dev.identity.account.gov.uk"
 CORE_BACK_PUBLIC_ENCRYPTION_KEY='{"kty":"RSA","e":"AQAB","kid":"b454ac07-e188-415d-a3c8-f1d0d38aaecd","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs\*-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"}'
-ORCHESTRATOR_REDIRECT_URL="https://orch-dev-chrisw.01.core.dev.stubs.account.gov.uk/callback"
+ORCHESTRATOR_REDIRECT_URL="https://orch-dev-danc.02.core.dev.stubs.account.gov.uk/callback"
 JAR_SIGNING_KEY='{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' // pragma: allowlist secret
-ASYNC_QUEUE_NAME="stubQueue_criResponseQueue_dev-chrisw"
+ASYNC_QUEUE_NAME="stubQueue_criResponseQueue_dev-danc"
 ASYNC_QUEUE_DELAY=5
+CIMIT_STUB_BASE_URL="https://cimit-dev-danc.02.core.dev.stubs.account.gov.uk"
+CIMIT_INTERNAL_API_URL="https://cimit-api-dev-danc.02.core.dev.stubs.account.gov.uk"
 MANAGEMENT_CIMIT_STUB_API_KEY="example-value" # pragma: allowlist secret
+CIMIT_INTERNAL_API_KEY="example-value" # pragma: allowlist secret
 ```
+
+#### Substituting individual stubs
+
+It is possible to run the tests mostly against local/build core and stubs and just substitute in a single stub running
+in your developer environment. This can be useful if you want to make sure stub changes don't break the tests. To do this
+you will need to update the config values for the relevant stub in your `.env.build` or `.env.local` file. This typically
+means updating the URLs and possibly api keys and signing and encryption keys.
+
+e.g. to use a CIMIT stub deployed to a dev env you need to update:
+
+- `CIMIT_STUB_BASE_URL` to something like `https://cimit-dev-danc.02.core.dev.stubs.account.gov.uk`
+- `CIMIT_INTERNAL_API_URL` to something like `https://cimit-api-dev-danc.02.core.dev.stubs.account.gov.uk`
+- `CIMIT_INTERNAL_API_KEY` to the internal API key of the dev env CIMIT stub (find this in AWS console - see below)
+- `MANAGEMENT_CIMIT_STUB_API_KEY` to the external API key of the dev env CIMIT stub (find this in AWS console - see below)
+
+At time of writing, the process for finding dev env API keys is so bad it deserves documenting. To find an API key for a
+specific API you need to go to `API Gateway / API Keys` in AWS console and then filter by the key prefix (e.g. cimit).
+If you know when the key was created you can use the date to find the right one. Otherwise you will just need to click on
+each one until you find the one with the right `Associated Stage` value.
 
 ## Working on the tests
 

@@ -101,6 +101,7 @@ core:
         - event: /journey/alternate-doc-invalid-passport
           document: passport
     apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
+    # example dev env URL apiBaseUrl: https://cimit-api-dev-danc.02.core.dev.stubs.account.gov.uk
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
   sis:

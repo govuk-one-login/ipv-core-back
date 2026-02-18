@@ -44,6 +44,7 @@ import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElem
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.model.CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE;
 import static uk.gov.di.model.CheckDetails.FraudCheckType.AVAILABLE_AUTHORITATIVE_SOURCE;
+import static uk.gov.di.model.CheckDetails.FraudCheckType.MORTALITY_CHECK;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -190,10 +191,6 @@ public class VcHelper {
         var jwtClaimsSet = vc.getClaimsSet();
         var nbfDate = jwtClaimsSet.getNotBeforeTime();
         var nbf = nbfDate.toInstant();
-        if (nbf == null) {
-            LOGGER.error("VC does not have a nbf claim");
-            return true;
-        }
 
         var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
         return hasExpired(nbf, expiryPeriodInDays, clock);
@@ -234,20 +231,32 @@ public class VcHelper {
         return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
     }
 
-    public static boolean hasUnavailableOrNotApplicableFraudCheck(List<VerifiableCredential> vcs) {
+    public static boolean isFraudScoreOptionalForGpg45Evaluation(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
                 .anyMatch(
                         vc ->
-                                VcHelper.hasFailedFraudCheck(
-                                        vc,
-                                        Set.of(
-                                                APPLICABLE_AUTHORITATIVE_SOURCE,
-                                                AVAILABLE_AUTHORITATIVE_SOURCE)));
+                                hasUnavailableOrNotApplicableFraudCheck(vc)
+                                        || hasFailedMortalityCheck(vc));
+    }
+
+    public static boolean hasUnavailableOrNotApplicableFraudCheck(VerifiableCredential vc) {
+        return VcHelper.hasFailedFraudCheck(
+                vc, Set.of(APPLICABLE_AUTHORITATIVE_SOURCE, AVAILABLE_AUTHORITATIVE_SOURCE));
     }
 
     public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
         return hasFailedFraudCheck(vc, Set.of(AVAILABLE_AUTHORITATIVE_SOURCE));
+    }
+
+    private static boolean hasFailedMortalityCheck(VerifiableCredential vc) {
+        return VcHelper.hasFailedFraudCheck(vc, Set.of(MORTALITY_CHECK))
+                && getIdentityCheckFraudScore(vc) == 0;
+    }
+
+    private static int getIdentityCheckFraudScore(VerifiableCredential vc) {
+        var identityCheckCredential = (IdentityCheckCredential) vc.getCredential();
+        return identityCheckCredential.getEvidence().getFirst().getIdentityFraudScore();
     }
 
     private static boolean hasFailedFraudCheck(

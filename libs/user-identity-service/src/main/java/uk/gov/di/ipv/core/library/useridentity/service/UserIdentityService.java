@@ -81,7 +81,7 @@ public class UserIdentityService {
                                 vc ->
                                         VcHelper.isSuccessfulVc(vc)
                                                 || VcHelper.hasUnavailableOrNotApplicableFraudCheck(
-                                                        List.of(vc)))
+                                                        vc))
                         .map(VerifiableCredential::getVcString)
                         .toList();
 
