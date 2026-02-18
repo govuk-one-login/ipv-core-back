@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
 import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
-import uk.gov.di.ipv.core.library.domain.AisInterventionType;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -104,19 +103,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.ais.TestData.createBlockedIdentityAisState;
+import static uk.gov.di.ipv.core.library.ais.TestData.createNoInterventionAisState;
+import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.AIS_STATE_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_BLOCKED;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_ACCOUNT_SUSPENDED;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY;
-import static uk.gov.di.ipv.core.library.domain.AisInterventionType.AIS_NO_INTERVENTION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
@@ -249,7 +243,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
         lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
-        lenient().when(configService.enabled(AIS_STATE_CHECK)).thenReturn(false);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -285,8 +278,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AIS_NO_INTERVENTION);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createNoInterventionAisState());
         }
 
         @Test
@@ -968,8 +961,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AIS_NO_INTERVENTION);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createNoInterventionAisState());
         }
 
         @Test
@@ -1251,7 +1244,7 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
         var response =
                 toResponseClass(
@@ -1275,7 +1268,7 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
         var response =
                 toResponseClass(
@@ -1298,7 +1291,7 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                 .thenThrow(CredentialParseException.class);
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
         var response =
                 toResponseClass(
@@ -1325,7 +1318,7 @@ class CheckExistingIdentityHandlerTest {
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
         var response =
                 toResponseClass(
@@ -1347,8 +1340,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AIS_FORCED_USER_IDENTITY_VERIFY);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createReproveIdentityAisState());
         }
 
         @Test
@@ -1450,8 +1443,8 @@ class CheckExistingIdentityHandlerTest {
         void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
             // Arrange
             when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AisInterventionType.AIS_FORCED_USER_IDENTITY_VERIFY);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createReproveIdentityAisState());
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1483,8 +1476,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AIS_NO_INTERVENTION);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createNoInterventionAisState());
         }
 
         @Test
@@ -1525,8 +1518,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisInterventionType(TEST_USER_ID))
-                    .thenReturn(AIS_NO_INTERVENTION);
+            when(mockAisService.fetchAisState(TEST_USER_ID))
+                    .thenReturn(createNoInterventionAisState());
         }
 
         @Test
@@ -1624,35 +1617,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @ParameterizedTest
-    @MethodSource("getFetchedAccountInterventionStateWithTypeForInvalidJourney")
-    void shouldInvalidateSession(AisInterventionType aisInterventionType)
-            throws IpvSessionNotFoundException, ClientOauthSessionNotFoundException {
-        // Arrange
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(aisInterventionType);
-
-        // Act
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        // Assert
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(JOURNEY_ACCOUNT_INTERVENTION, journeyResponse);
-    }
-
-    private static Stream<Arguments> getFetchedAccountInterventionStateWithTypeForInvalidJourney() {
-        return Stream.of(
-                Arguments.of(AIS_ACCOUNT_BLOCKED),
-                Arguments.of(AIS_ACCOUNT_SUSPENDED),
-                Arguments.of(AIS_FORCED_USER_PASSWORD_RESET),
-                Arguments.of(AIS_FORCED_USER_PASSWORD_RESET_AND_IDENTITY_VERIFY));
-    }
-
-    @ParameterizedTest
     @MethodSource("aisStatesToTriggerIntervention")
     void shouldInvalidateSession(AccountInterventionState aisState)
             throws IpvSessionNotFoundException, ClientOauthSessionNotFoundException {
@@ -1661,7 +1625,6 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(aisState);
-        when(configService.enabled(AIS_STATE_CHECK)).thenReturn(true);
 
         // Act
         var journeyResponse =
@@ -1689,7 +1652,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
-        when(mockAisService.fetchAisInterventionType(TEST_USER_ID)).thenReturn(AIS_NO_INTERVENTION);
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
         checkExistingIdentityHandler.handleRequest(event, context);
 
