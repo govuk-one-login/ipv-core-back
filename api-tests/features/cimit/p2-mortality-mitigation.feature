@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest @qqqqqq
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: Mortality check failures
   Background:
     Given I activate the 'strategicApp' feature set

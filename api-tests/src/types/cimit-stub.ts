@@ -10,9 +10,3 @@ export interface CimitStubUserCisRequest {
   issuanceDate?: string;
   mitigations?: string[];
 }
-
-export interface CimitStubMitigationRequest {
-  mitigations: string[];
-  vcJti: string;
-  forFutureCi?: boolean;
-}
