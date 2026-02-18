@@ -237,9 +237,7 @@ public class VcHelper {
                 .anyMatch(
                         vc ->
                                 hasUnavailableOrNotApplicableFraudCheck(vc)
-                                        || (VcHelper.hasFailedFraudCheck(
-                                                        vc, Set.of(MORTALITY_CHECK))
-                                                && getIdentityCheckFraudScore(vc) == 0));
+                                        || hasFailedMortalityCheck(vc));
     }
 
     public static boolean hasUnavailableOrNotApplicableFraudCheck(VerifiableCredential vc) {
@@ -249,6 +247,11 @@ public class VcHelper {
 
     public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
         return hasFailedFraudCheck(vc, Set.of(AVAILABLE_AUTHORITATIVE_SOURCE));
+    }
+
+    private static boolean hasFailedMortalityCheck(VerifiableCredential vc) {
+        return VcHelper.hasFailedFraudCheck(vc, Set.of(MORTALITY_CHECK))
+                && getIdentityCheckFraudScore(vc) == 0;
     }
 
     private static int getIdentityCheckFraudScore(VerifiableCredential vc) {
