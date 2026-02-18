@@ -353,7 +353,6 @@ core:
   featureFlags:
     resetIdentity: false
     pendingF2FResetEnabled: false
-    strategicAppEnabled: true
     repeatFraudCheckEnabled: true
     parseVcClasses: true
     sqsAsync: true
@@ -379,12 +378,6 @@ core:
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
-    strategicApp:
-      featureFlags:
-        strategicAppEnabled: true
-    disableStrategicApp:
-      featureFlags:
-        strategicAppEnabled: false
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0

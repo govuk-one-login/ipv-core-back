@@ -292,7 +292,7 @@ class AppConfigServiceTest {
 
     @Test
     void enabledTrueIfFeatureFlagEnabled() {
-        assertTrue(configService.enabled("strategicAppEnabled"));
+        assertTrue(configService.enabled("repeatFraudCheckEnabled"));
     }
 
     @Test
