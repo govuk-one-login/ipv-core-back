@@ -362,15 +362,8 @@ core:
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
-    aisStateCheckEnabled: false
 
   features:
-    aisStateCheck:
-      featureFlags:
-        aisStateCheckEnabled: true
-    disableAisStateCheck:
-      featureFlags:
-        aisStateCheckEnabled: false
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
