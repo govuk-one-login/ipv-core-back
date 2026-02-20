@@ -357,7 +357,6 @@ core:
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
-    aisStateCheckEnabled: false
     testFeatureFlag: false
   features:
     testFeature:
@@ -381,12 +380,6 @@ core:
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
-    aisStateCheck:
-      featureFlags:
-        aisStateCheckEnabled: true
-    disableAisStateCheck:
-      featureFlags:
-        aisStateCheckEnabled: false
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:
