@@ -104,54 +104,55 @@ Feature: Repeat fraud check failures
       When I submit a 'delete' event
       Then I get a 'delete-handover' page response
 
-    Scenario: Breaching CI received from DCMAW
-      # TODO: update this to use the strategic app once PYIC-8769/8941/8940 have been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit an 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      When I start a new 'medium-confidence' journey
-      Then I get a 'pyi-no-match' page response
+    # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941/8940 have been resolved
+#    Scenario: Breaching CI received from DCMAW
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit an 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#      When I start a new 'medium-confidence' journey
+#      Then I get a 'pyi-no-match' page response
 
-    Scenario: User is able to delete account from sorry-could-not-confirm-details screen
-      # TODO: update this to use the strategic app once PYIC-8940 has been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit an 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'delete' event
-      Then I get a 'delete-handover' page response
+    # TODO: uncommment and update this to use the strategic app once PYIC-8940 has been resolved
+#    Scenario: User is able to delete account from sorry-could-not-confirm-details screen
+#      # TODO: update this to use the strategic app once PYIC-8940 has been resolved
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit an 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'delete' event
+#      Then I get a 'delete-handover' page response
 
-    Scenario: Zero score in fraud CRI
-      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit an 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-      When I start a new 'medium-confidence' journey
-      Then I get a 'confirm-your-details' page response
+    # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
+#    Scenario: Zero score in fraud CRI
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit an 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+#      Then I get a 'drivingLicence' CRI response
+#      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+#        | Attribute | Values          |
+#        | context   | "check_details" |
+#      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+#      When I submit a 'next' event
+#      Then I get a 'fraud' CRI response
+#      When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
+#        | Attribute          | Values                   |
+#        | evidence_requested | {"identityFraudScore":2} |
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#
+#      When I start a new 'medium-confidence' journey
+#      Then I get a 'confirm-your-details' page response
 
     Scenario: Breaching CI received from fraud CRI
       When I submit an 'update-name' event
@@ -184,26 +185,26 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
 
-    Scenario: Failed COI check
-      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'alice-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'alice-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-      When I start a new 'medium-confidence' journey
-      Then I get a 'confirm-your-details' page response
+    # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
+#    Scenario: Failed COI check
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit a 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'alice-passport-valid' details to the CRI stub
+#      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+#      When I submit a 'next' event
+#      Then I get a 'fraud' CRI response
+#      When I submit 'alice-score-2' details with attributes to the CRI stub
+#        | Attribute          | Values                   |
+#        | evidence_requested | {"identityFraudScore":1} |
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#
+#      When I start a new 'medium-confidence' journey
+#      Then I get a 'confirm-your-details' page response
 
     Scenario: Breaching CI received from TICF CRI
       Given TICF CRI will respond with default parameters and
@@ -235,25 +236,25 @@ Feature: Repeat fraud check failures
         | cis  | BREACHING      |
         | type | RiskAssessment |
 
-    Scenario: Fraud access denied OAuth error
-      # TODO: update this to use the strategic app once PYIC-8769/8941 have been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      When I start a new 'medium-confidence' journey
-      Then I get a 'confirm-your-details' page response
+    # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
+#    Scenario: Fraud access denied OAuth error
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit a 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
+#      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+#      When I submit a 'next' event
+#      Then I get a 'fraud' CRI response
+#      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+#        | Attribute          | Values                   |
+#        | evidence_requested | {"identityFraudScore":1} |
+#      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#      When I start a new 'medium-confidence' journey
+#      Then I get a 'confirm-your-details' page response
 
   Rule: Update address only
     Background:

@@ -39,22 +39,22 @@ Feature: Failed update details
       Then I get a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'valid'
 
-    Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
-      # TODO: Update to use strategic app once PYIC-8940 has been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response
-      When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      # SI record invalidated as part of reset-session-identity lambda
-      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
-      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+    # TODO: uncomment and update to use strategic app once PYIC-8940 has been resolved
+#    Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit a 'given-names-only' event
+#      Then I get a 'page-update-name' page response
+#      When I submit a 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      # SI record invalidated as part of reset-session-identity lambda
+#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+#      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: Reuse journey - failed name change - fail with no ci (valid identity)
       When I submit a 'given-names-only' event
@@ -129,20 +129,20 @@ Feature: Failed update details
       Then I get a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
-    Scenario: RFC - failed update name - fail with CI (invalid identity)
-      # TODO: Update to use strategic app once PYIC-8940 has been resolved
-      When I activate the 'disableStrategicApp' feature set
-      And I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
-      When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+    # TODO: uncomment and update to use strategic app once PYIC-8940 has been resolved
+#    Scenario: RFC - failed update name - fail with CI (invalid identity)
+#      When I activate the 'disableStrategicApp' feature set
+#      And I submit a 'given-names-only' event
+#      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+#      When I submit a 'update-name' event
+#      Then I get a 'dcmaw' CRI response
+#      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
+#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+#      When I submit a 'returnToRp' event
+#      Then I get an OAuth response
+#      When I use the OAuth response to get my identity
+#      Then I get a 'P0' identity
+#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - fail with no CI (invalid identity)
       When I submit a 'given-names-only' event

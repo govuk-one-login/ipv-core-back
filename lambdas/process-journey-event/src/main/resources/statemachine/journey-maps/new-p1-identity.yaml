@@ -27,12 +27,8 @@ states:
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
       next:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriage
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -107,15 +103,11 @@ states:
         resetType: ALL
     events:
       next:
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
       error:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   RESET_SESSION_IDENTITY:
     response:
@@ -136,11 +128,7 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
           dcmawAsync:
             targetState: NINO_START_PAGE
@@ -247,57 +235,6 @@ states:
           f2f:
             targetState: PYI_ESCAPE
 
-  APP_DOC_CHECK:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      incomplete:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-        checkMitigation:
-          enhanced-verification:
-            targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
-      alternate-doc-invalid-dl:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl-another-way
-        checkMitigation:
-          enhanced-verification:
-            targetJourney: FAILED
-            targetState: FAILED
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: invalid-dl
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-      postOffice:
-        targetState: F2F_START_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_ESCAPE
-            checkMitigation:
-              enhanced-verification:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-        checkMitigation:
-          enhanced-verification:
-            targetState: PYI_POST_OFFICE
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
-
   MULTIPLE_DOC_CHECK_PAGE:
     response:
       type: page
@@ -336,12 +273,8 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
       try-again-app:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
       try-again-post-office:
         targetState: CRI_CLAIMED_IDENTITY_J4
       return-to-rp-cri-error:
@@ -365,11 +298,7 @@ states:
       context: dropout
     events:
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -552,11 +481,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -571,12 +496,8 @@ states:
       pageId: no-photo-id-abandon-find-another-way
     events:
       mobileApp:
-        targetState: APP_DOC_CHECK
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -606,11 +527,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -680,51 +597,13 @@ states:
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
-  APP_DOC_CHECK_PYI_ESCAPE:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: PROCESS_NEW_IDENTITY
-      incomplete:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-      postOffice:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
-
   MITIGATION_KBV_FAIL_PHOTO_ID:
     response:
       type: page
       pageId: photo-id-security-questions-find-another-way
     events:
       appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
