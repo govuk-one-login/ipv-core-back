@@ -23,8 +23,7 @@ nestedJourneyStates:
       fail-with-no-ci:
         exitEventToEmit: anotherWay
       fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
+        exitEventToEmit: failWithCiFromApp
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
