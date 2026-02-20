@@ -173,6 +173,9 @@ states:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+      failWithCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
@@ -575,6 +578,9 @@ states:
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE
       failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED
+      failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
       returnToRp:
