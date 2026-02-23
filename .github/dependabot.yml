@@ -55,6 +55,29 @@ updates:
           - "eslint-*"
           - "typescript-eslint"
           - "@types/eslint__js"
+  - package-ecosystem: "npm"
+    directory: "/journey-map"
+    registries: "*"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+    target-branch: main
+    labels:
+      - dependabot
+    commit-message:
+      prefix: BAU
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-patch" ]
+    groups:
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "typescript-eslint"
+          - "@types/eslint__js"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
