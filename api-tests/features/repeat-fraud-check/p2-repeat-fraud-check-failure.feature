@@ -155,6 +155,28 @@ Feature: Repeat fraud check failures
       When I submit a 'delete' event
       Then I get a 'delete-handover' page response
 
+    Scenario: Failed update name due to CI from DCMAW Async - user does not have valid identity on return journey
+      And I submit an 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC with a CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
+      When I start a new 'medium-confidence' journey
+      Then I get a 'pyi-no-match' page response
+
     # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
 #    Scenario: Zero score in fraud CRI
 #      When I activate the 'disableStrategicApp' feature set
