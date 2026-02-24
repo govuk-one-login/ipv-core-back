@@ -80,8 +80,7 @@ public class UserIdentityService {
                         .filter(
                                 vc ->
                                         VcHelper.isSuccessfulVc(vc)
-                                                || VcHelper.hasUnavailableOrNotApplicableFraudCheck(
-                                                        vc))
+                                                || VcHelper.hasNonFatalFraudCheckFailure(vc))
                         .map(VerifiableCredential::getVcString)
                         .toList();
 

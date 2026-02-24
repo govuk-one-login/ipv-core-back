@@ -361,13 +361,13 @@ class VcHelperTest {
 
     @Test
     void
-            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
+            hasNonFatalFraudCheckFailureShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
 
         // Arrange
         var vc = vcExperianFraudApplicableAuthoritativeSourceFailed();
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vc);
+        var result = VcHelper.hasNonFatalFraudCheckFailure(vc);
 
         // Assert
         assertTrue(result);
@@ -375,13 +375,26 @@ class VcHelperTest {
 
     @Test
     void
-            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
+            hasNonFatalFraudCheckFailureShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
 
         // Arrange
         var vc = vcExperianFraudAvailableAuthoritativeSourceFailed();
 
         // Act
-        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vc);
+        var result = VcHelper.hasNonFatalFraudCheckFailure(vc);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void hasNonFatalFraudCheckFailureShouldReturnTrueForMortalityFailedFraudCheck() {
+
+        // Arrange
+        var vc = vcExperianFraudMortalityFailed();
+
+        // Act
+        var result = VcHelper.hasNonFatalFraudCheckFailure(vc);
 
         // Assert
         assertTrue(result);
