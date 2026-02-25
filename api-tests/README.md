@@ -23,7 +23,7 @@ There are 4 presets that can be used:
 - `npm run test:dev` - runs against a dev environment
 - `npm run test:ci` - starts a new local instance of core-back and tests against it
 
-To run a subset of the tests, add a tag before the feature(s)/scenario(s) you want to run (like in `p2-app-journey.feature`) and run them like this: `npm run test:local -- --tags @YourTag`
+To Trun a subset of the tests, add a tag before the feature(s)/scenario(s) you want to run (like in `p2-app-journey.feature`) and run them like this: `npm run test:local -- --tags @YourTag`
 
 If you are using custom configuration, then you can use `npm test` to invoke cucumber without any presets.
 
