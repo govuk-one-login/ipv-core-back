@@ -75,7 +75,7 @@ jobs:
         run: ./gradlew clean build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
+          POWERTOOLS_METRICS_DISABLED: true
 
       - name: Perform Static Analysis
         if: ${{ github.actor != 'dependabot[bot]' }}
@@ -159,7 +159,6 @@ jobs:
           sed -i s/TICF_API_KEY/"$TICF_API_KEY"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/DCMAW_ASYNC_SECRET/"$DCMAW_ASYNC_SECRET"/ ../local-running/core.local.secrets.yaml
 
-
       - name: Local API tests
         env:
           ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
@@ -169,7 +168,7 @@ jobs:
           CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
           MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
           CIMIT_INTERNAL_API_KEY: ${{ secrets.API_KEY_CIMIT }}
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
+          POWERTOOLS_METRICS_DISABLED: true
         run: npm run test:ci
 
       - name: Upload API test report

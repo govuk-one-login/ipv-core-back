@@ -60,7 +60,7 @@ application {
 tasks.named('run', JavaExec) {
 	environment 'AWS_EMF_ENVIRONMENT', 'Local'
 	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
-	environment 'POWERTOOLS_METRICS_NAMESPACE', 'test'
+	environment 'POWERTOOLS_METRICS_DISABLED', 'true'
 }
 
 sonar {

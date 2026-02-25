@@ -39,7 +39,7 @@ jobs:
         run: ./gradlew --parallel pactConsumerTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
+          POWERTOOLS_METRICS_DISABLED: true
       - name: Upload pacts to broker with gradle
         # Dependabot PRs do not have access to secrets, so cannot access the pacts broker
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
@@ -55,7 +55,7 @@ jobs:
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
         run: ./gradlew pactProviderTests
         env:
-          POWERTOOLS_METRICS_NAMESPACE: 'TestMetricsNamespace'
+          POWERTOOLS_METRICS_DISABLED: true
       - name: Upload build-user-identity provider pact test report
         if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
         uses: actions/upload-artifact@v6
