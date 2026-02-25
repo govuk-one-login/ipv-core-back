@@ -11,6 +11,7 @@ import software.amazon.lambda.powertools.metrics.model.DimensionSet;
 import software.amazon.lambda.powertools.metrics.model.MetricResolution;
 import software.amazon.lambda.powertools.metrics.model.MetricUnit;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
@@ -38,6 +39,9 @@ import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.REV
 
 @ExcludeFromGeneratedCoverageReport
 public class EmbeddedMetricHelper {
+    private static final boolean METRICS_DISABLED =
+            Boolean.parseBoolean(
+                    System.getenv(EnvironmentVariable.POWERTOOLS_METRICS_DISABLED.name()));
     private static final Metrics METRICS_LOGGER = MetricsFactory.getMetricsInstance();
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -147,6 +151,9 @@ public class EmbeddedMetricHelper {
             Map<Dimension, String> dimensions,
             Map<Metric, Double> metrics,
             MetricResolution resolution) {
+        if (METRICS_DISABLED) {
+            return;
+        }
         try {
             ThreadContext.getContext().forEach(METRICS_LOGGER::addMetadata);
             dimensions.forEach(

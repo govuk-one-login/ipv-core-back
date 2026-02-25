@@ -40,7 +40,7 @@ subprojects {
 		environment "LAMBDA_TASK_ROOT", "handler"
 		environment 'AWS_EMF_ENVIRONMENT', 'Local'
 		environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
-		environment 'POWERTOOLS_METRICS_NAMESPACE', 'test'
+		environment 'POWERTOOLS_METRICS_DISABLED', 'true'
 
 		// Class data sharing doesn't work with the tests anyway, and this suppresses the warning
 		jvmArgs('-Xshare:off')
