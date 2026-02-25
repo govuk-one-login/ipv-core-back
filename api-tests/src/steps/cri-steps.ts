@@ -487,14 +487,15 @@ When(
     table: DataTable,
   ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
-    const credentials: string[] = [];
-    for (const row of table.hashes()) {
+
+    const allGenerationPromises = table.hashes().flatMap((row) => {
       const numCredentials = row.numCredentials
         ? parseInt(row.numCredentials)
         : 1;
-      if (row.CRI === "dcmawAsync") {
-        const asyncCreds = Array.from(Array(numCredentials)).map(async () => {
-          return await dcmawAsyncStubClient.generateVc(
+
+      return Array.from(Array(numCredentials)).map(async () => {
+        if (row.CRI === "dcmawAsync") {
+          return dcmawAsyncStubClient.generateVc(
             row.CRI,
             await generateDcmawAsyncVcCreationBodyFromScenario(
               this.userId,
@@ -512,12 +513,8 @@ When(
                 : undefined,
             ),
           );
-        });
-        const resolvedAsyncCreds = await Promise.all(asyncCreds);
-        credentials.push(...resolvedAsyncCreds);
-      } else {
-        const creds = Array.from(Array(numCredentials)).map(async () => {
-          return await criStubClient.generateVc(
+        } else {
+          return criStubClient.generateVc(
             row.CRI,
             await generateVcRequestBody(
               this.userId,
@@ -536,19 +533,22 @@ When(
                 : undefined,
             ),
           );
-        });
-        const resolvedCreds = await Promise.all(creds);
-        credentials.push(...resolvedCreds);
-      }
-    }
+        }
+      });
+    });
+
+    const credentials = await Promise.all(allGenerationPromises);
 
     await evcsStubClient.postCredentials(
       this.userId,
       generatePostVcsBody(credentials),
     );
-    for (const credential of credentials) {
-      await cimitStubClient.postDetectCi({ signed_jwt: credential });
-    }
+
+    await Promise.all(
+      credentials.map((credential) =>
+        cimitStubClient.postDetectCi({ signed_jwt: credential }),
+      ),
+    );
   },
 );
 
@@ -625,18 +625,27 @@ When(
 When(
   "I poll for async DCMAW credential receipt",
   async function (this: World): Promise<void> {
-    // Reset the polling result
     this.strategicAppPollResult = undefined;
-    let numberOfAttempts = 0;
 
-    while (numberOfAttempts < 10 && !this.strategicAppPollResult) {
+    const timeoutMs = 10000; // 10 second total ceiling
+    const intervalMs = 200; // Check every 200ms
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeoutMs) {
       this.strategicAppPollResult = await pollAsyncDcmaw(
         this.ipvSessionId,
         this.featureSet,
       );
-      numberOfAttempts++;
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (this.strategicAppPollResult?.journey) {
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+
+    if (!this.strategicAppPollResult) {
+      console.warn("Polling timed out after 10 seconds");
     }
   },
 );
