@@ -39,22 +39,29 @@ Feature: Failed update details
       Then I get a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'valid'
 
-    # TODO: uncomment and update to use strategic app once PYIC-8940 has been resolved
-#    Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
-#      When I activate the 'disableStrategicApp' feature set
-#      And I submit a 'given-names-only' event
-#      Then I get a 'page-update-name' page response
-#      When I submit a 'update-name' event
-#      Then I get a 'dcmaw' CRI response
-#      # SI record invalidated as part of reset-session-identity lambda
-#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
-#      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-#      When I submit a 'returnToRp' event
-#      Then I get an OAuth response
-#      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
-#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+    Scenario: Reuse journey - failed name change - fail with CI (invalid identity)
+      And I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response
+      When I submit a 'update-name' event
+      # SI record invalidated as part of reset-session-identity lambda
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: Reuse journey - failed name change - fail with no ci (valid identity)
       When I submit a 'given-names-only' event
@@ -129,20 +136,30 @@ Feature: Failed update details
       Then I get a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
-    # TODO: uncomment and update to use strategic app once PYIC-8940 has been resolved
-#    Scenario: RFC - failed update name - fail with CI (invalid identity)
-#      When I activate the 'disableStrategicApp' feature set
-#      And I submit a 'given-names-only' event
-#      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
-#      When I submit a 'update-name' event
-#      Then I get a 'dcmaw' CRI response
-#      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-#      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
-#      When I submit a 'returnToRp' event
-#      Then I get an OAuth response
-#      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
-#      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+    Scenario: RFC - failed update name - fail with CI (invalid identity)
+      And I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      When I submit a 'update-name' event
+      # SI record invalidated as part of reset-session-identity lambda
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
+
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
 
     Scenario: RFC - failed update name - fail with no CI (invalid identity)
       When I submit a 'given-names-only' event
