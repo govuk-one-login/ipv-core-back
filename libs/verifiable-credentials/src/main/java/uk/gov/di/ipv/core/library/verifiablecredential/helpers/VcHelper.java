@@ -234,24 +234,18 @@ public class VcHelper {
     public static boolean isFraudScoreOptionalForGpg45Evaluation(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(
-                        vc ->
-                                hasUnavailableOrNotApplicableFraudCheck(vc)
-                                        || hasFailedMortalityCheck(vc));
+                .anyMatch(VcHelper::hasNonFatalFraudCheckFailure);
     }
 
-    public static boolean hasUnavailableOrNotApplicableFraudCheck(VerifiableCredential vc) {
+    public static boolean hasNonFatalFraudCheckFailure(VerifiableCredential vc) {
         return VcHelper.hasFailedFraudCheck(
-                vc, Set.of(APPLICABLE_AUTHORITATIVE_SOURCE, AVAILABLE_AUTHORITATIVE_SOURCE));
+                        vc, Set.of(APPLICABLE_AUTHORITATIVE_SOURCE, AVAILABLE_AUTHORITATIVE_SOURCE))
+                || (VcHelper.hasFailedFraudCheck(vc, Set.of(MORTALITY_CHECK))
+                        && getIdentityCheckFraudScore(vc) == 0);
     }
 
     public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
         return hasFailedFraudCheck(vc, Set.of(AVAILABLE_AUTHORITATIVE_SOURCE));
-    }
-
-    private static boolean hasFailedMortalityCheck(VerifiableCredential vc) {
-        return VcHelper.hasFailedFraudCheck(vc, Set.of(MORTALITY_CHECK))
-                && getIdentityCheckFraudScore(vc) == 0;
     }
 
     private static int getIdentityCheckFraudScore(VerifiableCredential vc) {
