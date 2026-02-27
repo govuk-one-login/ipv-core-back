@@ -1,0 +1,60 @@
+name: Strategic App Identify Device
+description: >-
+  Deals with working out what kind of device the user has.
+entryEvents:
+  identify-device:
+    targetState: IDENTIFY_DEVICE
+  dad-select-smartphone:
+    targetState: DAD_SELECT_SMARTPHONE
+
+nestedJourneyStates:
+  IDENTIFY_DEVICE:
+    response:
+      type: page
+      pageId: identify-device
+      skipBack: true
+    events:
+      appTriage:
+        targetState: SELECT_DEVICE_PAGE
+      mobileDownloadIphone:
+        exitEventToEmit: mamIphone
+      mobileDownloadAndroid:
+        exitEventToEmit: mamAndroid
+      appTriageSmartphone:
+        targetState: MAM_SELECT_SMARTPHONE
+
+  SELECT_DEVICE_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-select-device
+    events:
+      computer-or-tablet:
+        targetState: DAD_SELECT_SMARTPHONE
+      smartphone:
+        targetState: MAM_SELECT_SMARTPHONE
+
+  DAD_SELECT_SMARTPHONE:
+    response:
+      type: page
+      pageId: pyi-triage-select-smartphone
+      context: dad
+    events:
+      iphone:
+        exitEventToEmit: dadIphone
+      android:
+        exitEventToEmit: dadAndroid
+      neither:
+        exitEventToEmit: noDevice
+
+  MAM_SELECT_SMARTPHONE:
+    response:
+      type: page
+      pageId: pyi-triage-select-smartphone
+      context: mam
+    events:
+      iphone:
+        exitEventToEmit: mamIphone
+      android:
+        exitEventToEmit: mamAndroid
+      neither:
+        targetState: DAD_SELECT_SMARTPHONE

@@ -13,54 +13,14 @@ entryEvents:
         targetState: DAD_IPHONE_START_SESSION
       dadAndroid:
         targetState: DAD_ANDROID_START_SESSION
-    targetState: IDENTIFY_DEVICE
+    targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+    targetEntryEvent: identify-device
     journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
 
 nestedJourneyStates:
-  IDENTIFY_DEVICE:
-    response:
-      type: page
-      pageId: identify-device
-      skipBack: true
-    events:
-      appTriage:
-        targetState: SELECT_DEVICE_PAGE
-      mobileDownloadIphone:
-        targetState: MOBILE_IPHONE_START_SESSION
-      mobileDownloadAndroid:
-        targetState: MOBILE_ANDROID_START_SESSION
-      appTriageSmartphone:
-        targetState: MAM_SELECT_SMARTPHONE
-
-  SELECT_DEVICE_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-select-device
-    events:
-      computer-or-tablet:
-        targetState: DAD_SELECT_SMARTPHONE
-      smartphone:
-        targetState: MAM_SELECT_SMARTPHONE
-
-  DAD_SELECT_SMARTPHONE:
-    response:
-      type: page
-      pageId: pyi-triage-select-smartphone
-      context: dad
-    events:
-      iphone:
-        targetState: DAD_IPHONE_START_SESSION
-      android:
-        targetState: DAD_ANDROID_START_SESSION
-      neither:
-        targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
-        checkJourneyContext:
-          internationalAddress:
-            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
-
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
     response:
       type: page
@@ -69,7 +29,8 @@ nestedJourneyStates:
       anotherWay:
         exitEventToEmit: anotherWay
       back:
-        targetState: DAD_SELECT_SMARTPHONE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: dad-select-smartphone
 
   DAD_IPHONE_START_SESSION:
     response:
@@ -271,19 +232,6 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  MAM_SELECT_SMARTPHONE:
-    response:
-      type: page
-      pageId: pyi-triage-select-smartphone
-      context: mam
-    events:
-      iphone:
-        targetState: MOBILE_IPHONE_START_SESSION
-      android:
-        targetState: MOBILE_ANDROID_START_SESSION
-      neither:
-        targetState: DAD_SELECT_SMARTPHONE
-
   MOBILE_IPHONE_START_SESSION:
     response:
       type: process
@@ -428,7 +376,8 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: DAD_SELECT_SMARTPHONE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: dad-select-smartphone
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
     response:
@@ -473,4 +422,23 @@ nestedJourneyStates:
             targetState: DAD_IPHONE_START_SESSION
           dadAndroid:
             targetState: DAD_ANDROID_START_SESSION
-        targetState: IDENTIFY_DEVICE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+
+  STRATEGIC_APP_IDENTIFY_DEVICE:
+    nestedJourney: STRATEGIC_APP_IDENTIFY_DEVICE
+    exitEvents:
+      mamIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mamAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      dadIphone:
+        targetState: DAD_IPHONE_START_SESSION
+      dadAndroid:
+        targetState: DAD_ANDROID_START_SESSION
+      noDevice:
+        targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
+
