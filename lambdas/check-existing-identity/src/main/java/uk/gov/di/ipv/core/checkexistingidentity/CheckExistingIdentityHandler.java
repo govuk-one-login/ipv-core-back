@@ -391,7 +391,7 @@ public class CheckExistingIdentityHandler
             // not contain PENDING_RETURN VCs
             var hasExpiredDcmawDrivingPermit = false;
             if (!credentialBundle.isPendingReturn()) {
-                var dcmawDlVc =
+                var successfulDcmawDlVc =
                         credentialBundle.credentials.stream()
                                 .filter(vc -> List.of(DCMAW_ASYNC, DCMAW).contains(vc.getCri()))
                                 .filter(
@@ -404,18 +404,19 @@ public class CheckExistingIdentityHandler
                                                                 identityCheckCredential
                                                                         .getCredentialSubject()
                                                                         .getDrivingPermit()))
+                                .filter(VcHelper::isSuccessfulVc)
                                 .findFirst();
 
-                if (dcmawDlVc.isPresent()) {
+                if (successfulDcmawDlVc.isPresent()) {
                     hasExpiredDcmawDrivingPermit =
                             VcHelper.isExpiredDrivingPermitVc(
-                                    dcmawDlVc.get(), configService, Clock.systemUTC());
+                                    successfulDcmawDlVc.get(), configService, Clock.systemUTC());
 
                     if (hasExpiredDcmawDrivingPermit) {
                         LOGGER.info(
                                 LogHelper.buildLogMessage(
                                         "DCMAW Driving Permit VC is expired and past validity period."));
-                        var vcsForUpdate = new ArrayList<>(List.of(dcmawDlVc.get()));
+                        var vcsForUpdate = new ArrayList<>(List.of(successfulDcmawDlVc.get()));
                         credentialBundle.credentials.stream()
                                 .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
                                 .findFirst()
@@ -425,7 +426,7 @@ public class CheckExistingIdentityHandler
 
                         vcsForUpdate.forEach(credentialBundle.credentials::remove);
 
-                        VcHelper.extractNbf(dcmawDlVc.get())
+                        VcHelper.extractNbf(successfulDcmawDlVc.get())
                                 .ifPresent(
                                         nbfInstant -> {
                                             var nbfMs = nbfInstant.toEpochMilli();
