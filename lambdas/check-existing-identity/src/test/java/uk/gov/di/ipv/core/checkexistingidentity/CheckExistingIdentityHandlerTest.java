@@ -1230,8 +1230,9 @@ class CheckExistingIdentityHandlerTest {
             verify(auditService, never())
                     .sendAuditEvent(
                             argThat(
-                                    event ->
-                                            event.getEventName()
+                                    auditEvent ->
+                                            auditEvent
+                                                    .getEventName()
                                                     .equals(
                                                             AuditEventTypes
                                                                     .IPV_EXPIRED_DCMAW_DL_VC_FOUND)));
