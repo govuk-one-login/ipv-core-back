@@ -92,6 +92,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doThrow;
@@ -121,6 +122,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredFailNoCi;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudM1aExpired;
@@ -1208,6 +1210,32 @@ class CheckExistingIdentityHandlerTest {
                 verify(mockEvcsService, times(0))
                         .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
             }
+        }
+
+        @Test
+        void shouldIgnoreUnsuccessfulExpiredDrivingLicenceDcmawVc() throws Exception {
+            var testCredentialBundle = List.of(vcDcmawDrivingPermitDvaExpiredFailNoCi());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+
+            checkExistingIdentityHandler.handleRequest(event, context);
+
+            verify(mockEvcsService, times(0))
+                    .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
+            verify(auditService, never())
+                    .sendAuditEvent(
+                            argThat(
+                                    auditEvent ->
+                                            auditEvent
+                                                    .getEventName()
+                                                    .equals(
+                                                            AuditEventTypes
+                                                                    .IPV_EXPIRED_DCMAW_DL_VC_FOUND)));
         }
     }
 
