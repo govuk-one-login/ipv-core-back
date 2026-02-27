@@ -233,8 +233,15 @@ public interface VcFixtures {
         return vcClaim;
     }
 
-    private static IdentityCheckCredential vcClaimWebDrivingLicenceDvaExpiredFailNoCi() {
-        var vcClaim = vcClaimWebDrivingLicenceDvla();
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaExpired() {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
+        vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
+        return vcClaim;
+    }
+
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaExpiredFailNoCi() {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
         vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         vcClaim.getEvidence().get(0).setValidityScore(0);
@@ -1339,7 +1346,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
-                vcClaimWebDrivingLicenceDvaExpired(),
+                vcClaimDcmawDrivingPermitDvaExpired(),
                 DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
@@ -1348,7 +1355,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 DCMAW,
-                vcClaimWebDrivingLicenceDvaExpiredFailNoCi(),
+                vcClaimDcmawDrivingPermitDvaExpiredFailNoCi(),
                 DCMAW_ISSUER_STAGING,
                 Instant.ofEpochSecond(1705986521));
     }
