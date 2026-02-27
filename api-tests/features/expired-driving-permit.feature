@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest @MyTest
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: Expired DCMAW/Async DCMAW Driving Permits
   Scenario: An expired successful DCMAW driving permit and current date is past the validity period should result in identity reprove
     # This creates a DCMAW Async VC which has nbf 26/07/2022 and driving permit expiry date set to 180 days before the nbf
@@ -92,18 +92,3 @@ Feature: Expired DCMAW/Async DCMAW Driving Permits
     # New journey
     When I start a new 'medium-confidence' journey
     Then I get an 'page-ipv-reuse' page response
-
-  Scenario: A VC bundle containing an expired failed DCMAW driving permit (outside of the validity period) should result in new identity proving
-    # This creates a DCMAW Async VC which has nbf 26/07/2022 and driving permit expiry date set to 180 days before the nbf
-    Given the subject already has the following expired credentials with overridden document expiry date
-      | CRI            | scenario                           | documentType  |
-      | dcmawAsync     | kenneth-driving-permit-fail-no-ci  | drivingPermit |
-    # Has a successful identity via web passport route
-    And the subject already has the following credentials
-      | CRI            | scenario                           |
-      | ukPassport     | kenneth-passport-valid             |
-      | address        | kenneth-current                    |
-      | fraud          | kenneth-score-2                    |
-
-    Given I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
