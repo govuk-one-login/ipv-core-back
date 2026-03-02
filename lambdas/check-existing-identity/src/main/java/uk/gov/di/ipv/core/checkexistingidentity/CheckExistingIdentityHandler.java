@@ -76,7 +76,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -364,8 +363,7 @@ public class CheckExistingIdentityHandler
 
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
-                    || configService.enabled(RESET_IDENTITY)) {
+            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)) {
                 EmbeddedMetricHelper.identityProving();
                 if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));

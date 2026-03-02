@@ -109,7 +109,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisSt
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -1002,7 +1001,6 @@ class CheckExistingIdentityHandlerTest {
                             List.of(),
                             true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
             var journeyResponse =
                     toResponseClass(
@@ -1143,7 +1141,6 @@ class CheckExistingIdentityHandlerTest {
                                     Optional.empty(),
                                     Optional.empty(),
                                     Gpg45Scores.builder().build()));
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
 
             try (MockedStatic<VcHelper> mockVcHelper =
@@ -1191,7 +1188,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(
                             List.of(P2), testCredentialBundle, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             try (MockedStatic<VcHelper> mockVcHelper =
                     mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
                 mockVcHelper
@@ -1221,7 +1217,6 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Map.of(CURRENT, testCredentialBundle));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
 
             checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -1495,49 +1490,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Nested
-    class ResetIdentity {
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
-                    .thenReturn(ipvSessionItem);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisState(TEST_USER_ID))
-                    .thenReturn(createNoInterventionAisState());
-        }
-
-        @Test
-        void shouldReturnReproveP2JourneyStepResponseIfResetIdentityTrue() throws Exception {
-            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-
-        @Test
-        void shouldReturnReproveP1JourneyStepResponseIfResetIdentityTrueAndP1InVtr()
-                throws Exception {
-            clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
-            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH, journeyResponse.getJourney());
-        }
-    }
-
-    @Nested
     class RepeatFraudCheck {
         @BeforeEach
         void setup() throws Exception {
@@ -1568,7 +1520,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
             try (MockedStatic<VcHelper> mockVcHelper =
@@ -1613,7 +1564,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
             when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(100000000);
             try (MockedStatic<VcHelper> mockVcHelper =
