@@ -32,7 +32,7 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "journey_type": "NEW_P2_IDENTITY"
+      "journey_type": "INTERVENTION_REPROVE_IDENTITY"
     },
     "restricted": {
       "device_information": {}
