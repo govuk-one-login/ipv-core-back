@@ -1,6 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: Expired DCMAW/Async DCMAW Driving Permits
-  Scenario: An expired DCMAW driving permit and current date is past the validity period should result in identity reprove
+  Scenario: An expired successful DCMAW driving permit and current date is past the validity period should result in identity reprove
     # This creates a DCMAW Async VC which has nbf 26/07/2022 and driving permit expiry date set to 180 days before the nbf
     Given the subject already has the following expired credentials with overridden document expiry date
       | CRI            | scenario                       | documentType  |
@@ -46,7 +46,7 @@ Feature: Expired DCMAW/Async DCMAW Driving Permits
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  Scenario: An expired DCMAW driving permit but the current date is not past the validity period should result in identity reuse
+  Scenario: An expired successful DCMAW driving permit but the current date is not past the validity period should result in identity reuse
     # Initial journey proving with expired driving licence in app
     Given I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

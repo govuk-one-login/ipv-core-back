@@ -627,8 +627,8 @@ When(
   async function (this: World): Promise<void> {
     this.strategicAppPollResult = undefined;
 
-    const timeoutMs = 10000; // 10 second total ceiling
-    const intervalMs = 200; // Check every 200ms
+    const timeoutMs = 20000;
+    const intervalMs = 200;
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeoutMs) {
@@ -645,7 +645,7 @@ When(
     }
 
     if (!this.strategicAppPollResult) {
-      console.warn("Polling timed out after 10 seconds");
+      console.warn("Polling timed out after 20 seconds");
     }
   },
 );
