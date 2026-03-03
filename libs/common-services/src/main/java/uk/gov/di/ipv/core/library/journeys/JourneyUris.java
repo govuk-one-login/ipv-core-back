@@ -43,10 +43,13 @@ public class JourneyUris {
     public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
     public static final String JOURNEY_F2F_PENDING_PATH = "/journey/pending";
     public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
+    // PYIC-8896 Remove these once the single reprove journey is live
     public static final String JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH =
             "/journey/reprove-identity-gpg45-medium";
     public static final String JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH =
             "/journey/reprove-identity-gpg45-low";
+    public static final String JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH =
+            "/journey/intervention-reprove-identity";
     public static final String JOURNEY_RESET_SESSION_IDENTITY_PATH =
             "/journey/reset-session-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";

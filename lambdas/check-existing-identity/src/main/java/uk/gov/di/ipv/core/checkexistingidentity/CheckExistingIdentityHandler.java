@@ -99,11 +99,13 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
@@ -127,6 +129,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
+    private static final JourneyResponse JOURNEY_INTERVENTION_REPROVE_IDENTITY =
+            new JourneyResponse(JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
