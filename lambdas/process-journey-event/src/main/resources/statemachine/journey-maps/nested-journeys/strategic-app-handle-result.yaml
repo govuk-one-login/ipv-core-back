@@ -21,7 +21,7 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
-        exitEventToEmit: anotherWay
+        exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
       vcs-not-correlated:
