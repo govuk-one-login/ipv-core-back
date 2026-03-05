@@ -106,8 +106,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
-      enhanced-verification:
-        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -139,8 +137,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
-      enhanced-verification:
-        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
