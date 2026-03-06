@@ -14,6 +14,7 @@ public enum NestedJourneyTypes {
     APP_DOC_CHECK("app-doc-check"),
     KBVS("kbvs"),
     STRATEGIC_APP_HANDLE_RESULT("strategic-app-handle-result"),
+    STRATEGIC_APP_IDENTIFY_DEVICE("strategic-app-identify-device"),
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
     WEB_DL_OR_PASSPORT("web-dl-or-passport");
 

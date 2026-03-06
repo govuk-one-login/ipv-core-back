@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.config;
 
 public enum CoreFeatureFlag implements FeatureFlag {
     UNUSED_PLACEHOLDER("unusedPlaceHolder"),
-    RESET_IDENTITY("resetIdentity"),
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
     SQS_ASYNC("sqsAsync"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),

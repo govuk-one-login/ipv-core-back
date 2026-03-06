@@ -1,0 +1,390 @@
+name: Intervention Reprove Identity
+description: >-
+  The routes a user can take to reprove their identity after an account intervention.
+
+states:
+  # Entry points
+  START:
+    events:
+      next:
+        targetState: REPROVE_IDENTITY_START
+
+  # Initial reprove pages
+  REPROVE_IDENTITY_START:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
+        targetState: PROVE_AGAIN_APP
+
+  PROVE_AGAIN_APP:
+    response:
+      type: page
+      pageId: prove-identity-again-app
+    events:
+      useApp:
+        targetState: IDENTITY_START_PAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+      end:
+        targetState: NEED_ID_TO_REPROVE
+
+  NEED_ID_TO_REPROVE:
+    response:
+      type: page
+      pageId: need-id-prove-identity-again-app
+    events:
+      useApp:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+      delete:
+        targetState: DELETE_LOGIN
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  # Device detection
+  STRATEGIC_APP_IDENTIFY_DEVICE:
+    nestedJourney: STRATEGIC_APP_IDENTIFY_DEVICE
+    exitEvents:
+      mamIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mamAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      dadIphone:
+        targetState: DAD_IPHONE_START_SESSION
+      dadAndroid:
+        targetState: DAD_ANDROID_START_SESSION
+      noDevice:
+        targetState: NEED_TO_REPROVE_NO_DEVICE
+
+  # Mobile pages
+  MOBILE_IPHONE_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: mam
+    events:
+      next:
+        targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+        journeyContextToSet: mamIphone
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-mobile-download-app
+      context: iphone-appOnly
+    events:
+      next:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
+      preferNoApp:
+        targetState: NEED_TO_REPROVE
+      anotherWay:
+        targetState: NEED_TO_REPROVE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MOBILE_ANDROID_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: mam
+    events:
+      next:
+        targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+        journeyContextToSet: mamAndroid
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-mobile-download-app
+      context: android-appOnly
+    events:
+      next:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
+      preferNoApp:
+        targetState: NEED_TO_REPROVE
+      anotherWay:
+        targetState: NEED_TO_REPROVE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  # Desktop pages
+  DAD_IPHONE_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: dad
+    events:
+      next:
+        targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+        journeyContextToSet: dadIphone
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-desktop-download-app
+      context: iphone-appOnly
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+      abandon:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: dl-auth-source-check
+      preferNoApp:
+        targetState: NEED_TO_REPROVE
+      anotherWay:
+        targetState: NEED_TO_REPROVE
+
+  DAD_ANDROID_START_SESSION:
+    response:
+      type: process
+      lambda: call-dcmaw-async-cri
+      lambdaInput:
+        mobileAppJourneyType: dad
+    events:
+      next:
+        targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+        journeyContextToSet: dadAndroid
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-desktop-download-app
+      context: android-appOnly
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+      abandon:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: dl-auth-source-check
+      preferNoApp:
+        targetState: NEED_TO_REPROVE
+      anotherWay:
+        targetState: NEED_TO_REPROVE
+
+  # App retry/escape page
+  NEED_TO_REPROVE:
+    response:
+      type: page
+      pageId: need-prove-identity-again-app
+    events:
+      useApp:
+        # To get here the context should have been set already but this is a safe fallback
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+        # The user may have abandoned the app in which case we need to start a new session.
+        # Starting a new session if they didn't abandon the app is safe and the newest session will be used.
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+      delete:
+        targetState: DELETE_LOGIN
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  # Handle app result
+  STRATEGIC_APP_HANDLE_RESULT:
+    nestedJourney: STRATEGIC_APP_HANDLE_RESULT
+    exitEvents:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+      anotherWay:
+        targetState: NEED_TO_REPROVE
+      incompleteDlAuthCheckInvalidDl:
+        targetState: DL_DETAILS_INCORRECT_PAGE
+      failedDlAuthCheckInvalidDl:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      failWithCiFromApp:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      failWithNoCiFromApp:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct-reprove
+      context: strategicApp
+    events:
+      next:
+        # To get here the context should have been set already but this is a safe fallback
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+      end:
+        targetState: NEED_TO_REPROVE
+
+  # Address, fraud, and issue identity
+  ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: PROCESS_NEW_IDENTITY
+      fraud-fail-with-no-ci:
+        targetState: PROCESS_NEW_IDENTITY
+
+  PROCESS_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: NEW
+    events:
+      next:
+        targetState: IPV_SUCCESS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  IPV_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-success
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  # Drop out pages
+  NEED_TO_REPROVE_NO_DEVICE:
+    response:
+      type: page
+      pageId: need-prove-identity-again-no-app
+    events:
+      delete:
+        targetState: DELETE_LOGIN
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  COULD_NOT_CONFIRM_IDENTITY:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-identity-reprove-failure
+    events:
+      delete:
+        targetState: DELETE_LOGIN
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  DELETE_LOGIN:
+    response:
+      type: page
+      pageId: delete-handover
+      context: reproveIdentity
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response
+
+  # Parent states (needed for STRATEGIC_APP_HANDLE_RESULT)
+
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR

@@ -21,6 +21,7 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   APP_DOC_CHECK: "App doc check",
   KBVS: "KBVs",
   STRATEGIC_APP_HANDLE_RESULT: "Strategic app handle result",
+  STRATEGIC_APP_IDENTIFY_DEVICE: "Strategic app identify device",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
 };

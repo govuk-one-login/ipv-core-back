@@ -76,7 +76,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -100,6 +99,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
@@ -128,6 +128,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
+    private static final JourneyResponse JOURNEY_INTERVENTION_REPROVE_IDENTITY =
+            new JourneyResponse(JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
@@ -363,17 +365,13 @@ public class CheckExistingIdentityHandler
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
-            // journey
-            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
-                    || configService.enabled(RESET_IDENTITY)) {
+            // journey. Once PYIC-8896 has been live long enough that no-one will be on F2F
+            // reproving journey we should
+            // remove the isReprovingWithF2f() check.
+            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)) {
                 EmbeddedMetricHelper.identityProving();
-                if (targetVot == Vot.P1) {
-                    LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
-                    return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
-                }
-
-                LOGGER.info(LogHelper.buildLogMessage("Reproving P2 identity"));
-                return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
+                LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
+                return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
             }
 
             // PYIC-6901 Currently we just check against the lowest Vot requested for this journey.

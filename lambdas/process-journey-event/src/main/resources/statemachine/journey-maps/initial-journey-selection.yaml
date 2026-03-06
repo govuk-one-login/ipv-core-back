@@ -53,6 +53,10 @@ states:
       repeat-fraud-check:
         targetJourney: REPEAT_FRAUD_CHECK
         targetState: START
+      intervention-reprove-identity:
+        targetJourney: INTERVENTION_REPROVE_IDENTITY
+        targetState: START
+      # PYIC-8896 Remove these states once the new journey is live
       reprove-identity-gpg45-medium:
         targetState: REPROVE_IDENTITY_START_P2
       reprove-identity-gpg45-low:
