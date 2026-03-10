@@ -56,7 +56,7 @@ nestedJourneyStates:
         resetType: PENDING_DCMAW_ASYNC_ALL
     events:
       next:
-        targetState: DL_DETAILS_INCORRECT_PAGE
+        exitEventToEmit: incompleteDlAuthCheckInvalidDlv2
 
   RESET_SESSION_INVALID_DL:
     response:
@@ -68,6 +68,7 @@ nestedJourneyStates:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
 
+  # PYIC-8896 Remove this state once these changes have been live long enough that no-one should be in this state.
   DL_DETAILS_INCORRECT_PAGE:
     response:
       type: page

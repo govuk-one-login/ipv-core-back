@@ -461,12 +461,16 @@ nestedJourneyStates:
         exitEventToEmit: next
       anotherWay:
         exitEventToEmit: anotherWay
+      # PYIC-8896 remove incompleteDlAuthCheckInvalidDl once no-one can be in strategic-app-handle-result / DL_DETAILS_INCORRECT_PAGE
       incompleteDlAuthCheckInvalidDl:
         exitEventToEmit: incompleteDlAuthCheckInvalidDl
+      incompleteDlAuthCheckInvalidDlv2:
+        targetState: DL_DETAILS_INCORRECT_PAGE
       failedDlAuthCheckInvalidDl:
         exitEventToEmit: failedDlAuthCheckInvalidDl
       failWithCiFromApp:
         exitEventToEmit: failWithCiFromApp
+      # PYIC-8896 remove retryApp once no-one can be in strategic-app-handle-result / DL_DETAILS_INCORRECT_PAGE
       retryApp:
         checkJourneyContext:
           mamIphone:
@@ -478,3 +482,23 @@ nestedJourneyStates:
           dadAndroid:
             targetState: DAD_ANDROID_START_SESSION
         targetState: IDENTIFY_DEVICE
+
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct
+      context: strategicApp
+    events:
+      next:
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+        targetState: IDENTIFY_DEVICE
+      end:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl
