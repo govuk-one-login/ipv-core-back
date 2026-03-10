@@ -47,7 +47,7 @@ jobs:
 
       - name: Get changed api-tests files
         id: get-changed-files
-        uses: tj-actions/changed-files@8cba46e29c11878d930bca7870bb54394d3e8b21 # v47.0.2
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
           files: |
             api-tests/**
@@ -112,7 +112,7 @@ jobs:
 
       - name: Get relevant changed files
         id: check-if-should-deploy
-        uses: tj-actions/changed-files@8cba46e29c11878d930bca7870bb54394d3e8b21 # v47.0.2
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
           files: |
             **
@@ -172,7 +172,7 @@ jobs:
           python-version: "3.8"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
           gradle-version: "8.13"
 

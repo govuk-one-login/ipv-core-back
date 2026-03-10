@@ -464,7 +464,7 @@ nestedJourneyStates:
         exitEventToEmit: next
       anotherWay:
         exitEventToEmit: anotherWay
-      incompleteDlAuthCheckInvalidDl:
+      incompleteDlAuthCheckInvalidDlv2:
         targetState: DL_DETAILS_INCORRECT_PAGE
       failedDlAuthCheckInvalidDl:
         exitEventToEmit: failedDlAuthCheckInvalidDl
@@ -510,4 +510,3 @@ nestedJourneyStates:
         checkJourneyContext:
           internationalAddress:
             targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
-
