@@ -21,6 +21,50 @@ entryEvents:
     targetEntryEvent: dl-auth-source-check
 
 nestedJourneyStates:
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
+  IDENTIFY_DEVICE:
+    response:
+      type: page
+      pageId: identify-device
+      skipBack: true
+    events:
+      appTriage:
+        targetState: SELECT_DEVICE_PAGE
+      mobileDownloadIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mobileDownloadAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      appTriageSmartphone:
+        targetState: MAM_SELECT_SMARTPHONE
+
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
+  SELECT_DEVICE_PAGE:
+    response:
+      type: page
+      pageId: pyi-triage-select-device
+    events:
+      computer-or-tablet:
+        targetState: DAD_SELECT_SMARTPHONE
+      smartphone:
+        targetState: MAM_SELECT_SMARTPHONE
+
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
+  DAD_SELECT_SMARTPHONE:
+    response:
+      type: page
+      pageId: pyi-triage-select-smartphone
+      context: dad
+    events:
+      iphone:
+        targetState: DAD_IPHONE_START_SESSION
+      android:
+        targetState: DAD_ANDROID_START_SESSION
+      neither:
+        targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
+
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
     response:
       type: page
@@ -231,6 +275,20 @@ nestedJourneyStates:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
+
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
+  MAM_SELECT_SMARTPHONE:
+    response:
+      type: page
+      pageId: pyi-triage-select-smartphone
+      context: mam
+    events:
+      iphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      android:
+        targetState: MOBILE_ANDROID_START_SESSION
+      neither:
+        targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_START_SESSION:
     response:

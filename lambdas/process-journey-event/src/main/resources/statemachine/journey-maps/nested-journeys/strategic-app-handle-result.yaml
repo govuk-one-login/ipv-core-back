@@ -67,3 +67,15 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
+
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct
+      context: strategicApp
+    events:
+      next:
+        exitEventToEmit: retryApp
+      end:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl
