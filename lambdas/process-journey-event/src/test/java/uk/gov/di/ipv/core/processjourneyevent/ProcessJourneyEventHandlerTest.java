@@ -737,6 +737,7 @@ class ProcessJourneyEventHandlerTest {
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
                 ipvSessionItem.getState());
 
+        // User goes back once
         processJourneyEventHandler.handleRequest(backInput, mockContext);
         inOrder.verify(ipvSessionItem).popState();
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
@@ -744,12 +745,17 @@ class ProcessJourneyEventHandlerTest {
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
                 ipvSessionItem.getState());
 
+        // User goes back again
         processJourneyEventHandler.handleRequest(backInput, mockContext);
         inOrder.verify(ipvSessionItem).popState();
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"),
                 ipvSessionItem.getState());
+
+        assertEquals(
+                List.of(new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/PAGE_STATE", null)),
+                ipvSessionItem.getStateHistoryStack());
     }
 
     @Test
