@@ -25,6 +25,8 @@ states:
     events:
       useApp:
         targetState: IDENTITY_START_PAGE
+      delete:
+        targetState: DELETE_LOGIN
       returnToRp:
         targetState: RETURN_TO_RP
 
