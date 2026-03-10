@@ -145,14 +145,9 @@ public class IpvSessionService {
             ipvSessionItem.pushState(
                     new JourneyState(
                             isReverification ? REVERIFICATION : INITIAL_JOURNEY_SELECTION,
-                            START_STATE));
-            ipvSessionItem.pushState(
-                    new JourneyState(
-                            isReverification ? REVERIFICATION : INITIAL_JOURNEY_SELECTION,
                             START_STATE),
                     null);
         } else {
-            ipvSessionItem.pushState(new JourneyState(TECHNICAL_ERROR, ERROR_STATE));
             ipvSessionItem.pushState(new JourneyState(TECHNICAL_ERROR, ERROR_STATE), null);
             ipvSessionItem.setErrorCode(errorObject.getCode());
             ipvSessionItem.setErrorDescription(errorObject.getDescription());

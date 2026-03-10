@@ -66,7 +66,6 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -89,7 +88,6 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -112,7 +110,6 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -277,7 +274,6 @@ class IpvSessionServiceTest {
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
@@ -290,7 +286,6 @@ class IpvSessionServiceTest {
     void shouldInvalidateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
