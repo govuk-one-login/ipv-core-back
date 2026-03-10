@@ -721,10 +721,6 @@ class ProcessJourneyEventHandlerTest {
         inOrder.verify(ipvSessionItem)
                 .pushState(
                         new JourneyState(
-                                INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"));
-        inOrder.verify(ipvSessionItem)
-                .pushState(
-                        new JourneyState(
                                 INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
                         "eventFour");
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
@@ -733,8 +729,6 @@ class ProcessJourneyEventHandlerTest {
                 ipvSessionItem.getState());
 
         processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
-        inOrder.verify(ipvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"));
         inOrder.verify(ipvSessionItem)
                 .pushState(
                         new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
@@ -981,9 +975,7 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
         ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"), "eventTwo");
-        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
         ipvSession.pushState(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), "parentEvent");
 
@@ -1071,9 +1063,7 @@ class ProcessJourneyEventHandlerTest {
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(new JourneyState(TECHNICAL_ERROR, "CRI_STATE"));
         ipvSession.pushState(new JourneyState(TECHNICAL_ERROR, "CRI_STATE"), "next");
-        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
         ipvSession.pushState(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), "parentEvent");
 
@@ -1263,12 +1253,8 @@ class ProcessJourneyEventHandlerTest {
         // Initial transition
         var initialOutput = processJourneyEventHandler.handleRequest(initialInput, mockContext);
         inOrder.verify(spyIpvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
-        inOrder.verify(spyIpvSessionItem)
                 .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), null);
         inOrder.verify(spyIpvSessionItem, times(1)).setJourneyContext("someContext");
-        inOrder.verify(spyIpvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"));
         inOrder.verify(spyIpvSessionItem)
                 .pushState(
                         new JourneyState(INITIAL_JOURNEY_SELECTION, "ANOTHER_PAGE_STATE"),
@@ -1279,8 +1265,6 @@ class ProcessJourneyEventHandlerTest {
         // Second transition
         var secondOutput =
                 processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
-        inOrder.verify(spyIpvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
         inOrder.verify(spyIpvSessionItem)
                 .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"), "next");
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
@@ -1328,8 +1312,6 @@ class ProcessJourneyEventHandlerTest {
         // Initial transition
         var initialOutput = processJourneyEventHandler.handleRequest(initialInput, mockContext);
         inOrder.verify(spyIpvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
-        inOrder.verify(spyIpvSessionItem)
                 .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), null);
         inOrder.verify(spyIpvSessionItem, times(1)).unsetJourneyContext("someContext");
         inOrder.verify(spyIpvSessionItem)
@@ -1342,8 +1324,6 @@ class ProcessJourneyEventHandlerTest {
         // Second transition
         var secondOutput =
                 processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
-        inOrder.verify(spyIpvSessionItem)
-                .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PROCESS_STATE"));
         inOrder.verify(spyIpvSessionItem)
                 .pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PROCESS_STATE"), "next");
         inOrder.verify(mockIpvSessionService).updateIpvSession(spyIpvSessionItem);
@@ -1452,7 +1432,6 @@ class ProcessJourneyEventHandlerTest {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState));
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState), null);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
