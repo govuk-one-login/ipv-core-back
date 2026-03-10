@@ -122,17 +122,17 @@ public class IpvSessionItem implements PersistenceItem {
     }
 
     public JourneyState getState() {
-        if (stateStack.isEmpty()) {
+        if (stateHistoryStack.isEmpty()) {
             throw new IllegalStateException();
         }
-        return new JourneyState(stateStack.get(stateStack.size() - 1));
+        return new JourneyState(stateHistoryStack.getLast().getState());
     }
 
     public JourneyState getPreviousState() {
-        if (stateStack.size() < 2) {
+        if (stateHistoryStack.size() < 2) {
             throw new IllegalStateException();
         }
-        return new JourneyState(stateStack.get(stateStack.size() - 2));
+        return new JourneyState(stateHistoryStack.get(stateHistoryStack.size() - 2).getState());
     }
 
     public void setJourneyContext(String journeyContext) {
