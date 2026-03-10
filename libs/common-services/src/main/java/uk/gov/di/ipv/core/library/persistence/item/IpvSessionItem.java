@@ -42,9 +42,6 @@ public class IpvSessionItem implements PersistenceItem {
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
-    @Builder.Default private List<String> stateStack = new ArrayList<>();
-
-    // This is a more detailed version of stateStack above and will be used to replace it
     @Builder.Default private List<StateHistoryEntry> stateHistoryStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
