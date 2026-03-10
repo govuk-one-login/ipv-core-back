@@ -446,6 +446,13 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("core", capturedAuditEvent.getComponentId());
         assertEquals(TEST_USER_ID, capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
+
+        assertEquals(
+                List.of(
+                        new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/CRI_STATE", null),
+                        new StateHistoryEntry("SESSION_TIMEOUT/CORE_SESSION_TIMEOUT", "next"),
+                        new StateHistoryEntry("SESSION_TIMEOUT/TIMEOUT_UNRECOVERABLE_PAGE", null)),
+                capturedIpvSessionItem.getStateHistoryStack());
     }
 
     @Test
@@ -1274,14 +1281,14 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("/journey/cri/build-oauth-request/aCriId", secondOutput.get("journey"));
 
         assertEquals(
-                spyIpvSessionItem.getStateHistoryStack(),
                 List.of(
                         new StateHistoryEntry(
                                 "INITIAL_JOURNEY_SELECTION/PAGE_STATE",
                                 "eventWithSetJourneyContext"),
                         new StateHistoryEntry(
                                 "INITIAL_JOURNEY_SELECTION/ANOTHER_PAGE_STATE", "next"),
-                        new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/CRI_STATE", null)));
+                        new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/CRI_STATE", null)),
+                spyIpvSessionItem.getStateHistoryStack());
     }
 
     @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
@@ -1337,14 +1344,14 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("/journey/a-lambda-to-invoke", secondOutput.get("journey"));
 
         assertEquals(
-                spyIpvSessionItem.getStateHistoryStack(),
                 List.of(
                         new StateHistoryEntry(
                                 "INITIAL_JOURNEY_SELECTION/PAGE_STATE",
                                 "eventWithUnsetJourneyContext"),
                         new StateHistoryEntry(
                                 "INITIAL_JOURNEY_SELECTION/ANOTHER_PAGE_STATE", "next"),
-                        new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/PROCESS_STATE", null)));
+                        new StateHistoryEntry("INITIAL_JOURNEY_SELECTION/PROCESS_STATE", null)),
+                spyIpvSessionItem.getStateHistoryStack());
     }
 
     @Test
