@@ -251,7 +251,7 @@ states:
         targetState: ADDRESS_AND_FRAUD
       anotherWay:
         targetState: NEED_TO_REPROVE
-      incompleteDlAuthCheckInvalidDl:
+      incompleteDlAuthCheckInvalidDlv2:
         targetState: DL_DETAILS_INCORRECT_PAGE
       failedDlAuthCheckInvalidDl:
         targetState: COULD_NOT_CONFIRM_IDENTITY
