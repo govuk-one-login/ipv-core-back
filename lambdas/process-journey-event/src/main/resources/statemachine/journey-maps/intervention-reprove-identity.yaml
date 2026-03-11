@@ -264,7 +264,6 @@ states:
     response:
       type: page
       pageId: uk-driving-licence-details-not-correct-reprove
-      context: strategicApp
     events:
       next:
         # To get here the context should have been set already but this is a safe fallback
