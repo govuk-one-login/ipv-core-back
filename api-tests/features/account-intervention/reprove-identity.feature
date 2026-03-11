@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateRegressionTest @dcc
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Reprove Identity Journey
 
   Scenario: Happy path user reproves identity on desktop android
