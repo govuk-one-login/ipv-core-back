@@ -308,7 +308,7 @@ Feature: Reprove Identity Journey
       Then I get a 'drivingLicence' CRI response
       # Driving licence auth source check fails
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct-reprove' page response with context 'strategicApp'
+      Then I get a 'uk-driving-licence-details-not-correct-reprove' page response
 
     Scenario: User reproves identity after driving licence auth check fail
       When I submit a 'next' event
