@@ -28,7 +28,7 @@ states:
       delete:
         targetState: DELETE_LOGIN
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   IDENTITY_START_PAGE:
     response:
@@ -52,7 +52,7 @@ states:
       delete:
         targetState: DELETE_LOGIN
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   # Device detection
   STRATEGIC_APP_IDENTIFY_DEVICE:
@@ -241,7 +241,7 @@ states:
       delete:
         targetState: DELETE_LOGIN
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   # Handle app result
   STRATEGIC_APP_HANDLE_RESULT:
@@ -335,7 +335,7 @@ states:
       delete:
         targetState: DELETE_LOGIN
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   COULD_NOT_CONFIRM_IDENTITY:
     response:
@@ -345,13 +345,31 @@ states:
       delete:
         targetState: DELETE_LOGIN
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   DELETE_LOGIN:
     response:
       type: page
       pageId: delete-handover
       context: reproveIdentity
+
+  PROCESS_INCOMPLETE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: RETURN_TO_RP
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   RETURN_TO_RP:
     response:
