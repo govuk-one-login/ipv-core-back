@@ -26,27 +26,38 @@ public class CoreBack {
         var auditHandler = new AuditHandler();
         var jwksHandler = new JwksHandler();
 
-        var app = Javalin.create();
+        var app =
+                Javalin.create(
+                        config -> {
+                            // Test APIs
+                            config.routes.get("/", HomeHandler::serveHomePage);
+                            config.routes.get("/audit-events", auditHandler::getAuditEvents);
 
-        // Test APIs
-        app.get("/", HomeHandler::serveHomePage);
-        app.get("/audit-events", auditHandler::getAuditEvents);
+                            // Internal APIs
+                            config.routes.post(
+                                    "/session/initialise", lambdaHandler::initialiseSession);
+                            config.routes.post(
+                                    "/journey/{event}", journeyEngineHandler::journeyEngine);
+                            config.routes.post("/cri/callback", lambdaHandler::criCallback);
+                            config.routes.post("/app/callback", lambdaHandler::appCallback);
+                            config.routes.get(
+                                    "/app/check-vc-receipt",
+                                    lambdaHandler::checkMobileAppVcReceipt);
+                            config.routes.get(
+                                    "/user/proven-identity-details",
+                                    lambdaHandler::getProvenUserIdentityDetails);
 
-        // Internal APIs
-        app.post("/session/initialise", lambdaHandler::initialiseSession);
-        app.post("/journey/{event}", journeyEngineHandler::journeyEngine);
-        app.post("/cri/callback", lambdaHandler::criCallback);
-        app.post("/app/callback", lambdaHandler::appCallback);
-        app.get("/app/check-vc-receipt", lambdaHandler::checkMobileAppVcReceipt);
-        app.get("/user/proven-identity-details", lambdaHandler::getProvenUserIdentityDetails);
-
-        // External APIs
-        app.post("/token", lambdaHandler::getToken);
-        app.get("/user-identity", lambdaHandler::getUserIdentity);
-        app.get("/reverification", lambdaHandler::getUserReverification);
-        app.get("/healthcheck", (ctx) -> ctx.json(Map.of("healthcheck", "ok")));
-        app.get("/.well-known/jwks.json", jwksHandler::jwks);
-        app.get("/.well-known/stored-identity/did.json", DidHandler::did);
+                            // External APIs
+                            config.routes.post("/token", lambdaHandler::getToken);
+                            config.routes.get("/user-identity", lambdaHandler::getUserIdentity);
+                            config.routes.get(
+                                    "/reverification", lambdaHandler::getUserReverification);
+                            config.routes.get(
+                                    "/healthcheck", (ctx) -> ctx.json(Map.of("healthcheck", "ok")));
+                            config.routes.get("/.well-known/jwks.json", jwksHandler::jwks);
+                            config.routes.get(
+                                    "/.well-known/stored-identity/did.json", DidHandler::did);
+                        });
 
         // Poll for async credentials
         startAsyncPoller();
