@@ -14,6 +14,7 @@ export const JOURNEY_TYPES: Record<string, string> = {
   F2F_PENDING: "F2F pending",
   F2F_FAILED: "F2F failed",
   REVERIFICATION: "Reverification",
+  INTERVENTION_REPROVE_IDENTITY: "Reprove identity for intervention",
 };
 
 export const NESTED_JOURNEY_TYPES: Record<string, string> = {
