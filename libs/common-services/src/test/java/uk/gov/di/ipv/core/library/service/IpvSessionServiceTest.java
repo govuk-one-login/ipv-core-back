@@ -67,6 +67,7 @@ class IpvSessionServiceTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -78,6 +79,7 @@ class IpvSessionServiceTest {
         assertEquals(ipvSessionID, ipvSessionIDArgumentCaptor.getValue());
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getState(), result.getState());
+        assertEquals(ipvSessionItem.getStateHistoryStack(), result.getStateHistoryStack());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
     }
 
@@ -88,6 +90,7 @@ class IpvSessionServiceTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -99,6 +102,7 @@ class IpvSessionServiceTest {
         assertEquals(ipvSessionID, ipvSessionIDArgumentCaptor.getValue());
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getState(), result.getState());
+        assertEquals(ipvSessionItem.getStateHistoryStack(), result.getStateHistoryStack());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
     }
 
@@ -109,6 +113,7 @@ class IpvSessionServiceTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID))
@@ -273,6 +278,7 @@ class IpvSessionServiceTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -285,6 +291,7 @@ class IpvSessionServiceTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE), null);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.invalidateSession(ipvSessionItem, ACCOUNT_INTERVENTION_ERROR_DESCRIPTION);

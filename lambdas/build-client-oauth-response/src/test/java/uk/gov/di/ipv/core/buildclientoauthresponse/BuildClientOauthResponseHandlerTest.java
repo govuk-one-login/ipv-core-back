@@ -445,6 +445,7 @@ class BuildClientOauthResponseHandlerTest {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         item.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "test-state"));
+        item.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "test-state"), null);
         item.setCreationDateTime(new Date().toString());
         return item;
     }

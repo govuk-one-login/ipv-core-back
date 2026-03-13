@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
@@ -42,6 +43,9 @@ public class IpvSessionItem implements PersistenceItem {
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     @Builder.Default private List<String> stateStack = new ArrayList<>();
+
+    // This is a more detailed version of stateStack above and will be used to replace it
+    @Builder.Default private List<StateHistoryEntry> stateHistoryStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
     private ReverificationFailureCode failureCode;
@@ -89,6 +93,17 @@ public class IpvSessionItem implements PersistenceItem {
     public void setFeatureSetFromList(List<String> featureSet) {
         this.featureSet =
                 (featureSet != null && !featureSet.isEmpty()) ? String.join(",", featureSet) : null;
+    }
+
+    public void pushState(JourneyState newJourneyState, String event) {
+        // Record event that moved the user out of the previous state
+        if (StringUtils.isNotBlank(event) && !stateHistoryStack.isEmpty()) {
+            stateHistoryStack.set(
+                    stateHistoryStack.size() - 1,
+                    new StateHistoryEntry(stateHistoryStack.getLast().getState(), event));
+        }
+        // Push the new state with no event
+        stateHistoryStack.add(new StateHistoryEntry(newJourneyState.toSessionItemString(), null));
     }
 
     public void pushState(JourneyState journeyState) {
