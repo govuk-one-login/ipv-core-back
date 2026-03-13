@@ -3893,11 +3893,11 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub ${AWS::StackName}-DwpKbvCriReturnRateAlarm
-      AlarmDescription: "Alarm if DWP KBV CRI return rate is 0 for 3 consecutive 5-minute windows"
+      AlarmDescription: "Alarm if DWP KBV CRI return rate is 0 in a 15-minute window (ignores low traffic)"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      EvaluationPeriods: 3
+      EvaluationPeriods: 1
       Threshold: 0
       ComparisonOperator: LessThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3910,7 +3910,7 @@ Resources:
               Dimensions:
                 - Name: cri
                   Value: dwpKbv
-            Period: 300
+            Period: 900 # 15mins
             Stat: Sum
           ReturnData: false
         - Id: returned
@@ -3921,11 +3921,12 @@ Resources:
               Dimensions:
                 - Name: cri
                   Value: dwpKbv
-            Period: 300
+            Period: 900 # 15mins
             Stat: Sum
           ReturnData: false
         - Id: returnRate
-          Expression: "returned / redirect"
+          # Ignore low traffic - if redirects<=5 return '1' (healthy)
+          Expression: "IF(redirect > 5, returned / redirect, 1)"
           Label: "DWP KBV CRI Return Rate"
           ReturnData: true
 
