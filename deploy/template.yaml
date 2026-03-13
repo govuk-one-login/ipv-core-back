@@ -124,11 +124,7 @@ Conditions:
     - !Equals [ !Ref Environment, build ]
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, production ]
-  IsBuildStagingIntProd: !Or
-    - !Equals [ !Ref Environment, build]
-    - !Equals [ !Ref Environment, staging]
-    - !Equals [ !Ref Environment, integration]
-    - !Equals [ !Ref Environment, production]
+
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2889,15 +2885,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ValidateAppConfigFunctionLogGroup
 
-  ValidateAppConfigInvokePermission:
-    Type: AWS::Lambda::Permission
-    Condition: IsBuildStagingIntProd
-    Properties:
-      Action: "lambda:InvokeFunction"
-      FunctionName: !Ref ValidateAppConfigFunction
-      Principal: "appconfig.amazonaws.com"
-      SourceArn: !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/configurationprofile/${AppConfigConfigurationProfile}"
-
   AppConfigPipelineValidateFunctionInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -4565,42 +4552,6 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
-
-  # App Config
-  AppConfigApplication:
-    Condition: IsBuildStagingIntProd
-    Type: AWS::AppConfig::Application
-    Properties:
-      Name: !Sub "core-back-${Environment}"
-
-  AppConfigEnvironment:
-    Condition: IsBuildStagingIntProd
-    Type: AWS::AppConfig::Environment
-    Properties:
-      Name: !Sub "core-back-${Environment}"
-      ApplicationId: !Ref AppConfigApplication
-
-  AppConfigConfigurationProfile:
-    Condition: IsBuildStagingIntProd
-    Type: AWS::AppConfig::ConfigurationProfile
-    Properties:
-      Name: !Sub "core-back-${Environment}"
-      ApplicationId: !Ref AppConfigApplication
-      LocationUri: "hosted"
-      Validators:
-        - Type: LAMBDA
-          Content: !GetAtt ValidateAppConfigFunction.Arn
-
-  AppConfigDeploymentStrategy:
-    Condition: IsBuildStagingIntProd
-    Type: AWS::AppConfig::DeploymentStrategy
-    Properties:
-      Name: !Sub "core-back-${Environment}"
-      DeploymentDurationInMinutes: 0
-      FinalBakeTimeInMinutes: 0
-      GrowthFactor: 100
-      GrowthType: LINEAR
-      ReplicateTo: NONE
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
