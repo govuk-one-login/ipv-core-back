@@ -7,6 +7,17 @@ states:
   START:
     events:
       next:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+
+  # Remove any DCMAW Async VC from previous attempts
+  RESET_SESSION_BEFORE_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC_ALL
+    events:
+      next:
         targetState: REPROVE_IDENTITY_START
 
   # Initial reprove pages

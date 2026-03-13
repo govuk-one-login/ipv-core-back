@@ -306,11 +306,11 @@ Feature: Reprove Identity Journey
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
+
+    Scenario: User reproves identity after driving licence auth check fail
       # Driving licence auth source check fails
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct-reprove' page response
-
-    Scenario: User reproves identity after driving licence auth check fail
       When I submit a 'next' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
       When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
@@ -338,7 +338,51 @@ Feature: Reprove Identity Journey
       Then I get a 'P2' identity
 
     Scenario: User deletes account after driving licence auth check fail
+      # Driving licence auth source check fails
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct-reprove' page response
       When I submit an 'end' event
       Then I get a 'need-prove-identity-again-app' page response
       When I submit an 'delete' event
       Then I get a 'delete-handover' page response with context 'reproveIdentity'
+
+    Scenario: User retries after CI from authoritative source check and is denied due to CI.
+      # Driving licence auth source check fails with a CI
+      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'sorry-could-not-confirm-identity-reprove-failure' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      # Return to try again
+      When I start a new 'medium-confidence' journey
+      Then I get a 'reprove-identity-start' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-again-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
