@@ -330,6 +330,10 @@ public class ProcessCriCallbackHandler
         }
         criCheckingService.validateCallbackRequest(callbackRequest, criOAuthSessionItem);
 
+        // Clear the CRI session, so we don't process this callback again
+        ipvSessionItem.setCriOAuthSessionId(null);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+
         // Retrieve, store and check cri credentials
         var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
         var vcResponse =
