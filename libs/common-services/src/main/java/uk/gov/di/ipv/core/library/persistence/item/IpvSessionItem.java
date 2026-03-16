@@ -111,7 +111,14 @@ public class IpvSessionItem implements PersistenceItem {
     }
 
     public void popState() {
-        stateStack.remove(stateStack.size() - 1);
+        stateStack.removeLast();
+
+        // Remove most recent state (which should have null event as the user
+        //  hasn't moved off it yet) and reset the last state
+        stateHistoryStack.removeLast();
+        stateHistoryStack.set(
+                stateHistoryStack.size() - 1,
+                new StateHistoryEntry(stateHistoryStack.getLast().getState(), null));
     }
 
     public JourneyState getState() {
