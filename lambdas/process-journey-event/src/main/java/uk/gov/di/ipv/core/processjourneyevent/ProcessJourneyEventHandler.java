@@ -374,8 +374,6 @@ public class ProcessJourneyEventHandler
 
         if (result.state() instanceof BasicState basicState) {
             ipvSessionItem.pushState(
-                    new JourneyState(basicState.getJourneyType(), basicState.getName()));
-            ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()),
                     journeyEvent);
         }
@@ -434,7 +432,6 @@ public class ProcessJourneyEventHandler
 
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.pushState(new JourneyState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE));
         ipvSessionItem.pushState(
                 new JourneyState(SESSION_TIMEOUT, CORE_SESSION_TIMEOUT_STATE), null);
 
