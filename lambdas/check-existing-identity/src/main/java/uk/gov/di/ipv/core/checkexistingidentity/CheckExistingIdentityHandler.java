@@ -75,6 +75,7 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
@@ -370,8 +371,17 @@ public class CheckExistingIdentityHandler
             if (isInterventionReprove
                     && !isInterventionReprovingWithF2f(asyncCriStatus, credentialBundle)) {
                 EmbeddedMetricHelper.identityProving();
-                LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
-                return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
+
+                if (configService.enabled(INTERVENTION_REPROVE_VIA_APP_ONLY)) {
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
+                    return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
+                } else if (targetVot == Vot.P1) {
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
+                    return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
+                } else {
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving P2 identity"));
+                    return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
+                }
             }
 
             // PYIC-6901 Currently we just check against the lowest Vot requested for this journey.
