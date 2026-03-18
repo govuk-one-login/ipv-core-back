@@ -272,15 +272,15 @@ public class CheckExistingIdentityHandler
                 throw new AccountInterventionException();
             }
 
-            var isReproveIdentity = AccountInterventionEvaluator.isReprove(fetchedAisState);
+            var isInterventionReprove = AccountInterventionEvaluator.isReprove(fetchedAisState);
 
-            clientOAuthSessionItem.setReproveIdentity(isReproveIdentity);
+            clientOAuthSessionItem.setReproveIdentity(isInterventionReprove);
             clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
 
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            if (isReproveIdentity) {
+            if (isInterventionReprove) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
@@ -307,7 +307,7 @@ public class CheckExistingIdentityHandler
                             userId,
                             govukSigninJourneyId,
                             auditEventUser,
-                            isReproveIdentity)
+                            isInterventionReprove)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
@@ -340,7 +340,7 @@ public class CheckExistingIdentityHandler
             String userId,
             String govukSigninJourneyId,
             AuditEventUser auditEventUser,
-            boolean isReproveIdentity) {
+            boolean isInterventionReprove) {
         try {
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
@@ -366,9 +366,9 @@ public class CheckExistingIdentityHandler
 
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey. Once PYIC-8896 has been live long enough that no-one will be on F2F
-            // reproving journey we should
-            // remove the isReprovingWithF2f() check.
-            if (isReproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)) {
+            // reproving journey we should remove the isInterventionReprovingWithF2f() check.
+            if (isInterventionReprove
+                    && !isInterventionReprovingWithF2f(asyncCriStatus, credentialBundle)) {
                 EmbeddedMetricHelper.identityProving();
                 LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
                 return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
@@ -810,7 +810,7 @@ public class CheckExistingIdentityHandler
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
     }
 
-    private boolean isReprovingWithF2f(
+    private boolean isInterventionReprovingWithF2f(
             AsyncCriStatus f2fStatus, VerifiableCredentialBundle vcBundle) {
         // does the user have a F2F response item that was created in response to an intervention,
         // and they're returning to core with a pending identity
