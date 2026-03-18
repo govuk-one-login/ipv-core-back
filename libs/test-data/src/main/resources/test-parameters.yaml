@@ -350,6 +350,7 @@ core:
   featureFlags:
     pendingF2FResetEnabled: false
     repeatFraudCheckEnabled: true
+    reproveViaAppOnlyEnabled: false
     parseVcClasses: true
     sqsAsync: true
     kidJarHeaderEnabled: true
@@ -367,6 +368,9 @@ core:
     disableTestFeatureFlag:
       featureFlags:
         testFeatureFlag: false
+    reproveViaAppOnly:
+      featureFlags:
+        reproveViaAppOnlyEnabled: true
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true

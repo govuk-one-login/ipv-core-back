@@ -354,6 +354,7 @@ core:
   featureFlags:
     pendingF2FResetEnabled: false
     repeatFraudCheckEnabled: true
+    reproveViaAppOnlyEnabled: false
     parseVcClasses: true
     sqsAsync: true
     kidJarHeaderEnabled: true
@@ -368,6 +369,9 @@ core:
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
+    reproveViaAppOnly:
+      featureFlags:
+        reproveViaAppOnlyEnabled: true
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
