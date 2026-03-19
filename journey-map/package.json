@@ -18,7 +18,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "dotenv": "17.2.3",
+    "dotenv": "17.3.1",
     "express": "5.2.0",
     "mermaid": "11.12.3",
     "svg-pan-zoom": "3.6.2",
