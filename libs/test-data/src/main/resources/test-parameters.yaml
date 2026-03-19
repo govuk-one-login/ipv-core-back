@@ -348,9 +348,9 @@ core:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
-    resetIdentity: false
     pendingF2FResetEnabled: false
     repeatFraudCheckEnabled: true
+    reproveViaAppOnlyEnabled: false
     parseVcClasses: true
     sqsAsync: true
     kidJarHeaderEnabled: true
@@ -368,12 +368,12 @@ core:
     disableTestFeatureFlag:
       featureFlags:
         testFeatureFlag: false
+    reproveViaAppOnly:
+      featureFlags:
+        reproveViaAppOnlyEnabled: true
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
-    clearUsersIdentity:
-      featureFlags:
-        resetIdentity: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true

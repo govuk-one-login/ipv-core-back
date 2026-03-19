@@ -78,7 +78,8 @@ Feature: Fail open scenarios
       | final reprove identity | ERROR               | AIS_FORCED_USER_IDENTITY_VERIFY |
 
   Scenario: Reprove identity journey with AIS failure succeeds
-    Given the subject already has the following credentials
+    Given I activate the 'reproveViaAppOnly' feature set
+    And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
@@ -87,8 +88,8 @@ Feature: Fail open scenarios
     When I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
+    Then I get a 'prove-identity-again-app' page response
+    When I submit a 'useApp' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get an 'identify-device' page response
@@ -97,7 +98,7 @@ Feature: Fail open scenarios
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
   # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -105,8 +106,6 @@ Feature: Fail open scenarios
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response
-    When I submit a 'next' event
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response

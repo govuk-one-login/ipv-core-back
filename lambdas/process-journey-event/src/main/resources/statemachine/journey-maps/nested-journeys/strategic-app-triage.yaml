@@ -13,13 +13,15 @@ entryEvents:
         targetState: DAD_IPHONE_START_SESSION
       dadAndroid:
         targetState: DAD_ANDROID_START_SESSION
-    targetState: IDENTIFY_DEVICE
+    targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+    targetEntryEvent: identify-device
     journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
 
 nestedJourneyStates:
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
   IDENTIFY_DEVICE:
     response:
       type: page
@@ -35,6 +37,7 @@ nestedJourneyStates:
       appTriageSmartphone:
         targetState: MAM_SELECT_SMARTPHONE
 
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
   SELECT_DEVICE_PAGE:
     response:
       type: page
@@ -45,6 +48,7 @@ nestedJourneyStates:
       smartphone:
         targetState: MAM_SELECT_SMARTPHONE
 
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
   DAD_SELECT_SMARTPHONE:
     response:
       type: page
@@ -69,7 +73,8 @@ nestedJourneyStates:
       anotherWay:
         exitEventToEmit: anotherWay
       back:
-        targetState: DAD_SELECT_SMARTPHONE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: dad-select-smartphone
 
   DAD_IPHONE_START_SESSION:
     response:
@@ -106,8 +111,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
-      enhanced-verification:
-        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -139,8 +142,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
-      enhanced-verification:
-        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -275,6 +276,7 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
+  # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
   MAM_SELECT_SMARTPHONE:
     response:
       type: page
@@ -432,7 +434,8 @@ nestedJourneyStates:
       returnToRp:
         exitEventToEmit: returnToRp
       useApp:
-        targetState: DAD_SELECT_SMARTPHONE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: dad-select-smartphone
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
     response:
@@ -461,27 +464,14 @@ nestedJourneyStates:
         exitEventToEmit: next
       anotherWay:
         exitEventToEmit: anotherWay
-      # PYIC-8896 remove incompleteDlAuthCheckInvalidDl once no-one can be in strategic-app-handle-result / DL_DETAILS_INCORRECT_PAGE
-      incompleteDlAuthCheckInvalidDl:
-        exitEventToEmit: incompleteDlAuthCheckInvalidDl
       incompleteDlAuthCheckInvalidDlv2:
         targetState: DL_DETAILS_INCORRECT_PAGE
       failedDlAuthCheckInvalidDl:
         exitEventToEmit: failedDlAuthCheckInvalidDl
+      failWithNoCiFromApp:
+        exitEventToEmit: anotherWay
       failWithCiFromApp:
         exitEventToEmit: failWithCiFromApp
-      # PYIC-8896 remove retryApp once no-one can be in strategic-app-handle-result / DL_DETAILS_INCORRECT_PAGE
-      retryApp:
-        checkJourneyContext:
-          mamIphone:
-            targetState: MOBILE_IPHONE_START_SESSION
-          mamAndroid:
-            targetState: MOBILE_ANDROID_START_SESSION
-          dadIphone:
-            targetState: DAD_IPHONE_START_SESSION
-          dadAndroid:
-            targetState: DAD_ANDROID_START_SESSION
-        targetState: IDENTIFY_DEVICE
 
   DL_DETAILS_INCORRECT_PAGE:
     response:
@@ -499,6 +489,24 @@ nestedJourneyStates:
             targetState: DAD_IPHONE_START_SESSION
           dadAndroid:
             targetState: DAD_ANDROID_START_SESSION
-        targetState: IDENTIFY_DEVICE
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
       end:
         exitEventToEmit: incompleteDlAuthCheckInvalidDl
+
+  STRATEGIC_APP_IDENTIFY_DEVICE:
+    nestedJourney: STRATEGIC_APP_IDENTIFY_DEVICE
+    exitEvents:
+      mamIphone:
+        targetState: MOBILE_IPHONE_START_SESSION
+      mamAndroid:
+        targetState: MOBILE_ANDROID_START_SESSION
+      dadIphone:
+        targetState: DAD_IPHONE_START_SESSION
+      dadAndroid:
+        targetState: DAD_ANDROID_START_SESSION
+      noDevice:
+        targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+        checkJourneyContext:
+          internationalAddress:
+            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
