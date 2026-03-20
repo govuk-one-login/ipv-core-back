@@ -91,6 +91,8 @@ class StateMachineInitializerTest {
 
         // page state assertions
         assertEquals("page-id-for-page-state", pageState.getResponse().value().get("page"));
+        assertEquals(
+                Map.of("reason", "dropout"), pageState.getResponse().value().get("pageContext"));
         assertEquals(parentState, pageState.getParentObj());
         assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(

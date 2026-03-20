@@ -299,6 +299,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals("page-id-for-page-state", output.get("page"));
+        assertEquals(Map.of("reason", "dropout"), output.get("pageContext"));
     }
 
     @Test
