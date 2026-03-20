@@ -101,6 +101,8 @@ states:
       type: page
       pageId: page-ipv-success
       context: updateIdentity
+      pageContext:
+        journeyType: coi
     events:
       next:
         targetState: RETURN_TO_RP

@@ -50,6 +50,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-select-smartphone
       context: dad
+      pageContext:
+        deviceType: dad
     events:
       iphone:
         targetState: DAD_IPHONE_START_SESSION
@@ -94,6 +96,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: iphone
+      pageContext:
+        smartphone: iphone
     events:
       next:
         exitEventToEmit: next
@@ -127,6 +131,9 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: iphone-appOnly
+      pageContext:
+        smartphone: iphone
+        isAppOnly: true
     events:
       next:
         exitEventToEmit: next
@@ -180,6 +187,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: android
+      pageContext:
+        smartphone: android
     events:
       next:
         exitEventToEmit: next
@@ -211,6 +220,9 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: android-appOnly
+      pageContext:
+        smartphone: android
+        isAppOnly: true
     events:
       next:
         exitEventToEmit: next
@@ -280,6 +292,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-select-smartphone
       context: mam
+      pageContext:
+        deviceType: mam
     events:
       iphone:
         targetState: MOBILE_IPHONE_START_SESSION
@@ -311,6 +325,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: iphone
+      pageContext:
+        smartphone: iphone
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -331,6 +347,9 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: iphone-appOnly
+      pageContext:
+        smartphone: iphone
+        isAppOnly: true
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -379,6 +398,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: android
+      pageContext:
+        smartphone: android
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -399,6 +420,9 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-mobile-download-app
       context: android-appOnly
+      pageContext:
+        smartphone: android
+        isAppOnly: true
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -488,6 +512,8 @@ nestedJourneyStates:
       type: page
       pageId: uk-driving-licence-details-not-correct
       context: strategicApp
+      pageContext:
+        isFromStrategicApp: true
     events:
       next:
         checkJourneyContext:

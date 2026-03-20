@@ -116,6 +116,8 @@ states:
       type: page
       pageId: prove-identity-another-way
       context: noF2f
+      pageContext:
+        allowF2f: false
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
@@ -129,6 +131,8 @@ states:
       type: page
       pageId: page-dcmaw-success
       context: coiNoAddress
+      pageContext:
+        noAddress: true
     events:
       next:
         targetState: FRAUD_CHECK_NAMES_ONLY
@@ -152,6 +156,8 @@ states:
       type: page
       pageId: page-update-name
       context: repeatFraudCheck
+      pageContext:
+        journeyType: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_NAMES_ONLY
@@ -184,6 +190,8 @@ states:
       type: page
       pageId: page-update-name
       context: repeatFraudCheck
+      pageContext:
+        journeyType: repeatFraudCheck
     events:
       update-name:
         targetState: RESET_IDENTITY_NAMES_WITH_ADDRESS
@@ -241,6 +249,8 @@ states:
       type: page
       pageId: prove-identity-another-way
       context: noF2f
+      pageContext:
+        allowF2f: false
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
@@ -268,6 +278,8 @@ states:
       type: page
       pageId: prove-identity-another-way
       context: noF2f
+      pageContext:
+        allowF2f: false
     events:
       anotherTypePhotoId:
         targetState: APP_DOC_CHECK_NAMES_WITH_ADDRESS
@@ -280,6 +292,8 @@ states:
       type: page
       pageId: page-dcmaw-success
       context: coiAddress
+      pageContext:
+        noAddress: true
     events:
       next:
         targetState: ADDRESS_AND_FRAUD
@@ -332,6 +346,8 @@ states:
       type: page
       pageId: page-ipv-success
       context: updateIdentity
+      pageContext:
+        journeyType: coi
     events:
       next:
         targetState: RETURN_TO_RP

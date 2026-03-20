@@ -61,6 +61,8 @@ nestedJourneyStates:
       type: page
       pageId: sorry-technical-problem
       context: dlOrPassportMitigation
+      pageContext:
+        reason: dlOrPassportMitigation
     events:
       tryAgain:
         targetState: CRI_UK_PASSPORT
@@ -79,6 +81,8 @@ nestedJourneyStates:
       type: page
       pageId: prove-identity-another-type-photo-id
       context: passport
+      pageContext:
+        invalidDoc: passport
     events:
       otherPhotoId:
         targetState: CRI_DRIVING_LICENCE
@@ -132,6 +136,8 @@ nestedJourneyStates:
       type: page
       pageId: sorry-technical-problem
       context: dlOrPassportMitigation
+      pageContext:
+        reason: dlOrPassportMitigation
     events:
       tryAgain:
         targetState: CRI_DRIVING_LICENCE
@@ -150,6 +156,8 @@ nestedJourneyStates:
       type: page
       pageId: prove-identity-another-type-photo-id
       context: drivingLicence
+      pageContext:
+        invalidDoc: drivingLicence
     events:
       otherPhotoId:
         targetState: CRI_UK_PASSPORT
@@ -193,6 +201,8 @@ nestedJourneyStates:
       type: page
       pageId: prove-identity-no-other-photo-id
       context: drivingLicence
+      pageContext:
+        invalidDoc: drivingLicence
     events:
       back:
         targetState: CRI_DRIVING_LICENCE
@@ -234,6 +244,8 @@ nestedJourneyStates:
       type: page
       pageId: prove-identity-no-other-photo-id
       context: passport
+      pageContext:
+        invalidDoc: passport
     events:
       back:
         targetState: CRI_UK_PASSPORT

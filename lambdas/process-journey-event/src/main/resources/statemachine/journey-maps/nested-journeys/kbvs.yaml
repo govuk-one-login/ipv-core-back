@@ -50,6 +50,8 @@ nestedJourneyStates:
       type: page
       pageId: sorry-technical-problem
       context: kbvCriError
+      pageContext:
+        reason: kbvCriError
     events:
       tryAgain:
         targetState: PRE_EXPERIAN_PAGE

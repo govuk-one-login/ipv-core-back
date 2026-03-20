@@ -309,6 +309,8 @@ states:
       type: page
       pageId: photo-id-security-questions-find-another-way
       context: dropout
+      pageContext:
+        reason: dropout
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -558,6 +560,8 @@ states:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
       context: dropout
+      pageContext:
+        reason: dropout
     events:
       f2f:
         targetJourney: F2F_HAND_OFF

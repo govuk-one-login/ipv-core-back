@@ -74,6 +74,8 @@ nestedJourneyStates:
       type: page
       pageId: uk-driving-licence-details-not-correct
       context: strategicApp
+      pageContext:
+        isFromStrategicApp: true
     events:
       next:
         exitEventToEmit: retryApp

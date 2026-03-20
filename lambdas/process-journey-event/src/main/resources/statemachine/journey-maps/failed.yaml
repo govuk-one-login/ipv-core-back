@@ -229,6 +229,8 @@ states:
       type: page
       pageId: sorry-could-not-confirm-details
       context: existingIdentityValid
+      pageContext:
+        isExistingIdentityValid: true
     events:
       returnToRp:
         targetState: REINSTATE_EXISTING_IDENTITY
@@ -240,6 +242,8 @@ states:
       type: page
       pageId: sorry-could-not-confirm-details
       context: existingIdentityInvalid
+      pageContext:
+        isExistingIdentityValid: false
     events:
       returnToRp:
         targetState: RETURN_TO_RP
@@ -261,6 +265,8 @@ states:
       type: page
       pageId: update-details-failed
       context: existingIdentityInvalid
+      pageContext:
+        isExistingIdentityInvalid: true
     events:
       delete:
         targetState: DELETE_HANDOVER_PAGE
@@ -322,6 +328,8 @@ states:
       type: page
       pageId: pyi-no-match
       context: bankAccount
+      pageContext:
+        reason: bankAccount
     events:
       next:
         targetState: RETURN_TO_RP
@@ -331,6 +339,8 @@ states:
       type: page
       pageId: pyi-no-match
       context: nino
+      pageContext:
+        reason: nino
     events:
       next:
         targetState: RETURN_TO_RP

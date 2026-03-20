@@ -112,6 +112,8 @@ states:
       type: page
       pageId: sorry-technical-problem
       context: f2fCriError
+      pageContext:
+        reason: f2fCriError
     events:
       tryAgain:
         targetState: CRI_F2F
@@ -127,6 +129,8 @@ states:
       type: page
       pageId: sorry-technical-problem
       context: kbvMitigation
+      pageContext:
+        reason: kbvMitigation
     events:
       tryAgain:
         targetState: CRI_F2F
