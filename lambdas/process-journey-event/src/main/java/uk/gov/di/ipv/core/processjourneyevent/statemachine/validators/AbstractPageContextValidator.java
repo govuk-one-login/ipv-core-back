@@ -1,14 +1,15 @@
-package uk.gov.di.ipv.core.processjourneyevent.statemachine;
+package uk.gov.di.ipv.core.processjourneyevent.statemachine.validators;
 
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StepResponseException;
 
 import java.util.Map;
 import java.util.Set;
 
-public interface IPageContextValidator {
-    Map<String, Set<String>> getAllowedContextsByPage();
+public abstract class AbstractPageContextValidator implements IPageContextValidator {
+    abstract Map<String, Set<String>> getAllowedContextsByPage();
 
-    default void validate(String pageId, Map<String, Object> pageContext) {
+    @Override
+    public void validate(String pageId, Map<String, Object> pageContext) {
         if (pageContext == null || pageContext.isEmpty()) {
             return;
         }

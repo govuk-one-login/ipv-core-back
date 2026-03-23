@@ -1,9 +1,9 @@
-package uk.gov.di.ipv.core.processjourneyevent.statemachine;
+package uk.gov.di.ipv.core.processjourneyevent.statemachine.validators;
 
 import java.util.Map;
 import java.util.Set;
 
-public class PageContextValidator implements IPageContextValidator {
+public class PageContextValidator extends AbstractPageContextValidator {
     private static final Map<String, Set<String>> ALLOWED_CONTEXTS_BY_PAGE =
             Map.ofEntries(
                     Map.entry("delete-handover", Set.of("journeyType")),
@@ -33,7 +33,7 @@ public class PageContextValidator implements IPageContextValidator {
                             Set.of("journeyType", "allowAccountDeletion")));
 
     @Override
-    public Map<String, Set<String>> getAllowedContextsByPage() {
+    Map<String, Set<String>> getAllowedContextsByPage() {
         return ALLOWED_CONTEXTS_BY_PAGE;
     }
 }

@@ -46,9 +46,9 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.PageContextValidator;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.TestPageContextValidator;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.PageContextValidator;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.TestPageContextValidator;
 
 import java.io.IOException;
 import java.time.Instant;
