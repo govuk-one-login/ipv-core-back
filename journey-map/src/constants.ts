@@ -14,6 +14,7 @@ export const JOURNEY_TYPES: Record<string, string> = {
   F2F_PENDING: "F2F pending",
   F2F_FAILED: "F2F failed",
   REVERIFICATION: "Reverification",
+  INTERVENTION_REPROVE_IDENTITY: "Reprove identity for intervention",
 };
 
 export const NESTED_JOURNEY_TYPES: Record<string, string> = {
@@ -21,6 +22,7 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   APP_DOC_CHECK: "App doc check",
   KBVS: "KBVs",
   STRATEGIC_APP_HANDLE_RESULT: "Strategic app handle result",
+  STRATEGIC_APP_IDENTIFY_DEVICE: "Strategic app identify device",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
 };

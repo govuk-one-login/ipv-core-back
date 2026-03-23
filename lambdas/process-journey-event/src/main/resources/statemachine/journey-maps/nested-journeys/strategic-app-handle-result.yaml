@@ -21,7 +21,7 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
-        exitEventToEmit: anotherWay
+        exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
       vcs-not-correlated:
@@ -67,17 +67,3 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
-
-  # PYIC-8896 Remove this state once these changes have been live long enough that no-one should be in this state.
-  DL_DETAILS_INCORRECT_PAGE:
-    response:
-      type: page
-      pageId: uk-driving-licence-details-not-correct
-      context: strategicApp
-      pageContext:
-        isFromStrategicApp: true
-    events:
-      next:
-        exitEventToEmit: retryApp
-      end:
-        exitEventToEmit: incompleteDlAuthCheckInvalidDl

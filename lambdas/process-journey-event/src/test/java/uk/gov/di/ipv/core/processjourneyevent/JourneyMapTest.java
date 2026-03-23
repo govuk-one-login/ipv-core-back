@@ -398,8 +398,11 @@ class JourneyMapTest {
 
                 if (response instanceof CriStepResponse) {
                     var criEvents = new HashSet<>(basicState.getEvents().keySet());
-                    var parentEvents = basicState.getParentObj().getEvents().keySet();
-                    criEvents.addAll(parentEvents);
+                    var parentObj = basicState.getParentObj();
+                    if (parentObj != null) {
+                        var parentEvents = parentObj.getEvents().keySet();
+                        criEvents.addAll(parentEvents);
+                    }
 
                     criStatesAndEvents.add(new StateAndEvents(key, criEvents));
                     allCriEvents.addAll(criEvents);

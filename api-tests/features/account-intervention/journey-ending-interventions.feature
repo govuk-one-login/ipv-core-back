@@ -126,6 +126,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | 06                     |
 
   Scenario Outline: <intervention> intervention during reprove identity journey
+    Given I activate the 'reproveViaAppOnly' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
@@ -135,8 +136,8 @@ Feature: Journey ending interventions
     When I start a new 'medium-confidence' journey
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
+    Then I get a 'prove-identity-again-app' page response
+    When I submit a 'useApp' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get an 'identify-device' page response
@@ -147,15 +148,14 @@ Feature: Journey ending interventions
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
       | Context    | Value   |
       | smartphone | android |
+      | isAppOnly  | true    |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response
-    When I submit a 'next' event
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
