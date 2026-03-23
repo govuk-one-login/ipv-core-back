@@ -117,7 +117,7 @@ states:
       pageId: prove-identity-another-way
       context: noF2f
       pageContext:
-        allowF2f: false
+        removeF2f: true
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
@@ -250,7 +250,7 @@ states:
       pageId: prove-identity-another-way
       context: noF2f
       pageContext:
-        allowF2f: false
+        removeF2f: true
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
@@ -279,7 +279,7 @@ states:
       pageId: prove-identity-another-way
       context: noF2f
       pageContext:
-        allowF2f: false
+        removeF2f: true
     events:
       anotherTypePhotoId:
         targetState: APP_DOC_CHECK_NAMES_WITH_ADDRESS

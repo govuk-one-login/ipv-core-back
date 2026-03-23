@@ -14,7 +14,7 @@ public class PageContextValidator implements IPageContextValidator {
                     Map.entry("page-update-name", Set.of("journeyType")),
                     Map.entry("photo-id-security-questions-find-another-way", Set.of("reason")),
                     Map.entry("prove-identity-another-type-photo-id", Set.of("invalidDoc")),
-                    Map.entry("prove-identity-another-way", Set.of("allowF2f")),
+                    Map.entry("prove-identity-another-way", Set.of("removeF2f")),
                     Map.entry("prove-identity-no-other-photo-id", Set.of("invalidDoc")),
                     Map.entry("prove-identity-no-photo-id", Set.of("ninoOnly")),
                     Map.entry("pyi-details-deleted", Set.of("journeyType")),
