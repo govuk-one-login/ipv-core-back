@@ -70,7 +70,7 @@ public class OAuthKeyService {
                 .orElseThrow();
     }
 
-    public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) throws ParseException {
+    public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) {
         var keyId = jwsHeader.getKeyID();
         if (keyId == null) {
             LOGGER.error(

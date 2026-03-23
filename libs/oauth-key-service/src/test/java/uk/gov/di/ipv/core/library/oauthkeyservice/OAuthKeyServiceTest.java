@@ -243,7 +243,7 @@ class OAuthKeyServiceTest {
         }
 
         @Test
-        void shouldThrowWhenNoKeyIdInHeader() throws Exception {
+        void shouldThrowWhenNoKeyIdInHeader() {
             // Arrange
             var headerNoKid = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(null).build();
 
@@ -254,7 +254,7 @@ class OAuthKeyServiceTest {
         }
 
         @Test
-        void shouldThrowWhenKeyIdNotFoundInJwkSet() throws Exception {
+        void shouldThrowWhenKeyIdNotFoundInJwkSet() {
             // Arrange
             when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
             when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
@@ -268,7 +268,7 @@ class OAuthKeyServiceTest {
         }
 
         @Test
-        void shouldThrowIfJwksUrlNotConfiguredForClient() throws Exception {
+        void shouldThrowIfJwksUrlNotConfiguredForClient() {
             // Arrange
             when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
             when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);

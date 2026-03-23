@@ -11,7 +11,6 @@ import lombok.extern.jackson.Jacksonized;
 public class ClientConfig {
     @NonNull String id;
     @NonNull String issuer;
-    @NonNull String publicKeyMaterialForCoreToVerify;
     @NonNull String validRedirectUrls;
     @NonNull String validScopes;
     String jwksUrl; // Null for API test client configs

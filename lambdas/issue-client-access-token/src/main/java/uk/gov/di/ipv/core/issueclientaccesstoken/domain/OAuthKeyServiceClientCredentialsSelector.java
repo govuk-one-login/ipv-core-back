@@ -8,10 +8,11 @@ import com.nimbusds.oauth2.sdk.auth.verifier.ClientCredentialsSelector;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 
 import java.security.PublicKey;
-import java.text.ParseException;
 import java.util.List;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
@@ -51,11 +52,15 @@ public class OAuthKeyServiceClientCredentialsSelector implements ClientCredentia
         try {
             return List.of(
                     oAuthKeyService.getClientSigningKey(clientId, jwsHeader).toECPublicKey());
-        } catch (ParseException | JOSEException e) {
+        } catch (JOSEException e) {
             throw new InvalidClientException(
                     String.format(
                             "Could not parse public key material for client ID '%s': %s",
                             clientId, e.getMessage()));
+        } catch (ConfigParseException | ConfigParameterNotFoundException e) {
+            throw new InvalidClientException(
+                    String.format(
+                            "Invalid client configuration for '%s': %s", clientId, e.getMessage()));
         }
     }
 }

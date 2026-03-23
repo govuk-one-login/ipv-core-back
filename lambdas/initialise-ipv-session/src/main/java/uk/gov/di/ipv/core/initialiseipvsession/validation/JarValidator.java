@@ -18,6 +18,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
@@ -210,10 +211,14 @@ public class JarValidator {
                         OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                                 "JWT signature validation failed"));
             }
-        } catch (JOSEException | ParseException e) {
+        } catch (JOSEException
+                | ParseException
+                | ConfigParseException
+                | ConfigParameterNotFoundException e) {
             LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            "Failed to parse JWT when attempting signature validation"));
+                    LogHelper.buildErrorMessage(
+                                    "Failed to parse JWT when attempting signature validation", e)
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Failed to parse JWT when attempting signature validation"));

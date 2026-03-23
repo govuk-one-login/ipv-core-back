@@ -12,10 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 
 import java.security.PublicKey;
-import java.text.ParseException;
 
 import static com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod.CLIENT_SECRET_JWT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -78,9 +78,9 @@ class OAuthKeyServiceClientCredentialsSelectorTest {
     }
 
     @Test
-    void selectPublicKeysShouldThrowIfOAuthKeyServiceThrows() throws Exception {
+    void selectPublicKeysShouldThrowIfOAuthKeyServiceThrows() {
         when(mockOAuthKeyService.getClientSigningKey(eq(TEST_CLIENT_ID), any()))
-                .thenThrow(new ParseException("oops", 0));
+                .thenThrow(new ConfigParseException("oops"));
 
         assertThrows(
                 InvalidClientException.class,
