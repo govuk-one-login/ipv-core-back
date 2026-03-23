@@ -11,9 +11,13 @@ Feature: P1 app journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an '<device>' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device>'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device>' and pageContext
+      | Context    | Value    |
+      | smartphone | <device> |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -44,9 +48,13 @@ Feature: P1 app journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -54,15 +62,21 @@ Feature: P1 app journey
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get an 'page-multiple-doc-check' page response with context 'nino'
+    Then I get an 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      | Context   | Value |
+      | allowNino | true  |
 
   Scenario: MAM journey credential fails with ci and goes to no match page
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -76,33 +90,49 @@ Feature: P1 app journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit a 'neither' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino'
+    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      | Context   | Value |
+      | allowNino | true  |
 
   Scenario: MAM journey detected iphone
     When I submit an 'mobileDownloadIphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
 
   Scenario: MAM journey detected iphone - invalid OS version
     When I submit an 'appTriageSmartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
 
   Scenario: MAM journey detected android
     When I submit an 'mobileDownloadAndroid' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
+      | Context    | Value  |
+      | smartphone | android |
 
   Scenario Outline: : DAD successful app journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an '<device>' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device>'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device>' and pageContext
+      | Context    | Value    |
+      | smartphone | <device> |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -130,8 +160,12 @@ Feature: P1 app journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino'
+    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      | Context   | Value |
+      | allowNino | true  |

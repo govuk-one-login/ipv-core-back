@@ -9,9 +9,13 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -41,11 +45,15 @@ Feature: P1 Journeys with DL authoritative source check
 
   Scenario: Auth check access_denied
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
 
     # Attempt 1 - retry after viewing prove-identity-another-way
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -55,13 +63,17 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit an 'anotherTypePhotoId' event
 
     # Attempt 2 - give up
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -71,7 +83,9 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit a 'returnToRp' event
@@ -93,9 +107,13 @@ Feature: P1 Journeys with DL authoritative source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -122,7 +140,9 @@ Feature: P1 Journeys with DL authoritative source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
     Then I get a 'prove-identity-another-way' page response
     When I submit a 'postOffice' event

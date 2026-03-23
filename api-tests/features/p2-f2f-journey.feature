@@ -77,7 +77,9 @@ Feature: P2 F2F journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -172,7 +174,9 @@ Feature: P2 F2F journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event

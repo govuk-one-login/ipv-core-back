@@ -5,6 +5,7 @@ import {
   Then,
   When,
   Status,
+  DataTable,
 } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
@@ -244,14 +245,49 @@ When(
 );
 
 Then(
-  /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?( with a non-empty clientOAuthSessionId)?$/,
+  /^I get an? '([\w-]+)' page response( with a non-empty clientOAuthSessionId)?$/,
   function (
     this: World,
     expectedPage: string,
-    expectedContext: string,
     clientOAuthSessionIdExists:
       | " with a non-empty clientOAuthSessionId"
       | undefined,
+  ) {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    assert.ok(
+      isPageResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
+    assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
+
+    if (clientOAuthSessionIdExists) {
+      assert.ok(!!this.lastJourneyEngineResponse.clientOAuthSessionId);
+    }
+
+    assert.ok(
+      this.lastJourneyEngineResponse.context == null,
+      `Expected context to be null but got ${this.lastJourneyEngineResponse.context}`,
+    );
+    assert.ok(
+      this.lastJourneyEngineResponse.pageContext == null,
+      `Expected pageContext to be null but got ${JSON.stringify(this.lastJourneyEngineResponse.pageContext)}`,
+    );
+  },
+);
+
+Then(
+  /^I get an? '([\w-]+)' page response( with a non-empty clientOAuthSessionId)? with context '([\w-]+)' and pageContext?$/,
+  function (
+    this: World,
+    expectedPage: string,
+    clientOAuthSessionIdExists:
+      | " with a non-empty clientOAuthSessionId"
+      | undefined,
+    expectedContext: string,
+    dataTable: DataTable,
   ): void {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
@@ -268,11 +304,27 @@ Then(
       `Expected context ${expectedContext} but got ${this.lastJourneyEngineResponse.context}`,
     );
 
+    assert.deepEqual(
+      this.lastJourneyEngineResponse.pageContext || {},
+      Object.fromEntries(
+        dataTable
+          .rows()
+          .map(([key, value]) => [key, parseDataTableValue(value)]),
+      ),
+    );
+
     if (clientOAuthSessionIdExists) {
       assert.ok(!!this.lastJourneyEngineResponse.clientOAuthSessionId);
     }
   },
 );
+
+function parseDataTableValue(value: string): string | number | boolean {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  const num = Number(value);
+  return Number.isNaN(num) ? value : num;
+}
 
 When(
   /I submit an? '([\w-]+)' event( in a separate session)?/,

@@ -32,7 +32,9 @@ Feature: Failed update details
       When I submit 'alice-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+        | Context                 | Value |
+        | isExistingIdentityValid | true  |
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -49,14 +51,21 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+        | Context                 | Value |
+        | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -74,9 +83,14 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -97,14 +111,21 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
 
       # User stops here and abandons journey
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
@@ -129,7 +150,9 @@ Feature: Failed update details
       When I submit 'alice-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+        | Context                 | Value |
+        | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -138,7 +161,9 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - fail with CI (invalid identity)
       And I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       # SI record invalidated as part of reset-session-identity lambda
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'
@@ -147,14 +172,21 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+        | Context                 | Value |
+        | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -163,7 +195,9 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - fail with no CI (invalid identity)
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       # SI record invalidated as part of reset-session-identity lambda
@@ -171,14 +205,21 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid'
+      Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+        | Context                   | Value |
+        | isExistingIdentityInvalid | true  |
       When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -187,21 +228,30 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - user abandons journey
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       # SI record invalidated as part of reset-session-identity lambda
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
 
       # User stops here and abandons journey
       And I have a GPG45 stored identity record type with a 'P1' vot that is 'invalid'

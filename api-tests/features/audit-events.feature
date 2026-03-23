@@ -12,9 +12,13 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -45,7 +49,9 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -184,13 +190,17 @@ Feature: Audit Events
 
     Given I activate the 'pendingF2FResetEnabled' feature set
     When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
+    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details' and pageContext
+      | Context            | Value |
+      | allowDeleteDetails | true  |
     When I submit a 'next' event
     Then I get a 'pyi-f2f-delete-details' page response
     When I submit a 'next' event
     Then I get a 'pyi-confirm-delete-details' page response
     When I submit a 'next' event
-    Then I get a 'pyi-details-deleted' page response with context 'f2f'
+    Then I get a 'pyi-details-deleted' page response with context 'f2f' and pageContext
+      | Context     | Value |
+      | journeyType | f2f   |
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -233,7 +243,9 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -265,9 +277,13 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -309,9 +325,13 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -348,7 +368,9 @@ Feature: Audit Events
     When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+    Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -360,7 +382,9 @@ Feature: Audit Events
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      | Context  | Value |
+      | ninoOnly | true  |
     When I submit an 'next' event
     Then I get a 'claimedIdentity' CRI response
     And audit events for 'no-photo-id-journey' are recorded [local only]
@@ -395,9 +419,14 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
+      | isAppOnly  | true    |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -406,7 +435,9 @@ Feature: Audit Events
     When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+    Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+      | Context   | Value |
+      | noAddress | true  |
     When I submit a 'next' event
     Then I get a 'address' CRI response
     When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -416,7 +447,9 @@ Feature: Audit Events
     When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -445,9 +478,13 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     And audit events for 'strategic-app-journey' are recorded [local only]
 
   @InitialisesDCMAWSessionState @QualityGateRegressionTest
@@ -462,9 +499,13 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
@@ -522,7 +563,9 @@ Feature: Audit Events
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event

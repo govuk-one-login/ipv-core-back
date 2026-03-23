@@ -12,11 +12,15 @@ Feature: Stored Identity Service - CIMIT journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
 
     Scenario Outline: Alternate doc mitigation via passport or DL
       When I submit an '<initialCri>' event
@@ -106,7 +110,9 @@ Feature: Stored Identity Service - CIMIT journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -198,11 +204,15 @@ Feature: Stored Identity Service - CIMIT journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub

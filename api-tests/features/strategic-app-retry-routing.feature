@@ -13,9 +13,13 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -25,9 +29,13 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
 
     Examples:
       | device-type |
@@ -42,18 +50,26 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
 
     Examples:
       | device-type |
@@ -68,9 +84,14 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
+      | isAppOnly  | true          |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -80,9 +101,14 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
+      | isAppOnly  | true          |
 
     Examples:
       | device-type |
@@ -97,18 +123,28 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
+      | isAppOnly  | true          |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly' and pageContext
+      | Context    | Value         |
+      | smartphone | <device-type> |
+      | isAppOnly  | true          |
 
     Examples:
       | device-type |

@@ -11,7 +11,9 @@ Feature: P2 Web document journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -57,7 +59,9 @@ Feature: P2 Web document journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -142,7 +146,9 @@ Feature: P2 Web document journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -173,7 +179,9 @@ Feature: P2 Web document journey
       When I submit a '<initial-cri>' event
       Then I get a '<initial-cri>' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-another-type-photo-id' page response with context '<prove-identity-another-type-photo-id-context>'
+      Then I get a 'prove-identity-another-type-photo-id' page response with context '<prove-identity-another-type-photo-id-context>' and pageContext
+        | Context    | Value                                          |
+        | invalidDoc | <prove-identity-another-type-photo-id-context> |
       When I submit a 'otherPhotoId' event
       Then I get a '<alternative-doc-cri>' CRI response
       When I submit '<alternative-doc>' details to the CRI stub
@@ -206,7 +214,9 @@ Feature: P2 Web document journey
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
+      Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport' and pageContext
+        | Context    | Value    |
+        | invalidDoc | passport |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -216,7 +226,9 @@ Feature: P2 Web document journey
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
+      Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport' and pageContext
+        | Context    | Value    |
+        | invalidDoc | passport |
       When I submit an 'f2f' event
       Then I get a 'pyi-post-office' page response
       When I submit a 'next' event
@@ -285,7 +297,9 @@ Feature: P2 Web document journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -309,15 +323,21 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
       When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context     | Value |
+        | deviceType  | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -335,7 +355,9 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
       When I submit an 'f2f' event
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub
@@ -354,13 +376,17 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
       When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event

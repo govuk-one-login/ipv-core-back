@@ -10,9 +10,13 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -62,7 +66,9 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -84,7 +90,9 @@ Feature: Return exit codes
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+      | Context | Value   |
+      | reason  | dropout |
     When I submit a 'f2f' event
     Then I get a 'f2f' CRI response
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
@@ -113,9 +121,13 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -144,9 +156,13 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -179,7 +195,9 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -222,9 +240,13 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -257,9 +279,13 @@ Feature: Return exit codes
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback

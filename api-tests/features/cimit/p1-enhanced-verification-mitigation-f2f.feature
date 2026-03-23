@@ -8,11 +8,15 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino'
+    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      | Context   | Value |
+      | allowNino | true  |
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -92,7 +96,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -195,7 +201,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -230,9 +238,13 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

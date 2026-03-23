@@ -10,11 +10,15 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -38,9 +42,13 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
 
     Scenario: Same session DCMAW enhanced verification mitigation - successful
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -72,7 +80,9 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
       When I submit an 'end' event
       Then I get a 'prove-identity-another-way' page response
       When I submit a 'postOffice' event
@@ -107,11 +117,15 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
       When I submit a 'next' event
 
       # Attempt 2 - retry after viewing prove-identity-another-way
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -121,13 +135,17 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
       When I submit an 'end' event
       Then I get a 'prove-identity-another-way' page response
       When I submit an 'anotherTypePhotoId' event
 
       # Attempt 3 - give up
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -137,7 +155,9 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
       When I submit an 'end' event
       Then I get a 'prove-identity-another-way' page response
       When I submit a 'returnToRp' event
@@ -163,9 +183,13 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
 
     Scenario: Separate session DCMAW enhanced verification mitigation - successful - DL
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -245,11 +269,15 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
       When I submit a 'drivingLicence' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -273,9 +301,13 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -306,9 +338,13 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

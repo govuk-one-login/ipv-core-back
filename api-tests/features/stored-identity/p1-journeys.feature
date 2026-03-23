@@ -11,9 +11,13 @@ Feature: Stored Identity - P1 journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -46,9 +50,13 @@ Feature: Stored Identity - P1 journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -77,9 +85,13 @@ Feature: Stored Identity - P1 journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -112,11 +124,15 @@ Feature: Stored Identity - P1 journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino'
+    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      | Context   | Value |
+      | allowNino | true  |
     When I submit an 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -143,7 +159,9 @@ Feature: Stored Identity - P1 journeys
 
   Scenario: Successful stored identity storage - P1 no photo ID
     When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      | Context  | Value  |
+      | ninoOnly | true   |
     When I submit an 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -176,7 +194,9 @@ Feature: Stored Identity - P1 journeys
 
   Scenario: Successful stored identity storage - P1 F2F journey
     When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      | Context  | Value  |
+      | ninoOnly | true   |
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event

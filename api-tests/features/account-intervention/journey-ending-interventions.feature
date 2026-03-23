@@ -12,9 +12,13 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -50,9 +54,13 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -85,9 +93,13 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -131,9 +143,13 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'

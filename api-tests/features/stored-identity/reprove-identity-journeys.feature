@@ -24,9 +24,13 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -94,9 +98,13 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -118,7 +126,9 @@ Feature: Reprove Identity Journey
 
     Scenario: User reproves with F2F
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+        | Context  | Value  |
+        | ninoOnly | true   |
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit a 'next' event

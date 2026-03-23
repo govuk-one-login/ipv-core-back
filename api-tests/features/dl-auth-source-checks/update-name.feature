@@ -20,9 +20,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
+      | isAppOnly  | true    |
     When the async DCMAW CRI produces a '<details>' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -31,13 +36,17 @@ Feature: Update name journey with DL auth source check
     When I submit '<details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      | Context   | Value |
+      | noAddress | true  |
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
     When I submit '<fraud-details>' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -58,9 +67,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      | Context    | Value   |
+      | smartphone | android |
+      | isAppOnly  | true    |
     When the async DCMAW CRI produces a '<details>' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -69,7 +83,9 @@ Feature: Update name journey with DL auth source check
     When I submit '<details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+    Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+      | Context   | Value |
+      | noAddress | true  |
     When I submit a 'next' event
     Then I get a 'address' CRI response
     When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -79,7 +95,9 @@ Feature: Update name journey with DL auth source check
     When I submit '<fraud-details>' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -101,9 +119,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-given-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -115,9 +138,14 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -125,13 +153,17 @@ Feature: Update name journey with DL auth source check
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      | Context   | Value |
+      | noAddress | true  |
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -146,9 +178,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -160,9 +197,14 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-passport-valid' VC
   # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -170,7 +212,9 @@ Feature: Update name journey with DL auth source check
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+    Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+      | Context   | Value |
+      | noAddress | true  |
     When I submit a 'next' event
     Then I get an 'address' CRI response
     When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -180,7 +224,9 @@ Feature: Update name journey with DL auth source check
     When I submit 'kenneth-changed-family-name-and-address-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      | Context     | Value |
+      | journeyType | coi   |
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -195,9 +241,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-given-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -209,9 +260,13 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+      | Context   | Value |
+      | removeF2f | true  |
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -232,9 +287,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -244,11 +304,16 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit a 'next' event
 
     # Attempt 2 - retry after viewing prove-identity-another-way
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -258,13 +323,20 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+      | Context   | Value |
+      | removeF2f | true  |
     When I submit an 'anotherTypePhotoId' event
 
     # Attempt 3 - give up
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -274,9 +346,13 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      | Context            | Value |
+      | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+      | Context   | Value |
+      | removeF2f | true  |
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -296,9 +372,14 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | true   |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -310,7 +391,9 @@ Feature: Update name journey with DL auth source check
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+    Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      | Context                 | Value |
+      | isExistingIdentityValid | false |
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
