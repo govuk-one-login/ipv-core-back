@@ -38,6 +38,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-select-smartphone
       context: dad
+      pageContext:
+        deviceType: dad
     events:
       iphone:
         exitEventToEmit: dadIphone
@@ -51,6 +53,8 @@ nestedJourneyStates:
       type: page
       pageId: pyi-triage-select-smartphone
       context: mam
+      pageContext:
+        deviceType: mam
     events:
       iphone:
         exitEventToEmit: mamIphone
