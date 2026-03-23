@@ -153,6 +153,6 @@ public class TracingHttpClient extends HttpClient {
     private static HttpClient getOTelInstrumentedHttpClient() {
         return JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
                 .build()
-                .newHttpClient(HttpClient.newHttpClient());
+                .wrap(HttpClient.newHttpClient());
     }
 }
