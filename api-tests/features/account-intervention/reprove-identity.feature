@@ -20,9 +20,13 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -193,9 +197,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -234,9 +243,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | iphone  |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -295,7 +309,9 @@ Feature: Reprove Identity Journey
       When I submit a 'end' event
       Then I get a 'need-id-prove-identity-again-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity'
+      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+        | Context     | Value   |
+        | journeyType | reprove |
 
     Scenario: User doesn't have a smartphone, deletes account
       Given the subject already has the following credentials
@@ -315,11 +331,15 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'need-prove-identity-again-no-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity'
+      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+        | Context     | Value   |
+        | journeyType | reprove |
 
     Scenario: Desktop user fails to prove identity and returns to RP
       Given the subject already has the following credentials
@@ -339,9 +359,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -371,9 +396,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -403,9 +433,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | iphone  |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -438,9 +473,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | iphone  |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -477,9 +517,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | iphone  |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -494,7 +539,10 @@ Feature: Reprove Identity Journey
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct-reprove' page response
       When I submit a 'next' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | iphone  |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -527,7 +575,9 @@ Feature: Reprove Identity Journey
       When I submit an 'end' event
       Then I get a 'need-prove-identity-again-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity'
+      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+        | Context     | Value   |
+        | journeyType | reprove |
 
     Scenario: User retries after CI from authoritative source check and is denied due to CI.
       # Driving licence auth source check fails with a CI
@@ -551,9 +601,14 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'

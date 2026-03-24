@@ -18,11 +18,15 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'non-uk-no-app-options' page response
       When I submit a 'useApp' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
 
     Scenario: International address user decides to return to RP from DCMAW exit page
       When I submit a 'international' event
@@ -32,7 +36,9 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'non-uk-no-app-options' page response
       When I submit a 'returnToRp' event
@@ -47,9 +53,14 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -81,9 +92,14 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -105,9 +121,14 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -144,14 +165,22 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       When I submit a 'preferNoApp' event
       Then I get a 'non-uk-no-app-options' page response
       # Change their mind and go back
       When I submit a 'useApp' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       # Decide to abandon again
       When I submit a 'preferNoApp' event
       Then I get a 'non-uk-no-app-options' page response
@@ -173,9 +202,14 @@ Feature: P2 International Address
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

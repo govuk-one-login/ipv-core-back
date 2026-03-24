@@ -184,6 +184,9 @@ states:
       type: page
       pageId: update-name-date-birth
       context: rfcAccountDeletion
+      pageContext:
+        allowAccountDeletion: true
+        journeyType: rfc
     events:
       continue:
         targetState: DELETE_HANDOVER_PAGE
@@ -241,6 +244,8 @@ states:
       type: page
       pageId: page-ipv-success
       context: repeatFraudCheck
+      pageContext:
+        journeyType: coi
     events:
       next:
         targetState: RETURN_TO_RP

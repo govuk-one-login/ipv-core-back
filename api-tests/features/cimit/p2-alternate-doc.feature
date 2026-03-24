@@ -11,7 +11,9 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -99,7 +101,9 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get a '<mitigating-cri>' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-no-other-photo-id' page response with context '<prove-identity-no-other-photo-id-context>'
+      Then I get a 'prove-identity-no-other-photo-id' page response with context '<invalid-doc-context>' and pageContext
+        | Context    | Value                 |
+        | invalidDoc | <invalid-doc-context> |
       When I submit a 'back' event
       Then I get a '<mitigating-cri>' CRI response
       When I submit '<mitigating-doc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
@@ -124,9 +128,9 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
       Then I get a 'P2' identity
 
       Examples:
-        | initial-cri    | initial-invalid-doc                        | no-match-page                            | mitigating-cri | mitigating-doc               | prove-identity-no-other-photo-id-context |
-        | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid | drivingLicence                           |
-        | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       | passport                                 |
+        | initial-cri    | initial-invalid-doc                        | no-match-page                            | mitigating-cri | mitigating-doc               | invalid-doc-context |
+        | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid | drivingLicence      |
+        | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       | passport            |
 
     Scenario: Returns P0 when user continues to service from prove-identity-no-other-photo-id page during CI mitigation
       When I submit a 'ukPassport' event
@@ -136,7 +140,9 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-no-other-photo-id' page response with context 'drivingLicence'
+      Then I get a 'prove-identity-no-other-photo-id' page response with context 'drivingLicence' and pageContext
+        | Context    | Value          |
+        | invalidDoc | drivingLicence |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -204,7 +210,9 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event

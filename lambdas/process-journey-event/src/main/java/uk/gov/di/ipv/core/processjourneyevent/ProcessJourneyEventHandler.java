@@ -53,6 +53,8 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.IPageContextValidator;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.PageContextValidator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -81,7 +83,7 @@ public class ProcessJourneyEventHandler
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     private static final StepResponse PROBLEM_DIFFERENT_BROWSER_PAGE_RESPONSE =
-            new PageStepResponse("problem-different-browser", null, null);
+            new PageStepResponse("problem-different-browser", null, null, null);
     private static final String BACK_EVENT = "back";
     private static final Set<IpvJourneyTypes> UPDATE_JOURNEY_TYPES =
             Set.of(UPDATE_NAME, UPDATE_ADDRESS);
@@ -103,14 +105,19 @@ public class ProcessJourneyEventHandler
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
             List<String> nestedJourneyTypes,
-            CimitUtilityService cimitUtilityService)
+            CimitUtilityService cimitUtilityService,
+            IPageContextValidator pageContextValidator)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.stateMachines =
-                loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
+                loadStateMachines(
+                        journeyTypes,
+                        stateMachineInitializerMode,
+                        nestedJourneyTypes,
+                        pageContextValidator);
         this.cimitUtilityService = cimitUtilityService;
     }
 
@@ -135,7 +142,8 @@ public class ProcessJourneyEventHandler
                 loadStateMachines(
                         List.of(IpvJourneyTypes.values()),
                         StateMachineInitializerMode.STANDARD,
-                        nestedJourneyTypes);
+                        nestedJourneyTypes,
+                        new PageContextValidator());
         this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
@@ -447,7 +455,8 @@ public class ProcessJourneyEventHandler
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
-            List<String> nestedJourneyTypes)
+            List<String> nestedJourneyTypes,
+            IPageContextValidator pageContextValidator)
             throws IOException {
         EnumMap<IpvJourneyTypes, StateMachine> stateMachinesMap =
                 new EnumMap<>(IpvJourneyTypes.class);
@@ -456,7 +465,10 @@ public class ProcessJourneyEventHandler
                     journeyType,
                     new StateMachine(
                             new StateMachineInitializer(
-                                    journeyType, stateMachineInitializerMode, nestedJourneyTypes)));
+                                    journeyType,
+                                    stateMachineInitializerMode,
+                                    nestedJourneyTypes,
+                                    pageContextValidator)));
         }
         return stateMachinesMap;
     }

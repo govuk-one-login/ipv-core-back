@@ -7,4 +7,8 @@ public class StepResponseException extends RuntimeException {
     public StepResponseException(Throwable e) {
         super(e);
     }
+
+    public StepResponseException(String message) {
+        super(message);
+    }
 }

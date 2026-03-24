@@ -108,6 +108,8 @@ states:
       type: page
       pageId: prove-identity-another-way
       context: noF2f
+      pageContext:
+        removeF2f: true
     events:
       anotherTypePhotoId:
         targetState: APP_DOC_CHECK

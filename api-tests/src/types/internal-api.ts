@@ -34,6 +34,7 @@ export interface PageResponse {
   page: string;
   statusCode?: string;
   context?: string;
+  pageContext?: object;
   type?: string;
   clientOAuthSessionId?: string;
 }

@@ -29,7 +29,9 @@ Feature: Repeat fraud check journeys
       When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -38,26 +40,37 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -68,15 +81,22 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Family Name Update
       # Repeat fraud check with update family name
       When I submit a 'family-name-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -85,7 +105,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
 
     Scenario: Fraud 6 Months Expiry + Address Update
       # Repeat fraud check with update address
@@ -98,7 +120,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -109,15 +133,22 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Address and Family Name Update
       # Repeat fraud check with update address and family name
       When I submit a 'family-name-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -126,7 +157,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -136,7 +169,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -147,20 +182,29 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and given name
       When I submit a 'given-names-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -170,48 +214,80 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
 
     Scenario: Unsupported Changes
       # Repeat fraud check with various unsupported events and back navigation
       When I submit a 'dob' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'dob-family' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'dob-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'family-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-family-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-family-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-family' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-family-given' event
-      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
+      Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
+        | Context              | Value |
+        | journeyType          | rfc   |
+        | allowAccountDeletion | true  |
 
   Rule: Match M1C Fraud Check Not Applicable
     Background:
@@ -232,7 +308,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -241,26 +319,37 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -277,7 +366,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -286,20 +377,29 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and family name
       When I submit a 'given-names-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -309,7 +409,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -334,7 +436,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -343,26 +447,37 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Given Name Update
       # Repeat fraud check with update name
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -377,7 +492,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -386,20 +503,29 @@ Feature: Repeat fraud check journeys
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and family name
       When I submit a 'given-names-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -407,7 +533,9 @@ Feature: Repeat fraud check journeys
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -429,7 +557,9 @@ Feature: Repeat fraud check journeys
       When I submit expired 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -448,26 +578,37 @@ Feature: Repeat fraud check journeys
       When I start a new 'high-medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

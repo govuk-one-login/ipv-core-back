@@ -18,16 +18,34 @@ export const getAuditEventsForJourneyType = async (journeyName: string) => {
   ) as AuditEvent[];
 };
 
+const diffAuditEventNames = (
+  actualEvents: AuditEvent[],
+  expectedEvents: AuditEvent[],
+): string => {
+  const actualNames = actualEvents.map((e) => e.event_name);
+  const expectedNames = expectedEvents.map((e) => e.event_name);
+  const missingFromActual = expectedNames.filter(
+    (n) => !actualNames.includes(n),
+  );
+  const unexpectedInActual = actualNames.filter(
+    (n) => !expectedNames.includes(n),
+  );
+  return [
+    missingFromActual.length ? `Missing: [${missingFromActual}]` : "",
+    unexpectedInActual.length ? `Unexpected: [${unexpectedInActual}]` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+};
+
 export const compareAuditEvents = (
   actualAuditEvents: AuditEvent[],
   expectedAuditEvent: AuditEvent[],
 ): ObjectPartialEqualityResult => {
   if (actualAuditEvents.length !== expectedAuditEvent.length) {
-    const expectedEventNames = expectedAuditEvent.map((e) => e.event_name);
-    const actualEventNames = actualAuditEvents.map((e) => e.event_name);
     return {
       isPartiallyEqual: false,
-      errorMessage: `Expected (${expectedAuditEvent.length}) and actual (${actualAuditEvents.length}) events are not the same length. Expected: ${expectedEventNames} but found: ${actualEventNames}`,
+      errorMessage: `Expected (${expectedAuditEvent.length}) and actual (${actualAuditEvents.length}) events are not the same length. ${diffAuditEventNames(actualAuditEvents, expectedAuditEvent)}`,
     };
   }
 

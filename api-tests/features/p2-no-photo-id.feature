@@ -58,7 +58,9 @@ Feature: P2 no photo id journey
         | context   | "bank_account" |
       Then I get a 'bav' CRI response
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response with context 'bankAccount'
+      Then I get a 'pyi-no-match' page response with context 'bankAccount' and pageContext
+        | Context | Value       |
+        | reason  | bankAccount |
 
     Scenario: P2 no photo id journey - Experian - NINO dropout:
       When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -82,7 +84,9 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'pyi-no-match' page response with context 'nino'
+      Then I get a 'pyi-no-match' page response with context 'nino' and pageContext
+        | Context | Value |
+        | reason  | nino  |
 
     Scenario: P2 no photo id journey - Experian - Drops out via thin file or failed checks
       When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -108,7 +112,9 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
 
     Scenario: P2 no photo id journey - Experian - Breaching KBV CI
       When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -168,7 +174,9 @@ Feature: P2 no photo id journey
         | context   | "bank_account" |
       Then I get a 'bav' CRI response
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response with context 'bankAccount'
+      Then I get a 'pyi-no-match' page response with context 'bankAccount' and pageContext
+        | Context | Value       |
+        | reason  | bankAccount |
 
   Rule: Abandon
     Background: Abandon P2 no photo id journey
@@ -332,7 +340,9 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
 
     Scenario: P2 no photo id journey - KBV dropout - Strategic app
       Given I activate the 'strategicApp' feature set

@@ -14,11 +14,15 @@ Feature: Stored Identity - M1C Outcomes
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
 
     Scenario Outline: Successful M1C P2 identity via DCMAW via <details>
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a '<details>' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -75,11 +79,16 @@ Feature: Stored Identity - M1C Outcomes
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
 
     Scenario: Successful M1C P2 identity via DCMAW using chipped passport
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
       When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -113,20 +122,29 @@ Feature: Stored Identity - M1C Outcomes
 
     Scenario Outline: Existing M1C address and name change - <selected-name-change>
       When I submit a '<selected-name-change>' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly'
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
       When the async DCMAW CRI produces a '<details>' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -134,7 +152,9 @@ Feature: Stored Identity - M1C Outcomes
       When I submit '<fraud-details>' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

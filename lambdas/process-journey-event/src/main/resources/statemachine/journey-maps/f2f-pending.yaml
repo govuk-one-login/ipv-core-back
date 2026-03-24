@@ -31,6 +31,8 @@ states:
       type: page
       context: f2f-delete-details
       pageId: page-ipv-pending
+      pageContext:
+        allowDeleteDetails: true
     events:
       next:
         targetState: F2F_DELETE_PAGE
@@ -78,6 +80,8 @@ states:
       type: page
       context: f2f
       pageId: pyi-details-deleted
+      pageContext:
+        journeyType: f2f
     events:
       next:
         targetJourney: INITIAL_JOURNEY_SELECTION

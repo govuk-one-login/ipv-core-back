@@ -13,6 +13,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.Journey;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.IPageContextValidator;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.PageContextValidator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +36,7 @@ public class StateMachineInitializer {
     private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
     private final StateMachineInitializerMode mode;
     private final List<String> nestedJourneyTypes;
+    private final IPageContextValidator pageContextValidator;
 
     public StateMachineInitializer(IpvJourneyTypes journeyType) {
         this(
@@ -40,16 +44,19 @@ public class StateMachineInitializer {
                 StateMachineInitializerMode.STANDARD,
                 Stream.of(NestedJourneyTypes.values())
                         .map(NestedJourneyTypes::getJourneyName)
-                        .toList());
+                        .toList(),
+                new PageContextValidator());
     }
 
     public StateMachineInitializer(
             IpvJourneyTypes journeyType,
             StateMachineInitializerMode mode,
-            List<String> nestedJourneyTypes) {
+            List<String> nestedJourneyTypes,
+            IPageContextValidator pageContextValidator) {
         this.journeyType = journeyType;
         this.mode = mode;
         this.nestedJourneyTypes = nestedJourneyTypes;
+        this.pageContextValidator = pageContextValidator;
     }
 
     private final IpvJourneyTypes journeyType;
@@ -88,6 +95,11 @@ public class StateMachineInitializer {
         state.setJourneyType(journeyType);
         linkBasicStateParents(state, journeyStates);
         initializeBasicStateEvents(state, eventTargetsStatesMap, nestedJourneyExitEvents);
+
+        if (state.getResponse() instanceof PageStepResponse pageStepResponse) {
+            pageContextValidator.validate(
+                    pageStepResponse.getPageId(), pageStepResponse.getPageContext());
+        }
     }
 
     private void linkBasicStateParents(BasicState state, Map<String, State> journeyStates) {

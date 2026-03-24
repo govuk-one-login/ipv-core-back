@@ -8,7 +8,9 @@ Feature: Disabled CRI journeys
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+        | Context  | Value  |
+        | ninoOnly | true   |
 
     Scenario: A P2 journey takes the user down the web route instead
       Given I activate the 'dcmawAsyncDisabled' feature set
@@ -44,7 +46,9 @@ Feature: Disabled CRI journeys
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+        | Context | Value   |
+        | reason  | dropout |
       When I submit an 'appTriage' event
       Then I get a 'pyi-technical' page response
 
@@ -97,7 +101,9 @@ Feature: Disabled CRI journeys
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+        | Context  | Value  |
+        | ninoOnly | true   |
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
@@ -121,7 +127,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -140,7 +148,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -148,7 +158,9 @@ Feature: Disabled CRI journeys
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit an 'access-denied' event
-      Then I get a 'prove-identity-another-type-photo-id' page response with context '<context>'
+      Then I get a 'prove-identity-another-type-photo-id' page response with context '<context>' and pageContext
+        | Context    | Value     |
+        | invalidDoc | <context> |
       When I submit an 'f2f' event
       Then I get a 'pyi-escape' page response
 
@@ -185,7 +197,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -204,9 +218,13 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -252,7 +270,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -273,7 +293,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event

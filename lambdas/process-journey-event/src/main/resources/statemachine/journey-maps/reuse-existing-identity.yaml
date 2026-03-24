@@ -234,6 +234,8 @@ states:
       type: page
       pageId: update-name-date-birth
       context: reuse
+      pageContext:
+        journeyType: reuse
     events:
       continue:
         targetState: RETURN_TO_RP

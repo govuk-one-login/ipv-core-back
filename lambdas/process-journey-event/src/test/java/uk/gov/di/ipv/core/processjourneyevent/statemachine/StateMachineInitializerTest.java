@@ -8,10 +8,12 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StepResponseException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.validators.TestPageContextValidator;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,6 +33,8 @@ class StateMachineInitializerTest {
                     "nested-journey-definition",
                     "doubly-nested-definition",
                     "strategic-app-triage");
+    private final TestPageContextValidator testPageContextValidator =
+            new TestPageContextValidator();
 
     @ParameterizedTest
     @EnumSource
@@ -44,8 +48,24 @@ class StateMachineInitializerTest {
         when(modeMock.getPathPart()).thenReturn("some-rubbish");
         StateMachineInitializer initializer =
                 new StateMachineInitializer(
-                        INITIAL_JOURNEY_SELECTION, modeMock, TEST_NESTED_JOURNEY_TYPES);
+                        INITIAL_JOURNEY_SELECTION,
+                        modeMock,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        testPageContextValidator);
         assertThrows(JourneyMapDeserializationException.class, initializer::initialize);
+    }
+
+    @Test
+    void initializeShouldThrowIfPageContextValidationFails() {
+        var journeyTypeMock = mock(IpvJourneyTypes.class);
+        when(journeyTypeMock.getPath()).thenReturn("journey-map-with-invalid-page-contexts");
+        StateMachineInitializer initializer =
+                new StateMachineInitializer(
+                        journeyTypeMock,
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        testPageContextValidator);
+        assertThrows(StepResponseException.class, initializer::initialize);
     }
 
     @Test
@@ -57,7 +77,8 @@ class StateMachineInitializerTest {
                 new StateMachineInitializer(
                         journeyTypeMock,
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        testPageContextValidator);
 
         var jsonMappingException =
                 assertThrows(JsonMappingException.class, stateMachineInitializer::initialize);
@@ -72,7 +93,8 @@ class StateMachineInitializerTest {
                 new StateMachineInitializer(
                                 INITIAL_JOURNEY_SELECTION,
                                 StateMachineInitializerMode.TEST,
-                                TEST_NESTED_JOURNEY_TYPES)
+                                TEST_NESTED_JOURNEY_TYPES,
+                                testPageContextValidator)
                         .initialize();
 
         State parentState = journeyMap.get("PARENT_STATE");
@@ -91,6 +113,8 @@ class StateMachineInitializerTest {
 
         // page state assertions
         assertEquals("page-id-for-page-state", pageState.getResponse().value().get("page"));
+        assertEquals(
+                Map.of("reason", "dropout"), pageState.getResponse().value().get("pageContext"));
         assertEquals(parentState, pageState.getParentObj());
         assertEquals(INITIAL_JOURNEY_SELECTION, pageState.getJourneyType());
         assertEquals(

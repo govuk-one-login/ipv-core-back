@@ -227,6 +227,8 @@ states:
       type: page
       pageId: prove-identity-no-photo-id
       context: nino
+      pageContext:
+        ninoOnly: true
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
@@ -243,6 +245,8 @@ states:
       type: page
       context: nino
       pageId: page-multiple-doc-check
+      pageContext:
+        allowNino: true
     events:
       ukPassport:
         targetState: WEB_DL_OR_PASSPORT
@@ -299,6 +303,8 @@ states:
       type: page
       pageId: photo-id-security-questions-find-another-way
       context: dropout
+      pageContext:
+        reason: dropout
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -521,6 +527,8 @@ states:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
       context: dropout
+      pageContext:
+        reason: dropout
     events:
       f2f:
         targetJourney: F2F_HAND_OFF

@@ -11,7 +11,9 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -60,9 +62,13 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -144,11 +150,15 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
-      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation' and pageContext
+        | Context | Value                   |
+        | reason  | dlOrPassportMitigation  |
       When I submit a 'tryAgain' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
-      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation' and pageContext
+        | Context | Value                   |
+        | reason  | dlOrPassportMitigation  |
       When I submit a 'tryAgain' event
       Then I get a '<mitigating_cri>' CRI response
       When I submit '<mitigating_details>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
@@ -193,11 +203,15 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
-      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation' and pageContext
+        | Context | Value                   |
+        | reason  | dlOrPassportMitigation  |
       When I submit a 'tryAgain' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
-      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation' and pageContext
+        | Context | Value                   |
+        | reason  | dlOrPassportMitigation  |
       When I submit a 'tryAgain' event
       Then I get a '<mitigating_cri>' CRI response
       When I submit '<mitigating_details>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
@@ -234,7 +248,9 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
-      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'dlOrPassportMitigation' and pageContext
+        | Context | Value                   |
+        | reason  | dlOrPassportMitigation  |
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -256,7 +272,9 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -278,7 +296,9 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'sorry-technical-problem' page response with context 'kbvCriError'
+      Then I get a 'sorry-technical-problem' page response with context 'kbvCriError' and pageContext
+        | Context | Value       |
+        | reason  | kbvCriError |
 
     Scenario: Unexpected error from Experian KBV CRI - try CRI again
       When I submit a 'tryAgain' event
@@ -300,9 +320,13 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -366,7 +390,9 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
-      Then I get a 'sorry-technical-problem' page response with context 'f2fCriError'
+      Then I get a 'sorry-technical-problem' page response with context 'f2fCriError' and pageContext
+        | Context | Value       |
+        | reason  | f2fCriError |
 
     Scenario: Unexpected error from F2F CRI - try CRI again
       When I submit a 'tryAgain' event
@@ -391,9 +417,13 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -457,11 +487,15 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
       When I submit an 'end' event
       Then I get a 'pyi-post-office' page response
       When I submit a 'next' event
@@ -479,7 +513,9 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'sorry-technical-problem' page response with context 'f2fCriError'
+      Then I get a 'sorry-technical-problem' page response with context 'f2fCriError' and pageContext
+        | Context | Value       |
+        | reason  | f2fCriError |
 
     Scenario: Unexpected error from F2F CRI - try app route
       When I submit a 'app' event
@@ -489,9 +525,13 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -515,7 +555,9 @@ Feature: Handling unexpected CRI errors
 
     Scenario: Unexpected error from F2F CRI - try web route
       When I submit a 'webRoute' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino'
+      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+        | Context   | Value |
+        | allowNino | true  |
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -550,9 +592,13 @@ Feature: Handling unexpected CRI errors
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When I submit a 'preferNoApp' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -582,7 +628,9 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
-      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation' and pageContext
+        | Context | Value         |
+        | reason  | kbvMitigation |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       Then I get an OAuth response
@@ -595,9 +643,13 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
-      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation' and pageContext
+        | Context | Value         |
+        | reason  | kbvMitigation |
       When I submit a 'app' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -633,15 +685,21 @@ Feature: Handling unexpected CRI errors
       When I call the CRI stub with attributes and get a 'server_error' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
-      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation'
+      Then I get a 'sorry-technical-problem' page response with context 'kbvMitigation' and pageContext
+        | Context | Value         |
+        | reason  | kbvMitigation |
       When I submit a 'app' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
