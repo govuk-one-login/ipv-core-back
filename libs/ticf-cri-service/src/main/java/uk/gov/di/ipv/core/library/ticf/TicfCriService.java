@@ -98,13 +98,19 @@ public class TicfCriService {
                                     .map(VerifiableCredential::getVcString)
                                     .toList());
 
+            var requestBody = OBJECT_MAPPER.writeValueAsString(ticfCriRequest);
+            LOGGER.info(
+                    LogHelper.buildLogMessage("TICF CRI request body size")
+                            .with(
+                                    "requestBodyBytes",
+                                    requestBody.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+                                            .length));
+
             var httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(ticfCriConfig.getCredentialUrl())
                             .timeout(Duration.ofSeconds(ticfCriConfig.getRequestTimeout()))
-                            .POST(
-                                    HttpRequest.BodyPublishers.ofString(
-                                            OBJECT_MAPPER.writeValueAsString(ticfCriRequest)));
+                            .POST(HttpRequest.BodyPublishers.ofString(requestBody));
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
