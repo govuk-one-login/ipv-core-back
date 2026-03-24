@@ -109,10 +109,11 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            var jwksUrl = configService.getConfiguration().getClientConfig(clientId).getJwksUrl();
-            if (jwksUrl == null) {
+            var clientConfig = configService.getConfiguration().getClientConfig(clientId);
+            if (clientConfig == null) {
                 return null;
             }
+            String jwksUrl = clientConfig.getJwksUrl();
             return URI.create(jwksUrl);
         } catch (ConfigParameterNotFoundException e) {
             return null;
@@ -124,18 +125,18 @@ public class OAuthKeyService {
                 cachedJwkSets.compute(
                         jwksUrl,
                         (key, existingCachedJWKSet) -> {
-                            if (existingCachedJWKSet == null || existingCachedJWKSet.isExpired()) {
-                                try {
-                                    return createCachedJWKSet(jwksUrl);
-                                } catch (Exception e) {
-                                    LOGGER.error(
-                                            LogHelper.buildErrorMessage(
-                                                            "Error creating cached JWK set", e)
-                                                    .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
-                                    return existingCachedJWKSet;
-                                }
+                            if (existingCachedJWKSet != null && !existingCachedJWKSet.isExpired()) {
+                                return existingCachedJWKSet;
                             }
-                            return existingCachedJWKSet;
+                            try {
+                                return createCachedJWKSet(jwksUrl);
+                            } catch (Exception e) {
+                                LOGGER.error(
+                                        LogHelper.buildErrorMessage(
+                                                        "Error creating cached JWK set", e)
+                                                .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
+                                return existingCachedJWKSet;
+                            }
                         });
         if (cachedJWKSet == null) {
             throw new ConfigParseException(

@@ -268,11 +268,10 @@ class OAuthKeyServiceTest {
         }
 
         @Test
-        void shouldThrowIfJwksUrlNotConfiguredForClient() {
+        void shouldThrowIfClientConfigNotFound() {
             // Arrange
             when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
-            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
-            when(mockClientConfig.getJwksUrl()).thenReturn(null);
+            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(null);
 
             // Act & Assert
             assertThrows(
