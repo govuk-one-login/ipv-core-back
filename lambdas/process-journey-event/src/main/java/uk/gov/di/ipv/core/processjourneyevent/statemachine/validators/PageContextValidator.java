@@ -28,9 +28,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry(
                             "uk-driving-licence-details-not-correct", Set.of("isFromStrategicApp")),
                     Map.entry("update-details-failed", Set.of("isExistingIdentityInvalid")),
-                    Map.entry(
-                            "update-name-date-birth",
-                            Set.of("journeyType", "allowAccountDeletion")));
+                    Map.entry("update-name-date-birth", Set.of("journeyType")));
 
     @Override
     Map<String, Set<String>> getAllowedContextsByPage() {
