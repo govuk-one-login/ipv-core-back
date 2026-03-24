@@ -7,6 +7,8 @@ public class PageContextValidator extends AbstractPageContextValidator {
     private static final Map<String, Set<String>> ALLOWED_CONTEXTS_BY_PAGE =
             Map.ofEntries(
                     Map.entry("delete-handover", Set.of("journeyType")),
+                    Map.entry(
+                            "need-more-information-confirm-change-details", Set.of("journeyType")),
                     Map.entry("no-photo-id-security-questions-find-another-way", Set.of("reason")),
                     Map.entry("page-dcmaw-success", Set.of("noAddress")),
                     Map.entry("page-ipv-pending", Set.of("allowDeleteDetails")),
