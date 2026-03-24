@@ -20,6 +20,7 @@ Feature: Strategic App Retry Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
+      | isAppOnly  | false         |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -36,6 +37,7 @@ Feature: Strategic App Retry Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
+      | isAppOnly  | false         |
 
     Examples:
       | device-type |
@@ -57,6 +59,7 @@ Feature: Strategic App Retry Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
+      | isAppOnly  | false         |
     When the async DCMAW CRI produces a 'kenneth-changed-family-name-driving-permit-valid' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -70,6 +73,7 @@ Feature: Strategic App Retry Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
+      | isAppOnly  | false         |
 
     Examples:
       | device-type |

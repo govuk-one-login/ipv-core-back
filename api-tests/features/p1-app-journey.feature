@@ -18,6 +18,7 @@ Feature: P1 app journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context '<device>' and pageContext
       | Context    | Value    |
       | smartphone | <device> |
+      | isAppOnly  | false    |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -55,6 +56,7 @@ Feature: P1 app journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -77,6 +79,7 @@ Feature: P1 app journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -109,6 +112,7 @@ Feature: P1 app journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
 
   Scenario: MAM journey detected iphone - invalid OS version
     When I submit an 'appTriageSmartphone' event
@@ -119,8 +123,9 @@ Feature: P1 app journey
   Scenario: MAM journey detected android
     When I submit an 'mobileDownloadAndroid' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
-      | Context    | Value  |
+      | Context    | Value   |
       | smartphone | android |
+      | isAppOnly  | false   |
 
   Scenario Outline: : DAD successful app journey
     When I submit an 'appTriage' event
@@ -133,6 +138,7 @@ Feature: P1 app journey
     Then I get a 'pyi-triage-desktop-download-app' page response with context '<device>' and pageContext
       | Context    | Value    |
       | smartphone | <device> |
+      | isAppOnly  | false    |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'

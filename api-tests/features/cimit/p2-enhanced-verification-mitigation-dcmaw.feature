@@ -47,6 +47,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a '<document-details>' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -116,6 +117,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -192,6 +194,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces an 'access_denied' error response
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
@@ -219,6 +222,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -247,6 +251,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback

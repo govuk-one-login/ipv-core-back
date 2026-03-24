@@ -24,6 +24,7 @@ Feature: Recovery journeys
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
 
     Scenario: Recovery event from CRI state - the same CRI is returned

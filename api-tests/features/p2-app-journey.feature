@@ -19,6 +19,7 @@ Feature: P2 App journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a '<details>' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -66,6 +67,7 @@ Feature: P2 App journey
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -104,6 +106,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -123,6 +126,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       # And the user returns from the app to core-front
       When I pass on the DCMAW callback
       Then I get an 'check-mobile-app-result' page response
@@ -137,6 +141,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
 
     Scenario: MAM journey detected iphone - invalid OS version
       When I submit an 'appTriageSmartphone' event
@@ -155,12 +160,14 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
         | Context    | Value   |
         | smartphone | android |
+        | isAppOnly  | false   |
 
     Scenario: MAM journey detected android
       When I submit an 'mobileDownloadAndroid' event
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
         | Context    | Value   |
         | smartphone | android |
+        | isAppOnly  | false   |
 
     Scenario: MAM Fail DCMAW with no CI - route to alternative IPV method
       When I submit an 'appTriage' event
@@ -173,6 +180,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -212,6 +220,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -248,6 +257,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -272,6 +282,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-desktop-download-app' page response with context '<device>' and pageContext
         | Context    | Value    |
         | smartphone | <device> |
+        | isAppOnly  | false    |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -306,6 +317,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -323,6 +335,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
@@ -364,6 +377,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces an '<error>' error response
       When I wait for 1 seconds for the async credential to be processed
       And I pass on the DCMAW callback

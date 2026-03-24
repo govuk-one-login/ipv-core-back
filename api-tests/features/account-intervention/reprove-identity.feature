@@ -27,6 +27,7 @@ Feature: Reprove Identity Journey
       Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
         | Context    | Value   |
         | smartphone | android |
+        | isAppOnly  | false   |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'

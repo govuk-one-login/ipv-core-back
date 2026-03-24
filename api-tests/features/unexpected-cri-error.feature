@@ -69,6 +69,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -327,6 +328,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -424,6 +426,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -532,6 +535,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -599,6 +603,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When I submit a 'preferNoApp' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
@@ -650,6 +655,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -700,6 +706,7 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

@@ -103,6 +103,7 @@ nestedJourneyStates:
       context: iphone
       pageContext:
         smartphone: iphone
+        isAppOnly: false
     events:
       next:
         exitEventToEmit: next
@@ -190,6 +191,7 @@ nestedJourneyStates:
       context: android
       pageContext:
         smartphone: android
+        isAppOnly: true
     events:
       next:
         exitEventToEmit: next
@@ -329,6 +331,7 @@ nestedJourneyStates:
       context: iphone
       pageContext:
         smartphone: iphone
+        isAppOnly: false
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
@@ -402,6 +405,7 @@ nestedJourneyStates:
       context: android
       pageContext:
         smartphone: android
+        isAppOnly: false
     events:
       next:
         targetState: STRATEGIC_APP_HANDLE_RESULT
