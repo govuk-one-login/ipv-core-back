@@ -56,9 +56,22 @@ class StateMachineInitializerTest {
     }
 
     @Test
-    void initializeShouldThrowIfPageContextValidationFails() {
+    void initializeShouldThrowIfPageContextValidationFailsDueToUnregisteredContext() {
         var journeyTypeMock = mock(IpvJourneyTypes.class);
         when(journeyTypeMock.getPath()).thenReturn("journey-map-with-invalid-page-contexts");
+        StateMachineInitializer initializer =
+                new StateMachineInitializer(
+                        journeyTypeMock,
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        testPageContextValidator);
+        assertThrows(StepResponseException.class, initializer::initialize);
+    }
+
+    @Test
+    void initializeShouldThrowIfPageContextValidationFailsDueToMissingRequiredContext() {
+        var journeyTypeMock = mock(IpvJourneyTypes.class);
+        when(journeyTypeMock.getPath()).thenReturn("journey-map-with-missing-page-contexts");
         StateMachineInitializer initializer =
                 new StateMachineInitializer(
                         journeyTypeMock,

@@ -1,0 +1,12 @@
+states:
+  PAGE_STATE:
+    response:
+      type: page
+      pageId: page-with-missing-context
+      context: test
+      pageContext:
+        reason: dropout
+    parent: PARENT_STATE
+    events:
+      eventOne:
+        targetState: ANOTHER_PAGE_STATE
