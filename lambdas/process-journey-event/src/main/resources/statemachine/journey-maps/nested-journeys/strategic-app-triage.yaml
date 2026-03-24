@@ -191,7 +191,7 @@ nestedJourneyStates:
       context: android
       pageContext:
         smartphone: android
-        isAppOnly: true
+        isAppOnly: false
     events:
       next:
         exitEventToEmit: next

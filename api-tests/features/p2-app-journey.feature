@@ -201,6 +201,7 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces an 'access_denied' error response
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
