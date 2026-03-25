@@ -99,12 +99,7 @@ public class TicfCriService {
                                     .toList());
 
             var requestBody = OBJECT_MAPPER.writeValueAsString(ticfCriRequest);
-            LOGGER.info(
-                    LogHelper.buildLogMessage("TICF CRI request body size")
-                            .with(
-                                    "requestBodyBytes",
-                                    requestBody.getBytes(java.nio.charset.StandardCharsets.UTF_8)
-                                            .length));
+            logTicfRequestSize(requestBody);
 
             var httpRequestBuilder =
                     HttpRequest.newBuilder()
@@ -157,6 +152,20 @@ public class TicfCriService {
                     LogHelper.buildErrorMessage(
                             "Request to TICF CRI failed. Allowing user journey to continue", e));
             return List.of();
+        }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private void logTicfRequestSize(String requestBody) {
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("TICF CRI request body size")
+                            .with(
+                                    "requestBodyBytes",
+                                    requestBody.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+                                            .length));
+        } catch (Exception e) {
+            LOGGER.warn(LogHelper.buildErrorMessage("Failed to log TICF CRI request body size", e));
         }
     }
 
