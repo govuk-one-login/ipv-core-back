@@ -70,44 +70,34 @@ public class OAuthKeyService {
                 .orElseThrow();
     }
 
-    public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) throws ParseException {
+    public ECKey getClientSigningKey(String clientId, JWSHeader jwsHeader) {
         var keyId = jwsHeader.getKeyID();
         if (keyId == null) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                                    "No key ID found in header, returning key from config")
+            LOGGER.error(
+                    LogHelper.buildLogMessage("No key ID found in header")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
-            return ECKey.parse(
-                    configService
-                            .getConfiguration()
-                            .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify());
+            throw new ConfigParseException(
+                    String.format("No key ID found in header for client: %s", clientId));
         }
 
         var jwksUrl = getClientJwksUrl(clientId);
         if (jwksUrl == null) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage("JWKS URL not configured, returning key from config")
+            LOGGER.error(
+                    LogHelper.buildLogMessage("JWKS URL not configured")
                             .with(LOG_CLIENT_ID.getFieldName(), clientId));
-            return ECKey.parse(
-                    configService
-                            .getConfiguration()
-                            .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify());
+            throw new ConfigParameterNotFoundException(
+                    String.format("JWKS URL not configured for client: %s", clientId));
         }
 
         var keyByKeyId = getCachedJWKSet(jwksUrl).filter(SIG_USE_MATCHER).getKeyByKeyId(keyId);
         if (keyByKeyId == null) {
             LOGGER.warn(
-                    LogHelper.buildLogMessage("Key not found by key ID, returning key from config")
+                    LogHelper.buildLogMessage("Key not found by key ID in JWKS")
                             .with(LOG_KEY_ID.getFieldName(), keyId)
                             .with(LOG_CLIENT_ID.getFieldName(), clientId)
                             .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
-            return ECKey.parse(
-                    configService
-                            .getConfiguration()
-                            .getClientConfig(clientId)
-                            .getPublicKeyMaterialForCoreToVerify());
+            throw new ConfigParseException(
+                    String.format("Key %s not found in JWKS for client %s", keyId, clientId));
         }
 
         LOGGER.info(
@@ -119,12 +109,22 @@ public class OAuthKeyService {
 
     private URI getClientJwksUrl(String clientId) {
         try {
-            var jwksUrl = configService.getConfiguration().getClientConfig(clientId).getJwksUrl();
-            if (jwksUrl == null) {
+            var clientConfig = configService.getConfiguration().getClientConfig(clientId);
+
+            if (clientConfig == null) {
                 return null;
             }
-            return URI.create(jwksUrl);
-        } catch (ConfigParameterNotFoundException e) {
+
+            return URI.create(clientConfig.getJwksUrl());
+
+        } catch (ConfigParameterNotFoundException
+                | NullPointerException
+                | IllegalArgumentException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Could not retrieve a valid JWKS URI from client config: {}",
+                            clientId));
+
             return null;
         }
     }
@@ -134,17 +134,18 @@ public class OAuthKeyService {
                 cachedJwkSets.compute(
                         jwksUrl,
                         (key, existingCachedJWKSet) -> {
-                            if (existingCachedJWKSet == null || existingCachedJWKSet.isExpired()) {
-                                try {
-                                    return createCachedJWKSet(jwksUrl);
-                                } catch (Exception e) {
-                                    LOGGER.error(
-                                            LogHelper.buildErrorMessage(
-                                                            "Error creating cached JWK set", e)
-                                                    .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
-                                }
+                            if (existingCachedJWKSet != null && !existingCachedJWKSet.isExpired()) {
+                                return existingCachedJWKSet;
                             }
-                            return existingCachedJWKSet;
+                            try {
+                                return createCachedJWKSet(jwksUrl);
+                            } catch (Exception e) {
+                                LOGGER.error(
+                                        LogHelper.buildErrorMessage(
+                                                        "Error creating cached JWK set", e)
+                                                .with(LOG_JWKS_URL.getFieldName(), jwksUrl));
+                                return existingCachedJWKSet;
+                            }
                         });
         if (cachedJWKSet == null) {
             throw new ConfigParseException(

@@ -62,29 +62,27 @@ core:
     orchStub:
       id: orchStub
       issuer: orchStub
-      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "openid"
       jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
     authStub:
       id: authStub
       issuer: authStub
-      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
       jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
     orchApiTest:
       id: orchApiTest
       issuer: orchApiTest
-      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "openid"
+      jwksUrl: "https://orch.stubs.account.gov.uk/.well-known/jwks.json" # Use orch stub URL for CI/CD compatibility
     authApiTest:
       id: authApiTest
       issuer: authApiTest
-      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
+      jwksUrl: "https://orch.stubs.account.gov.uk/.well-known/jwks.json" # Use orch stub URL for CI/CD compatibility
   ais:
     apiBaseUrl: "https://ais.stubs.account.gov.uk"
   cimit:

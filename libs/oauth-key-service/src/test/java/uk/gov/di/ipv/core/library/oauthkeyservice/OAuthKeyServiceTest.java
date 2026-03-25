@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -138,7 +139,7 @@ class OAuthKeyServiceTest {
 
         @Test
         @MockitoSettings(strictness = LENIENT)
-        void getEncryptionKeyShouldReturnKeyFromConfigIfNoJwksUrlAndNoCache() throws Exception {
+        void getEncryptionKeyShouldThrowIfNoJwksUrlAndNoCache() throws Exception {
             // Arrange
             var oauthConfigNoJwksUrl =
                     OauthCriConfig.builder()
@@ -158,9 +159,7 @@ class OAuthKeyServiceTest {
                     assertThrows(
                             ConfigParameterNotFoundException.class,
                             () -> oAuthKeyService.getEncryptionKey(oauthConfigNoJwksUrl));
-            assertEquals(
-                    "Parameter not found in config: JWKS URL is not set in CRI config",
-                    exception.getMessage());
+            assertTrue(exception.getMessage().contains("JWKS URL is not set in CRI config"));
         }
 
         @Test
@@ -171,6 +170,7 @@ class OAuthKeyServiceTest {
             // Second call returns cached key; HTTP not called again
             var secondKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
 
+            // Assert
             verify(mockHttpClient, times(1)).send(httpRequestCaptor.capture(), any());
             assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), secondKey);
         }
@@ -212,18 +212,19 @@ class OAuthKeyServiceTest {
     }
 
     @Nested
+    @MockitoSettings(strictness = LENIENT)
     class GetClientSigningKey {
         @BeforeEach
         void beforeEach() throws Exception {
-            when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
-            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
-
             when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
         }
 
         @Test
         void shouldReturnKeyByKeyId() throws Exception {
+            // Arrange
+            when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
             when(mockClientConfig.getJwksUrl()).thenReturn(TEST_JWKS_ENDPOINT);
             when(mockHttpResponse.body())
                     .thenReturn(
@@ -233,46 +234,71 @@ class OAuthKeyServiceTest {
                                     EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID,
                                     RSA_ENCRYPTION_PUBLIC_JWK));
 
+            // Act
             var signingKey =
                     oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, JWS_HEADER_WITH_KID);
+
+            // Assert
             assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), signingKey);
         }
 
         @Test
-        @MockitoSettings(strictness = LENIENT)
-        void shouldReturnConfigKeyWhenNoKeyIdInHeader() throws Exception {
-            when(mockClientConfig.getPublicKeyMaterialForCoreToVerify())
-                    .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
-
+        void shouldThrowWhenNoKeyIdInHeader() {
+            // Arrange
             var headerNoKid = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(null).build();
-            var signingKey = oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, headerNoKid);
 
-            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID), signingKey);
+            // Act & Assert
+            assertThrows(
+                    ConfigParseException.class,
+                    () -> oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, headerNoKid));
         }
 
         @Test
-        void shouldReturnConfigKeyWhenKeyIdNotFoundInJwkSet() throws Exception {
+        void shouldThrowWhenKeyIdNotFoundInJwkSet() {
+            // Arrange
+            when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
             when(mockClientConfig.getJwksUrl()).thenReturn(TEST_JWKS_ENDPOINT);
             when(mockHttpResponse.body()).thenReturn("{\"keys\":[]}");
-            when(mockClientConfig.getPublicKeyMaterialForCoreToVerify())
-                    .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
 
-            var signingKey =
-                    oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, JWS_HEADER_WITH_KID);
-            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID), signingKey);
+            // Act & Assert
+            assertThrows(
+                    ConfigParseException.class,
+                    () -> oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, JWS_HEADER_WITH_KID));
         }
 
         @Test
-        @MockitoSettings(strictness = LENIENT)
-        void shouldReturnConfigKeyIfJwksUrlNotConfiguredForClient() throws Exception {
-            when(mockClientConfig.getJwksUrl())
-                    .thenThrow(new ConfigParameterNotFoundException("boop"));
-            when(mockClientConfig.getPublicKeyMaterialForCoreToVerify())
-                    .thenReturn(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID);
+        void shouldThrowIfClientConfigNotFound() {
+            // Arrange
+            when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(null);
 
-            var signingKey =
+            // Act & Assert
+            assertThrows(
+                    ConfigParameterNotFoundException.class,
+                    () -> oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, JWS_HEADER_WITH_KID));
+        }
+
+        @Test
+        void shouldReturnExpiredCacheIfJwksFetchFails() throws Exception {
+            // Arrange
+            when(mockConfigService.getOauthKeyCacheDurationMins()).thenReturn(0L);
+            when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+            when(mockConfig.getClientConfig(TEST_CLIENT_ID)).thenReturn(mockClientConfig);
+            when(mockClientConfig.getJwksUrl()).thenReturn(TEST_JWKS_ENDPOINT);
+            when(mockHttpResponse.body())
+                    .thenReturn(String.format("{\"keys\":[%s]}", EC_PRIVATE_KEY_JWK));
+
+            // Act
+            oAuthKeyService.getClientSigningKey(
+                    TEST_CLIENT_ID, JWS_HEADER_WITH_KID); // First call caches
+
+            when(mockHttpResponse.statusCode()).thenReturn(500);
+            var secondKey =
                     oAuthKeyService.getClientSigningKey(TEST_CLIENT_ID, JWS_HEADER_WITH_KID);
-            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK_WITH_DIFFERENT_KID), signingKey);
+
+            // Assert
+            assertEquals(ECKey.parse(EC_PRIVATE_KEY_JWK), secondKey);
         }
     }
 }
