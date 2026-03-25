@@ -110,12 +110,21 @@ public class OAuthKeyService {
     private URI getClientJwksUrl(String clientId) {
         try {
             var clientConfig = configService.getConfiguration().getClientConfig(clientId);
+
             if (clientConfig == null) {
                 return null;
             }
-            String jwksUrl = clientConfig.getJwksUrl();
-            return URI.create(jwksUrl);
-        } catch (ConfigParameterNotFoundException e) {
+
+            return URI.create(clientConfig.getJwksUrl());
+
+        } catch (ConfigParameterNotFoundException
+                | NullPointerException
+                | IllegalArgumentException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Could not retrieve a valid JWKS URI from client config: {}",
+                            clientId));
+
             return null;
         }
     }
