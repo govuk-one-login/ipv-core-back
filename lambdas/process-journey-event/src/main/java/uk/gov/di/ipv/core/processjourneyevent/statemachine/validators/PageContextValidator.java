@@ -22,6 +22,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("prove-identity-no-photo-id", Set.of("ninoOnly")),
                     Map.entry("pyi-details-deleted", Set.of("journeyType")),
                     Map.entry("pyi-no-match", Set.of("reason")),
+                    Map.entry("pyi-technical", Set.of("isUnrecoverable")),
                     Map.entry("pyi-triage-desktop-download-app", Set.of("smartphone", "isAppOnly")),
                     Map.entry("pyi-triage-mobile-download-app", Set.of("smartphone", "isAppOnly")),
                     Map.entry("pyi-triage-select-smartphone", Set.of("deviceType")),
