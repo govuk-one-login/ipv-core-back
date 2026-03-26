@@ -359,8 +359,12 @@ core:
     drivingLicenceAuthCheck: true
     storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
+    evcsApiUpdatesEnabled: false
 
   features:
+    evcsApiUpdates:
+        featureFlags:
+          evcsApiUpdatesEnabled: true
     storedIdentityService:
       featureFlags:
         storedIdentityServiceEnabled: true
