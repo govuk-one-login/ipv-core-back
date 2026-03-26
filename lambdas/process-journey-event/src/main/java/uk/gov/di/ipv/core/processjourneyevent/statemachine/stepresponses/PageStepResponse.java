@@ -13,14 +13,12 @@ import java.util.Map;
 public class PageStepResponse implements StepResponse {
 
     private String pageId;
-    private String context;
     private Boolean skipBack;
     private Map<String, Object> pageContext;
 
     public Map<String, Object> value() {
         Map<String, Object> response = new HashMap<>();
         response.put("page", pageId);
-        response.put("context", context);
         response.put("skipBack", skipBack);
         response.put("pageContext", pageContext);
 

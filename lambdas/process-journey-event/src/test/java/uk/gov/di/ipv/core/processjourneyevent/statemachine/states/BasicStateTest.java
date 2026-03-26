@@ -43,7 +43,7 @@ class BasicStateTest {
     void transitionShouldReturnAStateWithAResponse() throws Exception {
         BasicState targetState = new BasicState();
         PageStepResponse stepResponse =
-                new PageStepResponse("stepId", "context", false, Map.of("reason", "dropout"));
+                new PageStepResponse("stepId", false, Map.of("reason", "dropout"));
         targetState.setResponse(stepResponse);
 
         BasicState currentState = new BasicState();

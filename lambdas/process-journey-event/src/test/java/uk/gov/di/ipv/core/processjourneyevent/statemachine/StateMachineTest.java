@@ -376,8 +376,7 @@ class StateMachineTest {
     void transitionShouldBeBlockedIfUnexpectedCurrentPage() throws Exception {
         // Arrange
         var startingState = mock(BasicState.class);
-        when(startingState.getResponse())
-                .thenReturn(new PageStepResponse("some-page", null, null, null));
+        when(startingState.getResponse()).thenReturn(new PageStepResponse("some-page", null, null));
         when(startingState.transition(
                         "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(new TransitionResult(new BasicState()));
@@ -407,7 +406,7 @@ class StateMachineTest {
         when(startingState.getNestedJourneyDefinition()).thenReturn(nestedJourneyDefinition);
         var startingBasicState = mock(BasicState.class);
         when(startingBasicState.getResponse())
-                .thenReturn(new PageStepResponse("some-page", null, null, null));
+                .thenReturn(new PageStepResponse("some-page", null, null));
         when(nestedJourneyDefinition.getNestedJourneyStates())
                 .thenReturn(Map.of("NESTED_JOURNEY", startingBasicState));
         when(startingState.transition(

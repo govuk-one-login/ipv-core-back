@@ -83,7 +83,7 @@ public class ProcessJourneyEventHandler
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     private static final StepResponse PROBLEM_DIFFERENT_BROWSER_PAGE_RESPONSE =
-            new PageStepResponse("problem-different-browser", null, null, null);
+            new PageStepResponse("problem-different-browser", null, null);
     private static final String BACK_EVENT = "back";
     private static final Set<IpvJourneyTypes> UPDATE_JOURNEY_TYPES =
             Set.of(UPDATE_NAME, UPDATE_ADDRESS);
