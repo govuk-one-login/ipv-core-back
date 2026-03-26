@@ -338,6 +338,7 @@ Feature: P2 Web document journey
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

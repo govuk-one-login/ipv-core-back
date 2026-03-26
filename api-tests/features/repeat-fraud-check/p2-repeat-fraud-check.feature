@@ -224,70 +224,60 @@ Feature: Repeat fraud check journeys
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'dob-family' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'dob-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'family-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-family-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-family-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-family' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-dob-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
       When I submit a 'back' event
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-family-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion' and pageContext
         | Context              | Value |
         | journeyType          | rfc   |
-        | allowAccountDeletion | true  |
 
   Rule: Match M1C Fraud Check Not Applicable
     Background:

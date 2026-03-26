@@ -185,7 +185,6 @@ states:
       pageId: update-name-date-birth
       context: rfcAccountDeletion
       pageContext:
-        allowAccountDeletion: true
         journeyType: rfc
     events:
       continue:

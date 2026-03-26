@@ -49,6 +49,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
 
     Scenario: Same session DCMAW enhanced verification mitigation - successful
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -126,6 +127,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -146,6 +148,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -190,6 +193,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
 
     Scenario: Separate session DCMAW enhanced verification mitigation - successful - DL
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -308,6 +312,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
@@ -345,6 +350,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback

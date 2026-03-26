@@ -18,6 +18,7 @@ Feature: Stored Identity - P1 journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -57,6 +58,7 @@ Feature: Stored Identity - P1 journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
@@ -92,6 +94,7 @@ Feature: Stored Identity - P1 journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback

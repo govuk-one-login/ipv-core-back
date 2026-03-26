@@ -23,6 +23,7 @@ Feature: Stored Identity - M1C Outcomes
       Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
         | Context    | Value  |
         | smartphone | iphone |
+        | isAppOnly  | false  |
       When the async DCMAW CRI produces a '<details>' VC
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'

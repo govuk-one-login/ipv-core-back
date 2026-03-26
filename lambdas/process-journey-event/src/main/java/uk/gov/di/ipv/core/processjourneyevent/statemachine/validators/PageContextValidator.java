@@ -7,6 +7,8 @@ public class PageContextValidator extends AbstractPageContextValidator {
     private static final Map<String, Set<String>> ALLOWED_CONTEXTS_BY_PAGE =
             Map.ofEntries(
                     Map.entry("delete-handover", Set.of("journeyType")),
+                    Map.entry(
+                            "need-more-information-confirm-change-details", Set.of("journeyType")),
                     Map.entry("no-photo-id-security-questions-find-another-way", Set.of("reason")),
                     Map.entry("page-dcmaw-success", Set.of("noAddress")),
                     Map.entry("page-ipv-pending", Set.of("allowDeleteDetails")),
@@ -20,6 +22,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("prove-identity-no-photo-id", Set.of("ninoOnly")),
                     Map.entry("pyi-details-deleted", Set.of("journeyType")),
                     Map.entry("pyi-no-match", Set.of("reason")),
+                    Map.entry("pyi-technical", Set.of("isUnrecoverable")),
                     Map.entry("pyi-triage-desktop-download-app", Set.of("smartphone", "isAppOnly")),
                     Map.entry("pyi-triage-mobile-download-app", Set.of("smartphone", "isAppOnly")),
                     Map.entry("pyi-triage-select-smartphone", Set.of("deviceType")),
@@ -28,9 +31,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry(
                             "uk-driving-licence-details-not-correct", Set.of("isFromStrategicApp")),
                     Map.entry("update-details-failed", Set.of("isExistingIdentityInvalid")),
-                    Map.entry(
-                            "update-name-date-birth",
-                            Set.of("journeyType", "allowAccountDeletion")));
+                    Map.entry("update-name-date-birth", Set.of("journeyType")));
 
     @Override
     Map<String, Set<String>> getAllowedContextsByPage() {

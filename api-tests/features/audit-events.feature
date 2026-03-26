@@ -19,6 +19,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
       | Context    | Value   |
       | smartphone | android |
+      | isAppOnly  | false   |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -332,6 +333,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
       | Context    | Value   |
       | smartphone | android |
+      | isAppOnly  | false   |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
@@ -485,6 +487,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     And audit events for 'strategic-app-journey' are recorded [local only]
 
   @InitialisesDCMAWSessionState @QualityGateRegressionTest
@@ -506,6 +509,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
       | Context    | Value  |
       | smartphone | iphone |
+      | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session

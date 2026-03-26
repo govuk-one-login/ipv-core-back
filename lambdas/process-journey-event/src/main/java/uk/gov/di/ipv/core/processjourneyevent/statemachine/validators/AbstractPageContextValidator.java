@@ -21,12 +21,21 @@ public abstract class AbstractPageContextValidator implements IPageContextValida
                             .formatted(pageId));
         }
 
-        for (var key : pageContext.keySet()) {
-            if (!allowedContexts.contains(key)) {
-                throw new StepResponseException(
-                        "Context '%s' is not allowed for page '%s'. If required, please add to ALLOWED_CONTEXTS_BY_PAGE."
-                                .formatted(key, pageId));
-            }
+        var contextKeys = pageContext.keySet();
+        var disallowedKeys =
+                contextKeys.stream().filter(key -> !allowedContexts.contains(key)).findFirst();
+        if (disallowedKeys.isPresent()) {
+            throw new StepResponseException(
+                    "Context '%s' is not allowed for page '%s'. If required, please add to ALLOWED_CONTEXTS_BY_PAGE."
+                            .formatted(disallowedKeys.get(), pageId));
+        }
+
+        var missingKeys =
+                allowedContexts.stream().filter(key -> !contextKeys.contains(key)).findFirst();
+        if (missingKeys.isPresent()) {
+            throw new StepResponseException(
+                    "Required context '%s' is missing for page '%s'."
+                            .formatted(missingKeys.get(), pageId));
         }
     }
 }
