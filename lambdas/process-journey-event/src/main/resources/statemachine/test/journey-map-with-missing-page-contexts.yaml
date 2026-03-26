@@ -3,7 +3,6 @@ states:
     response:
       type: page
       pageId: page-with-missing-context
-      context: test
       pageContext:
         reason: dropout
     parent: PARENT_STATE

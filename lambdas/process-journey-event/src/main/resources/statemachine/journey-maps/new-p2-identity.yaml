@@ -308,7 +308,6 @@ states:
     response:
       type: page
       pageId: photo-id-security-questions-find-another-way
-      context: dropout
       pageContext:
         reason: dropout
     events:
@@ -559,7 +558,6 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
-      context: dropout
       pageContext:
         reason: dropout
     events:

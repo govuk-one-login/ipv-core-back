@@ -107,7 +107,6 @@ states:
     response:
       type: page
       pageId: prove-identity-another-way
-      context: noF2f
       pageContext:
         removeF2f: true
     events:

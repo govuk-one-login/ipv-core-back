@@ -49,7 +49,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: sorry-technical-problem
-      context: kbvCriError
       pageContext:
         reason: kbvCriError
     events:
