@@ -24,7 +24,7 @@ Then(
     );
 
     // Default to asserting that the SI record is valid
-    const siShouldBeValid: boolean = isValidString !== "invalid"
+    const siShouldBeValid: boolean = isValidString !== "invalid";
     assert.equal(
       actualSi?.isValid,
       siShouldBeValid,
