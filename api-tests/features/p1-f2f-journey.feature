@@ -104,6 +104,7 @@ Feature: P1 F2F journey
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get a 'page-face-to-face-handoff' page response
+      And I don't have a stored identity in EVCS
 
       # Return journey
       When I start new 'low-confidence' journeys until I get a 'page-ipv-reuse' page response
@@ -111,3 +112,4 @@ Feature: P1 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P1' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot

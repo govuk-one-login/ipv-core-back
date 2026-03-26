@@ -40,15 +40,16 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a '<attained-vot>' identity
+    And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
 
     Examples:
-      | journey-type           | doc             | details                       | attained-vot |
-      | high-medium-confidence | passport        | kenneth-passport-valid        | P3           |
-      | high-medium-confidence | BRC             | kenneth-brc-valid             | P2           |
-      | high-medium-confidence | BRP             | kenneth-brp-valid             | P3           |
-      | medium-confidence      | passport        | kenneth-passport-valid        | P2           |
-      | medium-confidence      | BRC             | kenneth-brc-valid             | P2           |
-      | medium-confidence      | BRP             | kenneth-brp-valid             | P2           |
+      | journey-type           | doc             | details                       | attained-vot | stored-identity-score |
+      | high-medium-confidence | passport        | kenneth-passport-valid        | P3           | P3                    |
+      | high-medium-confidence | BRC             | kenneth-brc-valid             | P2           | P2                    |
+      | high-medium-confidence | BRP             | kenneth-brp-valid             | P3           | P3                    |
+      | medium-confidence      | passport        | kenneth-passport-valid        | P2           | P3                    |
+      | medium-confidence      | BRC             | kenneth-brc-valid             | P2           | P2                    |
+      | medium-confidence      | BRP             | kenneth-brp-valid             | P2           | P3                    |
 
   Scenario Outline: MAM Failed DCMAW with CI should result in P0 - <journey-type>
     When I start a new '<journey-type>' journey
@@ -80,6 +81,7 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I don't have a stored identity in EVCS
 
     Examples:
       | journey-type           |
@@ -271,6 +273,7 @@ Feature: P2 App journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario Outline: Happy path DAD journey - <device>
       When I submit an 'appTriage' event
@@ -301,6 +304,7 @@ Feature: P2 App journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
       Examples:
         | device  |

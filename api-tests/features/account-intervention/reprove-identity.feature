@@ -590,6 +590,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       # Return to try again
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response

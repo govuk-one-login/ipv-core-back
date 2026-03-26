@@ -41,6 +41,7 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
     # Reuse journey
     When I start a new 'medium-confidence' journey
@@ -50,6 +51,7 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: User with M1C is sent on reuse journey when no applicable fraud check
     Given the subject already has the following credentials
@@ -73,6 +75,7 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P3' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
     Given the subject already has the following credentials with overridden document expiry date
@@ -89,3 +92,4 @@ Feature: P2 Reuse journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P2' vot

@@ -41,6 +41,7 @@ Feature: Mortality check failures
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity with a fraud VC
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
   Scenario: Unmitigated mortality check results in failure
     When I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
@@ -51,3 +52,4 @@ Feature: Mortality check failures
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I don't have a stored identity in EVCS

@@ -80,7 +80,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -140,7 +139,7 @@ public class ProcessCandidateIdentityHandler
 
     // Candidate identities that should store the given identity (if successful)
     private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
-            EnumSet.of(NEW, PENDING, UPDATE);
+            EnumSet.of(NEW, PENDING, UPDATE, EXISTING);
 
     // Candidate identities that should match a profile
     private static final Set<CandidateIdentityType> PROFILE_MATCHING_TYPES =
@@ -473,8 +472,7 @@ public class ProcessCandidateIdentityHandler
 
         var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
 
-        if (StringUtils.isNotBlank(securityCheckCredential)
-                && configService.enabled(STORED_IDENTITY_SERVICE)) {
+        if (StringUtils.isNotBlank(securityCheckCredential)) {
             try {
                 var parsedSecurityCheckVc =
                         cimitUtilityService.getParsedSecurityCheckCredential(
@@ -497,10 +495,6 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean requiresVotMatchingResult(CandidateIdentityType processIdentityType) {
-        if (shouldStoreExistingIdentity(processIdentityType)) {
-            return true;
-        }
-
         var typesRequiringVotMatchingResult =
                 Stream.concat(PROFILE_MATCHING_TYPES.stream(), STORE_IDENTITY_TYPES.stream())
                         .filter(identityType -> !identityType.equals(PENDING))
@@ -516,12 +510,7 @@ public class ProcessCandidateIdentityHandler
     }
 
     private boolean shouldStoreIdentity(CandidateIdentityType identityType) {
-        return STORE_IDENTITY_TYPES.contains(identityType)
-                || shouldStoreExistingIdentity(identityType);
-    }
-
-    private boolean shouldStoreExistingIdentity(CandidateIdentityType identityType) {
-        return configService.enabled(STORED_IDENTITY_SERVICE) && EXISTING.equals(identityType);
+        return STORE_IDENTITY_TYPES.contains(identityType);
     }
 
     private JourneyResponse getJourneyResponseForProfileMatching(

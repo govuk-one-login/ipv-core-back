@@ -58,6 +58,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | journey-type           | doc      | details                      |
@@ -106,6 +107,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | doc      | details                      |
@@ -274,6 +276,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity without a TICF VC
+      And I don't have a stored identity in EVCS
 
       # Start another return journey
       When I start a new 'medium-confidence' journey

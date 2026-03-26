@@ -40,6 +40,7 @@ Feature: P2 Web document journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | journey-type           | cri            | details                      |
@@ -90,6 +91,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score
       When I submit an 'drivingLicence' event
@@ -106,6 +108,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
       | driving-licence-type | details                          |
@@ -174,6 +177,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI
       When I submit a '<initial-cri>' event
@@ -204,6 +208,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
         | initial-cri    | alternative-doc-cri | alternative-doc              | prove-identity-another-type-photo-id-context |
@@ -221,6 +226,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity
       When I submit a 'ukPassport' event
@@ -252,6 +258,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Failed P2 journey via Web using <cri>
       When I submit a '<cri>' event
@@ -285,6 +292,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks
     Background: Navigate to KBV CRI
@@ -351,6 +359,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: KBV score zero - user is able to receive identity via F2F
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
@@ -372,6 +381,7 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: KBV score zero - user is able to receive identity via F2F after dropping out of DCMAW
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
@@ -405,3 +415,4 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot

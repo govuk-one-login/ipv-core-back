@@ -40,6 +40,7 @@ Feature: Failed TICF responses
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity without a TICF VC
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
     Examples:
       | statusCode |
@@ -86,3 +87,4 @@ Feature: Failed TICF responses
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity without a TICF VC
+    And I have a GPG45 stored identity record type with a 'P3' vot

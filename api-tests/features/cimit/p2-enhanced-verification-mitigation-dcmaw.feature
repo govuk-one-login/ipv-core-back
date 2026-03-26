@@ -60,6 +60,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a '<attained-vot>' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
     Examples:
     | journey-type           | attained-vot | document-details             |
@@ -138,6 +139,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a '<attained-vot>' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
     Examples:
       | journey-type           | attained-vot |
@@ -208,6 +210,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Same session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
       When I submit an 'appTriage' event
@@ -235,6 +238,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
       When I start a new 'medium-confidence' journey
@@ -264,3 +268,4 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS

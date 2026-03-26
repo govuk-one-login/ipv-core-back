@@ -18,7 +18,6 @@ import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
@@ -50,11 +49,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
-import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudNotExpired;
@@ -106,6 +103,9 @@ class StoreIdentityServiceTest {
         @Test
         void shouldSuccessfullyStoreIdentityWhenEvcsWriteEnabled() throws Exception {
             // Arrange
+            when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
             VCS.forEach(
                     credential -> {
                         if (credential.getCri().equals(EXPERIAN_FRAUD)) {
@@ -133,6 +133,9 @@ class StoreIdentityServiceTest {
         @Test
         void shouldSendAuditEventWithVotExtensionWhenIdentityAchieved() throws Exception {
             // Arrange
+            when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
             var testVcs =
                     VCS.stream()
                             .peek(
@@ -176,6 +179,11 @@ class StoreIdentityServiceTest {
         @Test
         void shouldSendAuditEventWithVotAndIdentityTypeExtensionWhenIdentityUpdated()
                 throws Exception {
+            // Arrange
+            when(evcsService.storeStoredIdentityRecord(any(), any(), any(), any()))
+                    .thenReturn(httpResponse);
+            when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
@@ -288,11 +296,6 @@ class StoreIdentityServiceTest {
 
     @Nested
     class PostIdentityEndpoint {
-        @BeforeEach
-        void setUp() {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
-        }
-
         @Test
         void shouldStoreStoredIdentityRecordForCompletedIdentity() throws Exception {
             // Arrange
@@ -446,31 +449,5 @@ class StoreIdentityServiceTest {
                                 STRONGEST_MATCHED_VOT,
                                 CandidateIdentityType.NEW,
                                 sharedAuditEventParameters));
-    }
-
-    @Test
-    void shouldSetSisRecordCreatedFlagToFalseWhenFeatureFlagIsDisabled()
-            throws EvcsServiceException {
-        // arrange
-        when(configService.getComponentId()).thenReturn("https://core-component.example");
-        when(configService.enabled(CoreFeatureFlag.STORED_IDENTITY_SERVICE)).thenReturn(false);
-
-        // act
-        storeIdentityService.storeIdentity(
-                USER_ID,
-                VCS,
-                List.of(),
-                P1,
-                STRONGEST_MATCHED_VOT,
-                CandidateIdentityType.NEW,
-                sharedAuditEventParameters);
-
-        // assert
-        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
-        var auditEvent = auditEventCaptor.getValue();
-
-        assertFalse(
-                ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
-                        .sisRecordCreated());
     }
 }

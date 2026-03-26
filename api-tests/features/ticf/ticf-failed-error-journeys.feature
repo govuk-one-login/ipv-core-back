@@ -63,6 +63,7 @@ Feature: TICF failed/error journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -86,6 +87,7 @@ Feature: TICF failed/error journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -101,6 +103,7 @@ Feature: TICF failed/error journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -121,6 +124,7 @@ Feature: TICF failed/error journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -154,6 +158,7 @@ Feature: TICF failed/error journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

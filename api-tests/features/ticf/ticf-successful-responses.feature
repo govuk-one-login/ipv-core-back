@@ -41,6 +41,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -68,6 +69,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -86,6 +88,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -132,6 +135,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Blocked
       Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
@@ -213,6 +217,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P3' vot
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -260,6 +265,7 @@ Feature: TICF successful responses
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P3' vot
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 
 public class StoreIdentityService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -63,7 +62,7 @@ public class StoreIdentityService {
         evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                 userId, sessionCredentials, evcsVcs, isPendingIdentity);
 
-        if (configService.enabled(STORED_IDENTITY_SERVICE) && !isPendingIdentity) {
+        if (!isPendingIdentity) {
             try {
                 var httpResponse =
                         evcsService.storeStoredIdentityRecord(

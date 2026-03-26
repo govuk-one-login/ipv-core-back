@@ -53,6 +53,7 @@ Feature: Update name journey with DL auth source check
     Then I get a 'P2' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | selected-name-change | actual-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -105,6 +106,7 @@ Feature: Update name journey with DL auth source check
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
     And my address 'addressLocality' is 'Bristol'
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | selected-name-change    | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -169,6 +171,7 @@ Feature: Update name journey with DL auth source check
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: Change of name and address journey - User backs out of DL CRI - Returns to DCMAW to use passport
     When I submit a 'family-name-and-address' event
@@ -232,6 +235,7 @@ Feature: Update name journey with DL auth source check
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
+    And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario Outline: Change of details - dropout DL auth source check - return to RP with no identity
     When I submit a '<update-type>' event
@@ -271,6 +275,7 @@ Feature: Update name journey with DL auth source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:
       | update-type             |
@@ -357,6 +362,7 @@ Feature: Update name journey with DL auth source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:
       | change-type             |
@@ -398,6 +404,7 @@ Feature: Update name journey with DL auth source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:
       | change-type             |

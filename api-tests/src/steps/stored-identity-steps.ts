@@ -23,11 +23,12 @@ Then(
       `Expected "${expectedVot}" but got "${actualSi?.levelOfConfidence}"`,
     );
 
+    // Default to asserting that the SI record is valid
+    const siShouldBeValid: boolean = isValidString !== "invalid"
     assert.equal(
       actualSi?.isValid,
-      // Default to asserting that the SI record is valid
-      isValidString ? isValidString === "valid" : true,
-      `Expected "${isValidString === "valid"}" but got "${actualSi?.isValid}"`,
+      siShouldBeValid,
+      `Expected "${siShouldBeValid ? "valid" : "invalid"}" but got "${actualSi?.isValid ? "valid" : "invalid"}"`,
     );
   },
 );

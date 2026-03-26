@@ -83,6 +83,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity with a fraud VC
+      And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: User fails V2 app with CI - MAM
       When I submit an 'international' event
@@ -112,6 +113,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: User fails V2 app with CI - DAD
       When I submit an 'international' event
@@ -138,6 +140,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: User looks for alternative methods to prove identity without using the app
       When I submit an 'international' event
@@ -148,6 +151,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: International user abandons due to no biometric passport then returns
       When I submit an 'international' event
@@ -188,6 +192,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: High-medium confidence journeys
     Background: Start high-medium confidence journey
@@ -232,3 +237,4 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+      And I have a GPG45 stored identity record type with a 'P2' vot

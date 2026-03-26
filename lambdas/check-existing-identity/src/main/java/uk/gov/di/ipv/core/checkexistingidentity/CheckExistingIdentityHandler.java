@@ -78,7 +78,6 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
@@ -296,9 +295,7 @@ public class CheckExistingIdentityHandler
                         clientOAuthSessionItem, auditEventUser);
             }
 
-            if (configService.enabled(STORED_IDENTITY_SERVICE)) {
-                evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
-            }
+            evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
 
             return getJourneyResponse(
                             ipvSessionItem,

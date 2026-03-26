@@ -45,6 +45,7 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
@@ -102,6 +103,7 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
@@ -151,6 +153,7 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
@@ -196,6 +199,7 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I don't have a stored identity in EVCS
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |

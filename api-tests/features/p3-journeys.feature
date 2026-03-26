@@ -7,3 +7,4 @@ Feature: P3 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+    And I don't have a stored identity in EVCS
