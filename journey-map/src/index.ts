@@ -141,10 +141,13 @@ const loadJourneyMaps = async <T>(
   return maps;
 };
 
-const getPageUrl = (id: string, context?: string): string => {
+const getPageUrl = (
+  id: string,
+  pageContext?: Record<string, unknown>,
+): string => {
   const baseUrl = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
-  return context
-    ? `${baseUrl}?context=${encodeURIComponent(context)}`
+  return pageContext
+    ? `${baseUrl}?pageContext=${encodeURIComponent(JSON.stringify(pageContext))}`
     : baseUrl;
 };
 
@@ -500,7 +503,7 @@ const setupMermaidClickHandlers = (): void => {
     // Clicking a node twice opens the link
     if (selectedState === state) {
       if (def.pageId) {
-        window.open(getPageUrl(def.pageId, def.context), "_blank");
+        window.open(getPageUrl(def.pageId, def.pageContext), "_blank");
         return;
       }
       if (def.targetJourney) {
@@ -540,7 +543,7 @@ const setupMermaidClickHandlers = (): void => {
       nodeDesc.append(
         createLink(
           "Click here to view the page in build",
-          getPageUrl(def.pageId, def.context),
+          getPageUrl(def.pageId, def.pageContext),
         ),
       );
     }
