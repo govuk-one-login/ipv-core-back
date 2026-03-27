@@ -48,7 +48,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my identity 'GivenName' is '<expected-given-name>'
         And my identity 'FamilyName' is '<expected-family-name>'
         And I have a GPG45 stored identity record type with a 'P3' vot
@@ -78,7 +78,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my address 'buildingNumber' is '28'
         And I have a GPG45 stored identity record type with a 'P2' vot
 
@@ -124,7 +124,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
         And I have a GPG45 stored identity record type with a 'P3' vot
@@ -169,7 +169,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'addressLocality' is 'Bristol'
         And I have a GPG45 stored identity record type with a 'P3' vot
@@ -290,7 +290,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P3' identity
+        Then I am issued a 'P3' identity
         And I have a GPG45 stored identity record type with a 'P3' vot
 
   Rule: Start with P3
@@ -347,5 +347,5 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And I have a GPG45 stored identity record type with a 'P2' vot

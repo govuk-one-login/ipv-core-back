@@ -40,7 +40,7 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
 
     # Reuse journey
@@ -50,7 +50,7 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: User with M1C is sent on reuse journey when no applicable fraud check
@@ -74,7 +74,7 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P3' identity
+    Then I am issued a 'P3' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
@@ -91,5 +91,5 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P2' vot

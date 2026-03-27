@@ -41,7 +41,7 @@ Feature: P2 Journeys with DL authoritative source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
@@ -86,7 +86,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Auth check access_denied
@@ -139,7 +139,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a 'dcmawAsync' VC
+      Then I am issued a 'P0' identity without a 'dcmawAsync' VC
       And I don't have a stored identity in EVCS
 
     Scenario: Auth check abandoned, retry with CI
@@ -194,7 +194,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a dcmawAsync VC without 'drivingPermit' details
       And I have a GPG45 stored identity record type with a 'P3' vot
 
@@ -229,7 +229,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity without a 'dcmawAsync' VC
+      Then I am issued a 'P2' identity without a 'dcmawAsync' VC
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: International address user
@@ -299,7 +299,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: Web Journey

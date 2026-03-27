@@ -67,7 +67,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - dropout DL auth source check - mitigate via f2f
@@ -106,7 +106,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check incomplete
@@ -168,7 +168,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: Separate session mitigation
@@ -222,7 +222,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
@@ -247,7 +247,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check acquires CI
@@ -266,7 +266,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: Web journey via DL initially
@@ -330,7 +330,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Separate session - DL auth source check still required when user already has a DL VC

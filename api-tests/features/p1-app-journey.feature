@@ -38,7 +38,7 @@ Feature: P1 app journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
 
     Examples:
@@ -160,7 +160,7 @@ Feature: P1 app journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:

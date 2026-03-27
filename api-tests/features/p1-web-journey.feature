@@ -79,7 +79,7 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
   Scenario Outline: Successful P1 journey - via <cri> and Experian KBV
@@ -104,7 +104,7 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P1' vot
 
     Examples:
@@ -146,7 +146,7 @@ Feature: P1 Web Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario Outline: P1 journey - thin file via Experian KBV
@@ -234,7 +234,7 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P1' vot
 
     Examples:

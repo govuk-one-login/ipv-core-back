@@ -42,7 +42,7 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P3
@@ -78,7 +78,7 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P2
@@ -118,7 +118,7 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
   Scenario: Successful stored identity storage - P1 web journey
@@ -157,7 +157,7 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 no photo ID
@@ -192,7 +192,7 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P1' vot
 
   Scenario: Successful stored identity storage - P1 F2F journey
@@ -223,5 +223,5 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
     And I have a GPG45 stored identity record type with a 'P2' vot

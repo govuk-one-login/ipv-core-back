@@ -39,7 +39,7 @@ Feature: P2 Web document journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
     Examples:
@@ -90,7 +90,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score
@@ -107,7 +107,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
       Examples:
@@ -176,7 +176,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI
@@ -207,7 +207,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -225,7 +225,7 @@ Feature: P2 Web document journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity
@@ -257,7 +257,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario Outline: Failed P2 journey via Web using <cri>
@@ -291,7 +291,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks
@@ -358,7 +358,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: KBV score zero - user is able to receive identity via F2F
@@ -380,7 +380,7 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: KBV score zero - user is able to receive identity via F2F after dropping out of DCMAW
@@ -414,5 +414,5 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot

@@ -50,7 +50,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
     And I have a GPG45 stored identity record type with a 'P2' vot
@@ -102,7 +102,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
     And my address 'addressLocality' is 'Bristol'
@@ -169,7 +169,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
     And I have a GPG45 stored identity record type with a 'P3' vot
 
@@ -233,7 +233,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
     And I have a GPG45 stored identity record type with a 'P3' vot
 
@@ -274,7 +274,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:
@@ -361,7 +361,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:
@@ -403,7 +403,7 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Examples:

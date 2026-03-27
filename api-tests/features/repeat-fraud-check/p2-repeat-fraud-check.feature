@@ -35,7 +35,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
@@ -75,7 +75,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And my identity 'GivenName' is 'Ken'
       And my identity 'FamilyName' is 'Decerqueira'
       And I have a GPG45 stored identity record type with a 'P3' vot
@@ -128,7 +128,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And my address 'buildingNumber' is '28'
       And my address 'addressLocality' is 'Bristol'
       And I have a GPG45 stored identity record type with a 'P2' vot
@@ -178,7 +178,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And my identity 'FamilyName' is 'Smith'
       And my address 'addressLocality' is 'Bristol'
       And I have a GPG45 stored identity record type with a 'P2' vot
@@ -308,7 +308,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
@@ -348,7 +348,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Address Update
@@ -368,7 +368,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
@@ -412,7 +412,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Match M1C Fraud Check Unavailable
@@ -440,7 +440,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Given Name Update
@@ -480,7 +480,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Address Update
@@ -498,7 +498,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
@@ -540,7 +540,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Match H1A
@@ -565,7 +565,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P3' identity
+      Then I am issued a 'P3' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Initial P2 credentials followed by high-medium confidence RFC update journey
@@ -615,5 +615,5 @@ Feature: Repeat fraud check journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P3' identity
+      Then I am issued a 'P3' identity
       And I have a GPG45 stored identity record type with a 'P3' vot

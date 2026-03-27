@@ -47,7 +47,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Cross-browser DL auth source check
@@ -87,7 +87,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
@@ -133,7 +133,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
@@ -161,7 +161,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: Cross-browser during same-session enhanced verification mitigation
@@ -243,7 +243,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
@@ -274,7 +274,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Cross-browser during separate-session enhanced verification mitigation
@@ -332,7 +332,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
@@ -365,7 +365,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check acquires CI
@@ -388,7 +388,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check incomplete
@@ -461,5 +461,5 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS

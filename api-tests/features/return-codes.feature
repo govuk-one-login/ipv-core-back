@@ -37,7 +37,7 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
     And I don't get any return codes
 
@@ -55,7 +55,7 @@ Feature: Return exit codes
     When I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
@@ -105,7 +105,7 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
@@ -148,7 +148,7 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
@@ -189,7 +189,7 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P3' vot
     And I get 'always-required' return code
 
@@ -237,7 +237,7 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'non-breaching,needs-enhanced-verification' return codes
 
@@ -276,7 +276,7 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'non-breaching,breaching,needs-enhanced-verification' return codes
 
@@ -317,6 +317,6 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
     And I get 'breaching' return codes

@@ -37,7 +37,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -63,7 +63,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: High-medium confidence journeys
@@ -101,7 +101,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Returning existing M1C user to high-medium confidence journey
@@ -124,7 +124,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P3' identity
+      Then I am issued a 'P3' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
   Rule: Returning existing M1C unavailable user goes through medium-confidence details confirmation
@@ -151,7 +151,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
 
       Examples:
@@ -195,7 +195,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
 
       Examples:
@@ -217,7 +217,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
 
       Examples:
@@ -264,7 +264,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
 
       Examples:
@@ -312,7 +312,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Existing non-M1C identity returns
@@ -362,7 +362,7 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Existing M1A user cannot change name with DL and unavailable fraud check
@@ -403,5 +403,5 @@ Feature: M1C Unavailable Journeys
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot

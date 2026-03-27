@@ -35,7 +35,7 @@ Feature: Repeat fraud check failures
       When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
@@ -76,7 +76,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Scenario: Available authoritative source failed check evidence too weak
@@ -115,7 +115,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
     Scenario: User is able to delete account from update-details-failed screen
@@ -146,7 +146,7 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
 #      And I don't have a stored identity in EVCS
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'pyi-no-match' page response
@@ -226,7 +226,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
       When I start a new 'medium-confidence' journey
@@ -256,7 +256,7 @@ Feature: Repeat fraud check failures
       When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
 
@@ -280,7 +280,7 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
 #      And I don't have a stored identity in EVCS
 #
 #      When I start a new 'medium-confidence' journey
@@ -322,7 +322,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
@@ -343,7 +343,7 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
 #      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 #
 #      When I start a new 'medium-confidence' journey
@@ -381,7 +381,7 @@ Feature: Repeat fraud check failures
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
       And the TICF VC has properties
         | cis  | BREACHING      |
@@ -403,7 +403,7 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
 #      And I don't have a stored identity in EVCS
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'confirm-your-details' page response
@@ -454,7 +454,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response

@@ -45,7 +45,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot
 
       Examples:
@@ -87,7 +87,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot
 
       Examples:
@@ -127,7 +127,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P1' vot
 
       Examples:
@@ -149,7 +149,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   # TODO: uncomment the test below and update it to use the strategic app once PYIC-8769/8941 have been resolved

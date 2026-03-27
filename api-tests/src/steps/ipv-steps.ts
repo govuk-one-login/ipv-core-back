@@ -416,7 +416,7 @@ When(
 );
 
 Then(
-  /^I get a '([<>\w-]+)' identity(?: (with|without) a (.+) VC)?$/,
+  /^I am issued a '([<>\w-]+)' identity(?: (with|without) a (.+) VC)?$/,
   function (
     this: World,
     vot: string,

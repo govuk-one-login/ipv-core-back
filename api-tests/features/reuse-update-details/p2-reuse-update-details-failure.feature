@@ -39,7 +39,7 @@ Feature: Identity reuse update details failures
             When I submit a 'continue' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -63,7 +63,7 @@ Feature: Identity reuse update details failures
             When I submit a 'continue' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
 
         Scenario: User is able to delete account from update-details-failed page
@@ -104,7 +104,7 @@ Feature: Identity reuse update details failures
             When I submit a 'continue' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -119,7 +119,7 @@ Feature: Identity reuse update details failures
 #            When I submit a 'returnToRp' event
 #            Then I get an OAuth response
 #            When I use the OAuth response to get my identity
-#            Then I get a 'P0' identity
+#            Then I am issued a 'P0' identity
 #            And I don't have a stored identity in EVCS
 #            When I start a new 'medium-confidence' journey
 #            Then I get a 'pyi-no-match' page response
@@ -138,7 +138,7 @@ Feature: Identity reuse update details failures
 #            When I submit a 'returnToRp' event
 #            Then I get an OAuth response
 #            When I use the OAuth response to get my identity
-#            Then I get a 'P0' identity
+#            Then I am issued a 'P0' identity
 #            And I don't have a stored identity in EVCS
 #            When I start a new 'medium-confidence' journey
 #            Then I get a 'pyi-driving-licence-no-match' page response
@@ -218,7 +218,7 @@ Feature: Identity reuse update details failures
             When I submit a 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P0' identity
+            Then I am issued a 'P0' identity
             And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
 
             When I start a new 'medium-confidence' journey
@@ -260,7 +260,7 @@ Feature: Identity reuse update details failures
             When I submit a 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -301,7 +301,7 @@ Feature: Identity reuse update details failures
             When I submit a 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P0' identity
+            Then I am issued a 'P0' identity
             And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
@@ -338,7 +338,7 @@ Feature: Identity reuse update details failures
             When I submit a 'next' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P0' identity
+            Then I am issued a 'P0' identity
             And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
             And the TICF VC has properties
                 | cis  | BREACHING      |
@@ -376,7 +376,7 @@ Feature: Identity reuse update details failures
             When I submit an 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -417,7 +417,7 @@ Feature: Identity reuse update details failures
             When I submit a 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
@@ -472,5 +472,5 @@ Feature: Identity reuse update details failures
             When I submit a 'returnToRp' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
-            Then I get a 'P2' identity
+            Then I am issued a 'P2' identity
             And I have a GPG45 stored identity record type with a 'P3' vot

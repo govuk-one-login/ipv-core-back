@@ -42,7 +42,7 @@ Feature: Stored Identity - P2 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: Non-international journeys
@@ -86,7 +86,7 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Successful stored identity storage - P2 app journey that meets P3
@@ -122,7 +122,7 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Successful stored identity storage - P2 F2F journey
@@ -148,7 +148,7 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Successful stored identity storage - P2 no photo ID journey
@@ -186,7 +186,7 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: High-medium confidence journey
@@ -227,5 +227,5 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P3' identity
+      Then I am issued a 'P3' identity
       And I have a GPG45 stored identity record type with a 'P3' vot

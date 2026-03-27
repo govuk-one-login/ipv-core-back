@@ -45,7 +45,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -90,7 +90,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
       Examples:
@@ -123,7 +123,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -139,7 +139,7 @@ Feature: Handling unexpected CRI errors
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
       Examples:
@@ -185,7 +185,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -239,7 +239,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
       Examples:
@@ -261,7 +261,7 @@ Feature: Handling unexpected CRI errors
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
       Examples:
@@ -320,7 +320,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Unexpected error from Experian KBV CRI - try app route
@@ -356,7 +356,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Unexpected error from Experian KBV CRI - try post office route
@@ -372,14 +372,14 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Unexpected error from Experian KBV CRI - return to RP
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: F2F CRI - P2
@@ -420,7 +420,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Unexpected error from F2F CRI - try app route
@@ -458,7 +458,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Unexpected error from F2F CRI - try web route
@@ -485,14 +485,14 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Unexpected error from F2F CRI - return to RP
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: F2F CRI - P1
@@ -570,7 +570,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P3' vot
 
     Scenario: Unexpected error from F2F CRI - try web route
@@ -599,7 +599,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
   Rule: F2F CRI mitigation via Experian KBV
@@ -657,7 +657,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Same session mitigation via F2F - switch to app after error
@@ -689,7 +689,7 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: Separate session F2F enhanced verification mitigation - user fails KBV - mitigate via F2F
@@ -741,5 +741,5 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot

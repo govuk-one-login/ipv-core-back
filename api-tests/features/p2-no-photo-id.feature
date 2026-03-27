@@ -42,7 +42,7 @@ Feature: P2 no photo id journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a GPG45 stored identity record type with a 'P2' vot
 
     Scenario: P2 no photo id journey - Experian - BAV dropout:
