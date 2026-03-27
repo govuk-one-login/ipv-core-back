@@ -38,7 +38,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
       | details                |
@@ -102,7 +102,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Returning existing M1C user to high-medium confidence journey
     Scenario: User goes through details confirmation and receives a P3 identity
@@ -125,7 +125,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P3' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: Returning existing M1C unavailable user goes through medium-confidence details confirmation
     Background:
@@ -152,7 +152,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
         | fraudResponse            | endScore  | stored-identity-score |
@@ -196,7 +196,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
         | fraudResponse                                | endScore  | stored-identity-score |
@@ -218,7 +218,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
         | fraudResponse            | endScore  | stored-identity-score |
@@ -265,7 +265,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
         | fraudResponse                                | endScore  | stored-identity-score |
@@ -313,7 +313,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Existing non-M1C identity returns
     Background:
@@ -363,7 +363,7 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Existing M1A user cannot change name with DL and unavailable fraud check
       When I submit a 'family-name-only' event
@@ -404,4 +404,4 @@ Feature: M1C Unavailable Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot

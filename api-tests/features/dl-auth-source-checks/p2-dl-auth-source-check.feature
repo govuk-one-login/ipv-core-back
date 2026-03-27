@@ -42,7 +42,7 @@ Feature: P2 Journeys with DL authoritative source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | journey-type           |
@@ -196,7 +196,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
       And I have a dcmawAsync VC without 'drivingPermit' details
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
@@ -230,7 +230,7 @@ Feature: P2 Journeys with DL authoritative source check
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity without a 'dcmawAsync' VC
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: International address user
     Scenario: Non-uk user tries to use driving licence and gets a P0

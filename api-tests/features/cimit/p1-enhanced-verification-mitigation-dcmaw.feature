@@ -63,7 +63,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - user abandons DCMAW then escapes
       When I submit an 'appTriage' event
@@ -168,7 +168,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC with a CI

@@ -42,7 +42,7 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot
+      And I have a stored identity record with a 'P1' max vot
 
       Examples:
         | cri            | details                      |
@@ -80,7 +80,7 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
         | cri            | details                      | stored-identity-score |
@@ -150,7 +150,7 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
       When I submit a 'next' event
@@ -171,7 +171,7 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey - DWP KBV PIP page dropout
       When I submit a 'end' event
@@ -186,7 +186,7 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P1' vot
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
       When I submit a 'next' event
@@ -224,4 +224,4 @@ Feature: P1 Web Journeys - DWP KBV
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot

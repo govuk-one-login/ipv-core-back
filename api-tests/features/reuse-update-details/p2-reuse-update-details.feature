@@ -51,7 +51,7 @@ Feature: Identity reuse update details
         Then I am issued a 'P2' identity
         And my identity 'GivenName' is '<expected-given-name>'
         And my identity 'FamilyName' is '<expected-family-name>'
-        And I have a GPG45 stored identity record type with a 'P3' vot
+        And I have a stored identity record with a 'P3' max vot
 
     Examples:
         | selected-name-change | actual-name-change | details                                    | fraud-details                       | expected-given-name | expected-family-name |
@@ -80,7 +80,7 @@ Feature: Identity reuse update details
         When I use the OAuth response to get my identity
         Then I am issued a 'P2' identity
         And my address 'buildingNumber' is '28'
-        And I have a GPG45 stored identity record type with a 'P2' vot
+        And I have a stored identity record with a 'P2' max vot
 
     Scenario: Address and Family Name Change
         When I start a new 'medium-confidence' journey
@@ -127,7 +127,7 @@ Feature: Identity reuse update details
         Then I am issued a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
-        And I have a GPG45 stored identity record type with a 'P3' vot
+        And I have a stored identity record with a 'P3' max vot
 
     Scenario: Address and Given Name Change
         When I start a new 'medium-confidence' journey
@@ -172,7 +172,7 @@ Feature: Identity reuse update details
         Then I am issued a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'addressLocality' is 'Bristol'
-        And I have a GPG45 stored identity record type with a 'P3' vot
+        And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unsupported Changes
         When I start a new 'medium-confidence' journey
@@ -291,7 +291,7 @@ Feature: Identity reuse update details
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I am issued a 'P3' identity
-        And I have a GPG45 stored identity record type with a 'P3' vot
+        And I have a stored identity record with a 'P3' max vot
 
   Rule: Start with P3
     Scenario: Initial P3 credentials downgraded to P2
@@ -348,4 +348,4 @@ Feature: Identity reuse update details
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I am issued a 'P2' identity
-        And I have a GPG45 stored identity record type with a 'P2' vot
+        And I have a stored identity record with a 'P2' max vot

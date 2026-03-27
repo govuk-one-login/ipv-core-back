@@ -17,7 +17,7 @@ Feature: Stored Identity
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Existing SI record is invalidated once update starts
     Background:
@@ -37,14 +37,14 @@ Feature: Stored Identity
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
-      And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a stored identity record with a 'P2' max vot that is 'invalid'
 
     Scenario: Update address invalidates stored identity
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-only' event
       Then I get a 'address' CRI response
-      And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a stored identity record with a 'P2' max vot that is 'invalid'
 
     Scenario: Update name and address invalidates stored identity
       When I start a new 'medium-confidence' journey
@@ -53,4 +53,4 @@ Feature: Stored Identity
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
-      And I have a GPG45 stored identity record type with a 'P2' vot that is 'invalid'
+      And I have a stored identity record with a 'P2' max vot that is 'invalid'

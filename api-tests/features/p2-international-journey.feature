@@ -83,7 +83,7 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity with a fraud VC
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: User fails V2 app with CI - MAM
       When I submit an 'international' event
@@ -237,4 +237,4 @@ Feature: P2 International Address
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot

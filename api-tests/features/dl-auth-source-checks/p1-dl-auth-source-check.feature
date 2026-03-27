@@ -43,7 +43,7 @@ Feature: P1 Journeys with DL authoritative source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Auth check access_denied
     When I call the CRI stub and get an 'access_denied' OAuth error
@@ -141,7 +141,7 @@ Feature: P1 Journeys with DL authoritative source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And I have a dcmawAsync VC without 'drivingPermit' details
 
   Scenario: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
@@ -176,5 +176,5 @@ Feature: P1 Journeys with DL authoritative source check
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity without a 'dcmawAsync' VC
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 

@@ -7,7 +7,7 @@ import {
 import assert from "assert";
 
 Then(
-  /I have a GPG45 stored identity record type with a '(\w+)' vot(?: that is '(invalid|valid)')?/,
+  /I have a stored identity record with a '(\w+)' max vot(?: that is '(invalid|valid)')?/,
   async function (
     this: World,
     expectedVot: string,

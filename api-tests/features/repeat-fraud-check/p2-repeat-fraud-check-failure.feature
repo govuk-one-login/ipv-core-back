@@ -36,7 +36,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -77,7 +77,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: Available authoritative source failed check evidence too weak
       When I submit a 'update-name' event
@@ -116,7 +116,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: User is able to delete account from update-details-failed screen
       When I submit an 'update-name' event
@@ -227,7 +227,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
@@ -257,7 +257,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
 
     # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
@@ -323,7 +323,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
 
@@ -344,7 +344,7 @@ Feature: Repeat fraud check failures
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
 #      Then I am issued a 'P0' identity
-#      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+#      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 #
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'confirm-your-details' page response
@@ -382,7 +382,7 @@ Feature: Repeat fraud check failures
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       And the TICF VC has properties
         | cis  | BREACHING      |
         | type | RiskAssessment |

@@ -45,7 +45,7 @@ Feature: P1 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri | mitigatingDoc                |
@@ -87,7 +87,7 @@ Feature: P1 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri | mitigatingDoc                |
@@ -121,7 +121,7 @@ Feature: P1 CIMIT - Alternate doc - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
     Examples:
       | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri | mitigatingDoc                |

@@ -42,7 +42,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -72,7 +72,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -121,7 +121,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - Passport and DL auth source check
     When I submit a 'ukPassport' event
@@ -169,7 +169,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario Outline: User drops out of DWP KBV CRI via thin file - DWP KBV
     When I submit a '<cri>' event
@@ -202,7 +202,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -238,7 +238,7 @@ Feature: P2 Web document journey - DWP KBV
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      | oauth_error             |

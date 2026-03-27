@@ -36,7 +36,7 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
     When I start a new 'low-confidence' journey
@@ -83,7 +83,7 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: P1 No Photo Id Journey - NINO dropout
     When I start a new 'low-confidence' journey
@@ -165,7 +165,7 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: P1 No Photo Id Journey user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
     When I start a new 'low-confidence' journey
@@ -208,7 +208,7 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: P1 No suitable ID
     When I start a new 'low-confidence' journey

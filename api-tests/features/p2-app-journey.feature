@@ -40,7 +40,7 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a '<attained-vot>' identity
-    And I have a GPG45 stored identity record type with a '<stored-identity-score>' vot
+    And I have a stored identity record with a '<stored-identity-score>' max vot
 
     Examples:
       | journey-type           | doc             | details                       | attained-vot | stored-identity-score |
@@ -304,7 +304,7 @@ Feature: P2 App journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | device  |

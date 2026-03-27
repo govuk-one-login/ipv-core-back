@@ -46,7 +46,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | intervention                        | ais_response                        |
@@ -89,7 +89,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: User needs to reprove their identity with F2F pending with AIS
       When I start a new 'medium-confidence' journey
@@ -159,7 +159,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Reproving with F2F journey with different identity fails COI check
       When I submit 'lora' details to the CRI stub
@@ -222,7 +222,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Happy path user reproves identity on mobile iphone
       Given the subject already has the following credentials
@@ -271,7 +271,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User doesn't have photo ID, returns to RP
       Given the subject already has the following credentials
@@ -567,7 +567,7 @@ Feature: Reprove Identity Journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: User deletes account after driving licence auth check fail
       # Driving licence auth source check fails

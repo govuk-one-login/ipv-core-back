@@ -44,7 +44,7 @@ Feature: P1 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
       | device  |
@@ -89,7 +89,7 @@ Feature: P1 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
@@ -137,7 +137,7 @@ Feature: P1 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
@@ -224,7 +224,7 @@ Feature: P1 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC

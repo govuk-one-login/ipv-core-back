@@ -68,7 +68,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - dropout DL auth source check - mitigate via f2f
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -223,7 +223,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
@@ -331,7 +331,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session - DL auth source check still required when user already has a DL VC
       Given I activate the 'drivingLicenceAuthCheck' feature set

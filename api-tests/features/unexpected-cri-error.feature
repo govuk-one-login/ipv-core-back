@@ -46,7 +46,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | cri            | details                      |
@@ -91,7 +91,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | cri            |
@@ -124,7 +124,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | cri            | details                      |
@@ -186,7 +186,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | ci_cri            | ci_details                                 | noMatchPage                              | mitigating_cri | mitigating_details           |
@@ -240,7 +240,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | ci_cri            | ci_details                                 | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigating_cri | mitigating_details           |
@@ -321,7 +321,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - try app route
       When I submit a 'app' event
@@ -357,7 +357,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - try post office route
       When I submit a 'postOffice' event
@@ -373,7 +373,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - return to RP
       When I submit an 'returnToRp' event
@@ -421,7 +421,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from F2F CRI - try app route
       When I submit a 'app' event
@@ -459,7 +459,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from F2F CRI - try web route
       When I submit a 'webRoute' event
@@ -486,7 +486,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from F2F CRI - return to RP
       When I submit an 'returnToRp' event
@@ -571,7 +571,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from F2F CRI - try web route
       When I submit a 'webRoute' event
@@ -600,7 +600,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: F2F CRI mitigation via Experian KBV
     Background: Route to sorry-technical-problem F2F mitigation error page
@@ -690,7 +690,7 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session F2F enhanced verification mitigation - user fails KBV - mitigate via F2F
       # Return journey
@@ -742,4 +742,4 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot

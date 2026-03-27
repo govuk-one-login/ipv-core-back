@@ -50,7 +50,7 @@ Feature: Expired DCMAW/Async DCMAW Driving Permits
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario: An expired successful DCMAW driving permit but the current date is not past the validity period should result in identity reuse
     # Initial journey proving with expired driving licence in app
@@ -99,7 +99,7 @@ Feature: Expired DCMAW/Async DCMAW Driving Permits
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
     # New journey
     When I start a new 'medium-confidence' journey

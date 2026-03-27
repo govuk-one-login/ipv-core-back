@@ -48,7 +48,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Cross-browser DL auth source check
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
@@ -88,7 +88,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
@@ -134,7 +134,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
       Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
@@ -244,7 +244,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -275,7 +275,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Cross-browser during separate-session enhanced verification mitigation
     Background: Start separate-session enhanced verification mitigation
@@ -333,7 +333,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC

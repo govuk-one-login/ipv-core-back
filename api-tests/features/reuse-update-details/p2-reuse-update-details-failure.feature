@@ -40,7 +40,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
@@ -64,7 +64,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
 
         Scenario: User is able to delete account from update-details-failed page
             When I submit an 'update-name' event
@@ -105,7 +105,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
@@ -219,7 +219,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P0' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+            And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
@@ -261,7 +261,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
@@ -302,7 +302,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P0' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+            And I have a stored identity record with a 'P3' max vot that is 'invalid'
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
 
@@ -339,7 +339,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P0' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+            And I have a stored identity record with a 'P3' max vot that is 'invalid'
             And the TICF VC has properties
                 | cis  | BREACHING      |
                 | type | RiskAssessment |
@@ -377,7 +377,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
@@ -418,7 +418,7 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot
             When I start a new 'medium-confidence' journey
             Then I get a 'page-ipv-reuse' page response
 
@@ -445,7 +445,7 @@ Feature: Identity reuse update details failures
               | noAddress | true  |
 
             # User stops here and abandons journey
-            And I have a GPG45 stored identity record type with a 'P3' vot that is 'invalid'
+            And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Rule: Update address only
         Background:
@@ -473,4 +473,4 @@ Feature: Identity reuse update details failures
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity
-            And I have a GPG45 stored identity record type with a 'P3' vot
+            And I have a stored identity record with a 'P3' max vot

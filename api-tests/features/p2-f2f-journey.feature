@@ -58,7 +58,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | journey-type           | doc      | details                      |
@@ -107,7 +107,7 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | doc      | details                      |

@@ -38,7 +38,7 @@ Feature: Return exit codes
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And I don't get any return codes
 
   Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
@@ -190,7 +190,7 @@ Feature: Return exit codes
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And I get 'always-required' return code
 
   Scenario: Breaching CI codes generate return codes, including mitigated CIs - CI codes returned

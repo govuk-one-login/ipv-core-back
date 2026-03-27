@@ -29,7 +29,7 @@ Feature: International identity reuse update details
         When I use the OAuth response to get my identity
         Then I am issued a 'P2' identity
         And my address 'buildingNumber' is '28'
-        And I have a GPG45 stored identity record type with a 'P2' vot
+        And I have a stored identity record with a 'P2' max vot
 
     Scenario: International Address and Family Name Change
         When I submit a 'family-name-and-address' event
@@ -72,7 +72,7 @@ Feature: International identity reuse update details
         Then I am issued a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
-        And I have a GPG45 stored identity record type with a 'P2' vot
+        And I have a stored identity record with a 'P2' max vot
 
     Scenario: International Address and Given Name Change
         When I submit a 'given-names-and-address' event
@@ -115,4 +115,4 @@ Feature: International identity reuse update details
         Then I am issued a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'streetName' is 'King Road'
-        And I have a GPG45 stored identity record type with a 'P2' vot
+        And I have a stored identity record with a 'P2' max vot

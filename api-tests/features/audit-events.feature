@@ -36,7 +36,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -79,7 +79,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'new-identity-p2-web-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -97,7 +97,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'reuse-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -116,7 +116,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -167,7 +167,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -307,7 +307,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -357,7 +357,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'reprove-identity-journey-expired-dl' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -384,7 +384,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'repeat-fraud-check-no-update' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -464,7 +464,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -544,7 +544,7 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'strategic-app-cross-browser-journey' are recorded [local only]
 
   @QualityGateRegressionTest

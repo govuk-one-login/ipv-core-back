@@ -43,7 +43,7 @@ Feature: Stored Identity - P2 journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    And I have a stored identity record with a 'P2' max vot
 
   Rule: Non-international journeys
     Background: start non-international journey
@@ -87,7 +87,7 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Successful stored identity storage - P2 app journey that meets P3
       When I submit an 'appTriage' event
@@ -123,7 +123,7 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Successful stored identity storage - P2 F2F journey
       When I submit an 'end' event
@@ -149,7 +149,7 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Successful stored identity storage - P2 no photo ID journey
       When I submit an 'end' event
@@ -187,7 +187,7 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: High-medium confidence journey
     Scenario: Successful P3 vot attained via app
@@ -228,4 +228,4 @@ Feature: Stored Identity - P2 journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P3' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      And I have a stored identity record with a 'P3' max vot

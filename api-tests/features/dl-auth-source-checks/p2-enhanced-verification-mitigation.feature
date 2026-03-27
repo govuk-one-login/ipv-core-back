@@ -68,7 +68,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -222,7 +222,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
@@ -330,7 +330,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | journey-type           |
@@ -384,7 +384,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | journey-type           |
