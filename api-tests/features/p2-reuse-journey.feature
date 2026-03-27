@@ -40,7 +40,8 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
 
     # Reuse journey
     When I start a new 'medium-confidence' journey
@@ -49,7 +50,8 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario: User with M1C is sent on reuse journey when no applicable fraud check
     Given the subject already has the following credentials
@@ -72,7 +74,8 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P3' identity
+    Then I am issued a 'P3' identity
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario: Reuse journey - credentials meet P2 identity - high-medium confidence journey
     Given the subject already has the following credentials with overridden document expiry date
@@ -88,4 +91,5 @@ Feature: P2 Reuse journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot

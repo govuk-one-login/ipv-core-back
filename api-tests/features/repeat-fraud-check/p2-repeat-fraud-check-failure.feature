@@ -9,6 +9,7 @@ Feature: Repeat fraud check failures
       And the subject already has the following expired credentials
         | CRI   | scenario        |
         | fraud | kenneth-score-2 |
+      And I have an existing stored identity record with a 'P3' vot
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'given-names-only' event
@@ -34,7 +35,8 @@ Feature: Repeat fraud check failures
       When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -74,7 +76,8 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: Available authoritative source failed check evidence too weak
       When I submit a 'update-name' event
@@ -112,7 +115,8 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: User is able to delete account from update-details-failed screen
       When I submit an 'update-name' event
@@ -142,7 +146,8 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
+#      And I don't have a stored identity in EVCS
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'pyi-no-match' page response
 
@@ -221,10 +226,39 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
+
+    Scenario: Failed update name due to DCMAW Async
+      And I submit an 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+        | Context                   | Value |
+        | isExistingIdentityInvalid | true  |
+      When I submit a 'return-to-service' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
+
 
     # TODO: uncomment and update this to use the strategic app once PYIC-8769/8941 have been resolved
 #    Scenario: Zero score in fraud CRI
@@ -246,7 +280,8 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
+#      And I don't have a stored identity in EVCS
 #
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'confirm-your-details' page response
@@ -287,7 +322,8 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
 
@@ -307,7 +343,8 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
+#      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 #
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'confirm-your-details' page response
@@ -344,7 +381,8 @@ Feature: Repeat fraud check failures
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
       And the TICF VC has properties
         | cis  | BREACHING      |
         | type | RiskAssessment |
@@ -365,9 +403,32 @@ Feature: Repeat fraud check failures
 #      When I submit a 'returnToRp' event
 #      Then I get an OAuth response
 #      When I use the OAuth response to get my identity
-#      Then I get a 'P0' identity
+#      Then I am issued a 'P0' identity
+#      And I don't have a stored identity in EVCS
 #      When I start a new 'medium-confidence' journey
 #      Then I get a 'confirm-your-details' page response
+
+    Scenario: RFC - failed update name - user abandons journey
+      When I submit a 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        | Context   | Value |
+        | noAddress | true  |
 
   Rule: Update address only
     Background:
@@ -393,6 +454,7 @@ Feature: Repeat fraud check failures
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response

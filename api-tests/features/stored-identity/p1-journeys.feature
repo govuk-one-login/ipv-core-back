@@ -42,8 +42,8 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P3
     When I submit an 'appTriage' event
@@ -78,8 +78,8 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P3' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario: Successful stored identity storage - P1 app journey with identity that matches P2
     When I submit an 'appTriage' event
@@ -118,8 +118,8 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Successful stored identity storage - P1 web journey
     When I submit an 'appTriage' event
@@ -157,8 +157,8 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: Successful stored identity storage - P1 no photo ID
     When I submit an 'end' event
@@ -192,8 +192,8 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P1' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: Successful stored identity storage - P1 F2F journey
     When I submit an 'end' event
@@ -223,5 +223,5 @@ Feature: Stored Identity - P1 journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
-    And I have a GPG45 stored identity record type with a 'P2' vot
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P2' max vot

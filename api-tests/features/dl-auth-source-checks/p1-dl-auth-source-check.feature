@@ -42,7 +42,8 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Auth check access_denied
     When I call the CRI stub and get an 'access_denied' OAuth error
@@ -94,7 +95,8 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity without a 'dcmawAsync' VC
+    Then I am issued a 'P0' identity without a 'dcmawAsync' VC
+    And I don't have a stored identity in EVCS
 
   Scenario: CI on auth check asks for alternative document
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
@@ -104,7 +106,8 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
 
   Scenario: User backs out of driving licence CRI and returns to DCMAW with a passport P1 - identity has only one DCMAW VC
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
@@ -137,7 +140,8 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P3' max vot
     And I have a dcmawAsync VC without 'drivingPermit' details
 
   Scenario: User backs out of driving licence CRI is able to prove their identity another way P1 - via F2F and has no dcmaw VC
@@ -171,4 +175,6 @@ Feature: P1 Journeys with DL authoritative source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity without a 'dcmawAsync' VC
+    Then I am issued a 'P1' identity without a 'dcmawAsync' VC
+    And I have a stored identity record with a 'P2' max vot
+

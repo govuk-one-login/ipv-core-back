@@ -40,8 +40,8 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | details                |
@@ -66,7 +66,7 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: New Identities - International Address
@@ -108,8 +108,8 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Returning existing M1C user goes through details confirmation
     Background:
@@ -159,10 +159,10 @@ Feature: Stored Identity - M1C Outcomes
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And my identity 'GivenName' is '<expected-given-name>'
       And my identity 'FamilyName' is '<expected-family-name>'
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | selected-name-change    | details                                    | fraud-details                           | expected-given-name | expected-family-name |

@@ -41,7 +41,8 @@ Feature: P2 Journeys with DL authoritative source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | journey-type           |
@@ -85,7 +86,8 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Auth check access_denied
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -137,7 +139,8 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a 'dcmawAsync' VC
+      Then I am issued a 'P0' identity without a 'dcmawAsync' VC
+      And I don't have a stored identity in EVCS
 
     Scenario: Auth check abandoned, retry with CI
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -191,8 +194,9 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
       And I have a dcmawAsync VC without 'drivingPermit' details
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User backs out of driving licence CRI is able to prove their identity another way P2 - via F2F and has no dcmaw VC
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
@@ -225,7 +229,8 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity without a 'dcmawAsync' VC
+      Then I am issued a 'P2' identity without a 'dcmawAsync' VC
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: International address user
     Scenario: Non-uk user tries to use driving licence and gets a P0
@@ -294,7 +299,8 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: Web Journey
     Background: Start web journey

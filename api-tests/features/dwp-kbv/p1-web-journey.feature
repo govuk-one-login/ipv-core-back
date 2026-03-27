@@ -41,7 +41,8 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P1' max vot
 
       Examples:
         | cri            | details                      |
@@ -78,12 +79,13 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
-        | cri            | details                      |
-        | drivingLicence | kenneth-driving-permit-valid |
-        | ukPassport     | kenneth-passport-valid       |
+        | cri            | details                      | stored-identity-score |
+        | drivingLicence | kenneth-driving-permit-valid | P1                    |
+        | ukPassport     | kenneth-passport-valid       | P2                    |
 
     Scenario: P1 journey - temporarily_unavailable from DWP CRI
       When I submit an 'ukPassport' event
@@ -107,7 +109,8 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: No Photo ID web journey
     Background: Start no photo ID journey to DWP KBV
@@ -146,7 +149,8 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
       When I submit a 'next' event
@@ -166,7 +170,8 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey - DWP KBV PIP page dropout
       When I submit a 'end' event
@@ -180,7 +185,8 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P1' max vot
 
     Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
       When I submit a 'next' event
@@ -217,4 +223,5 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P2' max vot

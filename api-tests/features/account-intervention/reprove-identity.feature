@@ -45,8 +45,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | intervention                        | ais_response                        |
@@ -88,8 +88,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: User needs to reprove their identity with F2F pending with AIS
       When I start a new 'medium-confidence' journey
@@ -158,8 +158,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Reproving with F2F journey with different identity fails COI check
       When I submit 'lora' details to the CRI stub
@@ -173,7 +173,7 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: App only reprove journey
@@ -221,8 +221,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Happy path user reproves identity on mobile iphone
       Given the subject already has the following credentials
@@ -270,8 +270,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P3' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User doesn't have photo ID, returns to RP
       Given the subject already has the following credentials
@@ -291,7 +291,7 @@ Feature: Reprove Identity Journey
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: User doesn't have photo ID, deletes account
@@ -376,7 +376,7 @@ Feature: Reprove Identity Journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Desktop user fails to prove identity with a CI and returns to RP
@@ -413,7 +413,7 @@ Feature: Reprove Identity Journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Mobile user fails to prove identity and returns to RP
@@ -453,7 +453,7 @@ Feature: Reprove Identity Journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
     Scenario: Mobile user fails to prove identity with a CI and returns to RP
@@ -493,7 +493,7 @@ Feature: Reprove Identity Journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
   Rule: App only reprove journey authoritative source check fails
@@ -566,8 +566,8 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      And I have a GPG45 stored identity record type with a 'P2' vot
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: User deletes account after driving licence auth check fail
       # Driving licence auth source check fails
@@ -589,7 +589,8 @@ Feature: Reprove Identity Journey
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
       # Return to try again
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
@@ -624,5 +625,5 @@ Feature: Reprove Identity Journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS

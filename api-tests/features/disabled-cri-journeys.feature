@@ -245,7 +245,8 @@ Feature: Disabled CRI journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity without a TICF VC
+      Then I am issued a 'P2' identity without a TICF VC
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: BAV is disabled
 

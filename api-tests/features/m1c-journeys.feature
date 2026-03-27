@@ -37,7 +37,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
       | details                |
@@ -62,7 +63,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: High-medium confidence journeys
     Scenario: Zero fraud score results in M1C with [P2,P3] VTR
@@ -99,7 +101,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Returning existing M1C user to high-medium confidence journey
     Scenario: User goes through details confirmation and receives a P3 identity
@@ -121,7 +124,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P3' identity
+      Then I am issued a 'P3' identity
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: Returning existing M1C unavailable user goes through medium-confidence details confirmation
     Background:
@@ -130,6 +134,7 @@ Feature: M1C Unavailable Journeys
         | dcmawAsync    | kenneth-passport-valid       |
         | address       | kenneth-current              |
         | fraud         | kenneth-unavailable          |
+      And I have an existing stored identity record with a 'P3' vot
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -146,12 +151,13 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
-        | fraudResponse            | endScore  |
-        | 'kenneth-unavailable'    | 'M1C'     |
-        | 'kenneth-score-2'        | 'M1A'     |
+        | fraudResponse            | endScore  | stored-identity-score |
+        | 'kenneth-unavailable'    | 'M1C'     | P2                    |
+        | 'kenneth-score-2'        | 'M1A'     | P3                    |
 
     Scenario Outline: Existing M1C name change, finish with <endScore>
       When I submit a 'family-name-only' event
@@ -189,14 +195,15 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
-        | fraudResponse                                | endScore  |
-        | 'kenneth-changed-family-name-unavailable'    | 'M1C'     |
-        | 'kenneth-changed-family-name-score-2'        | 'M1A'     |
+        | fraudResponse                                | endScore  | stored-identity-score |
+        | 'kenneth-changed-family-name-unavailable'    | 'M1C'     | P2                    |
+        | 'kenneth-changed-family-name-score-2'        | 'M1A'     | P3                    |
 
-    Scenario Outline: Existing M1C address change, finish with  <endScore>
+    Scenario Outline: Existing M1C address change, finish with <endScore>
       When I submit an 'address-only' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -210,14 +217,15 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
-        | fraudResponse            | endScore  |
-        | 'kenneth-unavailable'    | 'M1C'     |
-        | 'kenneth-score-2'        | 'M1A'     |
+        | fraudResponse            | endScore  | stored-identity-score |
+        | 'kenneth-unavailable'    | 'M1C'     | P2                    |
+        | 'kenneth-score-2'        | 'M1A'     | P3                    |
 
-    Scenario Outline: Existing M1C address and name change, finish with  <endScore>
+    Scenario Outline: Existing M1C address and name change, finish with <endScore>
       # Repeat fraud check with update address and family name
       When I submit a 'family-name-and-address' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
@@ -256,12 +264,13 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
 
       Examples:
-        | fraudResponse                                | endScore  |
-        | 'kenneth-changed-family-name-unavailable'    | 'M1C'     |
-        | 'kenneth-changed-family-name-score-2'        | 'M1A'     |
+        | fraudResponse                                | endScore  | stored-identity-score |
+        | 'kenneth-changed-family-name-unavailable'    | 'M1C'     | P2                    |
+        | 'kenneth-changed-family-name-score-2'        | 'M1A'     | P3                    |
 
     Scenario: Existing M1C name change to M1A using DL
       When I submit a 'family-name-only' event
@@ -303,7 +312,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Existing non-M1C identity returns
     Background:
@@ -312,6 +322,7 @@ Feature: M1C Unavailable Journeys
         | dcmawAsync    | kenneth-passport-valid       |
         | address       | kenneth-current              |
         | fraud         | kenneth-score-2              |
+      And I have an existing stored identity record with a 'P3' vot
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-reuse' page response
       When I submit a 'update-details' event
@@ -351,7 +362,8 @@ Feature: M1C Unavailable Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Existing M1A user cannot change name with DL and unavailable fraud check
       When I submit a 'family-name-only' event
@@ -391,4 +403,5 @@ Feature: M1C Unavailable Journeys
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot

@@ -40,7 +40,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -67,7 +68,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -85,7 +87,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -131,7 +134,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Blocked
       Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
@@ -212,7 +216,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -259,7 +264,8 @@ Feature: TICF successful responses
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

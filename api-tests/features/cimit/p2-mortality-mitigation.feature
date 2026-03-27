@@ -40,7 +40,8 @@ Feature: Mortality check failures
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity with a fraud VC
+    Then I am issued a 'P2' identity with a fraud VC
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Unmitigated mortality check results in failure
     When I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
@@ -50,4 +51,5 @@ Feature: Mortality check failures
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS

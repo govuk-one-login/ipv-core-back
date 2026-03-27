@@ -74,7 +74,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createNoInterventionAisSta
 import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -186,7 +185,6 @@ class ProcessCandidateIdentityHandlerTest {
             when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
-            lenient().when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
         }
 
         @Test
@@ -209,6 +207,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -231,7 +232,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
@@ -277,6 +278,9 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                     .thenReturn(List.of())
                     .thenReturn(List.of());
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -302,7 +306,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P0),
                             eq(null),
@@ -338,6 +342,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -363,7 +370,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P0),
                             eq(null),
@@ -463,15 +470,14 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(storeIdentityService, times(0))
+            verify(storeIdentityService)
                     .storeIdentity(any(), any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
         }
 
         @Test
-        void shouldStoreExistingIdentityIfStoredIdentityServiceFeatureFlagIsEnabled()
-                throws Exception {
+        void shouldStoreExistingIdentity() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
@@ -482,7 +488,6 @@ class ProcessCandidateIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(votMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(cimitUtilityService.getParsedSecurityCheckCredential(
                             SIGNED_CIMIT_VC_NO_CI, USER_ID))
                     .thenReturn(CIMIT_VC);
@@ -599,6 +604,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -623,7 +631,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
@@ -670,6 +678,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -694,7 +705,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
@@ -786,6 +797,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
             when(evcsService.getUserVCs(
                             USER_ID,
                             EVCS_ACCESS_TOKEN,
@@ -810,7 +824,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
@@ -1168,6 +1182,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, USER_ID))
+                    .thenReturn(CIMIT_VC);
 
             var request =
                     requestBuilder
@@ -1184,7 +1201,7 @@ class ProcessCandidateIdentityHandlerTest {
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(USER_ID),
-                            eq(List.of()),
+                            eq(List.of(CIMIT_VC)),
                             eq(List.of()),
                             eq(P2),
                             eq(STRONGEST_MATCHED_VOT),
@@ -1452,9 +1469,7 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void
-                shouldStoreCimitVcIfStoredIdentityServiceFeatureFlagIsEnabledAndSecurityCheckCredentialIsValid()
-                        throws Exception {
+        void shouldStoreCimitVcIfSecurityCheckCredentialIsValid() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
@@ -1479,7 +1494,6 @@ class ProcessCandidateIdentityHandlerTest {
                             EvcsVCState.CURRENT,
                             EvcsVCState.PENDING_RETURN))
                     .thenReturn(List.of());
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(cimitUtilityService.getParsedSecurityCheckCredential(
                             SIGNED_CIMIT_VC_NO_CI, USER_ID))
                     .thenReturn(CIMIT_VC);
@@ -1532,7 +1546,6 @@ class ProcessCandidateIdentityHandlerTest {
                             EvcsVCState.CURRENT,
                             EvcsVCState.PENDING_RETURN))
                     .thenReturn(List.of());
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(cimitUtilityService.getParsedSecurityCheckCredential(
                             SIGNED_CIMIT_VC_NO_CI, USER_ID))
                     .thenThrow(new CredentialParseException("Failed to parse VC"));

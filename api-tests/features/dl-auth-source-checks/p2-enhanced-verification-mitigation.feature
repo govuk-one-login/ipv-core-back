@@ -67,7 +67,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -85,7 +86,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Same session DCMAW enhanced verification mitigation - dropout DL auth source check - mitigate via f2f
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
@@ -165,7 +167,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: Separate session mitigation
     Background: Start new medium-confidence journey
@@ -218,7 +221,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
@@ -242,7 +246,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
@@ -260,7 +265,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: Web journey via DL initially
     Scenario Outline: Same session - DL auth source check not required when user already has a DL VC - <journey-type>
@@ -323,7 +329,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | journey-type           |
@@ -376,7 +383,8 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | journey-type           |

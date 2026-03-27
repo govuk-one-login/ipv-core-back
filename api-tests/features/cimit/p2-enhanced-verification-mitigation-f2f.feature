@@ -51,7 +51,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | document-details             |
@@ -77,7 +78,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a TICF VC
+      Then I am issued a 'P0' identity without a TICF VC
+      And I don't have a stored identity in EVCS
 
     Scenario: Same session F2F enhanced verification mitigation - async queue error - continue from pyi-f2f-technical page
       When I submit an 'f2f' event
@@ -115,7 +117,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: Separate session journeys
 
@@ -143,7 +146,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | document-details             |
@@ -191,7 +195,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a TICF VC
+      Then I am issued a 'P0' identity without a TICF VC
+      And I don't have a stored identity in EVCS
 
     Scenario: Separate session F2F enhanced verification mitigation - user abandons DCMAW and mitigates with F2F
       Given I start a new 'medium-confidence' journey
@@ -228,7 +233,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session F2F enhanced verification mitigation - user fails DCMAW (e.g. failed likeness) - mitigate via F2F
       Given I start a new 'medium-confidence' journey
@@ -274,4 +280,5 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot

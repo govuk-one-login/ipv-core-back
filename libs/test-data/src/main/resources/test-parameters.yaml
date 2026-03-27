@@ -353,7 +353,6 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
-    storedIdentityServiceEnabled: true
     sisVerificationEnabled: true
     testFeatureFlag: false
     evcsApiUpdatesEnabled: false
@@ -373,9 +372,6 @@ core:
     reproveViaAppOnly:
       featureFlags:
         reproveViaAppOnlyEnabled: true
-    storedIdentityService:
-      featureFlags:
-        storedIdentityServiceEnabled: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
