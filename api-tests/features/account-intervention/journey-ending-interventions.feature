@@ -12,11 +12,11 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | false   |
@@ -55,11 +55,11 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | false   |
@@ -95,11 +95,11 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | false   |
@@ -147,11 +147,11 @@ Feature: Journey ending interventions
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | true    |

@@ -183,7 +183,6 @@ states:
     response:
       type: page
       pageId: update-name-date-birth
-      context: rfcAccountDeletion
       pageContext:
         journeyType: rfc
     events:
@@ -242,7 +241,6 @@ states:
     response:
       type: page
       pageId: page-ipv-success
-      context: repeatFraudCheck
       pageContext:
         journeyType: coi
     events:

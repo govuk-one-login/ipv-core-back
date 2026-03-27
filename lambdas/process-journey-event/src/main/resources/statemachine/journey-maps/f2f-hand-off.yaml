@@ -111,7 +111,6 @@ states:
     response:
       type: page
       pageId: sorry-technical-problem
-      context: f2fCriError
       pageContext:
         reason: f2fCriError
     events:
@@ -128,7 +127,6 @@ states:
     response:
       type: page
       pageId: sorry-technical-problem
-      context: kbvMitigation
       pageContext:
         reason: kbvMitigation
     events:

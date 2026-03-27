@@ -99,7 +99,6 @@ states:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: iphone-appOnly
       pageContext:
         smartphone: iphone
         isAppOnly: true
@@ -133,7 +132,6 @@ states:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: android-appOnly
       pageContext:
         smartphone: android
         isAppOnly: true
@@ -168,7 +166,6 @@ states:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: iphone-appOnly
       pageContext:
         smartphone: iphone
         isAppOnly: true
@@ -213,7 +210,6 @@ states:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: android-appOnly
       pageContext:
         smartphone: android
         isAppOnly: true
@@ -374,7 +370,6 @@ states:
     response:
       type: page
       pageId: delete-handover
-      context: reproveIdentity
       pageContext:
         journeyType: reprove
 

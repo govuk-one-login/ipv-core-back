@@ -9,7 +9,6 @@ states:
     response:
       type: page
       pageId: page-id-for-page-state
-      context: test
       pageContext:
         reason: dropout
     parent: PARENT_STATE

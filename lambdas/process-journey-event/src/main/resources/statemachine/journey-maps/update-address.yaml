@@ -100,7 +100,6 @@ states:
     response:
       type: page
       pageId: page-ipv-success
-      context: updateIdentity
       pageContext:
         journeyType: coi
     events:

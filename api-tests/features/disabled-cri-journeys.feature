@@ -8,7 +8,7 @@ Feature: Disabled CRI journeys
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      Then I get a 'prove-identity-no-photo-id' page response and pageContext
         | Context  | Value  |
         | ninoOnly | true   |
 
@@ -46,7 +46,7 @@ Feature: Disabled CRI journeys
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+      Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
       When I submit an 'appTriage' event
@@ -101,7 +101,7 @@ Feature: Disabled CRI journeys
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      Then I get a 'prove-identity-no-photo-id' page response and pageContext
         | Context  | Value  |
         | ninoOnly | true   |
       When I submit an 'end' event
@@ -127,7 +127,7 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -148,7 +148,7 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -158,7 +158,7 @@ Feature: Disabled CRI journeys
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit an 'access-denied' event
-      Then I get a 'prove-identity-another-type-photo-id' page response with context '<context>' and pageContext
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
         | Context    | Value     |
         | invalidDoc | <context> |
       When I submit an 'f2f' event
@@ -197,7 +197,7 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -218,11 +218,11 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -271,7 +271,7 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -294,7 +294,7 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event

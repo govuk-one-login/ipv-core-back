@@ -20,11 +20,11 @@ Feature: Identity reuse update details
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'computer-or-tablet' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
             | Context    | Value |
             | deviceType | dad   |
         When I submit an 'android' event
-        Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
             | Context    | Value   |
             | smartphone | android |
             | isAppOnly  | true    |
@@ -32,7 +32,7 @@ Feature: Identity reuse update details
         And I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
             | Context   | Value |
             | noAddress | true  |
         When I submit a 'next' event
@@ -40,7 +40,7 @@ Feature: Identity reuse update details
         When I submit '<fraud-details>' details with attributes to the CRI stub
             | Attribute          | Values                   |
             | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
             | Context     | Value |
             | journeyType | coi   |
         When I submit a 'next' event
@@ -69,7 +69,7 @@ Feature: Identity reuse update details
         When I submit 'kenneth-score-2' details with attributes to the CRI stub
             | Attribute          | Values                   |
             | evidence_requested | {"identityFraudScore":2} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
             | Context     | Value |
             | journeyType | coi   |
         When I submit a 'next' event
@@ -90,11 +90,11 @@ Feature: Identity reuse update details
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'computer-or-tablet' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
             | Context    | Value |
             | deviceType | dad   |
         When I submit an 'android' event
-        Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
             | Context    | Value   |
             | smartphone | android |
             | isAppOnly  | true    |
@@ -102,7 +102,7 @@ Feature: Identity reuse update details
         And I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
             | Context   | Value |
             | noAddress | true  |
         When I submit a 'next' event
@@ -114,7 +114,7 @@ Feature: Identity reuse update details
         When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
             | Attribute          | Values                   |
             | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
             | Context     | Value |
             | journeyType | coi   |
         When I submit a 'next' event
@@ -136,11 +136,11 @@ Feature: Identity reuse update details
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'computer-or-tablet' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
             | Context    | Value |
             | deviceType | dad   |
         When I submit an 'android' event
-        Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
             | Context    | Value   |
             | smartphone | android |
             | isAppOnly  | true    |
@@ -148,7 +148,7 @@ Feature: Identity reuse update details
         And I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
             | Context   | Value |
             | noAddress | true  |
         When I submit a 'next' event
@@ -158,7 +158,7 @@ Feature: Identity reuse update details
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
             | Attribute          | Values                   |
             | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
             | Context     | Value |
             | journeyType | coi   |
         When I submit a 'next' event
@@ -174,61 +174,61 @@ Feature: Identity reuse update details
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
         When I submit a 'dob' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'dob-family' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'dob-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'family-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-family-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-family-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-family' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-family-given' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'end' event
@@ -240,7 +240,7 @@ Feature: Identity reuse update details
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
         When I submit a 'dob' event
-        Then I get a 'update-name-date-birth' page response with context 'reuse' and pageContext
+        Then I get a 'update-name-date-birth' page response and pageContext
             | Context     | Value |
             | journeyType | reuse |
         When I submit a 'continue' event
@@ -258,11 +258,11 @@ Feature: Identity reuse update details
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'computer-or-tablet' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
             | Context    | Value |
             | deviceType | dad   |
         When I submit an 'android' event
-        Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+        Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
             | Context    | Value   |
             | smartphone | android |
             | isAppOnly  | true    |
@@ -270,7 +270,7 @@ Feature: Identity reuse update details
         And I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
             | Context   | Value |
             | noAddress | true  |
         When I submit a 'next' event
@@ -278,7 +278,7 @@ Feature: Identity reuse update details
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
             | Attribute          | Values                   |
             | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
             | Context     | Value |
             | journeyType | coi   |
         When I submit a 'next' event

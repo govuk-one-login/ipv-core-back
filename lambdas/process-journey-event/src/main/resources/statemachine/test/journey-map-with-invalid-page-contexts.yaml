@@ -3,7 +3,6 @@ states:
     response:
       type: page
       pageId: page-id-for-page-state
-      context: test
       pageContext:
         unregisteredContext: dropout
     parent: PARENT_STATE

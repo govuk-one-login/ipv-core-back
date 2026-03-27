@@ -37,7 +37,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-select-smartphone
-      context: dad
       pageContext:
         deviceType: dad
     events:
@@ -52,7 +51,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-select-smartphone
-      context: mam
       pageContext:
         deviceType: mam
     events:

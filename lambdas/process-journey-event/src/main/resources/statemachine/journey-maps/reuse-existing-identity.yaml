@@ -233,7 +233,6 @@ states:
     response:
       type: page
       pageId: update-name-date-birth
-      context: reuse
       pageContext:
         journeyType: reuse
     events:

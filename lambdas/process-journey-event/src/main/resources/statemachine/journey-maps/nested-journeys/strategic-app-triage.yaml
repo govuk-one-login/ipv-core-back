@@ -53,7 +53,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-select-smartphone
-      context: dad
       pageContext:
         deviceType: dad
     events:
@@ -100,7 +99,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: iphone
       pageContext:
         smartphone: iphone
         isAppOnly: false
@@ -134,7 +132,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: iphone-appOnly
       pageContext:
         smartphone: iphone
         isAppOnly: true
@@ -188,7 +185,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: android
       pageContext:
         smartphone: android
         isAppOnly: false
@@ -222,7 +218,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
-      context: android-appOnly
       pageContext:
         smartphone: android
         isAppOnly: true
@@ -295,7 +290,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-select-smartphone
-      context: mam
       pageContext:
         deviceType: mam
     events:
@@ -328,7 +322,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: iphone
       pageContext:
         smartphone: iphone
         isAppOnly: false
@@ -351,7 +344,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: iphone-appOnly
       pageContext:
         smartphone: iphone
         isAppOnly: true
@@ -402,7 +394,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: android
       pageContext:
         smartphone: android
         isAppOnly: false
@@ -425,7 +416,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-mobile-download-app
-      context: android-appOnly
       pageContext:
         smartphone: android
         isAppOnly: true
@@ -505,7 +495,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: uk-driving-licence-details-not-correct
-      context: strategicApp
       pageContext:
         isFromStrategicApp: true
     events:

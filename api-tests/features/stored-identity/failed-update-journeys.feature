@@ -32,7 +32,7 @@ Feature: Failed update details
       When I submit 'alice-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | true  |
       When I submit an 'returnToRp' event
@@ -51,11 +51,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -63,7 +63,7 @@ Feature: Failed update details
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -83,11 +83,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -111,11 +111,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -123,7 +123,7 @@ Feature: Failed update details
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get an 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
 
@@ -150,7 +150,7 @@ Feature: Failed update details
       When I submit 'alice-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get an 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -161,7 +161,7 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - fail with CI (invalid identity)
       And I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -172,11 +172,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -184,7 +184,7 @@ Feature: Failed update details
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -195,7 +195,7 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - fail with no CI (invalid identity)
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -205,11 +205,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -217,7 +217,7 @@ Feature: Failed update details
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get an 'update-details-failed' page response and pageContext
         | Context                   | Value |
         | isExistingIdentityInvalid | true  |
       When I submit a 'return-to-service' event
@@ -228,7 +228,7 @@ Feature: Failed update details
 
     Scenario: RFC - failed update name - user abandons journey
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -237,11 +237,11 @@ Feature: Failed update details
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -249,7 +249,7 @@ Feature: Failed update details
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get an 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
 

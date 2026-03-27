@@ -20,11 +20,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | true    |
@@ -36,7 +36,7 @@ Feature: Update name journey with DL auth source check
     When I submit '<details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+    Then I get a 'page-dcmaw-success' page response and pageContext
       | Context   | Value |
       | noAddress | true  |
     When I submit a 'next' event
@@ -44,7 +44,7 @@ Feature: Update name journey with DL auth source check
     When I submit '<fraud-details>' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+    Then I get a 'page-ipv-success' page response and pageContext
       | Context     | Value |
       | journeyType | coi   |
     When I submit a 'next' event
@@ -67,11 +67,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | true    |
@@ -83,7 +83,7 @@ Feature: Update name journey with DL auth source check
     When I submit '<details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+    Then I get a 'page-dcmaw-success' page response and pageContext
       | Context   | Value |
       | noAddress | true  |
     When I submit a 'next' event
@@ -95,7 +95,7 @@ Feature: Update name journey with DL auth source check
     When I submit '<fraud-details>' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+    Then I get a 'page-ipv-success' page response and pageContext
       | Context     | Value |
       | journeyType | coi   |
     When I submit a 'next' event
@@ -119,11 +119,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -138,11 +138,11 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -153,7 +153,7 @@ Feature: Update name journey with DL auth source check
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+    Then I get a 'page-dcmaw-success' page response and pageContext
       | Context   | Value |
       | noAddress | true  |
     When I submit a 'next' event
@@ -161,7 +161,7 @@ Feature: Update name journey with DL auth source check
     When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+    Then I get a 'page-ipv-success' page response and pageContext
       | Context     | Value |
       | journeyType | coi   |
     When I submit a 'next' event
@@ -178,11 +178,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -197,11 +197,11 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -212,7 +212,7 @@ Feature: Update name journey with DL auth source check
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event
-    Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+    Then I get a 'page-dcmaw-success' page response and pageContext
       | Context   | Value |
       | noAddress | true  |
     When I submit a 'next' event
@@ -224,7 +224,7 @@ Feature: Update name journey with DL auth source check
     When I submit 'kenneth-changed-family-name-and-address-score-2' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+    Then I get a 'page-ipv-success' page response and pageContext
       | Context     | Value |
       | journeyType | coi   |
     When I submit a 'next' event
@@ -241,11 +241,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -260,11 +260,11 @@ Feature: Update name journey with DL auth source check
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+    Then I get a 'prove-identity-another-way' page response and pageContext
       | Context   | Value |
       | removeF2f | true  |
     When I submit a 'returnToRp' event
@@ -287,11 +287,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -304,13 +304,13 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
 
     # Attempt 2 - retry after viewing prove-identity-another-way
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -323,17 +323,17 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+    Then I get a 'prove-identity-another-way' page response and pageContext
       | Context   | Value |
       | removeF2f | true  |
     When I submit an 'anotherTypePhotoId' event
 
     # Attempt 3 - give up
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -346,11 +346,11 @@ Feature: Update name journey with DL auth source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit an 'end' event
-    Then I get a 'prove-identity-another-way' page response with context 'noF2f' and pageContext
+    Then I get a 'prove-identity-another-way' page response and pageContext
       | Context   | Value |
       | removeF2f | true  |
     When I submit a 'returnToRp' event
@@ -372,11 +372,11 @@ Feature: Update name journey with DL auth source check
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | true   |
@@ -391,7 +391,7 @@ Feature: Update name journey with DL auth source check
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+    Then I get an 'sorry-could-not-confirm-details' page response and pageContext
       | Context                 | Value |
       | isExistingIdentityValid | false |
     When I submit a 'returnToRp' event

@@ -60,7 +60,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: sorry-technical-problem
-      context: dlOrPassportMitigation
       pageContext:
         reason: dlOrPassportMitigation
     events:
@@ -80,7 +79,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: prove-identity-another-type-photo-id
-      context: passport
       pageContext:
         invalidDoc: passport
     events:
@@ -135,7 +133,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: sorry-technical-problem
-      context: dlOrPassportMitigation
       pageContext:
         reason: dlOrPassportMitigation
     events:
@@ -155,7 +152,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: prove-identity-another-type-photo-id
-      context: drivingLicence
       pageContext:
         invalidDoc: drivingLicence
     events:
@@ -200,7 +196,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: prove-identity-no-other-photo-id
-      context: drivingLicence
       pageContext:
         invalidDoc: drivingLicence
     events:
@@ -243,7 +238,6 @@ nestedJourneyStates:
     response:
       type: page
       pageId: prove-identity-no-other-photo-id
-      context: passport
       pageContext:
         invalidDoc: passport
     events:
