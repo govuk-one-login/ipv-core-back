@@ -98,14 +98,13 @@ public class TicfCriService {
                                     .map(VerifiableCredential::getVcString)
                                     .toList());
 
-            var requestBody = OBJECT_MAPPER.writeValueAsString(ticfCriRequest);
-            logTicfRequestSize(requestBody);
-
             var httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(ticfCriConfig.getCredentialUrl())
                             .timeout(Duration.ofSeconds(ticfCriConfig.getRequestTimeout()))
-                            .POST(HttpRequest.BodyPublishers.ofString(requestBody));
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(ticfCriRequest)));
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
@@ -152,20 +151,6 @@ public class TicfCriService {
                     LogHelper.buildErrorMessage(
                             "Request to TICF CRI failed. Allowing user journey to continue", e));
             return List.of();
-        }
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private void logTicfRequestSize(String requestBody) {
-        try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("TICF CRI request body size")
-                            .with(
-                                    "requestBodyBytes",
-                                    requestBody.getBytes(java.nio.charset.StandardCharsets.UTF_8)
-                                            .length));
-        } catch (Exception e) {
-            LOGGER.warn(LogHelper.buildErrorMessage("Failed to log TICF CRI request body size", e));
         }
     }
 

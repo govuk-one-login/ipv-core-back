@@ -7,7 +7,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     SIS_VERIFICATION("sisVerificationEnabled"),
     AIS_STATE_CHECK("aisStateCheckEnabled"),
-    INTERVENTION_REPROVE_VIA_APP_ONLY("reproveViaAppOnlyEnabled");
+    INTERVENTION_REPROVE_VIA_APP_ONLY("reproveViaAppOnlyEnabled"),
+    EVCS_API_UPDATES("evcsApiUpdatesEnabled");
 
     private final String name;
 

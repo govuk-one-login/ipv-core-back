@@ -355,6 +355,7 @@ core:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     testFeatureFlag: false
+    evcsApiUpdatesEnabled: false
   features:
     testFeature:
       self:
@@ -365,6 +366,9 @@ core:
     disableTestFeatureFlag:
       featureFlags:
         testFeatureFlag: false
+    evcsApiUpdates:
+      featureFlags:
+        evcsApiUpdatesEnabled: true
     reproveViaAppOnly:
       featureFlags:
         reproveViaAppOnlyEnabled: true

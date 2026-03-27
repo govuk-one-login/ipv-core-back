@@ -358,8 +358,12 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
+    evcsApiUpdatesEnabled: false
 
   features:
+    evcsApiUpdates:
+        featureFlags:
+          evcsApiUpdatesEnabled: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
