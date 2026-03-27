@@ -168,6 +168,7 @@ The Step Response returned by the State Machine when transitioning to this state
 * `process`: the state represents a call to a lambda
 * `page`: the state represents a page
 * `cri`: the state represents a CRI
+
 ```yaml
 PROCESS_STATE:
   response:
@@ -181,8 +182,10 @@ PROCESS_STATE:
 PAGE_STATE:
   response:
     type: page
-    pageId: live-in-uk # this is the page identifier defined in core-front
-    context: fraud # this optional field tells IPV Core Front to display a variant of a dynamic page
+    pageId: pyi-triage-mobile-download-app # this is the page identifier defined in core-front
+    pageContext: # this optional object tells IPV Core Front to display a variant of a dynamic page
+      smartphone: iphone
+      isAppOnly: true
   events:
     ...
 
@@ -193,6 +196,11 @@ CRI_STATE:
   events:
     ...
 ```
+
+### `pageContext` on Page States
+Page states have an optional `pageContext` object which is used to control which variant Core Front should display for the specified page.
+All pages with a context must be specified in the `PageContextValidator` which shows all the contexts that are valid for a page. When
+adding a variant to a page, all valid contexts must exist in the object otherwise the validator will throw.
 
 ## Events
 The `events` define what the state accepts and how the State Machine should handle when it receives a particular event for the current state.
