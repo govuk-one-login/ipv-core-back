@@ -13,11 +13,11 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'smartphone' event
 
     Scenario: MAM journey cross-browser scenario happy path
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -50,11 +50,11 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'P2' identity
 
     Scenario: Cross-browser DL auth source check
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -89,11 +89,11 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'P2' identity
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -134,11 +134,11 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'P2' identity
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -171,7 +171,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -201,11 +201,11 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -289,11 +289,11 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -396,7 +396,7 @@ Feature: P2 V2 App Cross Browser Scenario
       And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
         | Context            | Value |
         | isFromStrategicApp | true  |
       When I submit a 'next' event
@@ -406,11 +406,11 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -423,7 +423,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
         | Context            | Value |
         | isFromStrategicApp | true  |
       When I submit an 'end' event
@@ -431,7 +431,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'anotherTypePhotoId' event
 
       # Attempt 3 - give up
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -444,7 +444,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
         | Context            | Value |
         | isFromStrategicApp | true  |
       When I submit an 'end' event

@@ -51,11 +51,11 @@ Feature: P2 reuse journeys
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'smartphone' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
           | Context    | Value |
           | deviceType | mam   |
         When I submit an 'iphone' event
-        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
           | Context    | Value  |
           | smartphone | iphone |
           | isAppOnly  | true   |
@@ -66,7 +66,7 @@ Feature: P2 reuse journeys
         When I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
           | Context   | Value |
           | noAddress | true  |
         When I submit a 'next' event
@@ -74,7 +74,7 @@ Feature: P2 reuse journeys
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
           | Attribute          | Values                   |
           | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
           | Context     | Value |
           | journeyType | coi   |
         When I submit a 'next' event
@@ -110,11 +110,11 @@ Feature: P2 reuse journeys
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'smartphone' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
           | Context    | Value |
           | deviceType | mam   |
         When I submit an 'iphone' event
-        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
           | Context    | Value  |
           | smartphone | iphone |
           | isAppOnly  | true   |
@@ -129,7 +129,7 @@ Feature: P2 reuse journeys
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
           | Attribute | Values          |
           | context   | "check_details" |
-        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
           | Context   | Value |
           | noAddress | true  |
         When I submit a 'next' event
@@ -137,7 +137,7 @@ Feature: P2 reuse journeys
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
           | Attribute          | Values                   |
           | evidence_requested | {"identityFraudScore":2} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
           | Context     | Value |
           | journeyType | coi   |
         When I submit a 'next' event
@@ -171,11 +171,11 @@ Feature: P2 reuse journeys
         When I submit an 'appTriage' event
         Then I get a 'pyi-triage-select-device' page response
         When I submit a 'smartphone' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
           | Context    | Value |
           | deviceType | mam   |
         When I submit an 'iphone' event
-        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+        Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
           | Context    | Value  |
           | smartphone | iphone |
           | isAppOnly  | true   |
@@ -186,7 +186,7 @@ Feature: P2 reuse journeys
         When I poll for async DCMAW credential receipt
         Then the poll returns a '201'
         When I submit the returned journey event
-        Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+        Then I get a 'page-dcmaw-success' page response and pageContext
           | Context   | Value |
           | noAddress | true  |
         When I submit a 'next' event
@@ -194,7 +194,7 @@ Feature: P2 reuse journeys
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
           | Attribute          | Values                   |
           | evidence_requested | {"identityFraudScore":1} |
-        Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+        Then I get a 'page-ipv-success' page response and pageContext
           | Context     | Value |
           | journeyType | coi   |
         When I submit a 'next' event

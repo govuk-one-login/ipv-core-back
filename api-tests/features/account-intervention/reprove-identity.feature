@@ -20,11 +20,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | false   |
@@ -198,11 +198,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -244,11 +244,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
@@ -310,7 +310,7 @@ Feature: Reprove Identity Journey
       When I submit a 'end' event
       Then I get a 'need-id-prove-identity-again-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+      Then I get a 'delete-handover' page response and pageContext
         | Context     | Value   |
         | journeyType | reprove |
 
@@ -332,13 +332,13 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'need-prove-identity-again-no-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+      Then I get a 'delete-handover' page response and pageContext
         | Context     | Value   |
         | journeyType | reprove |
 
@@ -360,11 +360,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -397,11 +397,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -434,11 +434,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
@@ -474,11 +474,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
@@ -518,11 +518,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
@@ -540,7 +540,7 @@ Feature: Reprove Identity Journey
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'uk-driving-licence-details-not-correct-reprove' page response
       When I submit a 'next' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
@@ -576,7 +576,7 @@ Feature: Reprove Identity Journey
       When I submit an 'end' event
       Then I get a 'need-prove-identity-again-app' page response
       When I submit an 'delete' event
-      Then I get a 'delete-handover' page response with context 'reproveIdentity' and pageContext
+      Then I get a 'delete-handover' page response and pageContext
         | Context     | Value   |
         | journeyType | reprove |
 
@@ -602,11 +602,11 @@ Feature: Reprove Identity Journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |

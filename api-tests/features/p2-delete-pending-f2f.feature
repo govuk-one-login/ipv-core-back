@@ -26,7 +26,7 @@ Feature: P2 delete pending F2F journey
   Scenario: Pending F2F request delete identity
     # Return journey
     When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details' and pageContext
+    Then I get a 'page-ipv-pending' page response and pageContext
       | Context            | Value |
       | allowDeleteDetails | true  |
     When I submit a 'next' event
@@ -34,20 +34,20 @@ Feature: P2 delete pending F2F journey
     When I submit a 'next' event
     Then I get a 'pyi-confirm-delete-details' page response
     When I submit a 'next' event
-    Then I get a 'pyi-details-deleted' page response with context 'f2f' and pageContext
+    Then I get a 'pyi-details-deleted' page response and pageContext
       | Context     | Value |
       | journeyType | f2f   |
 
   Scenario: Pending F2F request continue without delete identity
     # Return journey
     When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details' and pageContext
+    Then I get a 'page-ipv-pending' page response and pageContext
       | Context            | Value |
       | allowDeleteDetails | true  |
     When I submit a 'next' event
     Then I get a 'pyi-f2f-delete-details' page response
     When I submit a 'end' event
-    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details' and pageContext
+    Then I get a 'page-ipv-pending' page response and pageContext
       | Context            | Value |
       | allowDeleteDetails | true  |
     When I submit a 'next' event
@@ -55,6 +55,6 @@ Feature: P2 delete pending F2F journey
     When I submit a 'next' event
     Then I get a 'pyi-confirm-delete-details' page response
     When I submit a 'end' event
-    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details' and pageContext
+    Then I get a 'page-ipv-pending' page response and pageContext
       | Context            | Value |
       | allowDeleteDetails | true  |
