@@ -41,7 +41,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -70,7 +71,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -118,7 +120,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - Passport and DL auth source check
     When I submit a 'ukPassport' event
@@ -165,7 +168,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario Outline: User drops out of DWP KBV CRI via thin file - DWP KBV
     When I submit a '<cri>' event
@@ -197,7 +201,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      |
@@ -232,7 +237,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | cri            | details                      | oauth_error             |
@@ -262,7 +268,8 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
 
   Scenario: Experian KBV is offered first if DWP is disabled
     When I submit a 'ukPassport' event

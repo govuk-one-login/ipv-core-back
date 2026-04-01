@@ -37,7 +37,8 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And I don't get any return codes
 
   Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
@@ -54,7 +55,8 @@ Feature: Return exit codes
     When I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
   Scenario: KBV score zero and failure to complete journey - non-ci-breaching code returned
@@ -103,7 +105,8 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
   Scenario: CI mitigated in separate session but failed to complete journey - non-ci-breaching code returned
@@ -145,7 +148,8 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
   Scenario: Successful journey with always-required return code - always-required code returned
@@ -185,7 +189,8 @@ Feature: Return exit codes
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And I get 'always-required' return code
 
   Scenario: Breaching CI codes generate return codes, including mitigated CIs - CI codes returned
@@ -232,7 +237,8 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'non-breaching,needs-enhanced-verification' return codes
 
     # New journey with the same user id
@@ -270,7 +276,8 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'non-breaching,breaching,needs-enhanced-verification' return codes
 
   Scenario: Breaching CI code generates return code
@@ -310,5 +317,6 @@ Feature: Return exit codes
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
     And I get 'breaching' return codes

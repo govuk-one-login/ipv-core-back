@@ -111,7 +111,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAis
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.STORED_IDENTITY_SERVICE;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
@@ -277,7 +276,6 @@ class CheckExistingIdentityHandlerTest {
     class NewIdentityJourneys {
         @BeforeEach
         void setUp() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -960,7 +958,6 @@ class CheckExistingIdentityHandlerTest {
     class ReuseJourneys {
         @BeforeEach
         void reuseSetup() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1261,7 +1258,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
                 .thenThrow(CiRetrievalException.class);
@@ -1285,7 +1281,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenThrow(CiExtractionException.class);
@@ -1310,7 +1305,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnableToParseCredentials() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1336,7 +1330,6 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.fetchContraIndicatorsVc(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
@@ -1361,7 +1354,6 @@ class CheckExistingIdentityHandlerTest {
     class ReproveIdentity {
         @BeforeEach
         void beforeEach() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1465,7 +1457,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
             // Arrange
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(mockAisService.fetchAisState(TEST_USER_ID))
                     .thenReturn(createReproveIdentityAisState());
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
@@ -1493,7 +1484,6 @@ class CheckExistingIdentityHandlerTest {
     class InterventionReproveIdentity {
         @BeforeEach
         void beforeEach() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             lenient()
                     .when(configService.enabled(INTERVENTION_REPROVE_VIA_APP_ONLY))
                     .thenReturn(true);
@@ -1611,7 +1601,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
             // Arrange
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(mockAisService.fetchAisState(TEST_USER_ID))
                     .thenReturn(createReproveIdentityAisState());
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
@@ -1639,7 +1628,6 @@ class CheckExistingIdentityHandlerTest {
     class ExpiredReproveIdentity {
         @BeforeEach
         void beforeEach() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1690,7 +1678,6 @@ class CheckExistingIdentityHandlerTest {
     class RepeatFraudCheck {
         @BeforeEach
         void setup() throws Exception {
-            when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1817,22 +1804,6 @@ class CheckExistingIdentityHandlerTest {
                 Arguments.of(createBlockedIdentityAisState()),
                 Arguments.of(createSuspendedIdentityAisState()),
                 Arguments.of(createResetPasswordAisState()));
-    }
-
-    @Test
-    void shouldNotInvalidateSiIfFeatureFlagDisabled() throws Exception {
-        when(configService.enabled(STORED_IDENTITY_SERVICE)).thenReturn(false);
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
-
-        checkExistingIdentityHandler.handleRequest(event, context);
-
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-        verify(mockEvcsService, times(0)).invalidateStoredIdentityRecord(TEST_USER_ID);
     }
 
     @Test

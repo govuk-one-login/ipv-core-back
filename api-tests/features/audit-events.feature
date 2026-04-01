@@ -2,8 +2,7 @@
 Feature: Audit Events
   @QualityGateRegressionTest
   Scenario: New identity - p2 app journey
-    Given I activate the 'storedIdentityService' feature set
-    And I start a new 'medium-confidence' journey
+    Given I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -36,7 +35,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -78,7 +78,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'new-identity-p2-web-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -95,7 +96,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'reuse-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -113,7 +115,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'reuse-journey-identity-stored' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -163,7 +166,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -230,7 +234,8 @@ Feature: Audit Events
     When I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity without a TICF VC
+    Then I am issued a 'P0' identity without a TICF VC
+    And I don't have a stored identity in EVCS
     And audit events for 'f2f-vc-error-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -301,7 +306,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -350,7 +356,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'reprove-identity-journey-expired-dl' are recorded [local only]
 
   @QualityGateNewFeatureTest
@@ -376,7 +383,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'repeat-fraud-check-no-update' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -455,7 +463,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
   @QualityGateRegressionTest
@@ -534,7 +543,8 @@ Feature: Audit Events
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P3' max vot
     And audit events for 'strategic-app-cross-browser-journey' are recorded [local only]
 
   @QualityGateRegressionTest

@@ -7,7 +7,7 @@ import {
 import assert from "assert";
 
 Then(
-  /I have a GPG45 stored identity record type with a '(\w+)' vot(?: that is '(invalid|valid)')?/,
+  /I have a stored identity record with a '(\w+)' max vot(?: that is '(invalid|valid)')?/,
   async function (
     this: World,
     expectedVot: string,
@@ -23,11 +23,12 @@ Then(
       `Expected "${expectedVot}" but got "${actualSi?.levelOfConfidence}"`,
     );
 
+    // Default to asserting that the SI record is valid
+    const siShouldBeValid: boolean = isValidString !== "invalid";
     assert.equal(
       actualSi?.isValid,
-      // Default to asserting that the SI record is valid
-      isValidString ? isValidString === "valid" : true,
-      `Expected "${isValidString === "valid"}" but got "${actualSi?.isValid}"`,
+      siShouldBeValid,
+      `Expected "${siShouldBeValid ? "valid" : "invalid"}" but got "${actualSi?.isValid ? "valid" : "invalid"}"`,
     );
   },
 );

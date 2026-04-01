@@ -45,7 +45,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | cri            | details                      |
@@ -89,7 +90,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | cri            |
@@ -121,7 +123,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | cri            | details                      |
@@ -136,7 +139,8 @@ Feature: Handling unexpected CRI errors
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | cri            |
@@ -181,7 +185,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | ci_cri            | ci_details                                 | noMatchPage                              | mitigating_cri | mitigating_details           |
@@ -234,7 +239,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
       Examples:
         | ci_cri            | ci_details                                 | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigating_cri | mitigating_details           |
@@ -255,7 +261,8 @@ Feature: Handling unexpected CRI errors
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
       Examples:
         | ci_cri            | ci_details                                 | noMatchPage                              | mitigating_cri |
@@ -313,7 +320,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - try app route
       When I submit a 'app' event
@@ -348,7 +356,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - try post office route
       When I submit a 'postOffice' event
@@ -363,13 +372,15 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from Experian KBV CRI - return to RP
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: F2F CRI - P2
     Background: Route to sorry-technical-problem F2F CRI error page
@@ -409,9 +420,10 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
-    Scenario: Unexpected error from F2F CRI - try app routeWhen I submit a 'app' event
+    Scenario: Unexpected error from F2F CRI - try app route
       When I submit a 'app' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -446,7 +458,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from F2F CRI - try web route
       When I submit a 'webRoute' event
@@ -472,13 +485,15 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Unexpected error from F2F CRI - return to RP
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
   Rule: F2F CRI - P1
     Background: Route to sorry-technical-problem F2F CRI error page
@@ -555,7 +570,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Unexpected error from F2F CRI - try web route
       When I submit a 'webRoute' event
@@ -583,7 +599,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P2' max vot
 
   Rule: F2F CRI mitigation via Experian KBV
     Background: Route to sorry-technical-problem F2F mitigation error page
@@ -640,7 +657,8 @@ Feature: Handling unexpected CRI errors
       Then I get an OAuth response
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
 
     Scenario: Same session mitigation via F2F - switch to app after error
       When I submit a 'f2f' event
@@ -671,7 +689,8 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Separate session F2F enhanced verification mitigation - user fails KBV - mitigate via F2F
       # Return journey
@@ -722,4 +741,5 @@ Feature: Handling unexpected CRI errors
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot

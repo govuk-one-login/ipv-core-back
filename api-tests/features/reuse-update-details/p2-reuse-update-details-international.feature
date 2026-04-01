@@ -27,8 +27,9 @@ Feature: International identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my address 'buildingNumber' is '28'
+        And I have a stored identity record with a 'P2' max vot
 
     Scenario: International Address and Family Name Change
         When I submit a 'family-name-and-address' event
@@ -68,9 +69,10 @@ Feature: International identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
+        And I have a stored identity record with a 'P2' max vot
 
     Scenario: International Address and Given Name Change
         When I submit a 'given-names-and-address' event
@@ -110,6 +112,7 @@ Feature: International identity reuse update details
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Then I am issued a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'streetName' is 'King Road'
+        And I have a stored identity record with a 'P2' max vot

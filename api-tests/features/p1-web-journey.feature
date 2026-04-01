@@ -79,7 +79,8 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P2' max vot
 
   Scenario Outline: Successful P1 journey - via <cri> and Experian KBV
     When I submit an '<cri>' event
@@ -103,7 +104,8 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
     Examples:
       | cri            | details                      |
@@ -144,7 +146,8 @@ Feature: P1 Web Journeys
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P1' identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P1' max vot
 
   Scenario Outline: P1 journey - thin file via Experian KBV
     When I submit an '<cri>' event
@@ -231,7 +234,8 @@ Feature: P1 Web Journeys
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P1' identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
     Examples:
       | cri            | details                      |

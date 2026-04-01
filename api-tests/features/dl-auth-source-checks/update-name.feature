@@ -50,9 +50,10 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | selected-name-change | actual-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -101,10 +102,11 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And my identity 'GivenName' is '<expected-given-name>'
     And my identity 'FamilyName' is '<expected-family-name>'
     And my address 'addressLocality' is 'Bristol'
+    And I have a stored identity record with a 'P2' max vot
 
     Examples:
       | selected-name-change    | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -167,8 +169,9 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario: Change of name and address journey - User backs out of DL CRI - Returns to DCMAW to use passport
     When I submit a 'family-name-and-address' event
@@ -230,8 +233,9 @@ Feature: Update name journey with DL auth source check
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+    Then I am issued a 'P2' identity
     And I have a dcmawAsync VC without 'drivingPermit' details
+    And I have a stored identity record with a 'P3' max vot
 
   Scenario Outline: Change of details - dropout DL auth source check - return to RP with no identity
     When I submit a '<update-type>' event
@@ -270,7 +274,8 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Examples:
       | update-type             |
@@ -356,7 +361,8 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Examples:
       | change-type             |
@@ -397,7 +403,8 @@ Feature: Update name journey with DL auth source check
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity
+    Then I am issued a 'P0' identity
+    And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Examples:
       | change-type             |
