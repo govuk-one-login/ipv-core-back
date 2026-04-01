@@ -35,7 +35,7 @@ export interface JourneyResponse {
 
   // Page states
   pageId?: string;
-  context?: string;
+  pageContext?: Record<string, unknown>;
 
   // Process states
   lambda?: string;
@@ -43,6 +43,7 @@ export interface JourneyResponse {
 
   // CRI states
   criId?: string;
+  context?: string;
 
   // Error states
   statusCode?: number;
