@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
@@ -250,10 +251,14 @@ public class EvcsClient {
             throws EvcsServiceException {
         LOGGER.info(
                 LogHelper.buildLogMessage("Preparing to invalidate user's stored identity record"));
+
+        var invalidateEndPoint =
+                configService.enabled(EVCS_API_UPDATES) ? "invalidate/si" : "invalidate";
+
         try {
             HttpRequest.Builder httpRequestBuilder =
                     HttpRequest.newBuilder()
-                            .uri(getIdentityUri("invalidate"))
+                            .uri(getIdentityUri(invalidateEndPoint))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(
