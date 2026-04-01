@@ -11,13 +11,13 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
 
     Scenario Outline: Successful M1C P2 identity via <details>
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -77,11 +77,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | false   |
@@ -118,7 +118,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -145,7 +145,7 @@ Feature: M1C Unavailable Journeys
       When I submit <fraudResponse> details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -161,7 +161,7 @@ Feature: M1C Unavailable Journeys
 
     Scenario Outline: Existing M1C name change, finish with <endScore>
       When I submit a 'family-name-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -169,11 +169,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -181,7 +181,7 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -189,7 +189,7 @@ Feature: M1C Unavailable Journeys
       When I submit <fraudResponse> details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -211,7 +211,7 @@ Feature: M1C Unavailable Journeys
       When I submit <fraudResponse> details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -228,7 +228,7 @@ Feature: M1C Unavailable Journeys
     Scenario Outline: Existing M1C address and name change, finish with <endScore>
       # Repeat fraud check with update address and family name
       When I submit a 'family-name-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -236,11 +236,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -248,7 +248,7 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -258,7 +258,7 @@ Feature: M1C Unavailable Journeys
       When I submit <fraudResponse> details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -274,7 +274,7 @@ Feature: M1C Unavailable Journeys
 
     Scenario: Existing M1C name change to M1A using DL
       When I submit a 'family-name-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'update-name' event
@@ -282,11 +282,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -298,7 +298,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -306,7 +306,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -336,11 +336,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -348,7 +348,7 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -356,7 +356,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity' and pageContext
+      Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
       When I submit a 'next' event
@@ -373,11 +373,11 @@ Feature: M1C Unavailable Journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -389,7 +389,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -397,7 +397,7 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | true  |
       When I submit a 'returnToRp' event

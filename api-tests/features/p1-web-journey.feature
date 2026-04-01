@@ -8,13 +8,13 @@ Feature: P1 Web Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+    Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context   | Value |
       | allowNino | true  |
 
@@ -52,7 +52,7 @@ Feature: P1 Web Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit a 'neither' event
@@ -116,13 +116,13 @@ Feature: P1 Web Journeys
       When I submit an 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport' and pageContext
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
         | Context    | Value    |
         | invalidDoc | passport |
       When I submit an 'otherPhotoId' event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-another-type-photo-id' page response with context 'drivingLicence' and pageContext
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
         | Context    | Value          |
         | invalidDoc | drivingLicence |
       When I submit an 'otherPhotoId' event
@@ -167,7 +167,7 @@ Feature: P1 Web Journeys
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+    Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
       | Context | Value   |
       | reason  | dropout |
 
@@ -204,13 +204,13 @@ Feature: P1 Web Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context     | Value |
       | deviceType  | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+    Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context    | Value |
       | allowNino  | true  |
     When I submit an '<cri>' event

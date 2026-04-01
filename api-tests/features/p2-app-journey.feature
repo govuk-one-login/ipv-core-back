@@ -12,11 +12,11 @@ Feature: P2 App journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
@@ -61,11 +61,11 @@ Feature: P2 App journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
@@ -101,11 +101,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -121,11 +121,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -140,14 +140,14 @@ Feature: P2 App journey
 
     Scenario: MAM journey detected iphone
       When I submit an 'mobileDownloadIphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
 
     Scenario: MAM journey detected iphone - invalid OS version
       When I submit an 'appTriageSmartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
 
@@ -155,18 +155,18 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | false   |
 
     Scenario: MAM journey detected android
       When I submit an 'mobileDownloadAndroid' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'android' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | false   |
@@ -175,11 +175,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -196,11 +196,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -216,11 +216,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -237,11 +237,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit a 'neither' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'neither' event
@@ -253,11 +253,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -279,11 +279,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an '<device>' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context '<device>' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value    |
         | smartphone | <device> |
         | isAppOnly  | false    |
@@ -315,11 +315,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -333,11 +333,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
@@ -351,7 +351,7 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -375,11 +375,11 @@ Feature: P2 App journey
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |

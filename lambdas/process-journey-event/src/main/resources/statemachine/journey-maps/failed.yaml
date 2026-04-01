@@ -228,7 +228,6 @@ states:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
-      context: existingIdentityValid
       pageContext:
         isExistingIdentityValid: true
     events:
@@ -241,7 +240,6 @@ states:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
-      context: existingIdentityInvalid
       pageContext:
         isExistingIdentityValid: false
     events:
@@ -264,7 +262,6 @@ states:
     response:
       type: page
       pageId: update-details-failed
-      context: existingIdentityInvalid
       pageContext:
         isExistingIdentityInvalid: true
     events:
@@ -327,7 +324,6 @@ states:
     response:
       type: page
       pageId: pyi-no-match
-      context: bankAccount
       pageContext:
         reason: bankAccount
     events:
@@ -338,7 +334,6 @@ states:
     response:
       type: page
       pageId: pyi-no-match
-      context: nino
       pageContext:
         reason: nino
     events:

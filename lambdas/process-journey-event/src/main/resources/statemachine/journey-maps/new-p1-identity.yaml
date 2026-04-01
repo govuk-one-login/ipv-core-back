@@ -226,7 +226,6 @@ states:
     response:
       type: page
       pageId: prove-identity-no-photo-id
-      context: nino
       pageContext:
         ninoOnly: true
     events:
@@ -243,7 +242,6 @@ states:
   MULTIPLE_DOC_CHECK_PAGE:
     response:
       type: page
-      context: nino
       pageId: page-multiple-doc-check
       pageContext:
         allowNino: true
@@ -302,7 +300,6 @@ states:
     response:
       type: page
       pageId: photo-id-security-questions-find-another-way
-      context: dropout
       pageContext:
         reason: dropout
     events:
@@ -526,7 +523,6 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
-      context: dropout
       pageContext:
         reason: dropout
     events:

@@ -21,11 +21,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'smartphone' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | mam   |
             When I submit an 'iphone' event
-            Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+            Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
                 | Context    | Value  |
                 | smartphone | iphone |
                 | isAppOnly  | true   |
@@ -50,11 +50,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'smartphone' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | mam   |
             When I submit an 'iphone' event
-            Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+            Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
                 | Context    | Value  |
                 | smartphone | iphone |
                 | isAppOnly  | true   |
@@ -72,7 +72,7 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit a 'neither' event
@@ -88,11 +88,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -149,11 +149,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'smartphone' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | mam   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-mobile-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -164,7 +164,7 @@ Feature: Identity reuse update details failures
             When I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | false |
             When I submit a 'delete' event
@@ -176,11 +176,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'iphone' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value  |
                 | smartphone | iphone |
                 | isAppOnly  | true   |
@@ -188,7 +188,7 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | false |
             When I submit a 'delete' event
@@ -200,11 +200,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'iphone' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value  |
                 | smartphone | iphone |
                 | isAppOnly  | true   |
@@ -212,7 +212,7 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | false |
             When I submit a 'returnToRp' event
@@ -230,11 +230,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -246,7 +246,7 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get a 'page-dcmaw-success' page response and pageContext
                 | Context   | Value |
                 | noAddress | true  |
             When I submit a 'next' event
@@ -254,7 +254,7 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
                 | Attribute          | Values                   |
                 | evidence_requested | {"identityFraudScore":2} |
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | true  |
             When I submit a 'returnToRp' event
@@ -271,11 +271,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -287,7 +287,7 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get a 'page-dcmaw-success' page response and pageContext
                 | Context   | Value |
                 | noAddress | true  |
             When I submit a 'next' event
@@ -295,7 +295,7 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-breaching-ci' details with attributes to the CRI stub
                 | Attribute          | Values                   |
                 | evidence_requested | {"identityFraudScore":2} |
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | false |
             When I submit a 'returnToRp' event
@@ -314,11 +314,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -326,7 +326,7 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get a 'page-dcmaw-success' page response and pageContext
                 | Context   | Value |
                 | noAddress | true  |
             When I submit a 'next' event
@@ -350,11 +350,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -362,7 +362,7 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get a 'page-dcmaw-success' page response and pageContext
                 | Context   | Value |
                 | noAddress | true  |
             When I submit a 'next' event
@@ -370,7 +370,7 @@ Feature: Identity reuse update details failures
             When I submit 'alice-score-2' details with attributes to the CRI stub
                 | Attribute          | Values                   |
                 | evidence_requested | {"identityFraudScore":1} |
-            Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+            Then I get a 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | true  |
             When I submit an 'returnToRp' event
@@ -387,11 +387,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
                 | Context    | Value |
                 | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
                 | Context    | Value   |
                 | smartphone | android |
                 | isAppOnly  | true    |
@@ -403,7 +403,7 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get a 'page-dcmaw-success' page response and pageContext
                 | Context   | Value |
                 | noAddress | true  |
             When I submit a 'next' event
@@ -411,7 +411,7 @@ Feature: Identity reuse update details failures
             When I call the CRI stub with attributes and get an 'access_denied' OAuth error
                 | Attribute          | Values                   |
                 | evidence_requested | {"identityFraudScore":2} |
-            Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+            Then I get an 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | true  |
             When I submit a 'returnToRp' event
@@ -428,11 +428,11 @@ Feature: Identity reuse update details failures
             When I submit an 'appTriage' event
             Then I get a 'pyi-triage-select-device' page response
             When I submit a 'computer-or-tablet' event
-            Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+            Then I get a 'pyi-triage-select-smartphone' page response and pageContext
               | Context    | Value |
               | deviceType | dad   |
             When I submit an 'android' event
-            Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+            Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
               | Context    | Value   |
               | smartphone | android |
               | isAppOnly  | true    |
@@ -440,7 +440,7 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+            Then I get an 'page-dcmaw-success' page response and pageContext
               | Context   | Value |
               | noAddress | true  |
 
@@ -466,7 +466,7 @@ Feature: Identity reuse update details failures
             When I call the CRI stub with attributes and get an 'access_denied' OAuth error
                 | Attribute | Values               |
                 | context   | "international_user" |
-            Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid' and pageContext
+            Then I get an 'sorry-could-not-confirm-details' page response and pageContext
                 | Context                 | Value |
                 | isExistingIdentityValid | true  |
             When I submit a 'returnToRp' event

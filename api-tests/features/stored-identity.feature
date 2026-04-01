@@ -34,7 +34,7 @@ Feature: Stored Identity
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       And I have a stored identity record with a 'P2' max vot that is 'invalid'
@@ -50,7 +50,7 @@ Feature: Stored Identity
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'family-name-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
       And I have a stored identity record with a 'P2' max vot that is 'invalid'

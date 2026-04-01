@@ -13,7 +13,7 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
       When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck' and pageContext
+      Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
 
@@ -23,13 +23,13 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get an 'update-details-failed' page response and pageContext
         | Context                   | Value |
         | isExistingIdentityInvalid | true  |
       When I submit a 'return-to-service' event
@@ -46,11 +46,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -62,7 +62,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -70,7 +70,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -85,11 +85,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -101,7 +101,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -109,7 +109,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -124,13 +124,13 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get an 'update-details-failed' page response and pageContext
         | Context                   | Value |
         | isExistingIdentityInvalid | true  |
       When I submit a 'delete' event
@@ -157,11 +157,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | true   |
@@ -172,7 +172,7 @@ Feature: Repeat fraud check failures
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'delete' event
@@ -184,11 +184,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | true   |
@@ -196,7 +196,7 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'delete' event
@@ -208,11 +208,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | true   |
@@ -220,7 +220,7 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -238,11 +238,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | true   |
@@ -250,7 +250,7 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'update-details-failed' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'update-details-failed' page response and pageContext
         | Context                   | Value |
         | isExistingIdentityInvalid | true  |
       When I submit a 'return-to-service' event
@@ -292,11 +292,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -308,7 +308,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -316,7 +316,7 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-breaching-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get a 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event
@@ -357,11 +357,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -369,7 +369,7 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
       When I submit a 'next' event
@@ -414,11 +414,11 @@ Feature: Repeat fraud check failures
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response with context 'android-appOnly' and pageContext
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
@@ -426,7 +426,7 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'page-dcmaw-success' page response with context 'coiNoAddress' and pageContext
+      Then I get an 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
 
@@ -448,7 +448,7 @@ Feature: Repeat fraud check failures
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
             | Attribute | Values               |
             | context   | "international_user" |
-      Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid' and pageContext
+      Then I get an 'sorry-could-not-confirm-details' page response and pageContext
         | Context                 | Value |
         | isExistingIdentityValid | false |
       When I submit a 'returnToRp' event

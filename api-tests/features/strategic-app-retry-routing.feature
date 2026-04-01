@@ -13,11 +13,11 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | false         |
@@ -30,11 +30,11 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | false         |
@@ -52,11 +52,11 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | false         |
@@ -66,11 +66,11 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | false         |
@@ -88,11 +88,11 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | mam   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | true          |
@@ -105,11 +105,11 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response with context '<device-type>-appOnly' and pageContext
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | true          |
@@ -127,11 +127,11 @@ Feature: Strategic App Retry Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit an '<device-type>' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | true          |
@@ -141,11 +141,11 @@ Feature: Strategic App Retry Journeys
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp' and pageContext
+    Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
       | Context            | Value |
       | isFromStrategicApp | true  |
     When I submit a 'next' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context '<device-type>-appOnly' and pageContext
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
       | Context    | Value         |
       | smartphone | <device-type> |
       | isAppOnly  | true          |

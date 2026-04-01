@@ -268,10 +268,6 @@ Then(
     }
 
     assert.ok(
-      this.lastJourneyEngineResponse.context == null,
-      `Expected context to be null but got ${this.lastJourneyEngineResponse.context}`,
-    );
-    assert.ok(
       this.lastJourneyEngineResponse.pageContext == null,
       `Expected pageContext to be null but got ${JSON.stringify(this.lastJourneyEngineResponse.pageContext)}`,
     );
@@ -279,14 +275,13 @@ Then(
 );
 
 Then(
-  /^I get an? '([\w-]+)' page response( with a non-empty clientOAuthSessionId)? with context '([\w-]+)' and pageContext?$/,
+  /^I get an? '([\w-]+)' page response( with a non-empty clientOAuthSessionId)? and pageContext?$/,
   function (
     this: World,
     expectedPage: string,
     clientOAuthSessionIdExists:
       | " with a non-empty clientOAuthSessionId"
       | undefined,
-    expectedContext: string,
     dataTable: DataTable,
   ): void {
     if (!this.lastJourneyEngineResponse) {
@@ -298,19 +293,14 @@ Then(
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
     assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
-    assert.equal(
-      this.lastJourneyEngineResponse.context,
-      expectedContext === "null" ? null : expectedContext,
-      `Expected context ${expectedContext} but got ${this.lastJourneyEngineResponse.context}`,
-    );
 
+    const expectedPageContexts = Object.fromEntries(
+      dataTable.rows().map(([key, value]) => [key, parseDataTableValue(value)]),
+    );
     assert.deepEqual(
       this.lastJourneyEngineResponse.pageContext || {},
-      Object.fromEntries(
-        dataTable
-          .rows()
-          .map(([key, value]) => [key, parseDataTableValue(value)]),
-      ),
+      expectedPageContexts,
+      `Expected context ${JSON.stringify(expectedPageContexts)} but got ${JSON.stringify(this.lastJourneyEngineResponse.pageContext || {})}`,
     );
 
     if (clientOAuthSessionIdExists) {

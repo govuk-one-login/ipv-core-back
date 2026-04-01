@@ -115,7 +115,6 @@ states:
     response:
       type: page
       pageId: prove-identity-another-way
-      context: noF2f
       pageContext:
         removeF2f: true
     events:
@@ -130,7 +129,6 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coiNoAddress
       pageContext:
         noAddress: true
     events:
@@ -155,7 +153,6 @@ states:
     response:
       type: page
       pageId: page-update-name
-      context: repeatFraudCheck
       pageContext:
         journeyType: repeatFraudCheck
     events:
@@ -189,7 +186,6 @@ states:
     response:
       type: page
       pageId: page-update-name
-      context: repeatFraudCheck
       pageContext:
         journeyType: repeatFraudCheck
     events:
@@ -248,7 +244,6 @@ states:
     response:
       type: page
       pageId: prove-identity-another-way
-      context: noF2f
       pageContext:
         removeF2f: true
     events:
@@ -277,7 +272,6 @@ states:
     response:
       type: page
       pageId: prove-identity-another-way
-      context: noF2f
       pageContext:
         removeF2f: true
     events:
@@ -291,7 +285,6 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      context: coiAddress
       pageContext:
         noAddress: true
     events:
@@ -345,7 +338,6 @@ states:
     response:
       type: page
       pageId: page-ipv-success
-      context: updateIdentity
       pageContext:
         journeyType: coi
     events:

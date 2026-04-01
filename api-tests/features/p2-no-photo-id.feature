@@ -59,7 +59,7 @@ Feature: P2 no photo id journey
         | context   | "bank_account" |
       Then I get a 'bav' CRI response
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response with context 'bankAccount' and pageContext
+      Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value       |
         | reason  | bankAccount |
 
@@ -85,7 +85,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'pyi-no-match' page response with context 'nino' and pageContext
+      Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value |
         | reason  | nino  |
 
@@ -113,7 +113,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+      Then I get a 'no-photo-id-security-questions-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
 
@@ -175,7 +175,7 @@ Feature: P2 no photo id journey
         | context   | "bank_account" |
       Then I get a 'bav' CRI response
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response with context 'bankAccount' and pageContext
+      Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value       |
         | reason  | bankAccount |
 
@@ -341,7 +341,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout' and pageContext
+      Then I get a 'no-photo-id-security-questions-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
 

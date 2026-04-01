@@ -8,13 +8,13 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+    Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context   | Value |
       | allowNino | true  |
     When I submit a 'ukPassport' event
@@ -98,7 +98,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -206,7 +206,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
@@ -244,11 +244,11 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
       When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone' and pageContext
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |

@@ -9,13 +9,13 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+      Then I get a 'page-multiple-doc-check' page response and pageContext
         | Context   | Value |
         | allowNino | true  |
 
@@ -103,7 +103,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get a '<mitigating-cri>' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-no-other-photo-id' page response with context '<invalid-doc-context>' and pageContext
+      Then I get a 'prove-identity-no-other-photo-id' page response and pageContext
         | Context    | Value                 |
         | invalidDoc | <invalid-doc-context> |
       When I submit a 'back' event
@@ -143,7 +143,7 @@ Feature: P1 CIMIT - Alternate doc - Experian KBV
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'prove-identity-no-other-photo-id' page response with context 'drivingLicence' and pageContext
+      Then I get a 'prove-identity-no-other-photo-id' page response and pageContext
         | Context    | Value          |
         | invalidDoc | drivingLicence |
       When I submit a 'returnToRp' event

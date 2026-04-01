@@ -8,13 +8,13 @@ Feature: P1 F2F journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+    Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context   | Value |
       | allowNino | true  |
     When I submit an 'end' event
@@ -42,13 +42,13 @@ Feature: P1 F2F journey
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad' and pageContext
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
       | Context    | Value |
       | deviceType | dad   |
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
-    Then I get a 'page-multiple-doc-check' page response with context 'nino' and pageContext
+    Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context   | Value |
       | allowNino | true  |
     When I submit an 'end' event
@@ -73,7 +73,7 @@ Feature: P1 F2F journey
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response with context 'nino' and pageContext
+      Then I get a 'prove-identity-no-photo-id' page response and pageContext
         | Context  | Value |
         | ninoOnly | true  |
       When I submit an 'end' event

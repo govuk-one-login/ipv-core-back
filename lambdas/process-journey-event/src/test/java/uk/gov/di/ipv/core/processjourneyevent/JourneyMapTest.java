@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNullElse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -467,10 +468,16 @@ class JourneyMapTest {
 
                 if (response instanceof PageStepResponse pageStepResponse) {
                     var pageId = (String) pageStepResponse.value().get("page");
-                    var context = (String) pageStepResponse.value().get("context");
+                    var pageContext =
+                            (Map<String, Object>) pageStepResponse.value().get("pageContext");
 
-                    if (context != null) {
-                        pageId += context;
+                    if (pageContext != null) {
+                        var sortedContext =
+                                pageContext.entrySet().stream()
+                                        .sorted(Map.Entry.comparingByKey())
+                                        .map(entry -> entry.getKey() + "=" + entry.getValue())
+                                        .collect(Collectors.joining(","));
+                        pageId += sortedContext;
                     }
 
                     var pageEvents = new HashSet<>(basicState.getEvents().keySet());
