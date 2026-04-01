@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "build",
+    "rootDir": "server",
     "types": ["node"]
   },
   "include": ["server"]
