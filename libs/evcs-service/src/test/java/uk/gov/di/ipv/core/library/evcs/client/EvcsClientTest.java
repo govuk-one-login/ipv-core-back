@@ -58,6 +58,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.AFTER_KEY_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.X_API_KEY_HEADER;
@@ -128,6 +129,7 @@ class EvcsClientTest {
         when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getEvcs()).thenReturn(mockEvcs);
         stubEvcsBaseUrl(EVCS_APPLICATION_URL);
+        lenient().when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(false);
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);
@@ -625,6 +627,38 @@ class EvcsClientTest {
             assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
             assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
             assertEquals("/v1/identity/invalidate", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var evcsInvalidateSiDto =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsInvalidateStoredIdentityDto>() {});
+            assertEquals(TEST_USER_ID, evcsInvalidateSiDto.userId());
+        }
+    }
+
+    @Test
+    void invalidateStoredIdentityRecordShouldSendRequestToNewUrlIfFlagEnabled() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NO_CONTENT);
+        when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            var res = evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID);
+
+            // Assert
+            assertEquals(HttpStatusCode.NO_CONTENT, res.statusCode());
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/identity/invalidate/si", httpRequest.uri().getPath());
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
