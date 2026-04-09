@@ -3786,9 +3786,9 @@ Resources:
       AlarmDescription: "There has been increased latency on backend api-gateway"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       InsufficientDataActions: []
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
@@ -3831,9 +3831,9 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}-LambdaThrottleAlarm"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       InsufficientDataActions: []
       MetricName: Throttles
       Namespace: AWS/Lambda
@@ -3853,9 +3853,9 @@ Resources:
       AlarmDescription: Alarm for Lambda functions running longer than 5 minutes
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       OKActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       MetricName: Duration
       Namespace: AWS/Lambda
       Statistic: Maximum
@@ -3874,7 +3874,7 @@ Resources:
       AlarmDescription: "Alarm if DWP KBV CRI return rate is 0 in a 15-minute window (ignores low traffic)"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       EvaluationPeriods: 1
       Threshold: 0
       ComparisonOperator: LessThanOrEqualToThreshold
@@ -3920,7 +3920,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: "Error returned from the ManualF2fPendingResetFunction."
       AlarmName: !Sub ${AWS::StackName}-ManualF2fPendingReset-ErrorCanary
       MetricName: Errors
@@ -3946,7 +3946,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: "Error returned from the IssueClientAccessTokenFunction."
       AlarmName: !Sub ${AWS::StackName}-IssueClientAccessTokenFunction-ErrorCanary
       MetricName: Errors
@@ -3972,7 +3972,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "IssueClientAccessTokenFunction returning 5xx response."
       AlarmName: !Sub ${AWS::StackName}-IssueClientAccessTokenFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
@@ -4000,7 +4000,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the InitialiseIpvSessionFunction."
       AlarmName: !Sub ${AWS::StackName}-InitialiseIpvSessionFunction-ErrorCanary
       MetricName: Errors
@@ -4026,7 +4026,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "InitialiseIpvSessionFunction returning 5xx response."
       AlarmName: !Sub ${AWS::StackName}-InitialiseIpvSessionFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
@@ -4054,7 +4054,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the ProcessCriCallbackFunction."
       AlarmName: !Sub ${AWS::StackName}-ProcessCriCallbackFunction-ErrorCanary
       MetricName: Errors
@@ -4080,7 +4080,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "ProcessCriCallbackFunction returning 5xx response."
       AlarmName: !Sub ${AWS::StackName}-ProcessCriCallbackFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
@@ -4108,7 +4108,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the BuildUserIdentityFunction."
       AlarmName: !Sub ${AWS::StackName}-BuildUserIdentityFunction-ErrorCanary
       MetricName: Errors
@@ -4134,7 +4134,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "BuildUserIdentityFunction returning 5xx response."
       AlarmName: !Sub ${AWS::StackName}-BuildUserIdentityFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
@@ -4162,7 +4162,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the ProcessAsyncCriCredentialFunction."
       AlarmName: !Sub ${AWS::StackName}-ProcessAsyncCriCredentialFunction-ErrorCanary
       MetricName: Errors
@@ -4188,7 +4188,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the BuildProvenUserIdentityDetailsFunction."
       AlarmName: !Sub ${AWS::StackName}-BuildProvenUserIdentityDetailsFunction-ErrorCanary
       MetricName: Errors
@@ -4214,7 +4214,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "BuildProvenUserIdentityDetailsFunction returning 5xx response."
       AlarmName: !Sub ${AWS::StackName}-BuildProvenUserIdentityDetailsFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
@@ -4248,7 +4248,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-ExecutionFailedCanary
       AlarmDescription: !Sub "Error returned from the JourneyEngineStepFunction ${JourneyEngineStepFunction.StateMachineRevisionId}"
       MetricName: ExecutionsFailed
@@ -4279,7 +4279,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-TaskFailedCanary
       AlarmDescription: !Sub "TaskFailed error returned from the JourneyEngineStepFunction"
       MetricName: "JourneyEngineStepFunctionTaskFailed"
@@ -4297,7 +4297,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-5xxErrorCanary
       AlarmDescription: "JourneyEngineStepFunction returning 5xx response."
       Namespace: AWS/ApiGateway
@@ -4325,7 +4325,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the IPVProcessJourneyEventFunction."
       AlarmName: !Sub ${AWS::StackName}-IPVProcessJourneyEventFunction-ErrorCanary
       MetricName: Errors
@@ -4351,7 +4351,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the CheckExistingIdentityFunction."
       AlarmName: !Sub ${AWS::StackName}-CheckExistingIdentityFunction-ErrorCanary
       MetricName: Errors
@@ -4377,7 +4377,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the BuildCriOauthRequestFunction."
       AlarmName: !Sub ${AWS::StackName}-BuildCriOauthRequestFunction-ErrorCanary
       MetricName: Errors
@@ -4403,7 +4403,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the BuildClientOauthResponseFunction."
       AlarmName: !Sub ${AWS::StackName}-BuildClientOauthResponseFunction-ErrorCanary
       MetricName: Errors
@@ -4429,7 +4429,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the CheckGpg45ScoreFunction."
       AlarmName: !Sub ${AWS::StackName}-CheckGpg45ScoreFunction-ErrorCanary
       MetricName: Errors
@@ -4455,7 +4455,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the CallDcmawAsyncCriFunction."
       AlarmName: !Sub ${AWS::StackName}-CallDcmawAsyncCriFunction-ErrorCanary
       MetricName: Errors
@@ -4481,7 +4481,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the ResetSessionIdentityFunction."
       AlarmName: !Sub ${AWS::StackName}-ResetSessionIdentityFunction-ErrorCanary
       MetricName: Errors
@@ -4507,7 +4507,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the CheckReverificationIdentityFunction"
       AlarmName: !Sub ${AWS::StackName}-CheckReverificationIdentityFunction-ErrorCanary
       MetricName: Errors
@@ -4533,7 +4533,7 @@ Resources:
     Properties:
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue alarm-alerts-topic
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
       AlarmDescription: !Sub "Error returned from the ProcessCandidateIdentityFunction."
       AlarmName: !Sub ${AWS::StackName}-ProcessCandidateIdentityFunction-ErrorCanary
       MetricName: Errors
