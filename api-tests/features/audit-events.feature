@@ -557,7 +557,9 @@ Feature: Audit Events
     When I start a new 'reverification' journey
     Then I get a 'you-can-change-security-code-method' page response
     When I submit a 'next' event
-    Then I get a 'page-ipv-identity-document-start' page response
+    Then I get a 'page-ipv-identity-document-start' page response and pageContext
+        | Context       | Value |
+        | allowMfaReset | true  |
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
