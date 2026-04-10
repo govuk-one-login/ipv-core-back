@@ -203,6 +203,7 @@ public class VcHelper {
 
         if (validityDurationInDays != null && nbf != null) {
             var vcIssueTime = nbf.toInstant();
+            var startOfIssueDay = getLocalStartOfDay(vcIssueTime);
 
             var dlExpiryDateString =
                     ((IdentityCheckCredential) drivingPermitVc.getCredential())
@@ -210,11 +211,10 @@ public class VcHelper {
                             .getDrivingPermit()
                             .getFirst()
                             .getExpiryDate();
-
-            var dlExpiryDate =
+            var startOfDlExpiryDay =
                     LocalDate.parse(dlExpiryDateString).atStartOfDay(LONDON_TIMEZONE).toInstant();
 
-            return dlExpiryDate.isBefore(vcIssueTime)
+            return startOfDlExpiryDay.isBefore(startOfIssueDay) // still valid on day of DL expiry
                     && hasExpired(vcIssueTime, validityDurationInDays, clock);
         }
         return false;
@@ -222,13 +222,16 @@ public class VcHelper {
 
     private static boolean hasExpired(
             Instant vcIssueTime, int validityDurationInDays, Clock clock) {
-        var startOfIssueDay =
-                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
-
-        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
+        var endOfValidity =
+                getLocalStartOfDay(vcIssueTime)
+                        .atZone(LONDON_TIMEZONE)
+                        .plusDays(validityDurationInDays);
         var now = ZonedDateTime.now(clock);
-
         return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
+    }
+
+    private static Instant getLocalStartOfDay(Instant time) {
+        return time.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE).toInstant();
     }
 
     public static boolean isFraudScoreOptionalForGpg45Evaluation(List<VerifiableCredential> vcs) {
