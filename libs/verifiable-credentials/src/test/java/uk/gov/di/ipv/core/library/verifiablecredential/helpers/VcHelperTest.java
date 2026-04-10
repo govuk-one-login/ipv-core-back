@@ -578,7 +578,7 @@ class VcHelperTest {
                         vcDcmawDrivingPermitDvaExpiredSameDayAsNbf(), // expiry: 2020-10-01, nbf:
                         // 2020-10-01T13:30:00
                         180,
-                        "2020-10-02 00:00:00+0000",
+                        "2024-01-24 00:10:00+0100",
                         false),
                 Arguments.of(
                         "expired DL but within validity period, BST current time",
