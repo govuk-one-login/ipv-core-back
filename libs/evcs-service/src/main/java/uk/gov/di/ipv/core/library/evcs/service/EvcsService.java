@@ -218,7 +218,7 @@ public class EvcsService {
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
             boolean isPendingIdentity)
             throws EvcsServiceException {
-        List<EvcsCreateUserVCsDto> userVCsToStore =
+        List<EvcsCreateUserVCsDto> newUserVcsToStore =
                 credentials.stream()
                         .filter(
                                 credential ->
@@ -239,7 +239,9 @@ public class EvcsService {
                         .toList();
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
             updateExistingUserVCs(userId, credentials, existingEvcsUserVCs, isPendingIdentity);
-        if (!userVCsToStore.isEmpty()) evcsClient.storeUserVCs(userId, userVCsToStore);
+        if (!newUserVcsToStore.isEmpty()) {
+            evcsClient.storeUserVCs(userId, newUserVcsToStore);
+        }
     }
 
     public HttpResponse<String> storeStoredIdentityRecord(

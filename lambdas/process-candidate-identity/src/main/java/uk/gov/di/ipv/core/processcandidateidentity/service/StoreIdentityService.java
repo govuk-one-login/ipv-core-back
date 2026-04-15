@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -58,11 +59,15 @@ public class StoreIdentityService {
 
         var hasStoredSiObject = false;
         var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
+
         LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
         evcsService.storeCompletedOrPendingIdentityWithPostVcs(
                 userId, sessionCredentials, evcsVcs, isPendingIdentity);
 
-        if (!isPendingIdentity) {
+        if (configService.enabled(CoreFeatureFlag.EVCS_API_UPDATES) && !isPendingIdentity) {
+            // TODO Store SI with vcs
+
+        } else if (!isPendingIdentity) {
             try {
                 var httpResponse =
                         evcsService.storeStoredIdentityRecord(
