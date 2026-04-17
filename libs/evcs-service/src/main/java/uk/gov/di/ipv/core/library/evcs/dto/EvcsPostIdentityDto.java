@@ -6,4 +6,7 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record EvcsPostIdentityDto(
-        String userId, List<EvcsCreateUserVCsDto> vcs, EvcsStoredIdentityDto si) {}
+        String userId,
+        String govuk_signin_journey_id,
+        List<EvcsCreateUserVCsDto> vcs,
+        EvcsStoredIdentityDto si) {}
