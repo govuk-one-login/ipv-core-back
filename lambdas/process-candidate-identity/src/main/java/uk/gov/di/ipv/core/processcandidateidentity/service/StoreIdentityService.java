@@ -112,8 +112,7 @@ public class StoreIdentityService {
                             sessionCredentials,
                             evcsVcs,
                             strongestMatchedVot,
-                            achievedVot,
-                            false);
+                            achievedVot);
 
             return response.statusCode() == HttpStatusCode.ACCEPTED;
         } catch (FailedToCreateStoredIdentityForEvcsException e) {
