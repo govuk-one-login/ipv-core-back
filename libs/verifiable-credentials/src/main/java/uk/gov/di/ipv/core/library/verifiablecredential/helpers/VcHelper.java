@@ -202,6 +202,9 @@ public class VcHelper {
         var nbf = drivingPermitVc.getClaimsSet().getNotBeforeTime();
 
         if (validityDurationInDays != null && nbf != null) {
+            // We pin both the VC issue time and DL expiry to the start of the day, for consistency
+            // with the hasExpired check and to ensure a licence is treated as valid until the very
+            // end of its expiry day.
             var vcIssueTime = nbf.toInstant();
             var startOfIssueDay = getLocalStartOfDay(vcIssueTime);
 
@@ -222,6 +225,9 @@ public class VcHelper {
 
     private static boolean hasExpired(
             Instant vcIssueTime, int validityDurationInDays, Clock clock) {
+        // We deliberately pin issue time to the start of the day. This ensures that all VCs issued
+        // on the same calendar day (e.g. Fraud and DCMAW-DL VCs) share the exact same 6-month
+        // expiry point.
         var endOfValidity =
                 getLocalStartOfDay(vcIssueTime)
                         .atZone(LONDON_TIMEZONE)
