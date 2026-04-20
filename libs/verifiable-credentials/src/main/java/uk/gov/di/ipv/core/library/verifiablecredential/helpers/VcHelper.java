@@ -202,7 +202,11 @@ public class VcHelper {
         var nbf = drivingPermitVc.getClaimsSet().getNotBeforeTime();
 
         if (validityDurationInDays != null && nbf != null) {
+            // We pin both the VC issue time and DL expiry to the start of the day, for consistency
+            // with the hasExpired check and to ensure a licence is treated as valid until the very
+            // end of its expiry day.
             var vcIssueTime = nbf.toInstant();
+            var startOfIssueDay = getLocalStartOfDay(vcIssueTime);
 
             var dlExpiryDateString =
                     ((IdentityCheckCredential) drivingPermitVc.getCredential())
@@ -210,11 +214,10 @@ public class VcHelper {
                             .getDrivingPermit()
                             .getFirst()
                             .getExpiryDate();
-
-            var dlExpiryDate =
+            var startOfDlExpiryDay =
                     LocalDate.parse(dlExpiryDateString).atStartOfDay(LONDON_TIMEZONE).toInstant();
 
-            return dlExpiryDate.isBefore(vcIssueTime)
+            return startOfDlExpiryDay.isBefore(startOfIssueDay) // still valid on day of DL expiry
                     && hasExpired(vcIssueTime, validityDurationInDays, clock);
         }
         return false;
@@ -222,13 +225,19 @@ public class VcHelper {
 
     private static boolean hasExpired(
             Instant vcIssueTime, int validityDurationInDays, Clock clock) {
-        var startOfIssueDay =
-                vcIssueTime.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE);
-
-        var endOfValidity = startOfIssueDay.plusDays(validityDurationInDays);
+        // We deliberately pin issue time to the start of the day. This ensures that all VCs issued
+        // on the same calendar day (e.g. Fraud and DCMAW-DL VCs) share the exact same 6-month
+        // expiry point.
+        var endOfValidity =
+                getLocalStartOfDay(vcIssueTime)
+                        .atZone(LONDON_TIMEZONE)
+                        .plusDays(validityDurationInDays);
         var now = ZonedDateTime.now(clock);
-
         return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
+    }
+
+    private static Instant getLocalStartOfDay(Instant time) {
+        return time.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE).toInstant();
     }
 
     public static boolean isFraudScoreOptionalForGpg45Evaluation(List<VerifiableCredential> vcs) {
