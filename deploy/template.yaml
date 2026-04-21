@@ -3716,9 +3716,9 @@ Resources:
           - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
         ActionsEnabled: true
         AlarmActions:
-          - !ImportValue sns-topics-AlarmTopic
+          - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
         OKActions:
-          - !ImportValue sns-topics-AlarmTopic
+          - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
         InsufficientDataActions: []
         EvaluationPeriods: 3
         DatapointsToAlarm: 3
@@ -3752,9 +3752,9 @@ Resources:
         - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue sns-topics-AlarmTopic
+        - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
       OKActions:
-        - !ImportValue sns-topics-AlarmTopic
+        - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
       InsufficientDataActions: []
       EvaluationPeriods: 3
       DatapointsToAlarm: 3
