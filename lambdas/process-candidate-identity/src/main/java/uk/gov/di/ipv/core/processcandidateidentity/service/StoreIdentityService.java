@@ -115,6 +115,8 @@ public class StoreIdentityService {
                             achievedVot);
 
             return response.statusCode() == HttpStatusCode.ACCEPTED;
+
+            // TODO: IF we fail to store SI should we continue the journey or throw an exception?
         } catch (FailedToCreateStoredIdentityForEvcsException e) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
