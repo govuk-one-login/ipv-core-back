@@ -1,10 +1,11 @@
 package uk.gov.di.ipv.core.library.evcs.exception;
 
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.ErrorResponseException;
 
 public class EvcsServiceException extends Exception implements ErrorResponseException {
-    private final ErrorResponse errorResponse;
+    @Getter private final ErrorResponse errorResponse;
 
     private final int responseCode;
 
@@ -12,10 +13,6 @@ public class EvcsServiceException extends Exception implements ErrorResponseExce
         super(errorResponse.getMessage());
         this.errorResponse = errorResponse;
         this.responseCode = responseCode;
-    }
-
-    public ErrorResponse getErrorResponse() {
-        return errorResponse;
     }
 
     @Override

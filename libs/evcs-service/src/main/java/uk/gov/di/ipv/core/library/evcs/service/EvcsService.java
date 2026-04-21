@@ -161,60 +161,6 @@ public class EvcsService {
         return evcsClient.getUserVcs(userId, evcsAccessToken, List.of(states)).vcs();
     }
 
-    //    public void storePendingIdentityWithPostIdentity(
-    //            String userId, List<VerifiableCredential> credentials) throws EvcsServiceException
-    // {
-    //        var postIdentityDto = createPendingPostIdentityDto(userId, credentials);
-    //        evcsClient.storeUserIdentity(postIdentityDto);
-    //    }
-    //
-    //    public HttpResponse<String> storeCompletedIdentityWithPostIdentity(
-    //            String userId,
-    //            List<VerifiableCredential> credentials,
-    //            VotMatchingResult.VotAndProfile strongestAchievedVot,
-    //            Vot achievedVot)
-    //            throws FailedToCreateStoredIdentityForEvcsException, EvcsServiceException {
-    //        var postIdentityDto =
-    //                createCompletedPostIdentityDto(
-    //                        userId, credentials, strongestAchievedVot, achievedVot);
-    //        return evcsClient.storeUserIdentity(postIdentityDto);
-    //    }
-    //
-    //    private EvcsPostIdentityDto createCompletedPostIdentityDto(
-    //            String userId,
-    //            List<VerifiableCredential> credentials,
-    //            VotMatchingResult.VotAndProfile strongestAchievedVot,
-    //            Vot achievedVot)
-    //            throws FailedToCreateStoredIdentityForEvcsException {
-    //        var storedIdentityJwt =
-    //                storedIdentityService.getStoredIdentityForEvcs(
-    //                        userId, credentials, strongestAchievedVot, achievedVot);
-    //
-    //        return new EvcsPostIdentityDto(
-    //                userId,
-    //                credentials.stream()
-    //                        .map(
-    //                                vc ->
-    //                                        new EvcsCreateUserVCsDto(
-    //                                                vc.getVcString(), CURRENT, null, ONLINE))
-    //                        .toList(),
-    //                storedIdentityJwt);
-    //    }
-    //
-    //    private EvcsPostIdentityDto createPendingPostIdentityDto(
-    //            String userId, List<VerifiableCredential> credentials) {
-    //        return new EvcsPostIdentityDto(
-    //                userId,
-    //                credentials.stream()
-    //                        .map(
-    //                                vc ->
-    //                                        new EvcsCreateUserVCsDto(
-    //                                                vc.getVcString(), PENDING_RETURN, null,
-    // ONLINE))
-    //                        .toList(),
-    //                null);
-    //    }
-
     public void storeCompletedOrPendingIdentityWithPostVcs(
             String userId,
             List<VerifiableCredential> credentials,

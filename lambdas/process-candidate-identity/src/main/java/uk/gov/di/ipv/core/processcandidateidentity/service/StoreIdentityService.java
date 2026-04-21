@@ -55,7 +55,7 @@ public class StoreIdentityService {
             VotMatchingResult.VotAndProfile strongestMatchedVot,
             CandidateIdentityType identityType,
             SharedAuditEventParameters auditEventParameters)
-            throws EvcsServiceException {
+            throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
 
         var govukSigninJourneyId = auditEventParameters.auditEventUser().getGovukSigninJourneyId();
         var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
@@ -95,7 +95,7 @@ public class StoreIdentityService {
             Vot achievedVot,
             VotMatchingResult.VotAndProfile strongestMatchedVot,
             boolean isPendingIdentity)
-            throws EvcsServiceException {
+            throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
 
         if (isPendingIdentity) {
             LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
@@ -104,30 +104,19 @@ public class StoreIdentityService {
             return false;
         }
 
-        try {
-            var response =
-                    evcsService.storeStoredIdentityRecordAndVcs(
-                            userId,
-                            govukSigninJourneyId,
-                            sessionCredentials,
-                            evcsVcs,
-                            strongestMatchedVot,
-                            achievedVot);
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Storing user identity records and VCs in one transaction."));
+        var response =
+                evcsService.storeStoredIdentityRecordAndVcs(
+                        userId,
+                        govukSigninJourneyId,
+                        sessionCredentials,
+                        evcsVcs,
+                        strongestMatchedVot,
+                        achievedVot);
 
-            return response.statusCode() == HttpStatusCode.ACCEPTED;
-
-            // TODO: IF we fail to store SI should we continue the journey or throw an exception?
-        } catch (FailedToCreateStoredIdentityForEvcsException e) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "Failed to create stored identity record. Stored identity record was not saved to EVCS."));
-        } catch (EvcsServiceException e) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "Failed to store stored identity record to EVCS. Continuing user journey."));
-        }
-
-        return false;
+        return response.statusCode() == HttpStatusCode.ACCEPTED;
     }
 
     private boolean storeIdentityLegacy(

@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +23,6 @@ import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
@@ -108,7 +106,6 @@ class EvcsServiceTest {
     private static final VotMatchingResult.VotAndProfile STRONGEST_MATCHED_VOT =
             new VotMatchingResult.VotAndProfile(P1, Optional.of(L1A));
     private static final Vot ACHIEVED_VOT = P1;
-    private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<List<EvcsUpdateUserVCsDto>> evcsUpdateUserVCsDtosCaptor;
@@ -119,11 +116,6 @@ class EvcsServiceTest {
     @Mock ConfigService mockConfigService;
     @Mock StoredIdentityService mockStoredIdentityService;
     @InjectMocks EvcsService evcsService;
-
-    @BeforeEach
-    void setUp() {
-        clientOAuthSessionItem = ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
-    }
 
     @Nested
     class StoreIdentityWithPost {

@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.enums.TicfCode;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -82,6 +83,7 @@ import java.util.stream.Stream;
 import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -301,6 +303,14 @@ public class ProcessCandidateIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } catch (FailedToCreateStoredIdentityForEvcsException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to construct stored identity record", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                            FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS)
+                    .toObjectMap();
         } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse credentials", e));
             return new JourneyErrorResponse(
@@ -351,7 +361,8 @@ public class ProcessCandidateIdentityHandler
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
                     CiExtractionException,
-                    AccountInterventionException {
+                    AccountInterventionException,
+                    FailedToCreateStoredIdentityForEvcsException {
         List<EvcsGetUserVCDto> evcsUserVcs = null;
         var userId = clientOAuthSessionItem.getUserId();
         var auditEventParameters =
@@ -463,7 +474,7 @@ public class ProcessCandidateIdentityHandler
             List<EvcsGetUserVCDto> evcsUserVcs,
             CandidateIdentityType processIdentityType,
             SharedAuditEventParameters auditEventParameters)
-            throws EvcsServiceException {
+            throws EvcsServiceException, FailedToCreateStoredIdentityForEvcsException {
         var achievedVot = ipvSessionItem.getVot();
         VotMatchingResult.VotAndProfile strongestMatchedVot =
                 Objects.isNull(votMatchingResult)

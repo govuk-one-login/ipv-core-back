@@ -459,7 +459,6 @@ class StoreIdentityServiceTest {
         @BeforeEach
         void setup() {
             when(configService.enabled(CoreFeatureFlag.EVCS_API_UPDATES)).thenReturn(true);
-            when(configService.getComponentId()).thenReturn("https://core-component.example");
         }
 
         private static Stream<Arguments> identityTypes() {
@@ -478,6 +477,7 @@ class StoreIdentityServiceTest {
                             any(), any(), any(), any(), any(), any()))
                     .thenReturn(httpResponse);
             when(httpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
 
             // Act
             storeIdentityService.storeIdentity(
@@ -518,6 +518,9 @@ class StoreIdentityServiceTest {
         void
                 shouldSuccessfullyStorePendingIdentityWithPostPatchEndpointAndNotStoreSiAndSendAuditEvent()
                         throws Exception {
+            // Arrange
+            when(configService.getComponentId()).thenReturn("https://core-component.example");
+
             // Act
             storeIdentityService.storeIdentity(
                     USER_ID,
@@ -550,6 +553,49 @@ class StoreIdentityServiceTest {
                             .sisRecordCreated());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
             assertEquals(testAuditEventUser, auditEvent.getUser());
+        }
+
+        @Test
+        void shouldThrowIfFailedToStoreVcsForPendingIdentity() throws Exception {
+            // Arrange
+            doThrow(EvcsServiceException.class)
+                    .when(evcsService)
+                    .storeCompletedOrPendingIdentityWithPostVcs(USER_ID, VCS, List.of(), true);
+
+            // Act/Assert
+            assertThrows(
+                    EvcsServiceException.class,
+                    () ->
+                            storeIdentityService.storeIdentity(
+                                    USER_ID,
+                                    VCS,
+                                    List.of(),
+                                    P2,
+                                    STRONGEST_MATCHED_VOT,
+                                    CandidateIdentityType.PENDING,
+                                    sharedAuditEventParameters));
+        }
+
+        @Test
+        void shouldThrowIfFailedToStoreVcsAndSiObjectInOneTransaction() throws Exception {
+            // Arrange
+            doThrow(FailedToCreateStoredIdentityForEvcsException.class)
+                    .when(evcsService)
+                    .storeStoredIdentityRecordAndVcs(
+                            USER_ID, GOVUK_JOURNEY_ID, VCS, List.of(), STRONGEST_MATCHED_VOT, P2);
+
+            // Act/Assert
+            assertThrows(
+                    FailedToCreateStoredIdentityForEvcsException.class,
+                    () ->
+                            storeIdentityService.storeIdentity(
+                                    USER_ID,
+                                    VCS,
+                                    List.of(),
+                                    P2,
+                                    STRONGEST_MATCHED_VOT,
+                                    CandidateIdentityType.NEW,
+                                    sharedAuditEventParameters));
         }
     }
 }
