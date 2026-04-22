@@ -38,8 +38,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERM
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredSameDayAsNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaWithDates;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNullNbf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraud;
@@ -560,40 +560,101 @@ class VcHelperTest {
     private static Stream<Arguments> provideTestArgumentsForIsExpiredDrivingPermitVc() {
         return Stream.of(
                 Arguments.of(
-                        "expired DL and past validity period, GMT current time",
-                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        "DL expired before VC issued, VC has passed VC validity period (GMT)",
+                        vcDcmawDrivingPermitDvaExpired(), // DL expiry: "2020-10-01", nbf:
                         // 2024-01-23T05:08:41
                         5,
-                        "2024-02-01 00:00:00+0000",
+                        "2024-01-28 00:00:00+0000",
                         true),
                 Arguments.of(
-                        "expired DL but within validity period, GMT current time",
-                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
+                        "DL expired before VC issued, VC is within VC validity period (GMT)",
+                        vcDcmawDrivingPermitDvaExpired(), // DL expiry: "2020-10-01", nbf:
                         // 2024-01-23T05:08:41
-                        10,
-                        "2024-01-25 00:00:00+0000",
+                        5,
+                        "2024-01-27 23:59:59+0000",
                         false),
                 Arguments.of(
-                        "DL expires same day as NBF, GMT current time",
-                        vcDcmawDrivingPermitDvaExpiredSameDayAsNbf(), // expiry: 2020-10-01, nbf:
-                        // 2020-10-01T13:30:00
+                        "DL expired before VC issued, VC has passed VC validity period (BST)",
+                        // DL expiry: 2020-10-01, nbf: 2024-07-23T23:59:59+01:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1721775599L)),
+                        5,
+                        "2024-07-28 00:00:00+0100",
+                        true),
+                Arguments.of(
+                        "DL expired before VC issued, VC is within VC validity period (BST)",
+                        // DL expiry: 2020-10-01, nbf: 2024-07-23T23:59:59+01:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1721775599L)),
+                        5,
+                        "2024-07-27 23:59:59+0100",
+                        false),
+
+                // In 2025 BST started at 01:00 on 30th March and ended at 01:00 26th October
+                Arguments.of(
+                        "DL expired before VC issued, VC has passed VC validity period (going from GMT to BST)",
+                        // DL expiry: 2020-10-01, nbf: 2025-03-28T23:59:59+00:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1743206399L)),
+                        5,
+                        "2025-04-02 00:00:00+0100",
+                        true),
+                Arguments.of(
+                        "DL expired before VC issued, VC is within VC validity period (going from GMT to BST)",
+                        // DL expiry: 2020-10-01, nbf: 2025-03-28T23:59:59+00:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1743206399L)),
+                        5,
+                        "2025-04-01 23:59:59+0100",
+                        false),
+                Arguments.of(
+                        "DL expired before VC issued, VC has passed VC validity period (going from BST to GMT)",
+                        // DL expiry: 2020-10-01, nbf: 2025-10-23T23:59:59+01:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1761260399L)),
+                        5,
+                        "2025-10-28 00:00:00+0000",
+                        true),
+                Arguments.of(
+                        "DL expired before VC issued, VC is within VC validity period (going from BST to GMT)",
+                        // DL expiry: 2020-10-01, nbf: 2025-10-23T23:59:59+01:00
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1761260399L)),
+                        5,
+                        "2025-10-27 23:59:59+0000",
+                        false),
+                Arguments.of(
+                        "DL expires day before VC issued so VC expires (DL expiry during BST)",
+                        // DL expiry: 2020-10-01, nbf: 2020-10-02T00:00:00+0100
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1601593200L)),
                         180,
-                        "2024-01-24 00:10:00+0100",
+                        "2024-01-24 00:10:00+0000",
+                        true),
+                Arguments.of(
+                        "DL expires on same day as VC issued so VC never expires (DL expiry during BST)",
+                        // DL expiry: 2020-10-01, nbf: 2020-10-01T23:59:59+0100
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-10-01", Instant.ofEpochSecond(1601593199L)),
+                        180,
+                        "2024-01-24 00:10:00+0000",
                         false),
                 Arguments.of(
-                        "expired DL but within validity period, BST current time",
-                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
-                        // 2024-01-23T05:08:41
-                        1,
-                        "2024-01-24 00:10:00+0100",
-                        false),
+                        "DL expires day before VC issued so VC expires (DL expiry during GMT)",
+                        // DL expiry: 2020-02-01, nbf: 2020-02-02T00:00:00+0000
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-02-01", Instant.ofEpochSecond(1580601600L)),
+                        180,
+                        "2024-01-24 00:10:00+0000",
+                        true),
                 Arguments.of(
-                        "expired DL and past validity period, BST current time",
-                        vcDcmawDrivingPermitDvaExpired(), // expiry: "2020-10-01", nbf:
-                        // 2024-01-23T05:08:41
-                        1,
-                        "2024-01-24 01:00:00+0100",
-                        true));
+                        "DL expires on same day as VC issued so VC never expires (DL expiry during GMT)",
+                        // DL expiry: 2020-02-01, nbf: 2020-02-01T23:59:59+0000
+                        vcDcmawDrivingPermitDvaWithDates(
+                                "2020-02-01", Instant.ofEpochSecond(1580601599L)),
+                        180,
+                        "2024-01-24 00:10:00+0000",
+                        false));
     }
 
     @ParameterizedTest

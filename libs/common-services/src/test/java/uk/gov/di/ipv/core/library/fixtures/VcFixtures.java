@@ -61,8 +61,12 @@ public interface VcFixtures {
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String CIMIT_ISSUER = "https://cimit.stubs.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
-    Instant INSTANT_01_01_2099 = Instant.ofEpochSecond(4070908800L);
-    Instant INSTANT_26_07_2022 = Instant.ofEpochSecond(1658829758L);
+    Instant INSTANT_2099_01_01_00_00_00_UTC = Instant.ofEpochSecond(4070908800L);
+    Instant INSTANT_2022_07_26_10_02_38_UTC = Instant.ofEpochSecond(1658829758L);
+    Instant INSTANT_2024_01_23_05_08_41_UTC = Instant.ofEpochSecond(1705986521L);
+    Instant INSTANT_2024_01_09_17_49_30_UTC = Instant.ofEpochSecond(1704822570L);
+    Instant INSTANT_2022_05_19_09_38_00_UTC = Instant.ofEpochSecond(1652953080L);
+    Instant INSTANT_2023_10_12_07_55_26_UTC = Instant.ofEpochSecond(1697097326L);
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -190,7 +194,7 @@ public interface VcFixtures {
                 .withCredentialSubject(
                         IdentityCheckSubject.builder()
                                 .withAddress(List.of(ADDRESS_4))
-                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVLA))
+                                .withDrivingPermit(List.of(drivingPermitDvla()))
                                 .withName(List.of(aliceParkerName()))
                                 .withBirthDate(
                                         List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
@@ -221,28 +225,37 @@ public interface VcFixtures {
 
     private static IdentityCheckCredential vcClaimWebDrivingLicenceDva() {
         var vcClaim = vcClaimWebDrivingLicenceDvla();
-        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA));
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(drivingPermitDva()));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         return vcClaim;
     }
 
     private static IdentityCheckCredential vcClaimWebDrivingLicenceDvaExpired() {
         var vcClaim = vcClaimWebDrivingLicenceDvla();
-        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(drivingPermitDvaExpired()));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         return vcClaim;
     }
 
     private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaExpired() {
         var vcClaim = vcClaimDcmawDrivingPermitDva();
-        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(drivingPermitDvaExpired()));
+        vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
+        return vcClaim;
+    }
+
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaWithExpiryDate(
+            String expiryDate) {
+        var vcClaim = vcClaimDcmawDrivingPermitDva();
+        vcClaim.getCredentialSubject()
+                .setDrivingPermit(List.of(drivingPermitDvaWithExpiryDate(expiryDate)));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         return vcClaim;
     }
 
     private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaExpiredFailNoCi() {
         var vcClaim = vcClaimDcmawDrivingPermitDva();
-        vcClaim.getCredentialSubject().setDrivingPermit(List.of(DRIVING_PERMIT_DVA_EXPIRED));
+        vcClaim.getCredentialSubject().setDrivingPermit(List.of(drivingPermitDvaExpired()));
         vcClaim.getCredentialSubject().setName(List.of(kennethDecerqueiraName()));
         vcClaim.getEvidence().get(0).setValidityScore(0);
         return vcClaim;
@@ -426,7 +439,7 @@ public interface VcFixtures {
                                 .withBirthDate(
                                         List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withAddress(List.of(ADDRESS_4))
-                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .withDrivingPermit(List.of(drivingPermitDva()))
                                 .build())
                 .withEvidence(
                         List.of(
@@ -471,7 +484,7 @@ public interface VcFixtures {
                                 .withBirthDate(
                                         List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .withAddress(List.of(ADDRESS_4))
-                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .withDrivingPermit(List.of(drivingPermitDva()))
                                 .build())
                 .build();
     }
@@ -553,7 +566,7 @@ public interface VcFixtures {
                 .withCredentialSubject(
                         IdentityCheckSubject.builder()
                                 .withName(List.of(morganSarahMeredythName()))
-                                .withDrivingPermit(List.of(DRIVING_PERMIT_DVA))
+                                .withDrivingPermit(List.of(drivingPermitDva()))
                                 .withBirthDate(
                                         List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
                                 .build())
@@ -808,15 +821,22 @@ public interface VcFixtures {
                 .build();
     }
 
-    DrivingPermitDetails DRIVING_PERMIT_DVA =
-            createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19");
+    static DrivingPermitDetails drivingPermitDva() {
+        return createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19");
+    }
 
-    DrivingPermitDetails DRIVING_PERMIT_DVA_EXPIRED =
-            createDrivingPermitDetails("MORGA753116SM9IJ", "2020-10-01", "DVA", "2018-04-19");
+    static DrivingPermitDetails drivingPermitDvaExpired() {
+        return createDrivingPermitDetails("MORGA753116SM9IJ", "2020-10-01", "DVA", "2018-04-19");
+    }
 
-    DrivingPermitDetails DRIVING_PERMIT_DVLA =
-            createDrivingPermitDetails(
-                    "PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02", "123456");
+    static DrivingPermitDetails drivingPermitDvaWithExpiryDate(String expiryDate) {
+        return createDrivingPermitDetails("MORGA753116SM9IJ", expiryDate, "DVA", "2018-04-19");
+    }
+
+    static DrivingPermitDetails drivingPermitDvla() {
+        return createDrivingPermitDetails(
+                "PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02", "123456");
+    }
 
     static List<PassportDetails> passportDetails() {
         return List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
@@ -828,7 +848,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportSuccessfulWithRsaKeyType() {
@@ -837,7 +857,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaimWebPassportValid(),
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521),
+                INSTANT_2024_01_23_05_08_41_UTC,
                 KeyType.RSA);
     }
 
@@ -852,7 +872,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaim,
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportM1aWithCI() {
@@ -865,7 +885,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaim,
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportM1aWithCiButValidity2() {
@@ -877,7 +897,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaim,
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportM1aMissingEvidence() {
@@ -889,7 +909,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaim,
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportMissingName() {
@@ -901,7 +921,7 @@ public interface VcFixtures {
                 Cri.PASSPORT,
                 vcClaim,
                 PASSPORT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebPassportMissingBirthDate() {
@@ -949,7 +969,7 @@ public interface VcFixtures {
                 Cri.ADDRESS,
                 vcClaim,
                 TEST_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829720));
+                INSTANT_2022_07_26_10_02_38_UTC);
     }
 
     static VerifiableCredential vcAddressOne() {
@@ -989,7 +1009,7 @@ public interface VcFixtures {
                 Cri.EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudM1aExpired() {
@@ -998,7 +1018,7 @@ public interface VcFixtures {
                 Cri.EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_26_07_2022);
+                INSTANT_2022_07_26_10_02_38_UTC);
     }
 
     static VerifiableCredential vcExperianFraudEvidenceFailed() {
@@ -1007,7 +1027,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore0(),
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudScoreTwo() {
@@ -1016,7 +1036,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore2(),
                 FRAUD_ISSUER_STAGING,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudExpired() {
@@ -1025,7 +1045,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_26_07_2022);
+                INSTANT_2022_07_26_10_02_38_UTC);
     }
 
     static VerifiableCredential vcExperianFraudNotExpired() {
@@ -1034,7 +1054,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudScoreOne() {
@@ -1043,7 +1063,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaimExperianFraudScore1(),
                 FRAUD_ISSUER_STAGING,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraud(Instant nbf) {
@@ -1064,7 +1084,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_STAGING,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudApplicableAuthoritativeSourceFailed() {
@@ -1085,7 +1105,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudAvailableAuthoritativeSourceFailed() {
@@ -1106,7 +1126,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcExperianFraudMortalityFailed() {
@@ -1125,7 +1145,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     // Note that this VC is unrealistic and only for specific testsing
@@ -1145,7 +1165,7 @@ public interface VcFixtures {
                 EXPERIAN_FRAUD,
                 vcClaim,
                 FRAUD_ISSUER_INTEGRATION,
-                INSTANT_01_01_2099);
+                INSTANT_2099_01_01_00_00_00_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitDvaValid() {
@@ -1154,7 +1174,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaimWebDrivingLicenceDva(),
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitDvaExpired() {
@@ -1163,7 +1183,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaimWebDrivingLicenceDvaExpired(),
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitMissingDrivingPermit() {
@@ -1175,7 +1195,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaim,
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitEmptyDrivingPermit() {
@@ -1187,7 +1207,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaim,
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitFailedChecks() {
@@ -1200,7 +1220,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaim,
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705468290));
+                Instant.ofEpochSecond(1705468290)); // 2024-01-17 05:11:30 UTC
     }
 
     static VerifiableCredential vcWebDrivingPermitDvlaValid() {
@@ -1209,7 +1229,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaimWebDrivingLicenceDvla(),
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1697097326));
+                INSTANT_2023_10_12_07_55_26_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitNoCredentialSubjectProperty() {
@@ -1221,7 +1241,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaim,
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcWebDrivingPermitIncorrectType() {
@@ -1236,7 +1256,7 @@ public interface VcFixtures {
                 DRIVING_LICENCE,
                 vcClaim,
                 DRIVING_PERMIT_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     private static VerifiableCredential generateNinoVc(IdentityCheckCredential vcClaim) {
@@ -1245,7 +1265,7 @@ public interface VcFixtures {
                 NINO,
                 vcClaim,
                 "https://review-xx.account.gov.uk",
-                Instant.ofEpochSecond(1697097326));
+                INSTANT_2023_10_12_07_55_26_UTC);
     }
 
     static VerifiableCredential vcNinoIdentityCheckSuccessful() {
@@ -1296,7 +1316,7 @@ public interface VcFixtures {
                 TICF,
                 vcClaimTicf(),
                 TICF_ISSUER,
-                Instant.ofEpochSecond(1704822570));
+                INSTANT_2024_01_09_17_49_30_UTC);
     }
 
     static VerifiableCredential vcTicfWithCi() {
@@ -1304,7 +1324,7 @@ public interface VcFixtures {
         vcClaim.getEvidence().get(0).setCi(List.of("test"));
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
+                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, INSTANT_2024_01_09_17_49_30_UTC);
     }
 
     static VerifiableCredential generateTicfVcWithIntervention(Intervention intervention) {
@@ -1312,7 +1332,7 @@ public interface VcFixtures {
         vcClaim.getEvidence().get(0).setIntervention(intervention);
 
         return generateVerifiableCredential(
-                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, Instant.ofEpochSecond(1704822570));
+                TEST_SUBJECT, TICF, vcClaim, TICF_ISSUER, INSTANT_2024_01_09_17_49_30_UTC);
     }
 
     static VerifiableCredential vcExperianKbvM1a() {
@@ -1321,7 +1341,7 @@ public interface VcFixtures {
                 Cri.EXPERIAN_KBV,
                 vcClaimExperianKbv(),
                 EXPERIAN_KBV_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1653403140));
+                Instant.ofEpochSecond(1653403140)); // 2022-05-24 14:39:00 UTC
     }
 
     static VerifiableCredential vcDwpKbv() {
@@ -1330,7 +1350,7 @@ public interface VcFixtures {
                 DWP_KBV,
                 vcClaimDwpKbv(),
                 DWP_KBV_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawDrivingPermitDvaM1b() {
@@ -1339,7 +1359,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawDrivingPermitDva(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawDrivingPermitDvaExpired() {
@@ -1348,7 +1368,17 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawDrivingPermitDvaExpired(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
+    }
+
+    static VerifiableCredential vcDcmawDrivingPermitDvaWithDates(
+            String dlExpiryDate, Instant vcIssueDate) {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                DCMAW,
+                vcClaimDcmawDrivingPermitDvaWithExpiryDate(dlExpiryDate),
+                DCMAW_ISSUER_STAGING,
+                vcIssueDate);
     }
 
     static VerifiableCredential vcDcmawDrivingPermitDvaExpiredFailNoCi() {
@@ -1357,7 +1387,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawDrivingPermitDvaExpiredFailNoCi(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDrivingPermitNullNbf() {
@@ -1384,7 +1414,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawPassport(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawFailedPassport() {
@@ -1393,7 +1423,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawPassportFailedNoBirthDate(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawDvaNoEvidence() {
@@ -1402,7 +1432,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimDcmawDrivingPermitDvaNoEvidence(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawAsyncDrivingPermitDva() {
@@ -1411,7 +1441,7 @@ public interface VcFixtures {
                 DCMAW_ASYNC,
                 vcClaimDcmawDrivingPermitDva(),
                 DCMAW_ASYNC_ISSUER_BUILD,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawAsyncDrivingPermitDvaFailedChecks() {
@@ -1424,7 +1454,7 @@ public interface VcFixtures {
                 DCMAW_ASYNC,
                 vcClaim,
                 DCMAW_ASYNC_ISSUER_BUILD,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDcmawAsyncPassport() {
@@ -1433,7 +1463,7 @@ public interface VcFixtures {
                 DCMAW_ASYNC,
                 vcClaimDcmawPassport(),
                 DCMAW_ASYNC_ISSUER_BUILD,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcF2fPassportPhotoM1a() {
@@ -1442,7 +1472,7 @@ public interface VcFixtures {
                 F2F,
                 vcClaimF2fPassportPhoto(),
                 F2F_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcF2fDrivingPermitDvaPhotoM1a() {
@@ -1451,7 +1481,7 @@ public interface VcFixtures {
                 DCMAW,
                 vcClaimF2fDrivingPermitDvaPhoto(),
                 DCMAW_ISSUER_STAGING,
-                Instant.ofEpochSecond(1705986521));
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcF2fBrp() {
@@ -1460,7 +1490,7 @@ public interface VcFixtures {
                 F2F,
                 vcClaimF2fBrp(),
                 F2F_ISSUER_STAGING,
-                Instant.ofEpochSecond(1652953080));
+                INSTANT_2022_05_19_09_38_00_UTC);
     }
 
     static VerifiableCredential vcF2fIdCard() {
@@ -1469,7 +1499,7 @@ public interface VcFixtures {
                 F2F,
                 vcClaimF2fIdCard(),
                 F2F_ISSUER_STAGING,
-                Instant.ofEpochSecond(1652953080));
+                INSTANT_2022_05_19_09_38_00_UTC);
     }
 
     static VerifiableCredential vcNinoIdentityCheckL1a() {
