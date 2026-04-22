@@ -482,14 +482,14 @@ nestedJourneyStates:
         exitEventToEmit: next
       anotherWay:
         exitEventToEmit: anotherWay
+      failWithNoCiFromApp:
+        exitEventToEmit: failWithNoCiFromApp
+      failWithCiFromApp:
+        exitEventToEmit: failWithCiFromApp
       incompleteDlAuthCheckInvalidDlv2:
         targetState: DL_DETAILS_INCORRECT_PAGE
       failedDlAuthCheckInvalidDl:
         exitEventToEmit: failedDlAuthCheckInvalidDl
-      failWithNoCiFromApp:
-        exitEventToEmit: anotherWay
-      failWithCiFromApp:
-        exitEventToEmit: failWithCiFromApp
 
   DL_DETAILS_INCORRECT_PAGE:
     response:
