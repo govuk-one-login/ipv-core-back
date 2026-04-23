@@ -238,6 +238,12 @@ states:
           - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      postOfficeTriageBanner:
+        targetState: PYI_POST_OFFICE
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -253,6 +259,12 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      postOfficeTriageBanner:
+        targetState: PYI_POST_OFFICE
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
