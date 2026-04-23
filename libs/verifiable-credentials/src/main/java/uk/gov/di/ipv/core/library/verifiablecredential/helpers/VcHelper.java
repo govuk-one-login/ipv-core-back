@@ -196,6 +196,10 @@ public class VcHelper {
         return hasExpired(nbf, expiryPeriodInDays, clock);
     }
 
+    // A driving permit VC expires if
+    // - The VC was issued after the driving licence expired
+    // AND
+    // - The VC was issued more than DcmawExpiredDlValidityPeriodDays days ago
     public static boolean isExpiredDrivingPermitVc(
             VerifiableCredential drivingPermitVc, ConfigService configService, Clock clock) {
         var validityDurationInDays = configService.getDcmawExpiredDlValidityPeriodDays();
