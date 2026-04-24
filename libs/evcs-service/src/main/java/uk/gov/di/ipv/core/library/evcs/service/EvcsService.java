@@ -172,10 +172,10 @@ public class EvcsService {
             boolean isPendingIdentity)
             throws EvcsServiceException {
 
-        var newUserVcs = findNewUserVcs(credentials, existingEvcsUserVCs);
         var evcsCreateUserVCsDtos =
                 mapNewVcsToEvcsCreateUserVCsDto(
-                        newUserVcs, isPendingIdentity ? PENDING_RETURN : CURRENT);
+                        findNewUserVcs(credentials, existingEvcsUserVCs),
+                        isPendingIdentity ? PENDING_RETURN : CURRENT);
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs)) {
             var existingVcsToUpdate =
@@ -236,7 +236,10 @@ public class EvcsService {
                         .toList();
         var evcsStoreIdentityDto =
                 new EvcsPostIdentityDto(
-                        userId, govukSigninJourneyId, vcToCreateAndUpdate, storedIdentityJwt);
+                        userId,
+                        vcToCreateAndUpdate.isEmpty() ? null : govukSigninJourneyId,
+                        vcToCreateAndUpdate.isEmpty() ? null : vcToCreateAndUpdate,
+                        storedIdentityJwt);
 
         return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
     }
@@ -275,7 +278,7 @@ public class EvcsService {
             List<VerifiableCredential> credentials,
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
             BiFunction<List<EvcsGetUserVCDto>, EvcsVCState, List<T>> mapper,
-            Boolean isPendingIdentity) {
+            boolean isPendingIdentity) {
         var existingPendingReturnUserVcsNotInSessionToUpdate =
                 mapper.apply(
                         findExistingVcsNotInSessionCredentials(
