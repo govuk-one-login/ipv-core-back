@@ -358,7 +358,7 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
-    evcsApiUpdatesEnabled: true
+    evcsApiUpdatesEnabled: false
 
   features:
     evcsApiUpdates:

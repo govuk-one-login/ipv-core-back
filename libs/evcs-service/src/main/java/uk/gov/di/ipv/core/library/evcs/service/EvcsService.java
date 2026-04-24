@@ -254,16 +254,6 @@ public class EvcsService {
                 .toList();
     }
 
-    private List<EvcsUpdateUserVCsDto> mapExistingVcsToEvcsUpdateUserVCsDto(
-            List<EvcsGetUserVCDto> existingVcs, EvcsVCState newState) {
-        return existingVcs.stream()
-                .map(
-                        existingVc ->
-                                new EvcsUpdateUserVCsDto(
-                                        getVcSignature(existingVc.vc()), newState, null))
-                .toList();
-    }
-
     private List<EvcsCreateUserVCsDto> mapExistingVcsToEvcsCreateUserVCsDto(
             List<EvcsGetUserVCDto> existingVcs, EvcsVCState newState) {
         return existingVcs.stream()
@@ -271,6 +261,16 @@ public class EvcsService {
                         existingVc ->
                                 new EvcsCreateUserVCsDto(
                                         existingVc.vc(), newState, existingVc.metadata(), null))
+                .toList();
+    }
+
+    private List<EvcsUpdateUserVCsDto> mapExistingVcsToEvcsUpdateUserVCsDto(
+            List<EvcsGetUserVCDto> existingVcs, EvcsVCState newState) {
+        return existingVcs.stream()
+                .map(
+                        existingVc ->
+                                new EvcsUpdateUserVCsDto(
+                                        getVcSignature(existingVc.vc()), newState, null))
                 .toList();
     }
 
