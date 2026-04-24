@@ -514,7 +514,7 @@ class ContractTest {
     void testPostIdentityReturns202(MockServer mockServer) throws EvcsServiceException {
         // Arrange
         var evcsPostIdentityDto =
-                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_STORED_IDENTITY_DTO);
+                new EvcsPostIdentityDto(TEST_USER_ID, null, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act
@@ -595,7 +595,8 @@ class ContractTest {
     @PactTestFor(pactMethod = "nullUserIdPostIdentityReturns400")
     void testNullUserIdPostIdentityReturns400(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(null, null, EVCS_STORED_IDENTITY_DTO);
+        var evcsPostIdentityDto =
+                new EvcsPostIdentityDto(null, null, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
@@ -644,7 +645,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "emptyUserIdPostIdentityReturns400")
     void testEmptyUserIdPostIdentityReturns400(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto("", null, EVCS_STORED_IDENTITY_DTO);
+        var evcsPostIdentityDto = new EvcsPostIdentityDto("", null, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
@@ -688,7 +689,7 @@ class ContractTest {
     @PactTestFor(pactMethod = "nullSiPostIdentityReturns400")
     void testNullSiPostIdentityReturns400(MockServer mockServer) {
         // Arrange
-        var evcsPostIdentityDto = new EvcsPostIdentityDto(TEST_USER_ID, null, null);
+        var evcsPostIdentityDto = new EvcsPostIdentityDto(TEST_USER_ID, null, null, null);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
@@ -738,7 +739,7 @@ class ContractTest {
     void testInvalidSiPostIdentityReturns400(MockServer mockServer) {
         // Arrange
         var evcsPostIdentityDto =
-                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_INVALID_STORED_IDENTITY_DTO);
+                new EvcsPostIdentityDto(TEST_USER_ID, null, null, EVCS_INVALID_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert
@@ -791,7 +792,7 @@ class ContractTest {
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_INVALID_API_KEY);
         var evcsPostIdentityDto =
-                new EvcsPostIdentityDto(TEST_USER_ID, null, EVCS_STORED_IDENTITY_DTO);
+                new EvcsPostIdentityDto(TEST_USER_ID, null, null, EVCS_STORED_IDENTITY_DTO);
         var underTest = new EvcsClient(mockConfigService);
 
         // Act & Assert

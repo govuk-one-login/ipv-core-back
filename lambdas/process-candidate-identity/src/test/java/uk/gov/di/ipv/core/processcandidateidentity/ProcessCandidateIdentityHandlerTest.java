@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.dto.AccountInterventionState;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -76,6 +77,7 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisStat
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -1419,6 +1421,57 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(500, response.get("statusCode"));
             assertEquals(
                     RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage(), response.get("message"));
+        }
+
+        @Test
+        void shouldReturnJourneyErrorWhenFailingToCreateStoredIdentityRecord() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(evcsService.getUserVCs(
+                            USER_ID,
+                            EVCS_ACCESS_TOKEN,
+                            EvcsVCState.CURRENT,
+                            EvcsVCState.PENDING_RETURN))
+                    .thenReturn(List.of());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(List.of()),
+                            any(),
+                            any()))
+                    .thenReturn(true);
+            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                    .thenReturn(List.of())
+                    .thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            doThrow(
+                            new FailedToCreateStoredIdentityForEvcsException(
+                                    "Failed to create stored identity record."))
+                    .when(storeIdentityService)
+                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(
+                    FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS.getMessage(),
+                    response.get("message"));
         }
 
         @Test
