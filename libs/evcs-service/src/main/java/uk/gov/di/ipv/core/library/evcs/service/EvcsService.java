@@ -173,14 +173,16 @@ public class EvcsService {
             throws EvcsServiceException {
 
         var newUserVcs = findNewUserVcs(credentials, existingEvcsUserVCs);
-        var evcsCreateUserVCsDtos = mapVcsToEvcsCreateUserVCsDto(newUserVcs, isPendingIdentity);
+        var evcsCreateUserVCsDtos =
+                mapNewVcsToEvcsCreateUserVCsDto(
+                        newUserVcs, isPendingIdentity ? PENDING_RETURN : CURRENT);
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs)) {
             var existingVcsToUpdate =
                     mapAndUpdateStateOfExistingUserVcs(
                             credentials,
                             existingEvcsUserVCs,
-                            this::mapExistingVcToEvcsUpdateUserVCsDto,
+                            this::mapExistingVcsToEvcsUpdateUserVCsDto,
                             isPendingIdentity);
             if (!existingVcsToUpdate.isEmpty()) {
                 evcsClient.updateUserVCs(userId, existingVcsToUpdate);
@@ -219,14 +221,14 @@ public class EvcsService {
                         userId, credentials, strongestAchievedVot, achievedVot);
 
         var evcsCreateUserVCsDtos =
-                mapVcsToEvcsCreateUserVCsDto(
-                        findNewUserVcs(credentials, existingEvcsUserVcs), false);
+                mapNewVcsToEvcsCreateUserVCsDto(
+                        findNewUserVcs(credentials, existingEvcsUserVcs), CURRENT);
 
         var existingVcsToUpdate =
                 mapAndUpdateStateOfExistingUserVcs(
                         credentials,
                         existingEvcsUserVcs,
-                        this::mapExistingVcToEvcsCreateUserVCsDto,
+                        this::mapExistingVcsToEvcsCreateUserVCsDto,
                         false);
 
         var vcToCreateAndUpdate =
@@ -237,6 +239,36 @@ public class EvcsService {
                         userId, govukSigninJourneyId, vcToCreateAndUpdate, storedIdentityJwt);
 
         return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
+    }
+
+    private List<EvcsCreateUserVCsDto> mapNewVcsToEvcsCreateUserVCsDto(
+            List<VerifiableCredential> credentials, EvcsVCState newState) {
+        return credentials.stream()
+                .map(
+                        vc ->
+                                new EvcsCreateUserVCsDto(
+                                        vc.getVcString(), newState, null, EvcsVcProvenance.ONLINE))
+                .toList();
+    }
+
+    private List<EvcsUpdateUserVCsDto> mapExistingVcsToEvcsUpdateUserVCsDto(
+            List<EvcsGetUserVCDto> existingVcs, EvcsVCState newState) {
+        return existingVcs.stream()
+                .map(
+                        existingVc ->
+                                new EvcsUpdateUserVCsDto(
+                                        getVcSignature(existingVc.vc()), newState, null))
+                .toList();
+    }
+
+    private List<EvcsCreateUserVCsDto> mapExistingVcsToEvcsCreateUserVCsDto(
+            List<EvcsGetUserVCDto> existingVcs, EvcsVCState newState) {
+        return existingVcs.stream()
+                .map(
+                        existingVc ->
+                                new EvcsCreateUserVCsDto(
+                                        existingVc.vc(), newState, existingVc.metadata(), null))
+                .toList();
     }
 
     private <T> List<T> mapAndUpdateStateOfExistingUserVcs(
@@ -281,6 +313,51 @@ public class EvcsService {
         return existingPendingReturnUserVcsNotInSessionToUpdate;
     }
 
+    private List<VerifiableCredential> findNewUserVcs(
+            List<VerifiableCredential> sessionCredentials, List<EvcsGetUserVCDto> existingEvcsVCs) {
+        return sessionCredentials.stream()
+                .filter(
+                        credential ->
+                                existingEvcsVCs.stream()
+                                        .noneMatch(
+                                                evcsVc ->
+                                                        evcsVc.vc()
+                                                                .equals(credential.getVcString())))
+                .toList();
+    }
+
+    private List<EvcsGetUserVCDto> findExistingVcsNotInSessionCredentials(
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> existingEvcsUserVCs,
+            Predicate<EvcsGetUserVCDto> condition) {
+        return existingEvcsUserVCs.stream()
+                .filter(condition)
+                .filter(
+                        existingVc ->
+                                credentials.stream()
+                                        .noneMatch(
+                                                credential ->
+                                                        credential
+                                                                .getVcString()
+                                                                .equals(existingVc.vc())))
+                .toList();
+    }
+
+    private List<EvcsGetUserVCDto> findExistingVcsInSessionCredentials(
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> existingEvcsUserVCs,
+            Predicate<EvcsGetUserVCDto> condition) {
+        return existingEvcsUserVCs.stream()
+                .filter(condition)
+                .filter(
+                        vc ->
+                                credentials.stream()
+                                        .anyMatch(
+                                                credential ->
+                                                        credential.getVcString().equals(vc.vc())))
+                .toList();
+    }
+
     public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
         evcsClient.invalidateStoredIdentityRecord(userId);
     }
@@ -303,85 +380,5 @@ public class EvcsService {
 
     private static String getVcSignature(String vcString) {
         return vcString.split("\\.")[2];
-    }
-
-    private List<VerifiableCredential> findNewUserVcs(
-            List<VerifiableCredential> sessionCredentials, List<EvcsGetUserVCDto> existingEvcsVCs) {
-        return sessionCredentials.stream()
-                .filter(
-                        credential ->
-                                existingEvcsVCs.stream()
-                                        .noneMatch(
-                                                evcsVc ->
-                                                        evcsVc.vc()
-                                                                .equals(credential.getVcString())))
-                .toList();
-    }
-
-    private List<EvcsCreateUserVCsDto> mapVcsToEvcsCreateUserVCsDto(
-            List<VerifiableCredential> credentials, Boolean isPendingIdentity) {
-        return credentials.stream()
-                .map(
-                        vc ->
-                                new EvcsCreateUserVCsDto(
-                                        vc.getVcString(),
-                                        isPendingIdentity
-                                                ? EvcsVCState.PENDING_RETURN
-                                                : EvcsVCState.CURRENT,
-                                        null,
-                                        EvcsVcProvenance.ONLINE))
-                .toList();
-    }
-
-    private List<EvcsGetUserVCDto> findExistingVcsNotInSessionCredentials(
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs,
-            Predicate<EvcsGetUserVCDto> condition) {
-        return existingEvcsUserVCs.stream()
-                .filter(condition)
-                .filter(
-                        existingVc ->
-                                credentials.stream()
-                                        .noneMatch(
-                                                credential ->
-                                                        credential
-                                                                .getVcString()
-                                                                .equals(existingVc.vc())))
-                .toList();
-    }
-
-    private List<EvcsUpdateUserVCsDto> mapExistingVcToEvcsUpdateUserVCsDto(
-            List<EvcsGetUserVCDto> existingVcs, EvcsVCState state) {
-        return existingVcs.stream()
-                .map(
-                        existingVc ->
-                                new EvcsUpdateUserVCsDto(
-                                        getVcSignature(existingVc.vc()), state, null))
-                .toList();
-    }
-
-    private List<EvcsCreateUserVCsDto> mapExistingVcToEvcsCreateUserVCsDto(
-            List<EvcsGetUserVCDto> existingVcs, EvcsVCState state) {
-        return existingVcs.stream()
-                .map(
-                        existingVc ->
-                                new EvcsCreateUserVCsDto(
-                                        existingVc.vc(), state, existingVc.metadata(), null))
-                .toList();
-    }
-
-    private List<EvcsGetUserVCDto> findExistingVcsInSessionCredentials(
-            List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs,
-            Predicate<EvcsGetUserVCDto> condition) {
-        return existingEvcsUserVCs.stream()
-                .filter(condition)
-                .filter(
-                        vc ->
-                                credentials.stream()
-                                        .anyMatch(
-                                                credential ->
-                                                        credential.getVcString().equals(vc.vc())))
-                .toList();
     }
 }
