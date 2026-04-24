@@ -74,6 +74,7 @@ class EvcsClientTest {
             "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg"; // pragma: allowlist secret
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
+    private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "TEST_GOVUK_SIGNIN_JOURNEY_ID";
     private static final Map<String, Object> TEST_METADATA =
             Map.of(
                     "reason", "testing",
@@ -113,6 +114,13 @@ class EvcsClientTest {
                     TEST_USER_ID,
                     null,
                     null,
+                    new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
+
+    private static final EvcsPostIdentityDto EVCS_POST_IDENTITY_DTO_SI_AND_VCS =
+            new EvcsPostIdentityDto(
+                    TEST_USER_ID,
+                    TEST_GOVUK_SIGNIN_JOURNEY_ID,
+                    EVCS_CREATE_USER_VCS_DTO,
                     new EvcsStoredIdentityDto("storedIdentityJwt", Vot.P2));
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(CURRENT, PENDING_RETURN);
 
@@ -607,6 +615,41 @@ class EvcsClientTest {
             assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
             assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
             assertEquals(TEST_USER_ID, evcsPostIdentityDto.userId());
+        }
+    }
+
+    @Test
+    void storeUserIdentityShouldSuccessfullySendRequestWithVCsAndGovukSigninJourneyId()
+            throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            evcsClient.storeUserIdentity(EVCS_POST_IDENTITY_DTO_SI_AND_VCS);
+
+            // Assert
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/identity", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var evcsPostIdentityDto =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsPostIdentityDto>() {});
+            assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
+            assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
+            assertEquals(TEST_USER_ID, evcsPostIdentityDto.userId());
+            assertEquals(EVCS_CREATE_USER_VCS_DTO, evcsPostIdentityDto.vcs());
+            assertEquals(
+                    TEST_GOVUK_SIGNIN_JOURNEY_ID, evcsPostIdentityDto.govuk_signin_journey_id());
         }
     }
 
