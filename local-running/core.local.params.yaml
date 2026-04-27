@@ -359,7 +359,7 @@ core:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: false
-    mitigations9020Enabled: true
+    mitigations9020Enabled: false
 
   features:
     mitigations9020:
