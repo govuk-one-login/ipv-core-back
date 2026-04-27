@@ -109,7 +109,6 @@ Feature: Audit Events
       | CRI     | scenario               |
       | address | kenneth-current        |
       | fraud   | kenneth-score-2        |
-    And I activate the 'storedIdentityService' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
