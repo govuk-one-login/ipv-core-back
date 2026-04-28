@@ -1,7 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - P2 journeys
-  Background: Enabled stored identity service flag and start p1 journey
-    Given I activate the 'storedIdentityService' feature sets
 
   Scenario: Successful stored identity storage - P2 app international journey - medium-confidence journey
     When I start a new 'medium-confidence' journey
@@ -158,8 +156,7 @@ Feature: Stored Identity - P2 journeys
       Then I get a 'prove-identity-no-photo-id' page response
       When I submit an 'next' event
       Then I get a 'claimedIdentity' CRI response
-      When I activate the 'storedIdentityService' feature set
-      And I submit 'kenneth-current' details with attributes to the CRI stub
+      When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
       Then I get a 'bav' CRI response

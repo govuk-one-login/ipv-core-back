@@ -1,7 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - P1 journeys
   Background: Enabled stored identity service flag and start p1 journey
-    Given I activate the 'storedIdentityService' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
 

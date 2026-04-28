@@ -1,7 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity - M1C Outcomes
-  Background:
-    Given I activate the 'storedIdentityService' feature set
 
   Rule: New Identities - UK Address
     Background:
