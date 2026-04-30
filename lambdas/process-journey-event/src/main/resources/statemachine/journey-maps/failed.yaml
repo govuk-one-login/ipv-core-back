@@ -340,6 +340,26 @@ states:
       next:
         targetState: RETURN_TO_RP
 
+  NO_MATCH_PAGE_REPEAT_FRAUD_CHECK:
+    response:
+      type: page
+      pageId: pyi-no-match
+      pageContext:
+        reason: repeatFraudCheck
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_UPDATE_DETAILS:
+    response:
+      type: page
+      pageId: pyi-no-match
+      pageContext:
+        reason: updateDetails
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
   RETURN_TO_RP:
     response:
       type: process

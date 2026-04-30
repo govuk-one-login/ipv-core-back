@@ -176,6 +176,15 @@ states:
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
+      failWithNoCiFromApp:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
@@ -587,6 +596,12 @@ states:
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
+      failWithNoCiFromApp:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 

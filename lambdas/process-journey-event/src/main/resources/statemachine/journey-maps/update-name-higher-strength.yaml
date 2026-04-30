@@ -1,0 +1,179 @@
+name: Update Name Higher Strength
+
+description: >-
+  A journey for users to retry with higher srength doc
+
+states:
+
+  # Entry points
+  START_HIGHER_STRENGTH:
+    events:
+      next:
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+
+  # Journey States
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: repeatFraudCheck
+    events:
+      passport:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: updateDetails
+    events:
+      passport:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  STRATEGIC_APP_TRIAGE_RETRY:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_NAMES_ONLY
+        journeyContextToUnset: appOnly
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+        journeyContextToUnset: appOnly
+      incompleteDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+      failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+        journeyContextToUnset: appOnly
+      failWithCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+      failWithNoCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+        journeyContextToUnset: appOnly
+      returnToRp:
+        targetState: RETURN_TO_RP
+        journeyContextToUnset: appOnly
+
+  POST_APP_DOC_CHECK_NAMES_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      pageContext:
+        noAddress: true
+    events:
+      next:
+        targetState: FRAUD_CHECK_NAMES_ONLY
+    
+  POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      pageContext:
+        noAddress: true
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+        targetEntryEvent: internationalUser
+
+  FRAUD_CHECK_NAMES_ONLY:
+    response:
+      type: cri
+      criId: fraud
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: PROCESS_UPDATE_IDENTITY
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: NO_MATCH_PAGE_REPEAT_FRAUD_CHECK
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: PROCESS_UPDATE_IDENTITY
+      fraud-fail-with-no-ci:
+        targetState: PROCESS_UPDATE_IDENTITY
+
+  # Remove any DCMAW Async VC from previous attempts
+  RESET_SESSION_BEFORE_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC_ALL
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE_RETRY
+        targetEntryEvent: appTriage
+
+  PROCESS_UPDATE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: UPDATE
+    events:
+      next:
+        targetState: IPV_SUCCESS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: true
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  IPV_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-success
+      pageContext:
+        journeyType: coi
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response
