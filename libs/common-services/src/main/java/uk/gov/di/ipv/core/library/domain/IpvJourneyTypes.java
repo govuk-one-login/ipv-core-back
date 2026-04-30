@@ -33,6 +33,7 @@ public enum IpvJourneyTypes {
     // Continuity of Identity journeys
     UPDATE_ADDRESS("update-address"),
     UPDATE_NAME("update-name"),
+    UPDATE_DETAILS_HIGHER_STRENGTH("update-details-higher-strength"),
 
     // MFA reset journey
     REVERIFICATION("reverification");
