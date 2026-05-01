@@ -21,3 +21,16 @@ path.
 IPV core uses a thing called the journey map to decide how to route a user between CRIs and eventually back to orchestration. Journey map is an overloaded term and can mean either the yaml files that
 define the users' possible routes through the site or be a shorthand for the journey map visualiser which is a website that displays possible routes in a graphical form that is easier to understand than
 the yaml files.
+
+# API Surface
+Core-back exposes three separate APIs defined in /openAPI:
+- **Internal API** (core-back-internal.yaml) — consumed by core-front for session initialisation, CRI callbacks, and journey event processing.
+- **External API** (core-back-external.yaml) — consumed by non-IPV services (e.g. Orchestration) for token exchange, user identity retrieval, and reverification.
+- **Analytics API** (core-back-analytics.yaml) — consumed by observability tooling, secured with API key auth.
+
+# Related Projects
+- [ipv-core-front](https://github.com/govuk-one-login/ipv-core-front) — front end for IPV Core
+- [ipv-core-tests](https://github.com/govuk-one-login/ipv-core-tests) — Cucumber feature tests run against deployed core-back + core-front
+- [ipv-core-common-infra](https://github.com/govuk-one-login/ipv-core-common-infra) — shared infrastructure, Terraform deployments, and dev-deploy tooling
+- [ipv-stubs](https://github.com/govuk-one-login/ipv-stubs) — stubs for CRI dependencies used in dev/build environments
+- [data-vocab](https://github.com/govuk-one-login/data-vocab) — shared data model (di-data-model-jackson) consumed via GitHub Packages
