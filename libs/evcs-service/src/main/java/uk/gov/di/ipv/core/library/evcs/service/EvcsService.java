@@ -8,9 +8,11 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -147,6 +149,17 @@ public class EvcsService {
                                 credential.getVcString(), PENDING_RETURN, null, OFFLINE)));
     }
 
+    public void storePendingVcV2(VerifiableCredential credential, String govukSigninJourneyId)
+            throws EvcsServiceException {
+        evcsClient.storeUserVcsV2(
+                new EvcsCreateUserVCsRequestBody(
+                        credential.getUserId(),
+                        govukSigninJourneyId,
+                        List.of(
+                                new EvcsCreateUserVCsDto(
+                                        credential.getVcString(), PENDING_RETURN, null, OFFLINE))));
+    }
+
     public void abandonPendingIdentity(String userId, String evcsAccessToken)
             throws EvcsServiceException {
         List<EvcsUpdateUserVCsDto> vcsToUpdates =
@@ -157,6 +170,22 @@ public class EvcsService {
                                                 getVcSignature(vc.vc()), ABANDONED, null))
                         .toList();
         if (!vcsToUpdates.isEmpty()) evcsClient.updateUserVCs(userId, vcsToUpdates);
+    }
+
+    public void abandonPendingIdentityV2(
+            String userId, String evcsAccessToken, String govukSigninJourneyId)
+            throws EvcsServiceException {
+        List<EvcsUpdateUserVCsDto> vcsToUpdates =
+                getUserVCs(userId, evcsAccessToken, PENDING_RETURN).stream()
+                        .map(
+                                vc ->
+                                        new EvcsUpdateUserVCsDto(
+                                                getVcSignature(vc.vc()), ABANDONED, null))
+                        .toList();
+        if (!vcsToUpdates.isEmpty()) {
+            evcsClient.updateUserVcsV2(
+                    new EvcsUpdateUserVCsRequestBody(userId, govukSigninJourneyId, vcsToUpdates));
+        }
     }
 
     public List<EvcsGetUserVCDto> getUserVCs(
@@ -190,6 +219,73 @@ public class EvcsService {
         }
         if (!evcsCreateUserVCsDtos.isEmpty()) {
             evcsClient.storeUserVCs(userId, evcsCreateUserVCsDtos);
+        }
+    }
+
+    public void storeCompletedOrPendingIdentityWithPostVcsV2(
+            String userId,
+            String govukSigninJourneyId,
+            List<VerifiableCredential> credentials,
+            List<EvcsGetUserVCDto> existingEvcsUserVCs,
+            boolean isPendingIdentity)
+            throws EvcsServiceException {
+
+        var evcsCreateUserVCsDtos =
+                mapNewVcsToEvcsCreateUserVCsDto(
+                        findNewUserVcs(credentials, existingEvcsUserVCs),
+                        isPendingIdentity ? PENDING_RETURN : CURRENT);
+
+        if (!CollectionUtils.isEmpty(existingEvcsUserVCs)) {
+            var existingVcsToUpdate =
+                    mapAndUpdateStateOfExistingUserVcs(
+                            credentials,
+                            existingEvcsUserVCs,
+                            this::mapExistingVcsToEvcsUpdateUserVCsDto,
+                            isPendingIdentity);
+            if (!existingVcsToUpdate.isEmpty()) {
+                evcsClient.updateUserVcsV2(
+                        new EvcsUpdateUserVCsRequestBody(
+                                userId, govukSigninJourneyId, existingVcsToUpdate));
+            }
+        }
+        if (!evcsCreateUserVCsDtos.isEmpty()) {
+            evcsClient.storeUserVcsV2(
+                    new EvcsCreateUserVCsRequestBody(
+                            userId, govukSigninJourneyId, evcsCreateUserVCsDtos));
+        }
+    }
+
+    public void markHistoricInEvcs(String userId, List<VerifiableCredential> vcs)
+            throws EvcsServiceException {
+        var vcsToUpdate =
+                vcs.stream()
+                        .map(
+                                vc ->
+                                        new EvcsUpdateUserVCsDto(
+                                                getVcSignature(vc.getVcString()),
+                                                EvcsVCState.HISTORIC,
+                                                null))
+                        .toList();
+        if (!vcsToUpdate.isEmpty()) {
+            evcsClient.updateUserVCs(userId, vcsToUpdate);
+        }
+    }
+
+    public void markHistoricInEvcsV2(
+            String userId, String govukSigninJourneyId, List<VerifiableCredential> vcs)
+            throws EvcsServiceException {
+        var vcsToUpdate =
+                vcs.stream()
+                        .map(
+                                vc ->
+                                        new EvcsUpdateUserVCsDto(
+                                                getVcSignature(vc.getVcString()),
+                                                EvcsVCState.HISTORIC,
+                                                null))
+                        .toList();
+        if (!vcsToUpdate.isEmpty()) {
+            evcsClient.updateUserVcsV2(
+                    new EvcsUpdateUserVCsRequestBody(userId, govukSigninJourneyId, vcsToUpdate));
         }
     }
 
@@ -242,6 +338,10 @@ public class EvcsService {
                         storedIdentityJwt);
 
         return evcsClient.storeUserIdentity(evcsStoreIdentityDto);
+    }
+
+    public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
+        evcsClient.invalidateStoredIdentityRecord(userId);
     }
 
     private List<EvcsCreateUserVCsDto> mapNewVcsToEvcsCreateUserVCsDto(
@@ -359,26 +459,6 @@ public class EvcsService {
                                                 credential ->
                                                         credential.getVcString().equals(vc.vc())))
                 .toList();
-    }
-
-    public void invalidateStoredIdentityRecord(String userId) throws EvcsServiceException {
-        evcsClient.invalidateStoredIdentityRecord(userId);
-    }
-
-    public void markHistoricInEvcs(String userId, List<VerifiableCredential> vcs)
-            throws EvcsServiceException {
-        var vcsToUpdate =
-                vcs.stream()
-                        .map(
-                                vc ->
-                                        new EvcsUpdateUserVCsDto(
-                                                getVcSignature(vc.getVcString()),
-                                                EvcsVCState.HISTORIC,
-                                                null))
-                        .toList();
-        if (!vcsToUpdate.isEmpty()) {
-            evcsClient.updateUserVCs(userId, vcsToUpdate);
-        }
     }
 
     private static String getVcSignature(String vcString) {
