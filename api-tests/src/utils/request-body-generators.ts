@@ -232,14 +232,18 @@ export const generateVcRequestBody = async (
 };
 
 export const generatePostVcsBody = (
+  userId: string,
   credentialsToPost: string[],
 ): EvcsStubPostVcsRequest => {
-  return credentialsToPost.map((cred) => ({
-    vc: cred,
-    state: "CURRENT",
-    metadata: {},
-    provenance: "ONLINE",
-  }));
+  return {
+    userId,
+    vcs: credentialsToPost.map((cred) => ({
+      vc: cred,
+      state: "CURRENT",
+      metadata: {},
+      provenance: "ONLINE",
+    })),
+  };
 };
 
 export const generateDcmawAsyncVcCreationBodyFromScenario = async (

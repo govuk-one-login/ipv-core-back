@@ -540,8 +540,7 @@ When(
     const credentials = await Promise.all(allGenerationPromises);
 
     await evcsStubClient.postCredentials(
-      this.userId,
-      generatePostVcsBody(credentials),
+      generatePostVcsBody(this.userId, credentials),
     );
 
     await Promise.all(

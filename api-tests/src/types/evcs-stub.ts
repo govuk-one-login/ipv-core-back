@@ -1,4 +1,7 @@
-export type EvcsStubPostVcsRequest = EvcsStubPostVcsCredential[];
+export interface EvcsStubPostVcsRequest {
+  userId: string;
+  vcs: EvcsStubPostVcsCredential[];
+}
 
 export interface EvcsStubPostVcsCredential {
   vc: string;
