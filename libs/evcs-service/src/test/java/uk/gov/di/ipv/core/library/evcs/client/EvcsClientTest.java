@@ -21,12 +21,14 @@ import uk.gov.di.ipv.core.library.config.domain.EvcsConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
@@ -734,5 +736,108 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID));
+    }
+
+    @Test
+    void testStoreUserVcsV2_shouldSendVcsToEvcs() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        var requestBody =
+                new EvcsCreateUserVCsRequestBody(
+                        TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, EVCS_CREATE_USER_VCS_DTO);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            evcsClient.storeUserVcsV2(requestBody);
+
+            // Assert
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("POST", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/vcs", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var sentBody =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsCreateUserVCsRequestBody>() {});
+            assertEquals(TEST_USER_ID, sentBody.userId());
+            assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, sentBody.govuk_signin_journey_id());
+            assertFalse(sentBody.vcs().stream().anyMatch(dto -> !dto.state().equals(CURRENT)));
+        }
+    }
+
+    @Test
+    void testStoreUserVcsV2_shouldThrowException_ifBadUrl() {
+        // Arrange
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.storeUserVcsV2(
+                                new EvcsCreateUserVCsRequestBody(
+                                        TEST_USER_ID,
+                                        TEST_GOVUK_SIGNIN_JOURNEY_ID,
+                                        EVCS_CREATE_USER_VCS_DTO)));
+    }
+
+    @Test
+    void testUpdateUserVcsV2_shouldSendVcsToEvcs() throws Exception {
+        // Arrange
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
+        var requestBody =
+                new EvcsUpdateUserVCsRequestBody(
+                        TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, EVCS_UPDATE_USER_VCS_DTO);
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            var res = evcsClient.updateUserVcsV2(requestBody);
+
+            // Assert
+            assertEquals(HttpStatusCode.ACCEPTED, res.statusCode());
+            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+            HttpRequest httpRequest = httpRequestCaptor.getValue();
+            assertEquals("PATCH", httpRequest.method());
+            assertTrue(httpRequest.bodyPublisher().isPresent());
+            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+            assertEquals("/v1/vcs", httpRequest.uri().getPath());
+
+            mockedBodyPublishers.verify(
+                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
+            var sentBody =
+                    OBJECT_MAPPER.readValue(
+                            stringCaptor.getAllValues().get(0),
+                            new TypeReference<EvcsUpdateUserVCsRequestBody>() {});
+            assertEquals(TEST_USER_ID, sentBody.userId());
+            assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, sentBody.govuk_signin_journey_id());
+            assertFalse(sentBody.vcs().stream().anyMatch(dto -> dto.state().equals(CURRENT)));
+        }
+    }
+
+    @Test
+    void testUpdateUserVcsV2_shouldThrowException_ifBadUrl() {
+        // Arrange
+        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
+        when(badUri.toString()).thenReturn("\\");
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.updateUserVcsV2(
+                                new EvcsUpdateUserVCsRequestBody(
+                                        TEST_USER_ID,
+                                        TEST_GOVUK_SIGNIN_JOURNEY_ID,
+                                        EVCS_UPDATE_USER_VCS_DTO)));
     }
 }
