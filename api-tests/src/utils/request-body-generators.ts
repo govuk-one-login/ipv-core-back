@@ -237,6 +237,7 @@ export const generatePostVcsBody = (
 ): EvcsStubPostVcsRequest => {
   return {
     userId,
+    govuk_signin_journey_id: "testJourneyId",
     vcs: credentialsToPost.map((cred) => ({
       vc: cred,
       state: "CURRENT",

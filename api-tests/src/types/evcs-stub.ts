@@ -1,5 +1,6 @@
 export interface EvcsStubPostVcsRequest {
   userId: string;
+  govuk_signin_journey_id: string;
   vcs: EvcsStubPostVcsCredential[];
 }
 

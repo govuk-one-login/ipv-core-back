@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateRegressionTest @dcc
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Stored Identity
 
   Rule: No existing SI record
