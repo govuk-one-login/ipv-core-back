@@ -333,7 +333,6 @@ public class BuildCriOauthRequestHandler
             String context,
             EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody,
-                    ParseException,
                     JOSEException,
                     VerifiableCredentialException {
 

@@ -25,8 +25,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
@@ -41,7 +39,6 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -132,13 +129,10 @@ public class ProcessAsyncCriCredentialHandler
                 processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
             }
         } catch (JsonProcessingException
-                | ParseException
                 | CiPutException
                 | UnrecognisedVotException
                 | CiPostMitigationsException
-                | CredentialParseException
-                | EvcsServiceException
-                | HttpResponseExceptionWithErrorBody e) {
+                | EvcsServiceException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
@@ -197,14 +191,11 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException,
-                    CiPutException,
+            throws CiPutException,
                     CiPostMitigationsException,
                     VerifiableCredentialException,
                     UnrecognisedVotException,
-                    CredentialParseException,
-                    EvcsServiceException,
-                    HttpResponseExceptionWithErrorBody {
+                    EvcsServiceException {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
 

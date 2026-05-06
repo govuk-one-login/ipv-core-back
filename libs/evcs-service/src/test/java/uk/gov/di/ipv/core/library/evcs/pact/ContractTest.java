@@ -48,6 +48,8 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "EvcsProvider")
 @MockServerConfig(hostInterface = "localhost")
+// PYIC-9114 Remove this suppression
+@SuppressWarnings("java:S125")
 class ContractTest {
     private static final String EVCS_API_KEY = "test-evcs-api-key"; // pragma: allowlist secret
     private static final String EVCS_INVALID_API_KEY =
@@ -1018,7 +1020,7 @@ class ContractTest {
     }
 
     // PYIC-9114 Enable these tests once Trust and Reuse have added the new API methods to their
-    // PACT set-up
+    // PACT set-up. Also remove the warning suppression on the class declaration above
     //    // POST /vcs with userId in body tests
     //
     //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
