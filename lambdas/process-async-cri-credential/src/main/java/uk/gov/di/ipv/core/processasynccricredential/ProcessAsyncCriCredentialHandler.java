@@ -50,6 +50,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -237,7 +238,11 @@ public class ProcessAsyncCriCredentialHandler
 
             submitVcToCiStorage(vc, journeyId);
             postMitigatingVc(vc, journeyId);
-            evcsService.storePendingVc(vc);
+            if (configService.enabled(EVCS_API_UPDATES)) {
+                evcsService.storePendingVcV2(vc, journeyId);
+            } else {
+                evcsService.storePendingVc(vc);
+            }
             sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
         }
     }

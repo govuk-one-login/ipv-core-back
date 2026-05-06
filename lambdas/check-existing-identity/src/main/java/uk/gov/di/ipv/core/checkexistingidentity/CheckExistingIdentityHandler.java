@@ -75,6 +75,7 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -427,7 +428,12 @@ public class CheckExistingIdentityHandler
                                 .findFirst()
                                 .ifPresent(vcsForUpdate::add);
 
-                        evcsService.markHistoricInEvcs(userId, vcsForUpdate);
+                        if (configService.enabled(EVCS_API_UPDATES)) {
+                            evcsService.markHistoricInEvcsV2(
+                                    userId, govukSigninJourneyId, vcsForUpdate);
+                        } else {
+                            evcsService.markHistoricInEvcs(userId, vcsForUpdate);
+                        }
 
                         vcsForUpdate.forEach(credentialBundle.credentials::remove);
 
