@@ -243,7 +243,7 @@ public class BuildCriOauthRequestHandler
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildJourneyErrorResponse(
                     e.getErrorReason(), e, e.getResponseCode(), e.getErrorResponse());
-        } catch (ParseException | JOSEException e) {
+        } catch (JOSEException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse encryption public JWK",
                     e,
