@@ -56,7 +56,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
