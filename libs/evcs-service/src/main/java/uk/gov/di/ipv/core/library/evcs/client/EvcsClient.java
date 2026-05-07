@@ -15,10 +15,12 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsInvalidateStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
@@ -232,6 +234,63 @@ public class EvcsClient {
                                     "PATCH",
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            return sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
+    }
+
+    public HttpResponse<String> storeUserVcsV2(EvcsCreateUserVCsRequestBody requestBody)
+            throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to store %d user VCs using POST /vcs with userId in body"
+                                .formatted(requestBody.vcs().size())));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getUri(VCS_SUB_PATH, null, null))
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(requestBody)))
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+            return sendHttpRequest(httpRequestBuilder.build());
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY);
+        }
+    }
+
+    public HttpResponse<String> updateUserVcsV2(EvcsUpdateUserVCsRequestBody requestBody)
+            throws EvcsServiceException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Preparing to update %d user VCs using PATCH /vcs with userId in body"
+                                .formatted(requestBody.vcs().size())));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(getUri(VCS_SUB_PATH, null, null))
+                            .method(
+                                    "PATCH",
+                                    HttpRequest.BodyPublishers.ofString(
+                                            OBJECT_MAPPER.writeValueAsString(requestBody)))
                             .header(
                                     X_API_KEY_HEADER,
                                     configService.getSecret(ConfigurationVariable.EVCS_API_KEY))

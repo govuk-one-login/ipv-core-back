@@ -46,6 +46,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
@@ -197,6 +198,40 @@ class ResetSessionIdentityHandlerTest {
     }
 
     @Test
+    void handleRequestShouldCleanupVcsAndReturnNext_forPendingF2fV2() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_F2F_ALL.name()))
+                        .build();
+
+        // Act
+        var journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
+        verify(mockEvcsService)
+                .abandonPendingIdentityV2(TEST_USER_ID, TEST_EVCS_TOKEN, TEST_JOURNEY_ID);
+        verify(mockEvcsService).invalidateStoredIdentityRecord(TEST_USER_ID);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
     void shouldReturnErrorJourneyIfFailureToUpdatePendingIdentityInEvcs() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
@@ -260,6 +295,39 @@ class ResetSessionIdentityHandlerTest {
                         ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC_ALL);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
         verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmawV2() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ASYNC_ALL.name()))
+                        .build();
+
+        // Act
+        var journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC_ALL);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
+        verify(mockEvcsService)
+                .abandonPendingIdentityV2(TEST_USER_ID, TEST_EVCS_TOKEN, TEST_JOURNEY_ID);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }

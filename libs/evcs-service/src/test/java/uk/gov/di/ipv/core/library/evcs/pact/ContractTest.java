@@ -48,6 +48,8 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "EvcsProvider")
 @MockServerConfig(hostInterface = "localhost")
+// PYIC-9114 Remove this suppression
+@SuppressWarnings("java:S125")
 class ContractTest {
     private static final String EVCS_API_KEY = "test-evcs-api-key"; // pragma: allowlist secret
     private static final String EVCS_INVALID_API_KEY =
@@ -1016,4 +1018,283 @@ class ContractTest {
         // Assert
         assertEquals(404, response.statusCode());
     }
+
+    // PYIC-9114 Enable these tests once Trust and Reuse have added the new API methods to their
+    // PACT set-up. Also remove the warning suppression on the class declaration above
+    //    // POST /vcs with userId in body tests
+    //
+    //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    //    public RequestResponsePact validCreateUserVcV2Returns202(PactDslWithProvider builder) {
+    //        return builder.given("Brand new user")
+    //                .given("test-evcs-api-key is a valid API key")
+    //                .uponReceiving("A request to create EVCS user VCs with userId in body")
+    //                .path("/vcs")
+    //                .method("POST")
+    //                .headers(
+    //                        Map.of(
+    //                                "x-api-key",
+    //                                EVCS_API_KEY,
+    //                                CONTENT_TYPE,
+    //                                ContentType.APPLICATION_JSON.toString()))
+    //                .body(getRequestBodyForUserVcV2())
+    //                .willRespondWith()
+    //                .status(202)
+    //                .toPact();
+    //    }
+    //
+    //    private DslPart getRequestBodyForUserVcV2() {
+    //        return newJsonBody(
+    //                        body -> {
+    //                            body.stringType("userId", TEST_USER_ID);
+    //                            body.stringType(
+    //                                    "govuk_signin_journey_id",
+    // "test-govuk-signin-journey-id");
+    //                            body.array(
+    //                                    "vcs",
+    //                                    vcs -> {
+    //                                        vcs.object(
+    //                                                vcObject -> {
+    //                                                    vcObject.stringType("vc", VC_STRING);
+    //                                                    vcObject.stringType("state", "CURRENT");
+    //                                                    vcObject.object(
+    //                                                            "metadata",
+    //                                                            metadata -> {
+    //                                                                metadata.stringType(
+    //                                                                        "reason", "testing");
+    //                                                                metadata.stringType(
+    //                                                                        "timestampMs",
+    //                                                                        "1711721297123");
+    //                                                                metadata.stringType(
+    //                                                                        "txmaEventId",
+    //
+    // "txma-testing-event-id");
+    //                                                            });
+    //                                                    vcObject.stringType("provenance",
+    // "ONLINE");
+    //                                                });
+    //                                    });
+    //                        })
+    //                .build();
+    //    }
+    //
+    //    @Test
+    //    @PactTestFor(pactMethod = "validCreateUserVcV2Returns202")
+    //    void testCreateVcV2Returns202(MockServer mockServer) throws Exception {
+    //        // Under Test
+    //        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+    //        try {
+    //            evcsClient.storeUserVcsV2(
+    //                    new EvcsCreateUserVCsRequestBody(
+    //                            TEST_USER_ID,
+    //                            "test-govuk-signin-journey-id",
+    //                            EVCS_CREATE_USER_VCS_DTO));
+    //        } catch (EvcsServiceException e) {
+    //            fail("EvcsServiceException was thrown");
+    //        }
+    //    }
+    //
+    //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    //    public RequestResponsePact invalidCreateUserVcV2Returns400(PactDslWithProvider builder) {
+    //        return builder.given("test-evcs-api-key is a valid API key")
+    //                .uponReceiving(
+    //                        "A request to create EVCS user VCs with userId in body and invalid
+    // data")
+    //                .path("/vcs")
+    //                .method("POST")
+    //                .headers(
+    //                        Map.of(
+    //                                "x-api-key",
+    //                                EVCS_API_KEY,
+    //                                CONTENT_TYPE,
+    //                                ContentType.APPLICATION_JSON.toString()))
+    //                .body(invalidRequestBodyForUserVcV2())
+    //                .willRespondWith()
+    //                .status(400)
+    //                .toPact();
+    //    }
+    //
+    //    private DslPart invalidRequestBodyForUserVcV2() {
+    //        return newJsonBody(
+    //                        body -> {
+    //                            body.stringType("userId", TEST_USER_ID);
+    //                            body.stringType(
+    //                                    "govuk_signin_journey_id",
+    // "test-govuk-signin-journey-id");
+    //                            body.array(
+    //                                    "vcs",
+    //                                    vcs -> {
+    //                                        vcs.object(
+    //                                                vcObject -> {
+    //                                                    vcObject.stringType("vc",
+    // "invalid-vc-string");
+    //                                                    vcObject.stringType("state",
+    // "WRONG_STATE");
+    //                                                });
+    //                                    });
+    //                        })
+    //                .build();
+    //    }
+    //
+    //    @Test
+    //    @PactTestFor(pactMethod = "invalidCreateUserVcV2Returns400")
+    //    void testCreateVcV2Returns400(MockServer mockServer) {
+    //        // Under Test
+    //        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+    //        assertThrows(
+    //                EvcsServiceException.class,
+    //                () -> {
+    //                    evcsClient.storeUserVcsV2(
+    //                            new EvcsCreateUserVCsRequestBody(
+    //                                    TEST_USER_ID,
+    //                                    "test-govuk-signin-journey-id",
+    //                                    INVALID_CREATE_USER_VCS_DTO));
+    //                });
+    //    }
+    //
+    //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    //    public RequestResponsePact createUserVcV2ForExistingVcReturns409(PactDslWithProvider
+    // builder) {
+    //        return builder.given("Existing user")
+    //                .given("test-evcs-api-key is a valid API key")
+    //                .uponReceiving(
+    //                        "A request to create EVCS user VCs with userId in body for existing
+    // user")
+    //                .path("/vcs")
+    //                .method("POST")
+    //                .headers(
+    //                        Map.of(
+    //                                "x-api-key",
+    //                                EVCS_API_KEY,
+    //                                CONTENT_TYPE,
+    //                                ContentType.APPLICATION_JSON.toString()))
+    //                .body(getRequestBodyForUserVcV2())
+    //                .willRespondWith()
+    //                .status(409)
+    //                .toPact();
+    //    }
+    //
+    //    @Test
+    //    @PactTestFor(pactMethod = "createUserVcV2ForExistingVcReturns409")
+    //    void testCreateVcV2Returns409(MockServer mockServer) {
+    //        // Under Test
+    //        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+    //        assertThrows(
+    //                EvcsServiceException.class,
+    //                () -> {
+    //                    evcsClient.storeUserVcsV2(
+    //                            new EvcsCreateUserVCsRequestBody(
+    //                                    TEST_USER_ID,
+    //                                    "test-govuk-signin-journey-id",
+    //                                    EVCS_CREATE_USER_VCS_DTO));
+    //                });
+    //    }
+    //
+    //    // PATCH /vcs with userId in body tests
+    //
+    //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    //    public RequestResponsePact validUpdateUserVcV2Returns204(PactDslWithProvider builder) {
+    //        return builder.given("User has a valid VC")
+    //                .given("test-evcs-api-key is a valid API key")
+    //                .given("test-user-id has one PENDING_RETURN VC")
+    //                .uponReceiving("A request to update EVCS user VCs with userId in body")
+    //                .path("/vcs")
+    //                .method("PATCH")
+    //                .headers(
+    //                        Map.of(
+    //                                "x-api-key",
+    //                                EVCS_API_KEY,
+    //                                CONTENT_TYPE,
+    //                                ContentType.APPLICATION_JSON.toString()))
+    //                .body(getRequestBodyUpdateVcV2("CURRENT"))
+    //                .willRespondWith()
+    //                .status(204)
+    //                .toPact();
+    //    }
+    //
+    //    private DslPart getRequestBodyUpdateVcV2(String state) {
+    //        return newJsonBody(
+    //                        body -> {
+    //                            body.stringType("userId", TEST_USER_ID);
+    //                            body.stringType(
+    //                                    "govuk_signin_journey_id",
+    // "test-govuk-signin-journey-id");
+    //                            body.array(
+    //                                    "vcs",
+    //                                    vcs -> {
+    //                                        vcs.object(
+    //                                                vcObject -> {
+    //                                                    vcObject.stringType("signature",
+    // VC_SIGNATURE);
+    //                                                    vcObject.stringType("state", state);
+    //                                                    vcObject.object(
+    //                                                            "metadata",
+    //                                                            metadata -> {
+    //                                                                metadata.stringType(
+    //                                                                        "reason", "testing");
+    //                                                                metadata.stringType(
+    //                                                                        "timestampMs",
+    //                                                                        "1711721297123");
+    //                                                                metadata.stringType(
+    //                                                                        "txmaEventId",
+    //
+    // "txma-testing-event-id");
+    //                                                            });
+    //                                                });
+    //                                    });
+    //                        })
+    //                .build();
+    //    }
+    //
+    //    @Test
+    //    @PactTestFor(pactMethod = "validUpdateUserVcV2Returns204")
+    //    void testUpdateVcV2Returns204(MockServer mockServer) throws Exception {
+    //        // Under Test
+    //        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+    //        try {
+    //            evcsClient.updateUserVcsV2(
+    //                    new EvcsUpdateUserVCsRequestBody(
+    //                            TEST_USER_ID,
+    //                            "test-govuk-signin-journey-id",
+    //                            EVCS_UPDATE_USER_VCS_DTO));
+    //        } catch (EvcsServiceException e) {
+    //            fail("EvcsServiceException was thrown");
+    //        }
+    //    }
+    //
+    //    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    //    public RequestResponsePact invalidUpdateUserVcV2Returns400(PactDslWithProvider builder) {
+    //        return builder.given("EVCS client exist")
+    //                .given("test-evcs-api-key is a valid API key")
+    //                .uponReceiving(
+    //                        "A request to update EVCS user VCs with userId in body and invalid
+    // data")
+    //                .path("/vcs")
+    //                .method("PATCH")
+    //                .headers(
+    //                        Map.of(
+    //                                "x-api-key",
+    //                                EVCS_API_KEY,
+    //                                CONTENT_TYPE,
+    //                                ContentType.APPLICATION_JSON.toString()))
+    //                .body(getRequestBodyUpdateVcV2("INVALID_STATE"))
+    //                .willRespondWith()
+    //                .status(400)
+    //                .toPact();
+    //    }
+    //
+    //    @Test
+    //    @PactTestFor(pactMethod = "invalidUpdateUserVcV2Returns400")
+    //    void testUpdateVcV2Returns400(MockServer mockServer) {
+    //        // Under Test
+    //        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+    //        assertThrows(
+    //                EvcsServiceException.class,
+    //                () -> {
+    //                    evcsClient.updateUserVcsV2(
+    //                            new EvcsUpdateUserVCsRequestBody(
+    //                                    INVALID_USER_ID,
+    //                                    "test-govuk-signin-journey-id",
+    //                                    EVCS_UPDATE_USER_VCS_DTO));
+    //                });
+    //    }
 }

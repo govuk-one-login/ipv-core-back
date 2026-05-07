@@ -55,6 +55,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportPhotoM1a;
@@ -133,8 +134,35 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyVerifiableCredentialJwtValidator();
         verifyCiStorageServicePutContraIndicators();
         verifyCiStorageServicePostMitigations();
-        verifyVerifiableCredentialService();
+        verify(evcsService).storePendingVc(vcArgumentCaptor.capture());
+        var storedVcs = vcArgumentCaptor.getAllValues();
+        assertEquals(1, storedVcs.size());
+        assertEquals(F2F_VC, storedVcs.get(0));
         verify(evcsService).storePendingVc(F2F_VC);
+        verifyAuditService();
+    }
+
+    @Test
+    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfullyV2() throws Exception {
+        when(verifiableCredentialValidator.parseAndValidate(
+                        eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
+                .thenReturn(List.of(F2F_VC));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
+        when(configService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+        mockCredentialIssuerConfig();
+
+        var batchResponse = handler.handleRequest(createSuccessTestEvent(TEST_OAUTH_STATE), null);
+
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
+
+        verifyVerifiableCredentialJwtValidator();
+        verifyCiStorageServicePutContraIndicators();
+        verifyCiStorageServicePostMitigations();
+        verify(evcsService).storePendingVcV2(vcArgumentCaptor.capture(), eq(TEST_JOURNEY_ID));
+        var storedVcs = vcArgumentCaptor.getAllValues();
+        assertEquals(1, storedVcs.size());
+        assertEquals(F2F_VC, storedVcs.get(0));
         verifyAuditService();
     }
 
@@ -395,14 +423,6 @@ class ProcessAsyncCriCredentialHandlerTest {
         var ciIpAddresses = ipAddressCaptor.getAllValues();
         assertEquals(1, ciIpAddresses.size());
         assertNull(ciIpAddresses.get(0));
-    }
-
-    private void verifyVerifiableCredentialService() throws Exception {
-        verify(evcsService).storePendingVc(vcArgumentCaptor.capture());
-
-        var storedVcs = vcArgumentCaptor.getAllValues();
-        assertEquals(1, storedVcs.size());
-        assertEquals(F2F_VC, storedVcs.get(0));
     }
 
     private void verifyVerifiableCredentialNotProcessedFurther() throws Exception {

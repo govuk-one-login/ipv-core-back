@@ -232,14 +232,19 @@ export const generateVcRequestBody = async (
 };
 
 export const generatePostVcsBody = (
+  userId: string,
   credentialsToPost: string[],
 ): EvcsStubPostVcsRequest => {
-  return credentialsToPost.map((cred) => ({
-    vc: cred,
-    state: "CURRENT",
-    metadata: {},
-    provenance: "ONLINE",
-  }));
+  return {
+    userId,
+    govuk_signin_journey_id: "testJourneyId",
+    vcs: credentialsToPost.map((cred) => ({
+      vc: cred,
+      state: "CURRENT",
+      metadata: {},
+      provenance: "ONLINE",
+    })),
+  };
 };
 
 export const generateDcmawAsyncVcCreationBodyFromScenario = async (

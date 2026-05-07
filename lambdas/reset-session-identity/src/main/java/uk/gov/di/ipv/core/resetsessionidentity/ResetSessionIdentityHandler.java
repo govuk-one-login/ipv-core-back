@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -203,7 +204,14 @@ public class ResetSessionIdentityHandler
             throws EvcsServiceException {
         var userId = clientOAuthSessionItem.getUserId();
         criResponseService.deleteCriResponseItem(userId, asyncCri);
-        evcsService.abandonPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
+        if (configService.enabled(EVCS_API_UPDATES)) {
+            evcsService.abandonPendingIdentityV2(
+                    userId,
+                    clientOAuthSessionItem.getEvcsAccessToken(),
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
+        } else {
+            evcsService.abandonPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
+        }
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         String.format("Reset done for %s pending identity.", asyncCri.getId())));

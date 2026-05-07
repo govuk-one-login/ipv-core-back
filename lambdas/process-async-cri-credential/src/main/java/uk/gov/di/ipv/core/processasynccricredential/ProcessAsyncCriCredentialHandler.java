@@ -25,8 +25,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
@@ -41,7 +39,6 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +47,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -131,13 +129,10 @@ public class ProcessAsyncCriCredentialHandler
                 processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
             }
         } catch (JsonProcessingException
-                | ParseException
                 | CiPutException
                 | UnrecognisedVotException
                 | CiPostMitigationsException
-                | CredentialParseException
-                | EvcsServiceException
-                | HttpResponseExceptionWithErrorBody e) {
+                | EvcsServiceException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
@@ -196,14 +191,11 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException,
-                    CiPutException,
+            throws CiPutException,
                     CiPostMitigationsException,
                     VerifiableCredentialException,
                     UnrecognisedVotException,
-                    CredentialParseException,
-                    EvcsServiceException,
-                    HttpResponseExceptionWithErrorBody {
+                    EvcsServiceException {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
 
@@ -237,7 +229,11 @@ public class ProcessAsyncCriCredentialHandler
 
             submitVcToCiStorage(vc, journeyId);
             postMitigatingVc(vc, journeyId);
-            evcsService.storePendingVc(vc);
+            if (configService.enabled(EVCS_API_UPDATES)) {
+                evcsService.storePendingVcV2(vc, journeyId);
+            } else {
+                evcsService.storePendingVc(vc);
+            }
             sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
         }
     }

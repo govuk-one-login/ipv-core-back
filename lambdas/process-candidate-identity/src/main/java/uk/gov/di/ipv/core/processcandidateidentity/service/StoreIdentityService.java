@@ -99,8 +99,8 @@ public class StoreIdentityService {
 
         if (isPendingIdentity) {
             LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
-            evcsService.storeCompletedOrPendingIdentityWithPostVcs(
-                    userId, sessionCredentials, evcsVcs, true);
+            evcsService.storePendingIdentityWithPostVcsV2(
+                    userId, govukSigninJourneyId, sessionCredentials, evcsVcs);
             return false;
         }
 

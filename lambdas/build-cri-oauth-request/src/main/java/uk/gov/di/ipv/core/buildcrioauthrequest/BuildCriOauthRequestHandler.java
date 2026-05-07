@@ -56,7 +56,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -243,7 +242,7 @@ public class BuildCriOauthRequestHandler
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildJourneyErrorResponse(
                     e.getErrorReason(), e, e.getResponseCode(), e.getErrorResponse());
-        } catch (ParseException | JOSEException e) {
+        } catch (JOSEException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse encryption public JWK",
                     e,
@@ -333,7 +332,6 @@ public class BuildCriOauthRequestHandler
             String context,
             EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody,
-                    ParseException,
                     JOSEException,
                     VerifiableCredentialException {
 

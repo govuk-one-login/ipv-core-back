@@ -108,6 +108,7 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createNoInterventionAisSta
 import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
@@ -1125,6 +1126,8 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnNewIdentityResponseIfUserHasExpiredDcmawDrivingLicenceAndSendAuditEvent()
                 throws Exception {
+
+            // Arrange
             var testCredentialBundle =
                     List.of(
                             vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
@@ -1152,14 +1155,69 @@ class CheckExistingIdentityHandlerTest {
                                                 any(), eq(configService), any()))
                         .thenReturn(true);
 
-                var journeyResponse =
-                        toResponseClass(
-                                checkExistingIdentityHandler.handleRequest(event, context),
-                                JourneyResponse.class);
+                // Act
+                var result = checkExistingIdentityHandler.handleRequest(event, context);
+
+                // Assert
+                var journeyResponse = toResponseClass(result, JourneyResponse.class);
 
                 assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM, journeyResponse);
                 verify(mockEvcsService, times(1))
                         .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
+            }
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            var extension = (AuditExtensionExpiredDcmawDlVcFound) auditEvent.getExtensions();
+            assertEquals(AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND, auditEvent.getEventName());
+            assertEquals(
+                    1705986521000L, // 23/01/2024 timestamp in ms
+                    extension.vcIssueDate());
+            assertEquals(15552000000L, extension.vcExpiryPeriodMs()); // 180 days in ms
+        }
+
+        @Test
+        void shouldReturnNewIdentityResponseIfUserHasExpiredDcmawDrivingLicenceAndSendAuditEventV2()
+                throws Exception {
+
+            // Arrange
+            var testCredentialBundle =
+                    List.of(
+                            vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
+                            vcWebDrivingPermitDvaExpired());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, testCredentialBundle));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(emptyAsyncCriStatus);
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
+                    .thenReturn(
+                            new VotMatchingResult(
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Gpg45Scores.builder().build()));
+            when(configService.getDcmawExpiredDlValidityPeriodDays()).thenReturn(180);
+            when(configService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.isExpiredDrivingPermitVc(
+                                                any(), eq(configService), any()))
+                        .thenReturn(true);
+
+                // Act
+                var result = checkExistingIdentityHandler.handleRequest(event, context);
+
+                // Assert
+                var journeyResponse = toResponseClass(result, JourneyResponse.class);
+
+                assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM, journeyResponse);
+                verify(mockEvcsService, times(1))
+                        .markHistoricInEvcsV2(TEST_USER_ID, TEST_JOURNEY_ID, testCredentialBundle);
             }
 
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());

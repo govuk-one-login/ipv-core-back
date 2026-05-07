@@ -170,7 +170,7 @@ public class CheckCoiService {
             List<VerifiableCredential> oldVcs,
             List<VerifiableCredential> sessionVcs,
             String deviceInformation)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
 
         var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
         var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);

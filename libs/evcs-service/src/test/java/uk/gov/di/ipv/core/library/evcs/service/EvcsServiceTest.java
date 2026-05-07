@@ -14,11 +14,13 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsPostIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsStoredIdentityDto;
 import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsRequestBody;
 import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
@@ -110,6 +112,8 @@ class EvcsServiceTest {
     @Captor ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<List<EvcsUpdateUserVCsDto>> evcsUpdateUserVCsDtosCaptor;
     @Captor ArgumentCaptor<EvcsPostIdentityDto> evcsPostIdentityDtoCaptor;
+    @Captor ArgumentCaptor<EvcsCreateUserVCsRequestBody> evcsCreateRequestBodyCaptor;
+    @Captor ArgumentCaptor<EvcsUpdateUserVCsRequestBody> evcsUpdateRequestBodyCaptor;
     @Captor ArgumentCaptor<String> stringArgumentCaptor;
 
     @Mock EvcsClient mockEvcsClient;
@@ -302,6 +306,23 @@ class EvcsServiceTest {
     }
 
     @Test
+    void testStorePendingIdentityV2_for_incompleteF2F() throws Exception {
+        // Act
+        evcsService.storePendingIdentityWithPostVcsV2(
+                TEST_USER_ID,
+                TEST_GOVUK_SIGNIN_JOURNEY_ID,
+                VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS,
+                List.of());
+
+        // Assert
+        verify(mockEvcsClient, never()).updateUserVcsV2(any());
+        verify(mockEvcsClient).storeUserVcsV2(evcsCreateRequestBodyCaptor.capture());
+        var requestBody = evcsCreateRequestBodyCaptor.getValue();
+        assertFalse(
+                requestBody.vcs().stream().anyMatch(dto -> !dto.state().equals(PENDING_RETURN)));
+    }
+
+    @Test
     void storeAsyncVcShouldStoreVcWithPendingReturnState() throws EvcsServiceException {
         evcsService.storePendingVc(VC_ADDRESS_TEST);
 
@@ -317,7 +338,22 @@ class EvcsServiceTest {
     }
 
     @Test
-    void updatePendingIdentityShouldUpdateStateToAbandoned() throws EvcsServiceException {
+    void storePendingVcV2ShouldStoreVcWithPendingReturnState() throws EvcsServiceException {
+        // Act
+        evcsService.storePendingVcV2(VC_ADDRESS_TEST, TEST_GOVUK_SIGNIN_JOURNEY_ID);
+
+        // Assert
+        verify(mockEvcsClient).storeUserVcsV2(evcsCreateRequestBodyCaptor.capture());
+        var requestBody = evcsCreateRequestBodyCaptor.getValue();
+        assertEquals(VC_ADDRESS_TEST.getUserId(), requestBody.userId());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, requestBody.govuk_signin_journey_id());
+        assertEquals(VC_ADDRESS_TEST.getVcString(), requestBody.vcs().get(0).vc());
+        assertEquals(PENDING_RETURN, requestBody.vcs().get(0).state());
+        assertEquals(OFFLINE, requestBody.vcs().get(0).provenance());
+    }
+
+    @Test
+    void abandonPendingIdentityShouldUpdateStateToAbandoned() throws EvcsServiceException {
         EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
                 new EvcsGetUserVCsDto(
                         List.of(
@@ -350,6 +386,44 @@ class EvcsServiceTest {
                 (userVCsToUpdate.stream()
                         .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
                         .count()));
+    }
+
+    @Test
+    void abandonPendingIdentityV2ShouldUpdateStateToAbandoned() throws EvcsServiceException {
+        // Arrange
+        EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VC_ADDRESS_TEST.getVcString(),
+                                        EvcsVCState.PENDING_RETURN,
+                                        Map.of("reason", "testing")),
+                                new EvcsGetUserVCDto(
+                                        vcExperianFraudM1a().getVcString(),
+                                        EvcsVCState.PENDING_RETURN,
+                                        Map.of("reason", "testing"))),
+                        null);
+        when(mockEvcsClient.getUserVcs(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN)))
+                .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
+
+        // Act
+        evcsService.abandonPendingIdentityV2(
+                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, TEST_GOVUK_SIGNIN_JOURNEY_ID);
+
+        // Assert
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN));
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .updateUserVcsV2(evcsUpdateRequestBodyCaptor.capture());
+        var requestBody = evcsUpdateRequestBodyCaptor.getValue();
+        assertEquals(TEST_USER_ID, requestBody.userId());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, requestBody.govuk_signin_journey_id());
+        assertEquals(
+                2, requestBody.vcs().stream().filter(dto -> dto.state().equals(ABANDONED)).count());
     }
 
     @Test
@@ -653,11 +727,35 @@ class EvcsServiceTest {
     }
 
     @Test
+    void markHistoricInEvcsV2ShouldUpdateEvcsWithHistoricVcs() throws Exception {
+        // Act
+        evcsService.markHistoricInEvcsV2(
+                TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, List.of(VC_DRIVING_PERMIT_TEST));
+
+        // Assert
+        verify(mockEvcsClient, times(1)).updateUserVcsV2(evcsUpdateRequestBodyCaptor.capture());
+        var requestBody = evcsUpdateRequestBodyCaptor.getValue();
+        assertEquals(TEST_USER_ID, requestBody.userId());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, requestBody.govuk_signin_journey_id());
+        assertEquals(
+                1, requestBody.vcs().stream().filter(dto -> dto.state().equals(HISTORIC)).count());
+    }
+
+    @Test
     void markVcsAsHistoricInEvcsShouldNotCallEvcsIfGivenEmptyList() throws Exception {
         // Act
         evcsService.markHistoricInEvcs(TEST_USER_ID, List.of());
 
         // Assert
         verify(mockEvcsClient, times(0)).updateUserVCs(eq(TEST_USER_ID), any());
+    }
+
+    @Test
+    void markHistoricInEvcsV2ShouldNotCallEvcsIfGivenEmptyList() throws Exception {
+        // Act
+        evcsService.markHistoricInEvcsV2(TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, List.of());
+
+        // Assert
+        verify(mockEvcsClient, never()).updateUserVcsV2(any());
     }
 }
