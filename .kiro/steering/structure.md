@@ -17,7 +17,7 @@ Key lambdas include:
 - build-user-identity / build-proven-user-identity-details — assembles user identity from credentials
 - issue-client-access-token — OAuth token exchange
 - check-existing-identity / check-gpg45-score / process-candidate-identity — identity evaluation
-- user-reverification / check-reverification-identity — reverification flow
+- user-reverification / check-reverification-identity — reverification flow used for MFA reset (not identity reproving)
 
 ## Shared Libraries (/libs)
 Library sub-projects:

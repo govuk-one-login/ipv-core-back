@@ -5,8 +5,9 @@ the user needing to create multiple accounts.
 The One Login service is made up mainly of a website and two mobile apps available on Android and iPhone. The website looks like one site to the end-user but is actually made up of multiple sites owned
 by different teams and the various sites hand-off to each other as required during the user's journey.
 
-Typically a user will start on government service's website that uses One Login. The service site (known as a relying party, or RP) will send the user to the One Login Authentication site to login,
-they may then be passed to Orchestration which will decide where to route the user to. If the user needs to prove or re-prove their identity they will be sent to Identity Proving and Verification (known as IPV, or IPV Core).
+Typically a user will start on government service's website that uses One Login. The service site (known as a relying party, or RP) will send the user to the One Login's Orchestration service which will
+typically first route the user to the Authentication site to login, then Orchestration will decide where to route the user to next. If the user needs to prove or re-prove their identity they will be sent
+to Identity Proving and Verification (known as IPV, or IPV Core).
 Once the user has succeeded or failed in proving their identity IPV will send them back to Orchestration to continue their journey.
 
 # IPV Core
