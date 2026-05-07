@@ -222,18 +222,17 @@ public class EvcsService {
         }
     }
 
-    public void storeCompletedOrPendingIdentityWithPostVcsV2(
+    public void storePendingIdentityWithPostVcsV2(
             String userId,
             String govukSigninJourneyId,
             List<VerifiableCredential> credentials,
-            List<EvcsGetUserVCDto> existingEvcsUserVCs,
-            boolean isPendingIdentity)
+            List<EvcsGetUserVCDto> existingEvcsUserVCs)
             throws EvcsServiceException {
 
         var evcsCreateUserVCsDtos =
                 mapNewVcsToEvcsCreateUserVCsDto(
                         findNewUserVcs(credentials, existingEvcsUserVCs),
-                        isPendingIdentity ? PENDING_RETURN : CURRENT);
+                        PENDING_RETURN);
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs)) {
             var existingVcsToUpdate =
@@ -241,7 +240,7 @@ public class EvcsService {
                             credentials,
                             existingEvcsUserVCs,
                             this::mapExistingVcsToEvcsUpdateUserVCsDto,
-                            isPendingIdentity);
+                            true);
             if (!existingVcsToUpdate.isEmpty()) {
                 evcsClient.updateUserVcsV2(
                         new EvcsUpdateUserVCsRequestBody(
