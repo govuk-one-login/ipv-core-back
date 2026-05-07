@@ -231,8 +231,7 @@ public class EvcsService {
 
         var evcsCreateUserVCsDtos =
                 mapNewVcsToEvcsCreateUserVCsDto(
-                        findNewUserVcs(credentials, existingEvcsUserVCs),
-                        PENDING_RETURN);
+                        findNewUserVcs(credentials, existingEvcsUserVCs), PENDING_RETURN);
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs)) {
             var existingVcsToUpdate =

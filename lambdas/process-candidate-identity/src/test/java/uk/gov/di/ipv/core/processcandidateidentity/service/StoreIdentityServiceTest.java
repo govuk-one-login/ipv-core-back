@@ -533,8 +533,7 @@ class StoreIdentityServiceTest {
 
             // Assert
             verify(evcsService, times(1))
-                    .storePendingIdentityWithPostVcsV2(
-                            USER_ID, GOVUK_JOURNEY_ID, VCS, List.of());
+                    .storePendingIdentityWithPostVcsV2(USER_ID, GOVUK_JOURNEY_ID, VCS, List.of());
             verify(evcsService, never())
                     .storeStoredIdentityRecordAndVcs(any(), any(), any(), any(), any(), any());
 
@@ -561,8 +560,7 @@ class StoreIdentityServiceTest {
             // Arrange
             doThrow(EvcsServiceException.class)
                     .when(evcsService)
-                    .storePendingIdentityWithPostVcsV2(
-                            USER_ID, GOVUK_JOURNEY_ID, VCS, List.of());
+                    .storePendingIdentityWithPostVcsV2(USER_ID, GOVUK_JOURNEY_ID, VCS, List.of());
 
             // Act/Assert
             assertThrows(

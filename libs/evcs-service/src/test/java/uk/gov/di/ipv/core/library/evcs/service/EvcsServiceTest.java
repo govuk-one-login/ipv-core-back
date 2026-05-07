@@ -319,8 +319,7 @@ class EvcsServiceTest {
         verify(mockEvcsClient).storeUserVcsV2(evcsCreateRequestBodyCaptor.capture());
         var requestBody = evcsCreateRequestBodyCaptor.getValue();
         assertFalse(
-                requestBody.vcs().stream()
-                        .anyMatch(dto -> !dto.state().equals(PENDING_RETURN)));
+                requestBody.vcs().stream().anyMatch(dto -> !dto.state().equals(PENDING_RETURN)));
     }
 
     @Test
