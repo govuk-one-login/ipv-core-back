@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.1.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.4.0/schemas/schema.json",
   "services": [
     {
       "quality-gates": [
@@ -8,9 +8,9 @@
             "secret scanning"
           ],
           "config": {
-            "file": ".github/workflows/pre-merge-checks.yml",
+            "file": ".github/workflows/automated-tests.yaml",
             "name": "run secret detection",
-            "path": "jobs.pre-commit"
+            "path": "jobs.detect-secrets"
           },
           "phase": "pre-merge",
           "provider": "GitHub"
@@ -22,7 +22,7 @@
             "unit"
           ],
           "config": {
-            "file": ".github/workflows/pre-merge-checks.yaml",
+            "file": ".github/workflows/automated-tests.yaml",
             "name": "run unit tests and static analysis",
             "path": "jobs.test-java"
           },
@@ -32,12 +32,13 @@
         {
           "check-types": [
             "code style and linting",
+            "component",
             "integration",
             "regression",
             "new feature"
           ],
           "config": {
-            "file": ".github/workflows/pre-merge-checks.yaml",
+            "file": ".github/workflows/automated-tests.yaml",
             "name": "run linting on api-tests directory and run api tests",
             "path": "jobs.api-test"
           },
