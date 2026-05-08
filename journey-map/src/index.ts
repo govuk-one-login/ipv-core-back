@@ -395,7 +395,7 @@ const setEdgeAndLabelClickHandlers = (edgeIds: string[]) => {
     // There isn't a native way in mermaid.js to add an id to the
     // edge labels so we manually add them after the diagram
     // has been rendered onto the dom
-    label.id = edgeIds[idx];
+    label.id = `diagramSvg-${edgeIds[idx]}`;
     label.addEventListener("click", () => {
       const edge = document.querySelector(`path[id^=${label.id}]`);
       if (edge) {
@@ -456,14 +456,15 @@ const highlightState = (state: string): void => {
   );
 
   // Add new highlights
-  Array.from(document.querySelectorAll(`path[id^="${state}-"]`)).forEach(
+  // Edge path IDs are formatted as `<diagramId>-<source>-<target>` by mermaid
+  Array.from(document.querySelectorAll(`path[id^="diagramSvg-${state}-"]`)).forEach(
     (edge) => edge.classList.add("highlight", "outgoingEdge"),
   );
   Array.from(document.querySelectorAll(`path[id$="-${state}"]`)).forEach(
     (edge) => edge.classList.add("highlight", "incomingEdge"),
   );
   Array.from(document.getElementsByClassName("node"))
-    .filter((node) => node.id.startsWith(`flowchart-${state}-`))
+    .filter((node) => node.id.startsWith(`diagramSvg-flowchart-${state}-`))
     .forEach((node) => node.classList.add("highlight"));
 };
 
