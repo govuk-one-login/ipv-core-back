@@ -457,9 +457,9 @@ const highlightState = (state: string): void => {
 
   // Add new highlights
   // Edge path IDs are formatted as `<diagramId>-<source>-<target>` by mermaid
-  Array.from(document.querySelectorAll(`path[id^="diagramSvg-${state}-"]`)).forEach(
-    (edge) => edge.classList.add("highlight", "outgoingEdge"),
-  );
+  Array.from(
+    document.querySelectorAll(`path[id^="diagramSvg-${state}-"]`),
+  ).forEach((edge) => edge.classList.add("highlight", "outgoingEdge"));
   Array.from(document.querySelectorAll(`path[id$="-${state}"]`)).forEach(
     (edge) => edge.classList.add("highlight", "incomingEdge"),
   );
