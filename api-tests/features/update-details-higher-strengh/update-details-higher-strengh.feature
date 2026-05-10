@@ -39,7 +39,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value             |
-        | journeyType          | repeatFraudCheck  |  
+        | journeyType          | repeatFraudCheck  |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -57,9 +57,7 @@ Feature: Update details higher strength
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -96,7 +94,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value             |
-        | journeyType          | repeatFraudCheck  |  
+        | journeyType          | repeatFraudCheck  |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -151,7 +149,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value            |
-        | journeyType          | repeatFraudCheck |   
+        | journeyType          | repeatFraudCheck |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -173,6 +171,41 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value            |
         | reason  | repeatFraudCheck |
+    
+    Scenario: 6MFC identity recovery via App for Name change only profile unmet
+      When I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
+      When I submit an 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      And I pass on the DCMAW callback
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-dcmaw-success' page response and pageContext
+        | Context   | Value |
+        | noAddress | true  |
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+        | Context              | Value            |
+        | journeyType          | repeatFraudCheck |
 
   Rule: Update details
     Background:
@@ -211,7 +244,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
-        | journeyType          | updateDetails |    
+        | journeyType          | updateDetails |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -264,7 +297,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
-        | journeyType          | updateDetails |  
+        | journeyType          | updateDetails |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -317,7 +350,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
-        | journeyType          | updateDetails |   
+        | journeyType          | updateDetails |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -362,7 +395,7 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
-        | journeyType          | updateDetails |    
+        | journeyType          | updateDetails |
       When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event

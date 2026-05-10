@@ -55,12 +55,11 @@ states:
     response:
       type: page
       pageId: page-dcmaw-success
-      pageContext:
-        noAddress: true
     events:
       next:
         targetState: ADDRESS_AND_FRAUD
         targetEntryEvent: internationalUser
+        journeyContextToUnset: nameAndAddress
 
   FRAUD_CHECK_NAMES_ONLY:
     response:
@@ -72,18 +71,10 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
 
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -93,13 +84,13 @@ states:
       fraud-fail-with-no-ci:
         targetState: PROCESS_UPDATE_IDENTITY
 
-  # Remove any DCMAW Async VC from previous attempts
+  # Remove all VCs from previous attempts
   RESET_SESSION_BEFORE_NEW_IDENTITY:
     response:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: PENDING_DCMAW_ASYNC_ALL
+        resetType: ALL
     events:
       next:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE
@@ -123,25 +114,13 @@ states:
         targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       profile-unmet:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
@@ -177,7 +156,8 @@ states:
       dadAndroid:
         targetState: DAD_ANDROID_START_SESSION
       noDevice:
-        targetState: NEED_TO_REPROVE_NO_DEVICE
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
 
   # Mobile pages
   MOBILE_IPHONE_START_SESSION:
@@ -211,14 +191,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -254,14 +230,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -300,24 +272,16 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -330,14 +294,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
 
   DAD_ANDROID_START_SESSION:
     response:
@@ -372,24 +332,16 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -402,14 +354,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_RFC
+            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
 
   # Handle app result
   STRATEGIC_APP_HANDLE_RESULT:
@@ -422,11 +370,7 @@ states:
             targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       incompleteDlAuthCheckInvalidDlv2:
         targetJourney: UPDATE_NAME
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
@@ -436,60 +380,13 @@ states:
             targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       failWithCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
       failWithNoCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_COI
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_RFC
-
-  NEED_TO_REPROVE_NO_DEVICE:
-    response:
-      type: page
-      pageId: need-prove-identity-again-no-app
-    events:
-      delete:
-        targetState: DELETE_LOGIN
-      returnToRp:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  DELETE_LOGIN:
-    response:
-      type: page
-      pageId: delete-handover
-      pageContext:
-        journeyType: reprove
-
-  PROCESS_INCOMPLETE_IDENTITY:
-    response:
-      type: process
-      lambda: process-candidate-identity
-      lambdaInput:
-        identityType: INCOMPLETE
-    events:
-      next:
-        targetState: RETURN_TO_RP
-      account-intervention:
-        targetJourney: FAILED
-        targetState: FAILED_ACCOUNT_INTERVENTION
-      fail-with-ci:
-        targetState: RETURN_TO_RP
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
 
   # Parent states (needed for STRATEGIC_APP_HANDLE_RESULT)
   CRI_STATE:

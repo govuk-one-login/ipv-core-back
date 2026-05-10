@@ -271,6 +271,7 @@ states:
         targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
         targetEntryEvent: appTriage
         journeyContextToSet: appOnly
+        journeyContextToUnset: nameAndAddress
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -351,6 +352,10 @@ states:
       profile-unmet:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          coi6mfcDeadEndRoutingEnabled:
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF

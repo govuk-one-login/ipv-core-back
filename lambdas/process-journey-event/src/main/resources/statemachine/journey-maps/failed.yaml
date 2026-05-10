@@ -74,15 +74,21 @@ states:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
 
-  FAILED_RFC:
-    events:
-      next:
-        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
-
-  FAILED_COI:
+  FAILED_UPDATE_DETAILS_HIGHER_STRENGTH:
     events:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
+        checkJourneyContext:
+          rfc:
+            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
 
   FAILED_NO_TICF:
     events:
