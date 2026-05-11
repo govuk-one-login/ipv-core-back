@@ -755,7 +755,7 @@ states:
         auditEvents:
           - IPV_INTERNATIONAL_ADDRESS_START
       abandon:
-        targetState: NON_UK_NO_PASSPORT
+        targetState: NON_UK_NEED_BIOMETRIC_PASSPORT
 
   NON_UK_NEED_BIOMETRIC_PASSPORT:
     response:
