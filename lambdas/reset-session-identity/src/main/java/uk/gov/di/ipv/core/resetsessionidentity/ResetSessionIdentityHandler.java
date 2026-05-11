@@ -40,6 +40,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL_INC_DCMAW_ASYNC_PENDING;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ASYNC_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
@@ -160,7 +161,8 @@ public class ResetSessionIdentityHandler
                                         input.getDeviceInformation())));
             }
 
-            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
+            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)
+                    || sessionCredentialsResetType.equals(ALL_INC_DCMAW_ASYNC_PENDING)) {
                 doResetForPendingVc(clientOAuthSessionItem, DCMAW_ASYNC);
             }
 

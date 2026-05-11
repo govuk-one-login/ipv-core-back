@@ -90,7 +90,7 @@ states:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: ALL_INC_DCMAW_ASYNC_PENDING
     events:
       next:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE

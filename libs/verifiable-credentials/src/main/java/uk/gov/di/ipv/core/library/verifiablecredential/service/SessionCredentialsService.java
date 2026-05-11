@@ -106,7 +106,8 @@ public class SessionCredentialsService {
             var sessionCredentialItems = dataStore.getItems(ipvSessionId);
             var vcsToDelete =
                     switch (resetType) {
-                        case ALL, PENDING_F2F_ALL, REINSTATE -> sessionCredentialItems;
+                        case ALL, ALL_INC_DCMAW_ASYNC_PENDING, PENDING_F2F_ALL, REINSTATE ->
+                                sessionCredentialItems;
                         case ADDRESS_ONLY_CHANGE ->
                                 sessionCredentialItems.stream()
                                         .filter(
