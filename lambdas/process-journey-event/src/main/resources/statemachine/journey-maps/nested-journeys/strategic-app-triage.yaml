@@ -171,16 +171,6 @@ nestedJourneyStates:
       back:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
 
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
-
   DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP:
     response:
       type: page
@@ -266,16 +256,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       back:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP:
     response:
@@ -463,37 +443,6 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
       back:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
-
-  DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
-        targetEntryEvent: dad-select-smartphone
-
-  MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
-
-  MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
   DAD_SELECT_SMARTPHONE_NEED_APP:
     response:
