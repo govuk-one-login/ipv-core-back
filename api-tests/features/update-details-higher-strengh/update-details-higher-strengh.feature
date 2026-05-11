@@ -190,11 +190,13 @@ Feature: Update details higher strength
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response and pageContext
         | Context   | Value |
         | noAddress | true  |
@@ -202,10 +204,39 @@ Feature: Update details higher strength
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
         | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
+        | evidence_requested | {"identityFraudScore": 2} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value            |
         | journeyType          | repeatFraudCheck |
+       When I submit an 'passport' event  
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-dcmaw-success' page response and pageContext
+        | Context   | Value |
+        | noAddress | true  |
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response and pageContext
+        | Context     | Value |
+        | journeyType | coi   | 
+
 
   Rule: Update details
     Background:
