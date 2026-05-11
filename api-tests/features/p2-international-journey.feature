@@ -12,7 +12,7 @@ Feature: P2 International Address
 
     Scenario: International address user is taken back to smartphone triage after selecting neither initially then trying again
       When I submit a 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -22,7 +22,7 @@ Feature: P2 International Address
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
-      Then I get a 'non-uk-no-app-options' page response
+      Then I get a 'need-app' page response
       When I submit a 'useApp' event
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
@@ -30,7 +30,7 @@ Feature: P2 International Address
 
     Scenario: International address user decides to return to RP from DCMAW exit page
       When I submit a 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -40,14 +40,14 @@ Feature: P2 International Address
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
-      Then I get a 'non-uk-no-app-options' page response
+      Then I get a 'need-app' page response
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
 
     Scenario: Successful P2 international identity via DCMAW using passport
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -87,7 +87,7 @@ Feature: P2 International Address
 
     Scenario: User fails V2 app with CI - MAM
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -117,7 +117,7 @@ Feature: P2 International Address
 
     Scenario: User fails V2 app with CI - DAD
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -144,9 +144,9 @@ Feature: P2 International Address
 
     Scenario: User looks for alternative methods to prove identity without using the app
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit an 'abandon' event
-      Then I get a 'non-uk-no-passport' page response
+      Then I get a 'need-biometric-passport' page response
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -155,15 +155,15 @@ Feature: P2 International Address
 
     Scenario: International user abandons due to no biometric passport then returns
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'abandon' event
-      Then I get a 'non-uk-no-passport' page response
+      Then I get a 'need-biometric-passport' page response
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
 
     Scenario: International user wants to prove identity another way from download page
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -178,7 +178,7 @@ Feature: P2 International Address
         | smartphone | iphone |
         | isAppOnly  | true   |
       When I submit a 'preferNoApp' event
-      Then I get a 'non-uk-no-app-options' page response
+      Then I get a 'need-app' page response
       # Change their mind and go back
       When I submit a 'useApp' event
       Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
@@ -187,7 +187,7 @@ Feature: P2 International Address
         | isAppOnly  | true   |
       # Decide to abandon again
       When I submit a 'preferNoApp' event
-      Then I get a 'non-uk-no-app-options' page response
+      Then I get a 'need-app' page response
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -201,7 +201,7 @@ Feature: P2 International Address
 
     Scenario: Successful P2 received via DCMAW
       When I submit an 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event

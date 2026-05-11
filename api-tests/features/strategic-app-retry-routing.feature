@@ -82,7 +82,7 @@ Feature: Strategic App Retry Journeys
 
   Scenario Outline: Trying again with a mobile device app only goes directly to the correct download page
     When I submit a 'international' event
-    Then I get a 'non-uk-passport' page response
+    Then I get a 'passport-biometric-chip' page response
     When I submit a 'next' event
     Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
@@ -121,7 +121,7 @@ Feature: Strategic App Retry Journeys
 
   Scenario Outline: Trying again with a desktop device app only goes directly to the correct download page
     When I submit a 'international' event
-    Then I get a 'non-uk-passport' page response
+    Then I get a 'passport-biometric-chip' page response
     When I submit a 'next' event
     Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
