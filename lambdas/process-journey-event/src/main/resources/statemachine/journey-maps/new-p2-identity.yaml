@@ -743,7 +743,7 @@ states:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
 
-  NON_UK_PASSPORT_BIOMETRIC_CHIP:
+  PASSPORT_BIOMETRIC_CHIP:
     response:
       type: page
       pageId: passport-biometric-chip
@@ -755,9 +755,9 @@ states:
         auditEvents:
           - IPV_INTERNATIONAL_ADDRESS_START
       abandon:
-        targetState: NON_UK_NEED_BIOMETRIC_PASSPORT
+        targetState: NEED_BIOMETRIC_PASSPORT
 
-  NON_UK_NEED_BIOMETRIC_PASSPORT:
+  NEED_BIOMETRIC_PASSPORT:
     response:
       type: page
       pageId: need-biometric-passport
