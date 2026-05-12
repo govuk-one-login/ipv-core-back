@@ -747,6 +747,31 @@ states:
         targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
         targetEntryEvent: appTriage
 
+  PASSPORT_BIOMETRIC_CHIP:
+    response:
+      type: page
+      pageId: passport-biometric-chip
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
+        targetEntryEvent: appTriage
+        journeyContextToSet: appOnly
+        auditEvents:
+          - IPV_INTERNATIONAL_ADDRESS_START
+      abandon:
+        targetState: NEED_BIOMETRIC_PASSPORT
+
+  NEED_BIOMETRIC_PASSPORT:
+    response:
+      type: page
+      pageId: need-biometric-passport
+    events:
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+      useApp:
+        targetState: STRATEGIC_APP_TRIAGE_INTERNATIONAL_ADDRESS
+        targetEntryEvent: appTriage
+
   POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE:
     response:
       type: page
