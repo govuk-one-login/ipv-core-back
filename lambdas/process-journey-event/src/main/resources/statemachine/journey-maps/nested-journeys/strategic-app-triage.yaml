@@ -181,7 +181,7 @@ nestedJourneyStates:
       useApp:
         targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
 
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NEED_APP:
+  DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP:
     response:
       type: page
       pageId: need-app
@@ -277,7 +277,7 @@ nestedJourneyStates:
       useApp:
         targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NEED_APP:
+  DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP:
     response:
       type: page
       pageId: need-app
@@ -495,7 +495,7 @@ nestedJourneyStates:
       useApp:
         targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
 
-  DAD_SELECT_SMARTPHONE_NON_UK_NEED_APP:
+  DAD_SELECT_SMARTPHONE_NEED_APP:
     response:
       type: page
       pageId: need-app
@@ -506,7 +506,7 @@ nestedJourneyStates:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE
         targetEntryEvent: dad-select-smartphone
 
-  MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NEED_APP:
+  MOBILE_IPHONE_DOWNLOAD_PAGE_NEED_APP:
     response:
       type: page
       pageId: need-app
@@ -516,7 +516,7 @@ nestedJourneyStates:
       useApp:
         targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
 
-  MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NEED_APP:
+  MOBILE_ANDROID_DOWNLOAD_PAGE_NEED_APP:
     response:
       type: page
       pageId: need-app
