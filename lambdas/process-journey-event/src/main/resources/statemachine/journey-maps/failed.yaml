@@ -74,6 +74,22 @@ states:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
 
+  FAILED_UPDATE_DETAILS_HIGHER_STRENGTH:
+    events:
+      next:
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
+        checkJourneyContext:
+          rfc:
+            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
+
   FAILED_NO_TICF:
     events:
       next:
@@ -224,6 +240,42 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
+  PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_REPEAT_FRAUD_CHECK
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_REPEAT_FRAUD_CHECK
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_UPDATE_DETAILS
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_UPDATE_DETAILS
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID:
     response:
       type: page
@@ -336,6 +388,26 @@ states:
       pageId: pyi-no-match
       pageContext:
         reason: nino
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_REPEAT_FRAUD_CHECK:
+    response:
+      type: page
+      pageId: pyi-no-match
+      pageContext:
+        reason: repeatFraudCheck
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_UPDATE_DETAILS:
+    response:
+      type: page
+      pageId: pyi-no-match
+      pageContext:
+        reason: updateDetails
     events:
       next:
         targetState: RETURN_TO_RP

@@ -5,6 +5,7 @@ export const JOURNEY_TYPES: Record<string, string> = {
   REUSE_EXISTING_IDENTITY: "Reuse existing identity",
   UPDATE_NAME: "Update name",
   UPDATE_ADDRESS: "Update address",
+  UPDATE_DETAILS_HIGHER_STRENGTH: "Update details with higher srength",
   INELIGIBLE: "Ineligible journey",
   FAILED: "Failed journey",
   TECHNICAL_ERROR: "Technical error",

@@ -360,8 +360,12 @@ core:
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: false
     mitigations9020Enabled: false
+    coi6mfcDeadEndRoutingEnabled: false
 
   features:
+    coi6mfcDeadEndRouting:
+      featureFlags:
+        coi6mfcDeadEndRoutingEnabled: true
     mitigations9020:
       featureFlags:
         mitigations9020Enabled: true

@@ -173,6 +173,16 @@ states:
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
+      failWithNoCiFromApp:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+        journeyContextToUnset: appOnly
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_01_PYI_POST_OFFICE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
         journeyContextToUnset: appOnly
@@ -639,6 +649,12 @@ states:
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
+      failWithNoCiFromApp:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
@@ -754,6 +770,8 @@ states:
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
+      failWithNoCiFromApp:
+        targetState: STRATEGIC_APP_NON_UK_NO_APP_PAGE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 

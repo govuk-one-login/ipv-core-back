@@ -356,6 +356,7 @@ core:
     sisVerificationEnabled: true
     testFeatureFlag: false
     evcsApiUpdatesEnabled: false
+    coi6mfcDeadEndRoutingEnabled: false
   features:
     testFeature:
       self:
@@ -366,6 +367,9 @@ core:
     disableTestFeatureFlag:
       featureFlags:
         testFeatureFlag: false
+    coi6mfcDeadEndRouting:
+      featureFlags:
+        coi6mfcDeadEndRoutingEnabled: true
     evcsApiUpdates:
       featureFlags:
         evcsApiUpdatesEnabled: true
