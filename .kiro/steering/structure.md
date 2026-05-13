@@ -56,7 +56,7 @@ Three OpenAPI specs define core-back's API surface:
 - link-workflows.yaml — workflow linking
 
 PR template (/.github/pull_request_template.md) uses Jira PYIC-XXXX ticket references and includes checklists for documentation, tests, PII exposure, and canary deployment considerations.
-CODEOWNERS: `@govuk-one-login/core-team` and `@govuk-one-login/identity-sre`.
+CODEOWNERS: `@govuk-one-login/core-team` and `@govuk-one-login/reliability-engineering-x`.
 Dependabot is configured for Gradle, npm (api-tests and journey-map), and GitHub Actions dependencies.
 
 # API Tests
