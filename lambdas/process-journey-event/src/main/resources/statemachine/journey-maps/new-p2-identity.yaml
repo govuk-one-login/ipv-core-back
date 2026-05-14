@@ -719,7 +719,7 @@ states:
         targetState: IDENTITY_START_PAGE
         journeyContextToUnset: internationalAddress
       international:
-        targetState: NON_UK_PASSPORT
+        targetState: PASSPORT_BIOMETRIC_CHIP
         journeyContextToSet: internationalAddress
 
   NON_UK_PASSPORT:

@@ -64,7 +64,7 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
+            targetState: DAD_SELECT_SMARTPHONE_NEED_APP
 
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
     response:
@@ -124,7 +124,7 @@ nestedJourneyStates:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -157,7 +157,7 @@ nestedJourneyStates:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -220,7 +220,7 @@ nestedJourneyStates:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -253,7 +253,7 @@ nestedJourneyStates:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -353,7 +353,7 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
       error:
@@ -375,7 +375,7 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
       error:
@@ -425,7 +425,7 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
       error:
@@ -447,7 +447,7 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
+            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NEED_APP
       anotherWay:
         exitEventToEmit: anotherWay
       error:
@@ -579,4 +579,4 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
-            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
+            targetState: DAD_SELECT_SMARTPHONE_NEED_APP

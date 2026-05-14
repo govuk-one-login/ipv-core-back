@@ -238,7 +238,7 @@ Feature: P2 Journeys with DL authoritative source check
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'international' event
-      Then I get a 'non-uk-passport' page response
+      Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event

@@ -471,7 +471,7 @@ Feature: Audit Events
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
-    Then I get a 'non-uk-passport' page response
+    Then I get a 'passport-biometric-chip' page response
     When I submit a 'next' event
     Then I get a 'identify-device' page response
     And audit events for 'international-address-journey' are recorded [local only]
