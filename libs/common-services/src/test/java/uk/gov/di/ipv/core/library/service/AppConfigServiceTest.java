@@ -297,7 +297,7 @@ class AppConfigServiceTest {
 
     @Test
     void enabledFalseIfFeatureFlagNotEnabled() {
-        assertFalse(configService.enabled("pendingF2FResetEnabled"));
+        assertFalse(configService.enabled("testFeatureFlag"));
     }
 
     @Test

@@ -12,9 +12,6 @@ states:
     events:
       next:
         targetState: PENDING_PAGE
-        checkFeatureFlag:
-          pendingF2FResetEnabled:
-            targetState: PENDING_PAGE_TEST
 
   # Journey states
 
@@ -25,65 +22,6 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-
-  PENDING_PAGE_TEST:
-    response:
-      type: page
-      pageId: page-ipv-pending
-      pageContext:
-        allowDeleteDetails: true
-    events:
-      next:
-        targetState: F2F_DELETE_PAGE
-
-  F2F_DELETE_PAGE:
-    response:
-      type: page
-      pageId: pyi-f2f-delete-details
-    events:
-      next:
-        targetState:
-          CONFIRM_DELETE_DETAILS_PAGE
-      end:
-        targetState:
-          PENDING_PAGE_TEST
-
-  CONFIRM_DELETE_DETAILS_PAGE:
-    response:
-      type: page
-      pageId: pyi-confirm-delete-details
-    events:
-      next:
-        targetState:
-          RESET_PENDING_F2F_SESSION_IDENTITY
-        auditEvents:
-          - IPV_F2F_USER_CANCEL_START
-      end:
-        targetState:
-          PENDING_PAGE_TEST
-
-  RESET_PENDING_F2F_SESSION_IDENTITY:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: PENDING_F2F_ALL
-    events:
-      next:
-        targetState: DETAILS_DELETED_PAGE
-        auditEvents:
-          - IPV_F2F_USER_CANCEL_END
-
-  DETAILS_DELETED_PAGE:
-    response:
-      type: page
-      pageId: pyi-details-deleted
-      pageContext:
-        journeyType: f2f
-    events:
-      next:
-        targetJourney: INITIAL_JOURNEY_SELECTION
-        targetState: START
 
   RETURN_TO_RP:
     response:
