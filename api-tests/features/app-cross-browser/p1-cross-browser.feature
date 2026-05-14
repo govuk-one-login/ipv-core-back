@@ -241,7 +241,7 @@ Feature: P1 V2 App Cross Browser Scenario
       Then I get a 'pyi-post-office' page response
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
-      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC with a 'BREACHING' CI
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
       # This simulates the user clicking continue on the problem-different-browser

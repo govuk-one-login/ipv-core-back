@@ -552,20 +552,27 @@ When(
 );
 
 When(
-  /^the async DCMAW CRI produces an? '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
+  /^the async DCMAW CRI produces an? '([\w-]+)' '([\w-]+)' '([\w-]+)' VC(?: with a '([\w-]+)' CI)?$/,
   async function (
     this: World,
     testUser: string,
     documentType: string,
     evidenceType: string,
-    hasCi: " with a CI" | undefined,
+    ciType:
+      | "NON-BREACHING"
+      | "BREACHING"
+      | "BREACHING-P1-ONLY"
+      | "NEEDS-ENHANCED-VERIFICATION"
+      | "NEEDS-ALTERNATE-DOC"
+      | "ALWAYS-REQUIRED"
+      | undefined,
   ): Promise<void> {
     this.oauthState = await enqueueVcFromDetails(
       this.userId,
       testUser,
       documentType,
       evidenceType,
-      hasCi && ["BREACHING"],
+      ciType ? [ciType] : undefined,
     );
   },
 );

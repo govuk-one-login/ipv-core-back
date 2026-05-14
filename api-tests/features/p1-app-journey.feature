@@ -81,7 +81,7 @@ Feature: P1 app journey
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
