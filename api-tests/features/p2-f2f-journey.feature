@@ -67,6 +67,34 @@ Feature: P2 F2F journey
         | medium-confidence      | passport | kenneth-passport-valid       |
         | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
+    Scenario: Failed F2F journey using passport with CI (score 1) - allow user to start again
+      # Initial journey
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-expired' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey - Inform user on unsuccessful check and allow to start journey again
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      When I submit a 'next' event
+      Then I get a 'live-in-uk' page response
+
     Scenario Outline: Successful P2 identity via F2F using <doc> - no valid device to go through app
       # Initial journey
       And I start a new 'medium-confidence' journey
