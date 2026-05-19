@@ -108,7 +108,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC with a 'BREACHING' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
@@ -171,7 +171,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       And I have a stored identity record with a 'P3' max vot
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC with a 'BREACHING' CI
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt

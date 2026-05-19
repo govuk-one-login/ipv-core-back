@@ -236,7 +236,7 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       Then I get a 'pyi-post-office' page response
 
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
-      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'fail' VC with a 'BREACHING' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response

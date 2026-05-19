@@ -405,7 +405,7 @@ Feature: Reprove Identity Journey
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
@@ -482,7 +482,7 @@ Feature: Reprove Identity Journey
         | Context    | Value   |
         | smartphone | iphone  |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
     # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response

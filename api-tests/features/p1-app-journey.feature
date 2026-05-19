@@ -81,7 +81,7 @@ Feature: P1 app journey
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
@@ -89,6 +89,52 @@ Feature: P1 app journey
     Then the poll returns a '201'
     When I submit the returned journey event
     Then I get an 'pyi-no-match' page response
+
+  Scenario: MAM journey - passport fails with ci (score 1) and goes to alternative document check
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | false  |
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'ALWAYS-REQUIRED' CI
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get an 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'page-multiple-doc-check' page response and pageContext
+      | Context   | Value |
+      | allowNino | true  |
+    When I submit a 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'end' event
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'experianKbv' CRI response
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot
 
   Scenario: MAM journey no compatible smartphone continues to other methods
     When I submit an 'appTriage' event
@@ -181,3 +227,48 @@ Feature: P1 app journey
     Then I get a 'page-multiple-doc-check' page response and pageContext
       | Context   | Value |
       | allowNino | true  |
+
+  Scenario: DAD journey - BRP fails with ci (score 1) and goes to alternative document check
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | false  |
+    When the async DCMAW CRI produces a 'kenneth-brp-expired' VC
+    And I pass on the DCMAW callback
+    Then I get an 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'page-multiple-doc-check' page response and pageContext
+      | Context   | Value |
+      | allowNino | true  |
+    When I submit a 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'end' event
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'experianKbv' CRI response
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P1' identity
+    And I have a stored identity record with a 'P1' max vot

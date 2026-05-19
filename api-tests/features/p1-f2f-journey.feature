@@ -113,3 +113,14 @@ Feature: P1 F2F journey
       When I use the OAuth response to get my identity
       Then I am issued a 'P1' identity
       And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Failed F2F journey using passport with CI (score 1) - allow user to start again
+      When I submit 'kenneth-passport-expired' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey - Inform user on unsuccessful check and allow to start journey again
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      When I submit a 'next' event
+      Then I get a 'live-in-uk' page response
