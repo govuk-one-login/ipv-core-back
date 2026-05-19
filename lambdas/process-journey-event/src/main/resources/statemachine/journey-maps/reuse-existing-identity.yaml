@@ -83,19 +83,6 @@ states:
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
 
-  RESET_SESSION_IDENTITY:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: DETAILS_DELETED_PAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   UPDATE_DETAILS_PAGE:
     response:
       type: page
@@ -219,15 +206,6 @@ states:
         targetState: IDENTITY_REUSE_PAGE
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  DETAILS_DELETED_PAGE:
-    response:
-      type: page
-      pageId: pyi-details-deleted
-    events:
-      next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: START
 
   UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION:
     response:
