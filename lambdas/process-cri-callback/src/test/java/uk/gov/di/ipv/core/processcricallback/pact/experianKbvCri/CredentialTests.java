@@ -596,7 +596,6 @@ class CredentialTests {
                "iss": "dummyExperianKbvComponentId",
                "sub": "test-subject",
                "nbf": 4070908800,
-               "exp": 4070909400,
                "vc": {
                  "@context": [
                    "https://www.w3.org/2018/credentials/v1",
@@ -684,7 +683,6 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -755,7 +753,6 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
