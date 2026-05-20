@@ -569,7 +569,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "Jy6iSQcjSYDsopf1AIPuscR_uwJTVdQaU3EcbFyZLukrFQ04fQWDFwUF2wzief2YL4v8_x2SVuMO7sqnn3m9MA"; // pragma: allowlist secret
+            "S64rhfYI527Tm17GflXVoerzu_3RO1hraph_Xsm5fna8h8RkMCSgdhTaYllvld7S-L37srFCrLsS_px8rqhVZw"; // pragma: allowlist secret
 
     private static final String VALID_VC_ADDRESS_BODY =
             """
@@ -605,7 +605,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "gHKt0bP-EDzMapHW5DfMJ93e31-WFltzYQxONTYlgN2okm5yRjkgjqsIyC1LFeeV6PtgctcW6FzrU_oqFS3GQA"; // pragma: allowlist secret
+            "gyDkSMo7Uad7mQSCVGKqbIu0t5DtbH-LFtzqFmAOQzyt97SbKic8lz-VGmLJk0Fp-6M4dcsOWuHlIFaohPXT-g"; // pragma: allowlist secret
 
     private static final String VALID_VC_CHANGED_ADDRESS_BODY =
             """
@@ -648,7 +648,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_CHANGED_ADDRESS_SIGNATURE =
-            "2GkXxAwDnFVYbQMhsh3w-F4ffSlMVavviDIddMge_CjnQbWERBkhu-CCy6F9kGE1B8ZFrAlFAqDJQaT5PkbPbw"; // pragma: allowlist secret
+            "Fa3iM-6-Rpz7bns-Xl92yb6iDcnt_N1j2pMmS8qjW0WTuqf_g3aZrQlbhXFJnuRCEdSwAmSEPwQFHaCVUBiY7A"; // pragma: allowlist secret
 
     private static final String VALID_VC_INTERNATIONAL_ADDRESS_BODY =
             """
@@ -688,5 +688,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE =
-            "cr_bBHq1GD0dyl2L4ryF3fVD9-yLbS78wcRqFZaPB_FGAV9ANGjJHoRSGXoDNn0cib9tVeQDFYgeIZkm3iz46Q"; // pragma: allowlist secret
+            "EejAGSdJxLKdn00LnU8sXOELnYuMdPy7NLJaLFpE-IC3bOwgGLMmhUD3P0jB9mTiHJd9I9GFdS9Nrgdwgq7WzQ"; // pragma: allowlist secret
 }
