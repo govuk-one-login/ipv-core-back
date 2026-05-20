@@ -675,7 +675,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "34505Qywo0EAF4qD0j-Jqncg67hKzH6ix0eHyJpCWLICID13yi-9WVEMbsn3CfyGt2et_A_kjIsYMtqMtjq8_g"; // pragma: allowlist secret
+            "Krq-lfEOsIDXWmtOMprkXagMOiLWEioGLYQBJhvNpr4k2yS1UqkdCyL5cqJ1ILZaZ3B6hxMBPe34Q_5PhQFTfA"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_BODY =
             """
@@ -745,7 +745,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "ZCVsXX_RLWrxt_l2ZCwa9QLpyiPMx91mNPDnkyIwiYM4r0TaD5xItuAfq2IKb_6bF5LVm6-cwCzhZ0HYdrey8g"; // pragma: allowlist secret
+            "XvQeyw342xQVyoUQCvqiSgsl-w31ByJjvzZtiCou6ibk6V9gurnMViSh-6nlBKqWIsL1LTlULXW-smgGOPBqOw"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -839,5 +839,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "Agb8PP9IYHV9pwm0gRyPRcWsK3o3STicbbFbuEm1nyGya-I_9nvBipO7eSEe0HYbEjIW_PmB0cY8k55ovUDH-Q"; // pragma: allowlist secret
+            "xg4gIkQeZCJVZHfNWJ7pKcI4Wo1G2vBlt5Med1LNCzkidD2wnrsAYWtZZ6_Z2jqMLl2PSTw15Sc8jl2bQ0LPJA"; // pragma: allowlist secret
 }
