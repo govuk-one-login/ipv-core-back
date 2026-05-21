@@ -88,8 +88,7 @@ Feature: Fail open scenarios
       | final reprove identity | ERROR               | AIS_FORCED_USER_IDENTITY_VERIFY |
 
   Scenario: Reprove identity journey with AIS failure succeeds
-    Given I activate the 'reproveViaAppOnly' feature set
-    And the subject already has the following credentials
+    Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
