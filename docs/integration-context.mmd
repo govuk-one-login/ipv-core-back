@@ -1,0 +1,24 @@
+graph LR
+    ORCH[Orchestration/Auth]
+    FRONT[IPV Core Front]
+    ANALYTICS[Observability Tooling]
+
+    CORE[IPV Core Back]
+
+    CRIs[CRIs x13]
+    CIMIT[CIMIT API]
+    EVCS[EVCS]
+    TICF[TICF CRI]
+    SIS[SIS]
+    AIS[AIS]
+
+    ORCH -->|HTTPS OAuth| CORE
+    FRONT -->|HTTPS| CORE
+    ANALYTICS -->|HTTPS API Key| CORE
+
+    CORE -->|HTTPS OAuth| CRIs
+    CORE -->|HTTPS API Key| CIMIT
+    CORE -->|HTTPS API Key| EVCS
+    CORE -->|HTTPS API Key| TICF
+    CORE -->|HTTPS API Key| SIS
+    CORE -->|HTTPS| AIS
