@@ -129,8 +129,7 @@ Feature: Journey ending interventions
       | Password reset and reprove identity | 06                     |
 
   Scenario Outline: <intervention> intervention during reprove identity journey
-    Given I activate the 'reproveViaAppOnly' feature set
-    And the subject already has the following credentials
+    Given the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |

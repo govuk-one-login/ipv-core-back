@@ -8,6 +8,7 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
+      And I activate the 'disableReproveViaAppOnly' feature set
       And The AIS stub will return an '<ais_response>' result
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
@@ -59,6 +60,7 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
+      And I activate the 'disableReproveViaAppOnly' feature set
       And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
       When I start a new 'medium-confidence' journey
       Then I get a 'reprove-identity-start' page response
@@ -92,6 +94,7 @@ Feature: Reprove Identity Journey
       And I have a stored identity record with a 'P2' max vot
 
     Scenario: User needs to reprove their identity with F2F pending with AIS
+      Given I activate the 'disableReproveViaAppOnly' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -127,6 +130,7 @@ Feature: Reprove Identity Journey
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
+      And I activate the 'disableReproveViaAppOnly' feature set
       And The AIS stub will return an 'AIS_FORCED_USER_IDENTITY_VERIFY' result
       When I start a new 'medium-confidence' journey with reprove identity
       Then I get a 'reprove-identity-start' page response
@@ -177,9 +181,6 @@ Feature: Reprove Identity Journey
       And I don't have a stored identity in EVCS
 
   Rule: App only reprove journey
-    Background:
-      Given I activate the 'reproveViaAppOnly' feature set
-
     Scenario: Happy path user reproves identity on desktop android
       Given the subject already has the following credentials
         | CRI     | scenario                     |
@@ -498,8 +499,7 @@ Feature: Reprove Identity Journey
 
   Rule: App only reprove journey authoritative source check fails
     Background:
-      Given I activate the 'reproveViaAppOnly' feature set
-      And the subject already has the following credentials
+      Given the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |

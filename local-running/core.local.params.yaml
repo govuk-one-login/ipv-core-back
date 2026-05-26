@@ -351,7 +351,7 @@ core:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     repeatFraudCheckEnabled: true
-    reproveViaAppOnlyEnabled: false
+    reproveViaAppOnlyEnabled: true
     parseVcClasses: true
     sqsAsync: true
     kidJarHeaderEnabled: true
@@ -374,9 +374,9 @@ core:
     evcsApiUpdates:
         featureFlags:
           evcsApiUpdatesEnabled: true
-    reproveViaAppOnly:
+    disableReproveViaAppOnly:
       featureFlags:
-        reproveViaAppOnlyEnabled: true
+        reproveViaAppOnlyEnabled: false
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
