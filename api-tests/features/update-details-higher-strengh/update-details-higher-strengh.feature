@@ -10,7 +10,6 @@ Feature: Update details higher strength
         | CRI   | scenario        |
         | fraud | kenneth-score-2 |
       And I have an existing stored identity record with a 'P3' vot
-      And I activate the 'coi6mfcDeadEndRouting' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -246,7 +245,6 @@ Feature: Update details higher strength
         | address | kenneth-current        |
         | fraud   | kenneth-score-2        |
       And I have an existing stored identity record with a 'P3' vot
-      And I activate the 'coi6mfcDeadEndRouting' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-reuse' page response
       When I submit a 'update-details' event
