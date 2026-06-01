@@ -21,7 +21,7 @@ dependencies {
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(":libs:common-services").sourceSets.test.output,
+			project(path: ":libs:common-services", configuration: "tests"),
 			project(path: ':libs:test-helpers')
 
 	mockitoAgent(libs.mockitoCore) {

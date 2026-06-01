@@ -72,13 +72,15 @@ jacocoTestReport {
 }
 
 configurations {
-	tests.extendsFrom(testImplementation)
+	tests {
+		extendsFrom testImplementation
+	}
 }
 
-tasks.register('jarTest', Jar) {
+tasks.register('testJar', Jar) {
 	from sourceSets.test.output
-	archiveClassifier.set('tests')
+	archiveClassifier.set('test')
 }
 artifacts {
-	tests jarTest
+	tests tasks.named('testJar')
 }
