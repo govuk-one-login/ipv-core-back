@@ -539,7 +539,6 @@ class CredentialTests {
               "iss": "dummyAddressComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "type": [
                   "VerifiableCredential",
@@ -570,7 +569,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "Jy6iSQcjSYDsopf1AIPuscR_uwJTVdQaU3EcbFyZLukrFQ04fQWDFwUF2wzief2YL4v8_x2SVuMO7sqnn3m9MA"; // pragma: allowlist secret
+            "8czA2bqTpfh6Gk-pdwrJv14Kgk4-uVKxRErYVgdix9-j2HPqjNj1zLVu0miE3T91ezq8Ly4kcq4WhBeQlURq_w"; // pragma: allowlist secret
 
     private static final String VALID_VC_ADDRESS_BODY =
             """
@@ -578,7 +577,6 @@ class CredentialTests {
               "iss": "dummyAddressComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "type": [
                   "VerifiableCredential",
@@ -607,7 +605,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "gHKt0bP-EDzMapHW5DfMJ93e31-WFltzYQxONTYlgN2okm5yRjkgjqsIyC1LFeeV6PtgctcW6FzrU_oqFS3GQA"; // pragma: allowlist secret
+            "RS3IMX4Vmzpr33jVuBi0tX-eG7WDQKjauSEjsMXbQVG9YibiLDZ_FCdJffd-XMbaSA5Qcg8XNHXwdNflJzb4FQ"; // pragma: allowlist secret
 
     private static final String VALID_VC_CHANGED_ADDRESS_BODY =
             """
@@ -615,7 +613,6 @@ class CredentialTests {
               "iss": "dummyAddressComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "type": [
                   "VerifiableCredential",
@@ -651,7 +648,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_CHANGED_ADDRESS_SIGNATURE =
-            "2GkXxAwDnFVYbQMhsh3w-F4ffSlMVavviDIddMge_CjnQbWERBkhu-CCy6F9kGE1B8ZFrAlFAqDJQaT5PkbPbw"; // pragma: allowlist secret
+            "aTEl9GodHJ3VGNRABT_S5eymTXBlwXB7u6NwLJSx4j-tKkjuXOiNTlLxmrrmU6D-8NAqYE11n22g_4ARmA46-A"; // pragma: allowlist secret
 
     private static final String VALID_VC_INTERNATIONAL_ADDRESS_BODY =
             """
@@ -659,7 +656,6 @@ class CredentialTests {
               "iss": "dummyAddressComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "type": [
                   "VerifiableCredential",
@@ -692,5 +688,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE =
-            "cr_bBHq1GD0dyl2L4ryF3fVD9-yLbS78wcRqFZaPB_FGAV9ANGjJHoRSGXoDNn0cib9tVeQDFYgeIZkm3iz46Q"; // pragma: allowlist secret
+            "Pr7z7A-0olLZrZLx03OU2BqY-8ZXAPEb1stuz0Cu5zqjfeLsvBhtLgRaMhvzoL2V_lao2l4j8m7i7w5Heo_vyA"; // pragma: allowlist secret
 }

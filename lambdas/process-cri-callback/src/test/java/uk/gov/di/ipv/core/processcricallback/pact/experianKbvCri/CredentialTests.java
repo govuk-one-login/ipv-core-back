@@ -596,7 +596,6 @@ class CredentialTests {
                "iss": "dummyExperianKbvComponentId",
                "sub": "test-subject",
                "nbf": 4070908800,
-               "exp": 4070909400,
                "vc": {
                  "@context": [
                    "https://www.w3.org/2018/credentials/v1",
@@ -676,7 +675,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "cHYsPI1M8wa6JOwU70yVZv8E7Bb6ev1QV20Nomm6e3QPKzyKo2rxuy8Gsk3r9fErXy8hv1N0L-LuZn7pLTSQSQ"; // pragma: allowlist secret
+            "Krq-lfEOsIDXWmtOMprkXagMOiLWEioGLYQBJhvNpr4k2yS1UqkdCyL5cqJ1ILZaZ3B6hxMBPe34Q_5PhQFTfA"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_BODY =
             """
@@ -684,7 +683,6 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -747,7 +745,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "gjiDQ5rzrzFjrVqvOE2ayqnbaQlDQpa7VHRBh-cGhar5Ty4pEkcTYr6LLChT5NoGPkSE9PlT9G4SuSEkako6gw"; // pragma: allowlist secret
+            "XvQeyw342xQVyoUQCvqiSgsl-w31ByJjvzZtiCou6ibk6V9gurnMViSh-6nlBKqWIsL1LTlULXW-smgGOPBqOw"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -755,7 +753,6 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
-              "exp": 4070909400,
               "vc": {
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
@@ -842,5 +839,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "m3xuM0mpZ3lTHhDk9hOLa79hyLr1x9fcCavK7RCD_OOGo04QvZFyxtV6OoUPnANU-WxEr3iMv7ZNBLPEcQb90g"; // pragma: allowlist secret
+            "xg4gIkQeZCJVZHfNWJ7pKcI4Wo1G2vBlt5Med1LNCzkidD2wnrsAYWtZZ6_Z2jqMLl2PSTw15Sc8jl2bQ0LPJA"; // pragma: allowlist secret
 }
