@@ -77,8 +77,6 @@ states:
     response:
       type: page
       pageId: page-ipv-identity-document-start
-      pageContext:
-        allowMfaReset: true
     events:
       appTriage:
         targetState: APP_DOC_CHECK

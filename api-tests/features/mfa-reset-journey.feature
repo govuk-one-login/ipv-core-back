@@ -14,9 +14,7 @@ Feature: MFA reset journey
 
     Scenario: Successful MFA reset journey
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -28,9 +26,7 @@ Feature: MFA reset journey
 
     Scenario: Successful MFA reset journey - with DL auth source check
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -46,9 +42,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey with breaching CI - user can still reuse existing identity
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
@@ -62,9 +56,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - DCMAW error
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -80,9 +72,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - failed verification score
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-verification-zero' details to the CRI stub
@@ -92,9 +82,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - non-matching identity
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'alice-passport-valid' details to the CRI stub
@@ -104,9 +92,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - failed DL auth source check
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -120,9 +106,7 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - incorrect DL details from DL auth source check - prove identity another way
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -142,9 +126,7 @@ Feature: MFA reset journey
 
     Scenario: Incorrect DL details from DL auth source check - allowed retry through the app
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -173,9 +155,7 @@ Feature: MFA reset journey
 
     Scenario: Successful MFA reset journey still using v1 app
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -203,9 +183,7 @@ Feature: MFA reset journey
       When I start a new 'reverification' journey
       Then I get a 'you-can-change-security-code-method' page response
       When I submit a 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response and pageContext
-        | Context       | Value |
-        | allowMfaReset | true  |
+      Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
