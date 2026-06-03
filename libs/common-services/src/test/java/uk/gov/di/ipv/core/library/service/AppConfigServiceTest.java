@@ -291,6 +291,11 @@ class AppConfigServiceTest {
     }
 
     @Test
+    void enabledTrueIfFeatureFlagEnabled() {
+        assertTrue(configService.enabled("parseVcClasses"));
+    }
+
+    @Test
     void enabledFalseIfFeatureFlagNotEnabled() {
         assertFalse(configService.enabled("testFeatureFlag"));
     }
