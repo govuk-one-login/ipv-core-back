@@ -77,7 +77,6 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -695,9 +694,8 @@ public class CheckExistingIdentityHandler
                         .toList();
         var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
 
-        if (configService.enabled(REPEAT_FRAUD_CHECK)
-                && VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        fraudVcs, configService, fixedClock)) {
+        if (VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                fraudVcs, configService, fixedClock)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "All Fraud VCs are expired or from unavailable source"));

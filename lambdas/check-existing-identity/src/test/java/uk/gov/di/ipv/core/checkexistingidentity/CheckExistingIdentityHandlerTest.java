@@ -110,7 +110,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisStat
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -1003,12 +1002,22 @@ class CheckExistingIdentityHandlerTest {
                             true))
                     .thenReturn(buildMatchResultFor(P2, matchedProfile));
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
 
-            assertEquals(JOURNEY_REUSE, journeyResponse);
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+
+                assertEquals(JOURNEY_REUSE, journeyResponse);
+            }
 
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
@@ -1049,12 +1058,23 @@ class CheckExistingIdentityHandlerTest {
                             true))
                     .thenThrow(new RuntimeException("boom"));
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
 
-            assertEquals(JOURNEY_REUSE, journeyResponse);
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+
+                assertEquals(JOURNEY_REUSE, journeyResponse);
+            }
+
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
@@ -1087,12 +1107,22 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(buildMatchResultFor(P2, M1A));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
 
-            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyResponse.class);
+
+                assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+            }
         }
 
         @Test
@@ -1108,19 +1138,29 @@ class CheckExistingIdentityHandlerTest {
                     .when(mockSessionCredentialService)
                     .persistCredentials(any(), any(), anyBoolean());
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
 
-            assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
+                var journeyResponse =
+                        toResponseClass(
+                                checkExistingIdentityHandler.handleRequest(event, context),
+                                JourneyErrorResponse.class);
 
-            assertEquals(HTTPResponse.SC_SERVER_ERROR, journeyResponse.getStatusCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getCode(), journeyResponse.getCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
-                    journeyResponse.getMessage());
+                assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
+                assertEquals(HTTPResponse.SC_SERVER_ERROR, journeyResponse.getStatusCode());
+                assertEquals(
+                        ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getCode(),
+                        journeyResponse.getCode());
+                assertEquals(
+                        ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
+                        journeyResponse.getMessage());
+            }
         }
 
         @Test
@@ -1154,6 +1194,13 @@ class CheckExistingIdentityHandlerTest {
                                         VcHelper.isExpiredDrivingPermitVc(
                                                 any(), eq(configService), any()))
                         .thenReturn(true);
+
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
 
                 // Act
                 var result = checkExistingIdentityHandler.handleRequest(event, context);
@@ -1209,6 +1256,13 @@ class CheckExistingIdentityHandlerTest {
                                                 any(), eq(configService), any()))
                         .thenReturn(true);
 
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
+
                 // Act
                 var result = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -1255,6 +1309,13 @@ class CheckExistingIdentityHandlerTest {
                                                 any(), eq(configService), any()))
                         .thenReturn(false);
 
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
+
                 var journeyResponse =
                         toResponseClass(
                                 checkExistingIdentityHandler.handleRequest(event, context),
@@ -1276,7 +1337,17 @@ class CheckExistingIdentityHandlerTest {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
 
-            checkExistingIdentityHandler.handleRequest(event, context);
+            try (MockedStatic<VcHelper> mockVcHelper =
+                    mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
+                mockVcHelper
+                        .when(
+                                () ->
+                                        VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                                any(), any(), any()))
+                        .thenReturn(false);
+
+                checkExistingIdentityHandler.handleRequest(event, context);
+            }
 
             verify(mockEvcsService, times(0))
                     .markHistoricInEvcs(TEST_USER_ID, testCredentialBundle);
@@ -1745,8 +1816,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraudAndFlagIsTrue()
-                throws Exception {
+        void shouldReturnJourneyRepeatFraudCheckResponseIfExpiredFraud() throws Exception {
             var fraudVc = vcExperianFraudM1aExpired();
             var vcs =
                     List.of(
@@ -1762,7 +1832,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
             try (MockedStatic<VcHelper> mockVcHelper =
                     mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
@@ -1797,8 +1866,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraudAndFlagIsTrue()
-                throws Exception {
+        void shouldNotReturnJourneyRepeatFraudCheckResponseIfNotExpiredFraud() throws Exception {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
@@ -1806,7 +1874,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(100000000);
             try (MockedStatic<VcHelper> mockVcHelper =
                     mockStatic(VcHelper.class, CALLS_REAL_METHODS)) {
