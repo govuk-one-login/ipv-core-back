@@ -292,7 +292,7 @@ class AppConfigServiceTest {
 
     @Test
     void enabledTrueIfFeatureFlagEnabled() {
-        assertTrue(configService.enabled("repeatFraudCheckEnabled"));
+        assertTrue(configService.enabled("parseVcClasses"));
     }
 
     @Test

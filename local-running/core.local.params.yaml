@@ -350,7 +350,6 @@ core:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
-    repeatFraudCheckEnabled: true
     reproveViaAppOnlyEnabled: true
     parseVcClasses: true
     sqsAsync: true
