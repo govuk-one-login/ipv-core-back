@@ -287,6 +287,12 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_J4
       return-to-rp-cri-error:
         targetState: PROCESS_INCOMPLETE_IDENTITY
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_FRAUD_CI_VIA_APP
 
   CHECK_FRAUD_AFTER_DL:
     response:
@@ -397,6 +403,9 @@ states:
         targetState: PROCESS_NEW_IDENTITY
       fraud-fail-with-no-ci:
         targetState: PROCESS_NEW_IDENTITY
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -420,6 +429,12 @@ states:
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_FRAUD_CI_VIA_APP
 
   # No photo id journey (M2B)
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -474,6 +489,12 @@ states:
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_FRAUD_CI_VIA_APP
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS
@@ -786,6 +807,41 @@ states:
         journeyContextToSet: appOnly
       end:
         targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  # Fraud mitigation journey
+  MITIGATE_FRAUD_CI_VIA_APP:
+    response:
+      type: page
+      pageId: retry-prove-identity-app
+    events:
+      useApp:
+        targetState: FRAUD_MITIGATION_PASSPORT_BIOMETRIC_CHIP
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  FRAUD_MITIGATION_PASSPORT_BIOMETRIC_CHIP:
+    response:
+      type: page
+      pageId: passport-biometric-chip
+    events:
+      next:
+        # PYIC-9068 Implement mitigation route
+        targetJourney: FAILED
+        targetState: FAILED
+      abandon:
+        targetState: NEED_BIOMETRIC_PASSPORT
+
+  FRAUD_MITIGATION_NEED_BIOMETRIC_PASSPORT:
+    response:
+      type: page
+      pageId: need-biometric-passport
+    events:
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+      useApp:
+        # PYIC-9068 Implement mitigation route
+        targetJourney: FAILED
+        targetState: FAILED
 
   # End of journey steps
 

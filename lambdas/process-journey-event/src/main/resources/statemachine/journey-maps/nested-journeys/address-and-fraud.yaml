@@ -43,5 +43,4 @@ nestedJourneyStates:
       fail-with-no-ci:
         exitEventToEmit: fraud-fail-with-no-ci
       fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
+        exitEventToEmit: fraud-fail-with-ci
