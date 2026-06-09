@@ -57,6 +57,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DEN
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_HIGHER_STRENGTH_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
@@ -66,6 +67,8 @@ public class CriCheckingService {
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_FRAUD_FAIL_WITH_NO_CI_HIGHER_SCORE =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_HIGHER_STRENGTH_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCESS_DENIED =
@@ -298,6 +301,12 @@ public class CriCheckingService {
                 if (isReverification) {
                     setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
                 }
+
+                if (Cri.EXPERIAN_FRAUD.equals(vc.getCri())
+                        && Boolean.TRUE.equals(VcHelper.checkIfDocUKIssuedForCredential(vc))) {
+                    return JOURNEY_FRAUD_FAIL_WITH_NO_CI_HIGHER_SCORE;
+                }
+
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
         }

@@ -77,18 +77,19 @@ states:
   FAILED_UPDATE_DETAILS_HIGHER_STRENGTH:
     events:
       next:
-        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS
+        targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS_HIGHER_STRENGTH
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
+  
+  FAILED_HIGHER_STRENGTH_DEAD_END:
+    events:
+      next:
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS
         checkJourneyContext:
           rfc:
             targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
 
   FAILED_NO_TICF:
     events:
@@ -96,6 +97,27 @@ states:
         targetState: NO_MATCH_PAGE
 
   # Journey states
+  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS_HIGHER_STRENGTH:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH:
     response:
       type: process
@@ -299,6 +321,32 @@ states:
         targetState: RETURN_TO_RP
       delete:
         targetState: DELETE_HANDOVER_PAGE
+  
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: updateDetails
+    events:
+      passport:
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: RETRY_HIGHER_STRENGTH
+      continueToService:
+        targetState: REINSTATE_EXISTING_IDENTITY
+
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: repeatFraudCheck
+    events:
+      passport:
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: RETRY_HIGHER_STRENGTH
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   COULD_NOT_UPDATE_DETAILS_PAGE:
     response:

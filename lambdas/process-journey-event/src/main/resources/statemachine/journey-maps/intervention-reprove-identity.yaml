@@ -181,6 +181,8 @@ states:
         targetState: COULD_NOT_CONFIRM_IDENTITY
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_IDENTITY
+      fail-with-no-ci-higher-score:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
@@ -222,6 +224,8 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+      fail-with-no-ci-higher-score:
         targetState: COULD_NOT_CONFIRM_IDENTITY
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_IDENTITY
@@ -311,6 +315,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-higher-score:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
+        
 
   PROCESS_NEW_IDENTITY:
     response:
@@ -407,6 +414,9 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci-higher-score:
         targetJourney: FAILED
         targetState: FAILED
       error:

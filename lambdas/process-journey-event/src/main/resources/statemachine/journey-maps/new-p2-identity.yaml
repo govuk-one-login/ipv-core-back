@@ -72,6 +72,9 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -422,6 +425,8 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-higher-score:
+        targetState: PROCESS_NEW_IDENTITY
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -451,6 +456,8 @@ states:
         checkFeatureFlag:
           mitigations9020Enabled:
             targetState: MITIGATE_CI_VIA_APP
+      fraud-fail-with-no-ci-higher-score:
+        targetState: PROCESS_NEW_IDENTITY
 
   # No photo id journey (M2B)
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -511,6 +518,9 @@ states:
         checkFeatureFlag:
           mitigations9020Enabled:
             targetState: MITIGATE_CI_VIA_APP
+      fraud-fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS

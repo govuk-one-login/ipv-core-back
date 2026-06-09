@@ -24,6 +24,9 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -90,6 +93,9 @@ states:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-no-ci-higher-score:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       fail-with-ci:

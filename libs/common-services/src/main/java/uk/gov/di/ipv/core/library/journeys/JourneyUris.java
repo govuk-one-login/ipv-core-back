@@ -30,6 +30,8 @@ public class JourneyUris {
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
+    public static final String JOURNEY_FAIL_WITH_NO_CI_HIGHER_STRENGTH_PATH =
+            "/journey/fail-with-no-ci-higher-score";
     public static final String JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH =
             "/journey/fail-with-no-ci-low";
     public static final String JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH =

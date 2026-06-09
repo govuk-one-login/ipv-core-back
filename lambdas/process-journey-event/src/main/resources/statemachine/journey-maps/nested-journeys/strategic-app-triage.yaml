@@ -112,6 +112,8 @@ nestedJourneyStates:
         targetState: ERROR
       fail-with-no-ci:
         exitEventToEmit: failWithNoCiFromApp
+      fail-with-no-ci-higher-score:
+        exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
       vcs-not-correlated:
@@ -144,6 +146,8 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
+        exitEventToEmit: failWithNoCiFromApp
+      fail-with-no-ci-higher-score:
         exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
@@ -198,6 +202,8 @@ nestedJourneyStates:
         targetState: ERROR
       fail-with-no-ci:
         exitEventToEmit: failWithNoCiFromApp
+      fail-with-no-ci-higher-score:
+        exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp
       vcs-not-correlated:
@@ -230,6 +236,8 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
+        exitEventToEmit: failWithNoCiFromApp
+      fail-with-no-ci-higher-score:
         exitEventToEmit: failWithNoCiFromApp
       fail-with-ci:
         exitEventToEmit: failWithCiFromApp

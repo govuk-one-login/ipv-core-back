@@ -9,38 +9,19 @@ states:
   START_HIGHER_STRENGTH:
     events:
       next:
-        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
         checkJourneyContext:
           rfc:
+            targetJourney: FAILED
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
 
+  RETRY_HIGHER_STRENGTH:
+    events:
+      next:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+
   # Journey States
-  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK:
-    response:
-      type: page
-      pageId: need-more-information-confirm-change-details
-      pageContext:
-        journeyType: repeatFraudCheck
-    events:
-      passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
-      returnToRp:
-        targetJourney: FAILED
-        targetState: FAILED_SKIP_MESSAGE
-
-  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
-    response:
-      type: page
-      pageId: need-more-information-confirm-change-details
-      pageContext:
-        journeyType: updateDetails
-    events:
-      passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
-      returnToRp:
-        targetJourney: FAILED
-        targetState: FAILED_SKIP_MESSAGE
-
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
       type: page
@@ -71,10 +52,13 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -86,18 +70,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-
-  # Remove all VCs from previous attempts
-  RESET_SESSION_BEFORE_NEW_IDENTITY:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL_INC_DCMAW_ASYNC_PENDING
-    events:
-      next:
-        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
-        targetEntryEvent: identify-device
+      fraud-fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   PROCESS_UPDATE_IDENTITY:
     response:
@@ -117,13 +92,13 @@ states:
         targetState: FAILED_ACCOUNT_INTERVENTION
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       profile-unmet:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
@@ -194,10 +169,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -233,10 +208,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -275,19 +250,22 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       dl-auth-source-check:
         targetState: STRATEGIC_APP_HANDLE_RESULT
         targetEntryEvent: dl-auth-source-check
@@ -297,10 +275,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   DAD_ANDROID_START_SESSION:
     response:
@@ -335,19 +313,22 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       dl-auth-source-check:
         targetState: STRATEGIC_APP_HANDLE_RESULT
         targetEntryEvent: dl-auth-source-check
@@ -357,10 +338,10 @@ states:
         checkJourneyContext:
           rfc:
             targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   # Handle app result
   STRATEGIC_APP_HANDLE_RESULT:
@@ -373,7 +354,7 @@ states:
             targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       anotherWay:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       incompleteDlAuthCheckInvalidDlv2:
         targetJourney: UPDATE_NAME
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
@@ -383,41 +364,55 @@ states:
             targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       failWithCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       failWithNoCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   # Parent states (needed for STRATEGIC_APP_HANDLE_RESULT)
   CRI_STATE:
     events:
       not-found:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       invalid-request:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
+
+  RESET_SESSION_BEFORE_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL_INC_DCMAW_ASYNC_PENDING
+    events:
+      next:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device

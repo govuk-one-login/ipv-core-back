@@ -21,6 +21,9 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      fail-with-no-ci-higher-score:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -66,6 +69,8 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-higher-score:
+        targetState: PROCESS_UPDATE_IDENTITY
 
   PROCESS_UPDATE_IDENTITY:
     response:

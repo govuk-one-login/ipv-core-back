@@ -100,8 +100,10 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get an 'update-details-failed' page response
-            When I submit a 'continue' event
+            Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+                | Context              | Value         |
+                | journeyType          | updateDetails |
+            When I submit a 'continueToService' event
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I am issued a 'P2' identity

@@ -42,5 +42,7 @@ nestedJourneyStates:
         exitEventToEmit: next
       fail-with-no-ci:
         exitEventToEmit: fraud-fail-with-no-ci
+      fail-with-no-ci-higher-score:
+        exitEventToEmit: fraud-fail-with-no-ci-higher-score
       fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
