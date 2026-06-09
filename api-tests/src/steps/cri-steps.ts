@@ -561,7 +561,6 @@ When(
     ciType:
       | "NON-BREACHING"
       | "BREACHING"
-      | "BREACHING-P1-ONLY"
       | "NEEDS-ENHANCED-VERIFICATION"
       | "NEEDS-ALTERNATE-DOC"
       | "ALWAYS-REQUIRED"
