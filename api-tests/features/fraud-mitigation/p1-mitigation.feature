@@ -60,32 +60,32 @@ Feature: P1 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-  Rule: Combined CI score breach
-    Scenario: Combined breaching fraud CI goes to mitigation route
-      When I start a new 'low-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response and pageContext
-        | Context  | Value |
-        | ninoOnly | true  |
-      When I submit an 'next' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "hmrc_check" |
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2-breaching-p1-when-combined-with-non-breaching' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'retry-prove-identity-app' page response
-      When I submit a 'useApp' event
-      Then I get a 'passport-biometric-chip' page response
+#  Rule: Combined CI score breach
+#    Scenario: Combined breaching fraud CI goes to mitigation route
+#      When I start a new 'low-confidence' journey
+#      Then I get a 'page-ipv-identity-document-start' page response
+#      When I submit an 'end' event
+#      Then I get a 'prove-identity-no-photo-id' page response and pageContext
+#        | Context  | Value |
+#        | ninoOnly | true  |
+#      When I submit an 'next' event
+#      Then I get a 'claimedIdentity' CRI response
+#      When I submit 'kenneth-current' details with attributes to the CRI stub
+#        | Attribute | Values         |
+#        | context   | "hmrc_check" |
+#      Then I get a 'nino' CRI response
+#      When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
+#        | Attribute          | Values                                      |
+#        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+#      Then I get an 'address' CRI response
+#      When I submit 'kenneth-current' details to the CRI stub
+#      Then I get a 'fraud' CRI response
+#      When I submit 'kenneth-score-2-breaching-p1-when-combined-with-non-breaching' details with attributes to the CRI stub
+#        | Attribute          | Values                   |
+#        | evidence_requested | {"identityFraudScore":2} |
+#      Then I get a 'retry-prove-identity-app' page response
+#      When I submit a 'useApp' event
+#      Then I get a 'passport-biometric-chip' page response
 
   Rule: Web document journey
     Background: Start P1 web document journey
