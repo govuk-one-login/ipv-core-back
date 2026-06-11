@@ -148,7 +148,9 @@ export const processCriCallback = async (
 
   const result = await response.json();
   if (!response.ok && !result.page) {
-    console.error(`Error response received from core back process CRI callback end point`);
+    console.error(
+      `Error response received from core back process CRI callback end point`,
+    );
     console.error(`Request sent to ${url}`);
     console.error(`Response received: ${JSON.stringify(response)}`);
     throw new Error(
