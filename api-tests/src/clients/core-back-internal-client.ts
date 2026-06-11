@@ -135,7 +135,8 @@ export const processCriCallback = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
 ): Promise<JourneyResponse | PageResponse> => {
-  const response = await fetch(`${config.core.internalApiUrl}/cri/callback`, {
+  const url = `${config.core.internalApiUrl}/cri/callback`;
+  const response = await fetch(url, {
     method: POST,
     headers: {
       ...internalApiHeaders,
@@ -147,6 +148,11 @@ export const processCriCallback = async (
 
   const result = await response.json();
   if (!response.ok && !result.page) {
+    console.error(
+      `Error response received from core back process CRI callback end point`,
+    );
+    console.error(`Request sent to ${url}`);
+    console.error(`Response received: ${JSON.stringify(response)}`);
     throw new Error(
       `processCriCallback request failed: ${response.statusText}`,
     );
