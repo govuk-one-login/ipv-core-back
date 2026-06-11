@@ -1,0 +1,12 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "strengthScore": 2,
+  "validityScore": 2,
+  "checkDetails": [
+    {
+      "checkMethod": "data"
+    }
+  ],
+  "ci": ["NON-BREACHING"]
+}

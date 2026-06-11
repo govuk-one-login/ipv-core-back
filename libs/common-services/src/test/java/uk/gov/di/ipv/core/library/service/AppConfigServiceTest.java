@@ -327,8 +327,8 @@ class AppConfigServiceTest {
         var map = configService.getContraIndicatorConfigMap();
 
         assertTrue(map.containsKey("NEEDS-ALTERNATE-DOC"));
-        assertEquals(20, map.get("NEEDS-ALTERNATE-DOC").getDetectedScore());
-        assertEquals(-20, map.get("NEEDS-ALTERNATE-DOC").getCheckedScore());
+        assertEquals(31, map.get("NEEDS-ALTERNATE-DOC").getDetectedScore());
+        assertEquals(-31, map.get("NEEDS-ALTERNATE-DOC").getCheckedScore());
         assertEquals("needs-alternate-doc", map.get("NEEDS-ALTERNATE-DOC").getReturnCode());
 
         assertTrue(map.containsKey("ALWAYS-REQUIRED"));

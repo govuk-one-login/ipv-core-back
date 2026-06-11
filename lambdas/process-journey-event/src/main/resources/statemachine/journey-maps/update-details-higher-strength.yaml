@@ -83,6 +83,9 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
       fraud-fail-with-no-ci:
         targetState: PROCESS_UPDATE_IDENTITY
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # Remove all VCs from previous attempts
   RESET_SESSION_BEFORE_NEW_IDENTITY:
