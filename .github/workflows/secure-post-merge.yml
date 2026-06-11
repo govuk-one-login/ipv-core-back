@@ -117,7 +117,6 @@ jobs:
           files: |
             **
           files_ignore: |
-            api-tests/**
             **/*.md
             lambdas/*/src/test/**
             libs/*/src/test/**
