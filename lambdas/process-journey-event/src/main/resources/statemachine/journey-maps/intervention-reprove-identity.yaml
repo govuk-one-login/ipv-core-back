@@ -430,3 +430,14 @@ states:
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
+
+  # TEMPORARY: backward-compatible state name during canary deployment. Remove after full rollout.
+  RESET_SESSION_BEFORE_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC_ALL
+    events:
+      next:
+        targetState: REPROVE_IDENTITY_START

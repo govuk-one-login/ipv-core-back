@@ -208,3 +208,58 @@ states:
     response:
       type: process
       lambda: build-client-oauth-response
+
+  # TEMPORARY: backward-compatible state names during canary deployment. Remove after full rollout.
+  RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  RESET_SESSION_BEFORE_F2F_HANDOFF:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: F2F_HANDOFF_PAGE
+      error:
+        targetState: F2F_HANDOFF_PAGE

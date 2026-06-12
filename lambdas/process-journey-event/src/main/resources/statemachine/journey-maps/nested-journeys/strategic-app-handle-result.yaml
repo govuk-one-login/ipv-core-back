@@ -67,3 +67,14 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
+
+  # TEMPORARY: backward-compatible state name during canary deployment. Remove after full rollout.
+  RESET_SESSION_INVALID_DL:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: DCMAW_ASYNC
+    events:
+      next:
+        exitEventToEmit: failedDlAuthCheckInvalidDl
