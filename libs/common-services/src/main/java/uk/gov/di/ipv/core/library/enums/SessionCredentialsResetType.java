@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.enums;
 
 public enum SessionCredentialsResetType {
     ALL,
-    ALL_INC_DCMAW_ASYNC_PENDING, // PYIC-8711: Investigate if we can use PENDING_DCMAW_ASYNC_ALL
     DCMAW,
     DCMAW_ASYNC,
     NAME_ONLY_CHANGE,

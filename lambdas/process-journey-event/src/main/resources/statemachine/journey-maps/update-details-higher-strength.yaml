@@ -50,7 +50,7 @@ states:
     events:
       next:
         targetState: FRAUD_CHECK_NAMES_ONLY
-    
+
   POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
       type: page
@@ -93,7 +93,7 @@ states:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL_INC_DCMAW_ASYNC_PENDING
+        resetType: PENDING_DCMAW_ASYNC_ALL
     events:
       next:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE
