@@ -223,10 +223,6 @@ states:
         checkIfDisabled:
           bav:
             targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   F2F_PYI_POST_OFFICE:
     response:
@@ -240,10 +236,6 @@ states:
         checkIfDisabled:
           bav:
             targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   BANK_ACCOUNT_START_PAGE:
     response:
@@ -256,10 +248,6 @@ states:
           - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -275,10 +263,6 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
@@ -654,10 +638,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   MITIGATION_01_PYI_POST_OFFICE:
     response:
@@ -669,10 +649,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   # Mitigation journey (02)
   STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
@@ -750,10 +726,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   # Common Mitigation states - invalid-dl/invalid-passport
 
