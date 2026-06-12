@@ -151,19 +151,24 @@ public class ProcessCriCallbackHandler
         CriCallbackRequest callbackRequest = null;
 
         try {
+            LOGGER.info("Parsing request");
             callbackRequest = parseCallbackRequest(input);
 
+            LOGGER.info("Calling getJourneyResponse");
             var journeyResponse = getJourneyResponse(callbackRequest);
 
+            LOGGER.info("Returning journey response");
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, journeyResponse);
         } catch (ParseCriCallbackRequestException e) {
+            LOGGER.error("Caught ParseCriCallbackRequestException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST,
                     Level.ERROR);
         } catch (InvalidCriCallbackRequestException e) {
+            LOGGER.error("Caught InvalidCriCallbackRequestException", e);
             switch (e.getErrorResponse()) {
                 case NO_IPV_FOR_CRI_OAUTH_SESSION -> {
                     LOGGER.warn(LogHelper.buildErrorMessage(e.getErrorResponse()));
@@ -202,36 +207,43 @@ public class ProcessCriCallbackHandler
                 }
             }
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            LOGGER.error(
+                    "Caught HttpResponseExceptionWithErrorBody | VerifiableCredentialException", e);
             if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
                 return buildErrorResponse(
                         e, e.getResponseCode(), ErrorResponse.FAILED_NAME_CORRELATION, Level.INFO);
             }
             return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse(), Level.ERROR);
         } catch (JsonProcessingException e) {
+            LOGGER.error("Caught JsonProcessingException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
                     Level.ERROR);
         } catch (UnrecognisedVotException | CredentialParseException e) {
+            LOGGER.error("Caught UnrecognisedVotException | CredentialParseException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS,
                     Level.ERROR);
         } catch (CiPutException | CiPostMitigationsException e) {
+            LOGGER.error("Caught CiPutException | CiPostMitigationsException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SAVE_CREDENTIAL,
                     Level.ERROR);
         } catch (CiRetrievalException e) {
+            LOGGER.error("Caught CiRetrievalException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_STORED_CIS,
                     Level.ERROR);
         } catch (CriApiException e) {
+            LOGGER.error("Caught CriApiException", e);
             if (DCMAW.equals(callbackRequest.getCredentialIssuer())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                 LOGGER.error(
@@ -242,18 +254,21 @@ public class ProcessCriCallbackHandler
             }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse(), Level.ERROR);
         } catch (CiExtractionException e) {
+            LOGGER.error("Caught CiExtractionException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC,
                     Level.ERROR);
         } catch (IpvSessionNotFoundException e) {
+            LOGGER.error("Caught IpvSessionNotFoundException", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.IPV_SESSION_NOT_FOUND,
                     Level.ERROR);
         } catch (MissingSecurityCheckCredential e) {
+            LOGGER.error("Caught MissingSecurityCheckCredential", e);
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
