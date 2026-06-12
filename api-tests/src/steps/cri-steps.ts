@@ -68,11 +68,13 @@ const submitAndProcessCriAction = async (
     redirectUrl,
     body: criStubRequest,
   };
+  console.info("QQ Calling stub headkess API");
   const criStubResponse = await criStubClient.callHeadlessApi(
     redirectUrl,
     criStubRequest,
   );
 
+  console.info("QQ Calling core-back processCriCallback");
   const response = await internalClient.processCriCallback(
     generateProcessCriCallbackBody(criStubResponse),
     world.ipvSessionId,
