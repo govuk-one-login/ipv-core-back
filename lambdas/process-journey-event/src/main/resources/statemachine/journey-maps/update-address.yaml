@@ -48,7 +48,7 @@ states:
   RESET_IDENTITY_ADDRESS_CHANGE:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ADDRESS_ONLY_CHANGE
     events:

@@ -21,14 +21,14 @@ states:
       pageId: pyi-f2f-technical
     events:
       next:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
       end:
-        targetState: RESET_SESSION_BEFORE_RETURN_TO_RP
+        targetState: RESET_IDENTITY_BEFORE_RETURN_TO_RP
 
-  RESET_SESSION_BEFORE_NEW_IDENTITY:
+  RESET_IDENTITY_BEFORE_NEW_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: PENDING_F2F_ALL
     events:
@@ -36,10 +36,10 @@ states:
         targetJourney: INITIAL_JOURNEY_SELECTION
         targetState: START
 
-  RESET_SESSION_BEFORE_RETURN_TO_RP:
+  RESET_IDENTITY_BEFORE_RETURN_TO_RP:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: PENDING_F2F_ALL
     events:

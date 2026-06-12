@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.resetsessionidentity;
+package uk.gov.di.ipv.core.resetidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,17 +53,17 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ASYNC_ALL;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.ALL;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC_ALL;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_F2F_ALL;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)
-class ResetSessionIdentityHandlerTest {
+class ResetIdentityHandlerTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String TEST_SESSION_ID = "test-session-id";
@@ -88,7 +88,7 @@ class ResetSessionIdentityHandlerTest {
     @Mock private CriResponseService mockCriResponseService;
     @Mock private EvcsService mockEvcsService;
     @Mock private VerifiableCredential mockVerifiableCredential;
-    @InjectMocks private ResetSessionIdentityHandler resetSessionIdentityHandler;
+    @InjectMocks private ResetIdentityHandler resetIdentityHandler;
 
     @BeforeEach
     void setUpEach() {
@@ -128,7 +128,7 @@ class ResetSessionIdentityHandlerTest {
                         .build();
 
         // Act
-        resetSessionIdentityHandler.handleRequest(event, mockContext);
+        resetIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         verify(mockSessionCredentialsService)
@@ -152,7 +152,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -181,7 +181,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -214,7 +214,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -251,7 +251,7 @@ class ResetSessionIdentityHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         verifyVotSetToP0();
@@ -284,7 +284,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -316,7 +316,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -351,7 +351,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyResponse.class);
 
         // Assert
@@ -384,7 +384,7 @@ class ResetSessionIdentityHandlerTest {
         // Act
         var journeyResponse =
                 OBJECT_MAPPER.convertValue(
-                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        resetIdentityHandler.handleRequest(event, mockContext),
                         JourneyErrorResponse.class);
 
         // Assert
@@ -406,7 +406,7 @@ class ResetSessionIdentityHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
@@ -432,7 +432,7 @@ class ResetSessionIdentityHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         verifyVotSetToP0();
@@ -457,7 +457,7 @@ class ResetSessionIdentityHandlerTest {
                         .build();
 
         // Act
-        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
+        var journeyResponse = resetIdentityHandler.handleRequest(event, mockContext);
 
         // Assert
         verifyVotSetToP0();
@@ -481,13 +481,13 @@ class ResetSessionIdentityHandlerTest {
                         .lambdaInput(Map.of("resetType", "SAUSAGES"))
                         .build();
 
-        var logCollector = LogCollector.getLogCollectorFor(ResetSessionIdentityHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ResetIdentityHandler.class);
 
         // Act
         var thrown =
                 assertThrows(
                         Exception.class,
-                        () -> resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        () -> resetIdentityHandler.handleRequest(event, mockContext),
                         "Expected handleRequest() to throw, but it didn't");
 
         // Assert

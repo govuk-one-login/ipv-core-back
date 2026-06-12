@@ -23,7 +23,7 @@ states:
         journeyType: repeatFraudCheck
     events:
       passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
       returnToRp:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
@@ -36,7 +36,7 @@ states:
         journeyType: updateDetails
     events:
       passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
       returnToRp:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
@@ -88,10 +88,10 @@ states:
         targetState: FAILED
 
   # Remove all VCs from previous attempts
-  RESET_SESSION_BEFORE_NEW_IDENTITY:
+  RESET_IDENTITY_BEFORE_NEW_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: PENDING_DCMAW_ASYNC_ALL
     events:

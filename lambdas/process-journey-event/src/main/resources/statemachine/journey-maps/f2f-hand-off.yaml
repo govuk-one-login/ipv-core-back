@@ -82,7 +82,7 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
+        targetState: RESET_IDENTITY_BEFORE_F2F_HANDOFF
       access-denied:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_NO_TICF
@@ -117,9 +117,9 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
-        targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
+        targetState: RESET_IDENTITY_BEFORE_IDENTITY_DOCUMENT_START
       webRoute:
-        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+        targetState: RESET_IDENTITY_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -145,10 +145,10 @@ states:
       returnToRp:
         targetState: RETURN_TO_RP
 
-  RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START:
+  RESET_IDENTITY_BEFORE_IDENTITY_DOCUMENT_START:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -166,10 +166,10 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
+  RESET_IDENTITY_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -187,10 +187,10 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  RESET_SESSION_BEFORE_F2F_HANDOFF:
+  RESET_IDENTITY_BEFORE_F2F_HANDOFF:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:

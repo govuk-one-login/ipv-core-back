@@ -49,8 +49,7 @@ public class JourneyUris {
             "/journey/reprove-identity-gpg45-low";
     public static final String JOURNEY_INTERVENTION_REPROVE_IDENTITY_PATH =
             "/journey/intervention-reprove-identity";
-    public static final String JOURNEY_RESET_SESSION_IDENTITY_PATH =
-            "/journey/reset-session-identity";
+    public static final String JOURNEY_RESET_IDENTITY_PATH = "/journey/reset-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_REUSE_WITH_STORE_PATH = "/journey/reuse-with-store";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =

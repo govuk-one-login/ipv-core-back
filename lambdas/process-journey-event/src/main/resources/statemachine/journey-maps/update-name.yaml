@@ -78,7 +78,7 @@ states:
   RESET_IDENTITY_NAMES_ONLY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: NAME_ONLY_CHANGE
     events:
@@ -215,7 +215,7 @@ states:
   RESET_IDENTITY_NAMES_WITH_ADDRESS:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:

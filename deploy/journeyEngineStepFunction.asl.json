@@ -35,8 +35,8 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/reset-session-identity",
-          "Next": "ResetSessionIdentityLambda"
+          "StringMatches": "/journey/reset-identity",
+          "Next": "ResetIdentityLambda"
         },
         {
           "Variable": "$.journey",
@@ -91,9 +91,9 @@
         "MaxDelaySeconds": 4
       }]
     },
-    "ResetSessionIdentityLambda": {
+    "ResetIdentityLambda": {
       "Type": "Task",
-      "Resource": "${ResetSessionIdentityFunctionArn}",
+      "Resource": "${ResetIdentityFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",

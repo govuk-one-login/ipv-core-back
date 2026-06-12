@@ -14,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
+import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -43,8 +43,8 @@ import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ADDRESS_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.ADDRESS_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianKbvM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoIdentityCheckSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebDrivingPermitDvaValid;
@@ -303,8 +303,8 @@ class SessionCredentialsServiceTest {
 
         @ParameterizedTest
         @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "PENDING_DCMAW_ASYNC_ALL", "REINSTATE"})
-        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(
-                SessionCredentialsResetType resetType) throws Exception {
+        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(IdentityResetType resetType)
+                throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
             var fraudVc =
@@ -357,7 +357,7 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, SessionCredentialsResetType.DCMAW);
+                    SESSION_ID, IdentityResetType.DCMAW);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
@@ -387,7 +387,7 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, SessionCredentialsResetType.DCMAW_ASYNC);
+                    SESSION_ID, IdentityResetType.DCMAW_ASYNC);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));

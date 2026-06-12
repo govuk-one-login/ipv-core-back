@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.core.library.enums;
 
-public enum SessionCredentialsResetType {
+public enum IdentityResetType {
     ALL,
     DCMAW,
     DCMAW_ASYNC,

@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
+import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -100,8 +100,7 @@ public class SessionCredentialsService {
     }
 
     public void deleteSessionCredentialsForResetType(
-            String ipvSessionId, SessionCredentialsResetType resetType)
-            throws VerifiableCredentialException {
+            String ipvSessionId, IdentityResetType resetType) throws VerifiableCredentialException {
         try {
             var sessionCredentialItems = dataStore.getItems(ipvSessionId);
             var vcsToDelete =

@@ -95,10 +95,10 @@ states:
         targetState: ERROR
 
   # Journey states
-  RESET_SESSION_BEFORE_WEBAPP_RETRY:
+  RESET_IDENTITY_BEFORE_WEBAPP_RETRY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -109,10 +109,10 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  RESET_SESSION_IDENTITY:
+  RESET_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -331,7 +331,7 @@ states:
       pageId: pyi-escape
     events:
       next:
-        targetState: RESET_SESSION_IDENTITY
+        targetState: RESET_IDENTITY
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
@@ -392,7 +392,7 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       try-again-app:
-        targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
+        targetState: RESET_IDENTITY_BEFORE_WEBAPP_RETRY
       try-again-post-office:
         targetJourney: F2F_HAND_OFF
         targetState: START_MEDIUM_CONFIDENCE
@@ -532,7 +532,7 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       try-again-app:
-        targetState: RESET_SESSION_BEFORE_WEBAPP_RETRY
+        targetState: RESET_IDENTITY_BEFORE_WEBAPP_RETRY
       try-again-post-office:
         targetJourney: F2F_HAND_OFF
         targetState: START_MEDIUM_CONFIDENCE
