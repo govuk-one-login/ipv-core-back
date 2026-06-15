@@ -72,7 +72,7 @@ nestedJourneyStates:
       end:
         exitEventToEmit: incomplete-invalid-dl
 
-  # TEMPORARY: backward-compatible state name during canary deployment. Remove after full rollout.
+  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
   RESET_SESSION_INVALID_DL:
     response:
       type: process

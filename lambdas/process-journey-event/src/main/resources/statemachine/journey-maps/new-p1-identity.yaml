@@ -799,7 +799,7 @@ states:
       type: process
       lambda: build-client-oauth-response
 
-  # TEMPORARY: backward-compatible state names during canary deployment. Remove after full rollout.
+  # TEMPORARY: backward-compatible state names during deployment. Remove after full rollout.
   RESET_SESSION_IDENTITY:
     response:
       type: process

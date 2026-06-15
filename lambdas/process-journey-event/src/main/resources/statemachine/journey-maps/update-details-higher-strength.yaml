@@ -87,7 +87,6 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
-  # Remove all VCs from previous attempts
   RESET_IDENTITY_BEFORE_NEW_IDENTITY:
     response:
       type: process
@@ -422,7 +421,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  # TEMPORARY: backward-compatible state name during canary deployment. Remove after full rollout.
+  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
   RESET_SESSION_BEFORE_NEW_IDENTITY:
     response:
       type: process

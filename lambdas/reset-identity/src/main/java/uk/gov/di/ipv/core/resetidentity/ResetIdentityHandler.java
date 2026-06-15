@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -123,14 +122,46 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            invalidateStoredIdentityInEvcs(clientOAuthSessionItem);
-            resetVotToP0(ipvSessionItem);
+            if (!clientOAuthSessionItem.isReverification()) {
+                evcsService.invalidateStoredIdentityRecord(userId);
+            }
+
+            ipvSessionItem.setVot(P0);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var resetType = RequestHelper.getIdentityResetType(input);
-            deleteSessionCredentials(ipvSessionId, resetType);
-            abandonPendingEvcsIdentity(clientOAuthSessionItem, resetType);
-            reinstateCurrentIdentityIntoSession(clientOAuthSessionItem, ipvSessionId, resetType);
-            sendF2fRestartAuditEvent(resetType, auditEventUser, input);
+
+            sessionCredentialsService.deleteSessionCredentialsForResetType(ipvSessionId, resetType);
+            LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
+
+            // Reinstate existing CURRENT identity from EVCS into session
+            if (resetType == REINSTATE) {
+                var existingIdentityVcs =
+                        evcsService.getVerifiableCredentials(
+                                userId, clientOAuthSessionItem.getEvcsAccessToken(), CURRENT);
+                sessionCredentialsService.persistCredentials(
+                        existingIdentityVcs, ipvSessionId, false);
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Existing identity persisted in session credentials store"));
+            }
+
+            if (resetType.equals(PENDING_F2F_ALL)) {
+                resetPendingIdentity(clientOAuthSessionItem, F2F);
+                // This audit event is relied on and consumed by the F2F team. Do not remove or
+                // change it without talking to them first.
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithDeviceInformation(
+                                AuditEventTypes.IPV_F2F_RESTART,
+                                configService.getComponentId(),
+                                auditEventUser,
+                                new AuditRestrictedDeviceInformation(
+                                        input.getDeviceInformation())));
+            }
+
+            if (resetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
+                resetPendingIdentity(clientOAuthSessionItem, DCMAW_ASYNC);
+            }
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody
@@ -167,38 +198,10 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         }
     }
 
-    private void invalidateStoredIdentityInEvcs(ClientOAuthSessionItem clientOAuthSessionItem)
-            throws EvcsServiceException {
-        if (!clientOAuthSessionItem.isReverification()) {
-            evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
-        }
-    }
-
-    private void resetVotToP0(IpvSessionItem ipvSessionItem) {
-        ipvSessionItem.setVot(P0);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-    }
-
-    private void deleteSessionCredentials(String ipvSessionId, IdentityResetType resetType)
-            throws VerifiableCredentialException {
-        sessionCredentialsService.deleteSessionCredentialsForResetType(ipvSessionId, resetType);
-        LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
-    }
-
-    private void abandonPendingEvcsIdentity(
-            ClientOAuthSessionItem clientOAuthSessionItem, IdentityResetType resetType)
-            throws EvcsServiceException {
-        if (resetType.equals(PENDING_F2F_ALL)) {
-            abandonPendingVcInEvcs(clientOAuthSessionItem, F2F);
-        } else if (resetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
-            abandonPendingVcInEvcs(clientOAuthSessionItem, DCMAW_ASYNC);
-        }
-    }
-
-    private void abandonPendingVcInEvcs(ClientOAuthSessionItem clientOAuthSessionItem, Cri cri)
+    private void resetPendingIdentity(ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri)
             throws EvcsServiceException {
         var userId = clientOAuthSessionItem.getUserId();
-        criResponseService.deleteCriResponseItem(userId, cri);
+        criResponseService.deleteCriResponseItem(userId, asyncCri);
         if (configService.enabled(EVCS_API_UPDATES)) {
             evcsService.abandonPendingIdentityV2(
                     userId,
@@ -209,38 +212,6 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
         }
         LOGGER.info(
                 LogHelper.buildLogMessage(
-                        String.format("Pending %s identity abandoned in EVCS.", cri.getId())));
-    }
-
-    private void reinstateCurrentIdentityIntoSession(
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            String ipvSessionId,
-            IdentityResetType resetType)
-            throws CredentialParseException, VerifiableCredentialException, EvcsServiceException {
-        if (resetType == REINSTATE) {
-            var existingIdentityVcs =
-                    evcsService.getVerifiableCredentials(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getEvcsAccessToken(),
-                            CURRENT);
-            sessionCredentialsService.persistCredentials(existingIdentityVcs, ipvSessionId, false);
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Existing identity persisted in session credentials store"));
-        }
-    }
-
-    private void sendF2fRestartAuditEvent(
-            IdentityResetType resetType, AuditEventUser auditEventUser, ProcessRequest input) {
-        if (resetType.equals(PENDING_F2F_ALL)) {
-            // This audit event is relied on and consumed by the F2F team. Do not remove or
-            // change it without talking to them first.
-            auditService.sendAuditEvent(
-                    AuditEvent.createWithDeviceInformation(
-                            AuditEventTypes.IPV_F2F_RESTART,
-                            configService.getComponentId(),
-                            auditEventUser,
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
-        }
+                        String.format("Reset done for %s pending identity.", asyncCri.getId())));
     }
 }
