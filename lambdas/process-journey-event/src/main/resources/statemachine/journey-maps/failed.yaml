@@ -77,11 +77,18 @@ states:
   FAILED_UPDATE_DETAILS_HIGHER_STRENGTH:
     events:
       next:
-        targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
+        checkJourneyContext:
+          rfc:
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
   
   FAILED_HIGHER_STRENGTH_DEAD_END:
     events:
@@ -97,27 +104,6 @@ states:
         targetState: NO_MATCH_PAGE
 
   # Journey states
-  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS_HIGHER_STRENGTH:
-    response:
-      type: process
-      lambda: process-candidate-identity
-      lambdaInput:
-        identityType: INCOMPLETE
-    events:
-      next:
-        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
-      account-intervention:
-        targetJourney: FAILED
-        targetState: FAILED_ACCOUNT_INTERVENTION
-      fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH:
     response:
       type: process

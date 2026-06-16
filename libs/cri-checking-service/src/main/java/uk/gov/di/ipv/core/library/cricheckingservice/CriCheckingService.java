@@ -303,7 +303,7 @@ public class CriCheckingService {
                 }
 
                 if (Cri.EXPERIAN_FRAUD.equals(vc.getCri())
-                        && Boolean.TRUE.equals(VcHelper.checkIfDocUKIssuedForCredential(vc))) {
+                        && !VcHelper.hasNonFatalFraudCheckFailure(vc)) {
                     return JOURNEY_FRAUD_FAIL_WITH_NO_CI_HIGHER_SCORE;
                 }
 
