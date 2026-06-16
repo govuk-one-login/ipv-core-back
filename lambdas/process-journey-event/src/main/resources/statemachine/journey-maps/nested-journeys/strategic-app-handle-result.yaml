@@ -40,15 +40,15 @@ nestedJourneyStates:
       next:
         exitEventToEmit: next
       access-denied:
-        targetState: REMOVE_DCMAW_FROM_SESSION
+        targetState: RESET_IDENTITY_INCOMPLETE_DL
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
         checkMitigation:
           alternate-doc-invalid-dl:
-            targetState: RESET_IDENTITY_INVALID_DL
+            targetState: REMOVE_DCMAW_ASYNC_INVALID_DL
 
-  REMOVE_DCMAW_FROM_SESSION:
+  RESET_IDENTITY_INCOMPLETE_DL:
     response:
       type: process
       lambda: reset-identity
@@ -58,7 +58,7 @@ nestedJourneyStates:
       next:
         exitEventToEmit: incompleteDlAuthCheckInvalidDlv2
 
-  RESET_IDENTITY_INVALID_DL:
+  REMOVE_DCMAW_ASYNC_INVALID_DL:
     response:
       type: process
       lambda: reset-identity
@@ -78,3 +78,14 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
+
+  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
+  REMOVE_DCMAW_FROM_SESSION:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC_ALL
+    events:
+      next:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDlv2

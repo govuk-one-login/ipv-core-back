@@ -40,7 +40,7 @@ nestedJourneyStates:
         targetState: FAILED
         checkMitigation:
           alternate-doc-invalid-dl:
-            targetState: RESET_IDENTITY_INVALID_DL
+            targetState: REMOVE_DCMAW_INVALID_DL
 
   REMOVE_DCMAW_FROM_SESSION:
     response:
@@ -52,7 +52,7 @@ nestedJourneyStates:
       next:
         targetState: DL_DETAILS_INCORRECT_PAGE
 
-  RESET_IDENTITY_INVALID_DL:
+  REMOVE_DCMAW_INVALID_DL:
     response:
       type: process
       lambda: reset-identity
