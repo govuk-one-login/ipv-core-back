@@ -226,7 +226,6 @@ Feature: Identity reuse update details failures
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
 
-        @amrit
         Scenario: Zero score in fraud CRI - receives old identity (P2)
             When I submit an 'update-name' event
             Then I get an 'identify-device' page response

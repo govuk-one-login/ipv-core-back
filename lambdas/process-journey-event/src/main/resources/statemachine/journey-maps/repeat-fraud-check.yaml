@@ -22,7 +22,7 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      fail-with-no-ci-higher-score:
+      fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       error:
@@ -211,7 +211,7 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci:
         targetState: PROCESS_UPDATE_IDENTITY
-      fail-with-no-ci-higher-score:
+      fail-with-no-ci-fatal:
         targetState: PROCESS_UPDATE_IDENTITY
 
   PROCESS_UPDATE_IDENTITY:

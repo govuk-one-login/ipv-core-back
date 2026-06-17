@@ -24,7 +24,7 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
-      fail-with-no-ci-higher-score:
+      fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
       error:
