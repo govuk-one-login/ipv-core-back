@@ -115,8 +115,8 @@ states:
         journeyContextToUnset: appOnly
         checkFeatureFlag:
           coi6mfcDeadEndRoutingEnabled:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
       returnToRp:
         targetState: RETURN_TO_RP
         journeyContextToUnset: appOnly
@@ -159,8 +159,8 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
         checkFeatureFlag:
           coi6mfcDeadEndRoutingEnabled:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
@@ -258,8 +258,8 @@ states:
         journeyContextToUnset: appOnly
         checkFeatureFlag:
           coi6mfcDeadEndRoutingEnabled:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
             journeyContextToSet: nameAndAddress
       returnToRp:
         targetState: RETURN_TO_RP
@@ -329,8 +329,8 @@ states:
         targetState: PROCESS_UPDATE_IDENTITY
         checkFeatureFlag:
           coi6mfcDeadEndRoutingEnabled:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
             journeyContextToSet: nameAndAddress
       fraud-fail-with-ci:
         targetJourney: FAILED
@@ -364,8 +364,8 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           coi6mfcDeadEndRoutingEnabled:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF

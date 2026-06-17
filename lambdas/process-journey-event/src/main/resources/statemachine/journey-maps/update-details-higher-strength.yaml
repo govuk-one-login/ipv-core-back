@@ -9,19 +9,71 @@ states:
   START_HIGHER_STRENGTH:
     events:
       next:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
         checkJourneyContext:
           rfc:
-            targetJourney: FAILED
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
 
-  RETRY_HIGHER_STRENGTH:
+  # Journey States
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: updateDetails
+    events:
+      passport:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+      continueToService:
+        targetState: REINSTATE_EXISTING_IDENTITY
+
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details
+      pageContext:
+        journeyType: repeatFraudCheck
+    events:
+      passport:
+        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  REINSTATE_EXISTING_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: REINSTATE
     events:
       next:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: PROCESS_VALID_IDENTITY
 
-  # Journey States
+  PROCESS_VALID_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: EXISTING
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      profile-unmet:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      vcs-not-correlated:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+  
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
       type: page
