@@ -308,9 +308,6 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-      fail-with-no-ci-fatal:
-        targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -369,9 +366,6 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-      fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
