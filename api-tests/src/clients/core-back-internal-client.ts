@@ -137,9 +137,6 @@ export const processCriCallback = async (
   featureSet: string | undefined,
 ): Promise<JourneyResponse | PageResponse> => {
   const url = `${config.core.internalApiUrl}/cri/callback`;
-  console.info(
-    `QQ About to call core back. URL: "${url}" requestBody: "${JSON.stringify(requestBody)}"`,
-  );
   const response = await fetch(url, {
     method: POST,
     headers: {
@@ -151,16 +148,14 @@ export const processCriCallback = async (
   });
 
   const result = await response.json();
-  console.info(
-    `QQ response received: ${inspect(response, { depth: null, showHidden: true })}`,
-  );
-  console.info(`QQ response body: ${JSON.stringify(result)}`);
   if (!response.ok && !result.page) {
     console.error(
       `Error response received from core back process CRI callback end point`,
     );
     console.error(`Request sent to ${url}`);
-    console.error(`Response received: ${JSON.stringify(response)}`);
+    console.error(
+      `Response received: ${inspect(response, { depth: null, showHidden: true })}`,
+    );
     throw new Error(
       `processCriCallback request failed: ${response.statusText}`,
     );

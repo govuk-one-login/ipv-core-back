@@ -1,6 +1,6 @@
 [versions]
-awsSdk = "2.45.0"
-jackson = "2.21.2"
+awsSdk = "2.46.11"
+jackson = "2.22.0"
 log4j = "2.26.0"
 mockito = "5.21.0"
 pact = "4.7.1"
@@ -55,4 +55,4 @@ awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 pact = { id = "au.com.dius.pact", version.ref = "pact" }
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:9.5.0"
 sonar = "org.sonarqube:7.3.0.8198"
-spotless = "com.diffplug.spotless:8.6.0"
+spotless = "com.diffplug.spotless:8.7.0"

@@ -362,7 +362,7 @@ core:
     sisVerificationEnabled: true
     testFeatureFlag: false
     evcsApiUpdatesEnabled: false
-    coi6mfcDeadEndRoutingEnabled: false
+    coi6mfcDeadEndRoutingEnabled: true
   features:
     testFeature:
       self:

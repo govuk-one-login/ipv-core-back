@@ -208,7 +208,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value            |
         | journeyType          | repeatFraudCheck |
-       When I submit an 'passport' event  
+      When I submit an 'passport' event  
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -303,7 +303,7 @@ Feature: Update details higher strength
         | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
-        | journeyType | coi   | 
+        | journeyType | coi   |
 
     Scenario: COI recovery fails at final Fraud check
       When I submit a 'given-names-only' event

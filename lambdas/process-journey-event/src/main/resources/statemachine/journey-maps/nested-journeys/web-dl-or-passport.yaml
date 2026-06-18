@@ -75,6 +75,9 @@ nestedJourneyStates:
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
   PROVE_ANOTHER_WAY_AFTER_PASSPORT:
@@ -152,6 +155,9 @@ nestedJourneyStates:
         targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      fraud-fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
   PROVE_ANOTHER_WAY_AFTER_DL:
     response:
       type: page

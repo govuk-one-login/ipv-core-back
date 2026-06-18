@@ -23,7 +23,7 @@ spotless {
 	}
 	groovyGradle {
 		target '**/*.gradle'
-		greclipse()
+		greclipse('4.35')
 		trimTrailingWhitespace()
 		endWithNewline()
 	}

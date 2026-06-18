@@ -72,6 +72,9 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -220,10 +223,6 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   F2F_PYI_POST_OFFICE:
     response:
@@ -234,10 +233,6 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   NINO_START_PAGE:
     response:
@@ -255,10 +250,6 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -280,10 +271,6 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
@@ -413,6 +400,8 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-fatal:
+        targetState: PROCESS_NEW_IDENTITY
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -442,6 +431,9 @@ states:
         checkFeatureFlag:
           mitigations9020Enabled:
             targetState: MITIGATE_CI_VIA_APP
+      fraud-fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # No photo id journey
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -488,6 +480,9 @@ states:
         checkFeatureFlag:
           mitigations9020Enabled:
             targetState: MITIGATE_CI_VIA_APP
+      fraud-fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS
@@ -600,10 +595,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   MITIGATION_01_PYI_POST_OFFICE:
     response:
@@ -615,10 +606,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   # Mitigation journey (02)
 
@@ -697,10 +684,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
-      # Temporary routing
-      appTriageBanner:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
 
   # Fraud mitigation journey
   MITIGATE_CI_VIA_APP:

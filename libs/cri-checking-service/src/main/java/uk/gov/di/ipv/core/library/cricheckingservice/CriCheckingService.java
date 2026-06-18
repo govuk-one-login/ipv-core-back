@@ -58,6 +58,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SO
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FRAUD_FAIL_WITH_NO_CI_FATAL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class CriCheckingService {
@@ -66,6 +67,8 @@ public class CriCheckingService {
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_FRAUD_FAIL_WITH_NO_CI_FATAL =
+            new JourneyResponse(JOURNEY_FRAUD_FAIL_WITH_NO_CI_FATAL_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCESS_DENIED =
@@ -298,6 +301,12 @@ public class CriCheckingService {
                 if (isReverification) {
                     setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
                 }
+
+                if (Cri.EXPERIAN_FRAUD.equals(vc.getCri())
+                        && !VcHelper.hasNonFatalFraudCheckFailure(vc)) {
+                    return JOURNEY_FRAUD_FAIL_WITH_NO_CI_FATAL;
+                }
+
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
         }
