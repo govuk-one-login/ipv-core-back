@@ -366,7 +366,7 @@ core:
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: false
     mitigations9020Enabled: false
-    coi6mfcDeadEndRoutingEnabled: true
+    coi6mfcDeadEndRoutingEnabled: false
 
   features:
     coi6mfcDeadEndRouting:
