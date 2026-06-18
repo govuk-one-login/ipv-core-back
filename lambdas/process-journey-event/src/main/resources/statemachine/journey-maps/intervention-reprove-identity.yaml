@@ -311,6 +311,8 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci-fatal:
+        targetState: COULD_NOT_CONFIRM_IDENTITY
 
   PROCESS_NEW_IDENTITY:
     response:
@@ -407,6 +409,9 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
       error:

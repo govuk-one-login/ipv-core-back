@@ -24,6 +24,9 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
+      fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
