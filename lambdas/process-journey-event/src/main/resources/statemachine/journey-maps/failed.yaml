@@ -78,6 +78,10 @@ states:
     events:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_UPDATE_DETAILS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
         checkJourneyContext:
           rfc:
             targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
