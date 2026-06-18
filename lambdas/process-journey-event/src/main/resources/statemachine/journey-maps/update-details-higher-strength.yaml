@@ -37,7 +37,8 @@ states:
       passport:
         targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
 
   REINSTATE_EXISTING_IDENTITY:
     response:
