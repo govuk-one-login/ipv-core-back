@@ -81,6 +81,10 @@ states:
         checkJourneyContext:
           rfc:
             targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
 
   FAILED_NO_TICF:
     events:
