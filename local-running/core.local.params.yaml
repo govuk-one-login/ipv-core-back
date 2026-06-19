@@ -359,9 +359,6 @@ core:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     reproveViaAppOnlyEnabled: true
-    parseVcClasses: true
-    sqsAsync: true
-    kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: true

@@ -276,11 +276,13 @@ class AppConfigServiceTest {
     @Test
     void featureSetsOverrideConfigurationInCorrectOrder() {
         // Act & Assert
-        configService.setFeatureSet(List.of("disableTestFeatureFlag", "enableTestFeatureFlag"));
-        assertTrue(configService.enabled("testFeatureFlag"));
+        configService.setFeatureSet(
+                List.of("disableTestFeatureFlagDisabled", "enableTestFeatureFlagDisabled"));
+        assertTrue(configService.enabled("testFeatureFlagDisabled"));
 
-        configService.setFeatureSet(List.of("enableTestFeatureFlag", "disableTestFeatureFlag"));
-        assertFalse(configService.enabled("testFeatureFlag"));
+        configService.setFeatureSet(
+                List.of("enableTestFeatureFlagDisabled", "disableTestFeatureFlagDisabled"));
+        assertFalse(configService.enabled("testFeatureFlagDisabled"));
     }
 
     @Test
@@ -292,18 +294,18 @@ class AppConfigServiceTest {
 
     @Test
     void enabledTrueIfFeatureFlagEnabled() {
-        assertTrue(configService.enabled("parseVcClasses"));
+        assertTrue(configService.enabled("testFeatureFlagEnabled"));
     }
 
     @Test
     void enabledFalseIfFeatureFlagNotEnabled() {
-        assertFalse(configService.enabled("testFeatureFlag"));
+        assertFalse(configService.enabled("testFeatureFlagDisabled"));
     }
 
     @Test
     void enabledTrueIfFeatureFlagSetEnabled() {
         configService.setFeatureSet(List.of("enableTestFeatureFlag"));
-        assertTrue(configService.enabled("testFeatureFlag"));
+        assertTrue(configService.enabled("testFeatureFlagEnabled"));
     }
 
     @Test
