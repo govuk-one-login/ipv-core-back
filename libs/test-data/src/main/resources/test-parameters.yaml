@@ -361,7 +361,7 @@ core:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     testFeatureFlag: false
-    evcsApiUpdatesEnabled: false
+    evcsApiUpdatesEnabled: true
     coi6mfcDeadEndRoutingEnabled: false
   features:
     testFeature:
