@@ -416,7 +416,6 @@ class CredentialTests {
               "sub": "test",
               "nbf": 4070908800,
               "iss": "dummyNinoComponentId",
-              "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
@@ -473,7 +472,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "SnthjM7v9cnoNMT0QgrhgkYnd4U_X1F8fNYzNT8GeEIvSgjBVSaAR_fvDLl4a-DFtvwUENQZV8XyhhB8oscu8Q"; // pragma: allowlist secret
+            "_rkNlljsUu1APxU9iM5NThI9hNeb11wKh1I09FAlrHi3-fEMdWJqNlFo9plcAKwviJE-E1Q_qgeyJAblTrLhWw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
@@ -481,7 +480,6 @@ class CredentialTests {
               "sub": "test",
               "nbf": 4070908800,
               "iss": "dummyNinoComponentId",
-              "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
@@ -541,5 +539,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "n_JVP1topSmn-_XVRHChwrZZ-vZkADhGRuSvBparwYIIwp3sxkyThtEZZs2evCICrt5ihdWAFDxUsE1kbCCcWQ"; // pragma: allowlist secret
+            "lMrdrcMTHTHRUk2PvIvobqaLyqqzXzbXQHB0pM-w3lBerQMQbHeuqOGYrjXCeIU-ls7TFJ3Hf5oY0PPGafW9_Q"; // pragma: allowlist secret
 }
