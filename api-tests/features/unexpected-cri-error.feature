@@ -642,7 +642,7 @@ Feature: Handling unexpected CRI errors
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response
+      Then I get a 'photo-id-web-find-another-way' page response
 
     Scenario: Same session mitigation via F2F - return to RP
       When I submit a 'f2f' event

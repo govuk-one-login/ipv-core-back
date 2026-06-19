@@ -344,12 +344,33 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
+  DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: photo-id-web-find-another-way
+      pageContext:
+        reason: dropout
+    events:
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
   # Common pages
   KBV_PHOTO_ID:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        targetState: DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY
         checkMitigation:
           alternate-doc-invalid-passport:
             targetJourney: INELIGIBLE
@@ -358,7 +379,7 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       end:
-        targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        targetState: DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY
         checkMitigation:
           alternate-doc-invalid-passport:
             targetJourney: INELIGIBLE
@@ -373,7 +394,7 @@ states:
         targetState: FAILED
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_KBV_FAIL_PHOTO_ID
+            targetState: MITIGATION_PHOTO_ID_WEB_FIND_ANOTHER_WAY
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -510,9 +531,9 @@ states:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+        targetState: DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
       end:
-        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+        targetState: DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
       next:
         targetState: PROCESS_NEW_IDENTITY
       fail-with-ci:
@@ -520,7 +541,7 @@ states:
         targetState: FAILED
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
+            targetState: MITIGATION_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -541,6 +562,28 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  MITIGATION_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: no-photo-id-web-find-another-way
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
@@ -599,6 +642,30 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
+      pageContext:
+        reason: dropout
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: no-photo-id-web-find-another-way
       pageContext:
         reason: dropout
     events:
@@ -710,6 +777,25 @@ states:
     response:
       type: page
       pageId: photo-id-security-questions-find-another-way
+    events:
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
+  MITIGATION_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: photo-id-web-find-another-way
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE

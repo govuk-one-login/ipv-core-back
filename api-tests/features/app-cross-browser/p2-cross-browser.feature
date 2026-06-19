@@ -199,7 +199,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response
+      Then I get a 'photo-id-web-find-another-way' page response
       When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event

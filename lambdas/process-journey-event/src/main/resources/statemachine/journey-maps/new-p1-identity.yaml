@@ -314,10 +314,10 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  PYI_KBV_DROPOUT_PHOTO_ID:
+  DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
-      pageId: photo-id-security-questions-find-another-way
+      pageId: photo-id-web-find-another-way
       pageContext:
         reason: dropout
     events:
@@ -340,7 +340,7 @@ states:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        targetState: DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY
         checkMitigation:
           alternate-doc-invalid-passport:
             targetJourney: INELIGIBLE
@@ -349,7 +349,7 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       end:
-        targetState: PYI_KBV_DROPOUT_PHOTO_ID
+        targetState: DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY
         checkMitigation:
           alternate-doc-invalid-passport:
             targetJourney: INELIGIBLE
@@ -364,7 +364,7 @@ states:
         targetState: FAILED
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_KBV_FAIL_PHOTO_ID
+            targetState: MITIGATION_PHOTO_ID_WEB_FIND_ANOTHER_WAY
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -488,9 +488,9 @@ states:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+        targetState: DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
       end:
-        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+        targetState: DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
       next:
         targetState: PROCESS_NEW_IDENTITY
       fail-with-ci:
@@ -498,7 +498,7 @@ states:
         targetState: FAILED
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
+            targetState: MITIGATION_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -515,10 +515,10 @@ states:
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
-  MITIGATION_KBV_FAIL_NO_PHOTO_ID:
+  MITIGATION_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
-      pageId: no-photo-id-security-questions-find-another-way
+      pageId: no-photo-id-web-find-another-way
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
@@ -560,10 +560,10 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  PYI_KBV_DROPOUT_NO_PHOTO_ID:
+  DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
-      pageId: no-photo-id-security-questions-find-another-way
+      pageId: no-photo-id-web-find-another-way
       pageContext:
         reason: dropout
     events:
@@ -654,10 +654,10 @@ states:
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
-  MITIGATION_KBV_FAIL_PHOTO_ID:
+  MITIGATION_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
-      pageId: photo-id-security-questions-find-another-way
+      pageId: photo-id-web-find-another-way
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE

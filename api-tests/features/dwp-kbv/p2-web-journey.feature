@@ -93,7 +93,7 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'end' event
-    Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+    Then I get a 'photo-id-web-find-another-way' page response and pageContext
       | Context | Value   |
       | reason  | dropout |
     When I submit an 'appTriage' event
@@ -137,7 +137,7 @@ Feature: P2 Web document journey - DWP KBV
     When I submit a 'next' event
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'end' event
-    Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+    Then I get a 'photo-id-web-find-another-way' page response and pageContext
       | Context | Value   |
       | reason  | dropout |
     When I submit an 'appTriage' event
