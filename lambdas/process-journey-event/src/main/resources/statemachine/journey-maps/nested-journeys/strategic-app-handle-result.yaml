@@ -67,25 +67,3 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: failedDlAuthCheckInvalidDl
-
-  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
-  RESET_SESSION_INVALID_DL:
-    response:
-      type: process
-      lambda: reset-identity
-      lambdaInput:
-        resetType: DCMAW_ASYNC
-    events:
-      next:
-        exitEventToEmit: failedDlAuthCheckInvalidDl
-
-  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
-  REMOVE_DCMAW_FROM_SESSION:
-    response:
-      type: process
-      lambda: reset-identity
-      lambdaInput:
-        resetType: PENDING_DCMAW_ASYNC_ALL
-    events:
-      next:
-        exitEventToEmit: incompleteDlAuthCheckInvalidDlv2
