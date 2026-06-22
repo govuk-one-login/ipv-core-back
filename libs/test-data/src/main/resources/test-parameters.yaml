@@ -354,25 +354,23 @@ core:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
+    testFeatureFlagEnabled: true
+    testFeatureFlagDisabled: false
     reproveViaAppOnlyEnabled: false
-    parseVcClasses: true
-    sqsAsync: true
-    kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
-    testFeatureFlag: false
     evcsApiUpdatesEnabled: true
     coi6mfcDeadEndRoutingEnabled: false
   features:
     testFeature:
       self:
         componentId: alternate-component-id
-    enableTestFeatureFlag:
+    enableTestFeatureFlagDisabled:
       featureFlags:
-        testFeatureFlag: true
-    disableTestFeatureFlag:
+        testFeatureFlagDisabled: true
+    disableTestFeatureFlagDisabled:
       featureFlags:
-        testFeatureFlag: false
+        testFeatureFlagDisabled: false
     coi6mfcDeadEndRouting:
       featureFlags:
         coi6mfcDeadEndRoutingEnabled: true
