@@ -1,62 +1,59 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.1.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.11.0/schemas/schema.json",
   "services": [
     {
-      "quality-gates": [
+      "serviceTag": "ipv-core",
+      "promotionType": "securePipelines",
+      "checks": [
         {
-          "check-types": [
+          "checkTypes": [
             "secret scanning"
           ],
+          "phase": "pre-merge",
+          "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pre-merge-checks.yml",
-            "name": "run secret detection",
-            "path": "jobs.pre-commit"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
+            "path": "$.jobs.pre-commit"
+          }
         },
         {
-          "check-types": [
+          "checkTypes": [
             "code style and linting",
             "unit test coverage",
             "unit"
           ],
+          "phase": "pre-merge",
+          "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pre-merge-checks.yaml",
-            "name": "run unit tests and static analysis",
-            "path": "jobs.test-java"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
+            "path": "$.jobs.test-java"
+          }
         },
         {
-          "check-types": [
+          "checkTypes": [
             "code style and linting",
             "integration",
             "regression",
             "new feature"
           ],
+          "phase": "pre-merge",
+          "provider": "GitHub",
           "config": {
             "file": ".github/workflows/pre-merge-checks.yaml",
-            "name": "run linting on api-tests directory and run api tests",
-            "path": "jobs.api-test"
-          },
-          "phase": "pre-merge",
-          "provider": "GitHub"
+            "path": "$.jobs.api-test"
+          }
         },
         {
-          "check-types": [
+          "checkTypes": [
             "contract"
           ],
-          "config": {
-            "file": ".github/workflows/contract-tests.yaml",
-            "name": "run contract tests"
-          },
           "phase": "pre-merge",
-          "provider": "GitHub"
+          "provider": "GitHub",
+          "config": {
+            "file": ".github/workflows/contract-tests.yaml"
+          }
         }
-      ],
-      "service-tag": "ipv-core"
+      ]
     }
   ]
 }
