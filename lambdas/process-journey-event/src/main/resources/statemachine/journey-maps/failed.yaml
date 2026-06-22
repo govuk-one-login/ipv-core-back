@@ -328,7 +328,7 @@ states:
   REINSTATE_EXISTING_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: REINSTATE
     events:

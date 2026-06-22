@@ -23,7 +23,7 @@ states:
         journeyType: updateDetails
     events:
       passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
       continueToService:
         targetState: REINSTATE_EXISTING_IDENTITY
 
@@ -35,7 +35,7 @@ states:
         journeyType: repeatFraudCheck
     events:
       passport:
-        targetState: RESET_SESSION_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
       returnToRp:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
@@ -43,7 +43,7 @@ states:
   REINSTATE_EXISTING_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: REINSTATE
     events:
@@ -74,7 +74,7 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-  
+
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
       type: page
@@ -84,7 +84,7 @@ states:
     events:
       next:
         targetState: FRAUD_CHECK_NAMES_ONLY
-    
+
   POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
       type: page
@@ -452,12 +452,24 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
+  RESET_IDENTITY_BEFORE_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC_ALL
+    events:
+      next:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+
+  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
   RESET_SESSION_BEFORE_NEW_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
-        resetType: ALL_INC_DCMAW_ASYNC_PENDING
+        resetType: PENDING_DCMAW_ASYNC_ALL
     events:
       next:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE

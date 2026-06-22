@@ -85,7 +85,7 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
+        targetState: RESET_IDENTITY_BEFORE_F2F_HANDOFF
       access-denied:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_NO_TICF
@@ -120,9 +120,9 @@ states:
       tryAgain:
         targetState: CRI_F2F
       app:
-        targetState: RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START
+        targetState: RESET_IDENTITY_BEFORE_IDENTITY_DOCUMENT_START
       webRoute:
-        targetState: RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
+        targetState: RESET_IDENTITY_BEFORE_DCMAW_ASYNC_ANOTHER_WAY
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -148,10 +148,75 @@ states:
       returnToRp:
         targetState: RETURN_TO_RP
 
+  RESET_IDENTITY_BEFORE_IDENTITY_DOCUMENT_START:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: IDENTITY_DOCUMENT_START
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  RESET_IDENTITY_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+        checkJourneyContext:
+          mediumConfidence:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+          lowConfidence:
+            targetJourney: NEW_P1_IDENTITY
+            targetState: DCMAW_ASYNC_ANOTHER_WAY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  RESET_IDENTITY_BEFORE_F2F_HANDOFF:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: F2F_HANDOFF_PAGE
+      error:
+        targetState: F2F_HANDOFF_PAGE
+
+  F2F_HANDOFF_PAGE:
+    response:
+      type: page
+      pageId: page-face-to-face-handoff
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response
+
+  # TEMPORARY: backward-compatible state names during deployment. Remove after full rollout.
   RESET_SESSION_BEFORE_IDENTITY_DOCUMENT_START:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -172,7 +237,7 @@ states:
   RESET_SESSION_BEFORE_DCMAW_ASYNC_ANOTHER_WAY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -193,7 +258,7 @@ states:
   RESET_SESSION_BEFORE_F2F_HANDOFF:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: ALL
     events:
@@ -201,13 +266,3 @@ states:
         targetState: F2F_HANDOFF_PAGE
       error:
         targetState: F2F_HANDOFF_PAGE
-
-  F2F_HANDOFF_PAGE:
-    response:
-      type: page
-      pageId: page-face-to-face-handoff
-
-  RETURN_TO_RP:
-    response:
-      type: process
-      lambda: build-client-oauth-response

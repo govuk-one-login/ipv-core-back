@@ -5,7 +5,7 @@ Each lambda has its own Gradle sub-project in /lambdas with its own unit tests. 
 ## Step Function
 The journey engine step function (/deploy/journeyEngineStepFunction.asl.json) orchestrates the core routing loop. It avoids double-billing by invoking lambdas directly rather than having one lambda call another.
 The flow is: ProcessJourneyEvent → Choice → [specific lambda] → if result contains `/journey/*`, loop back to ProcessJourneyEvent; otherwise succeed.
-The step-function-invoked lambdas are: CheckExistingIdentity, ResetSessionIdentity, BuildCriOauthRequest, BuildClientOauthResponse, CheckGpg45Score, CallDcmawAsyncCri, CheckReverificationIdentity, ProcessCandidateIdentity.
+The step-function-invoked lambdas are: CheckExistingIdentity, ResetIdentity, BuildCriOauthRequest, BuildClientOauthResponse, CheckGpg45Score, CallDcmawAsyncCri, CheckReverificationIdentity, ProcessCandidateIdentity.
 Every lambda task has SnapStart retry logic (5 retries with backoff for `SnapStartNotReadyException`).
 
 ## Lambdas (/lambdas)

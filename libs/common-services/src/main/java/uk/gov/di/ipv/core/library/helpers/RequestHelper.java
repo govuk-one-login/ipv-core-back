@@ -10,9 +10,9 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
+import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
-import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
@@ -202,11 +202,11 @@ public class RequestHelper {
         }
     }
 
-    public static SessionCredentialsResetType getSessionCredentialsResetType(ProcessRequest request)
+    public static IdentityResetType getIdentityResetType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody, UnknownResetTypeException {
         String resetType = extractValueFromLambdaInput(request, "resetType", MISSING_RESET_TYPE);
         try {
-            return SessionCredentialsResetType.valueOf(resetType);
+            return IdentityResetType.valueOf(resetType);
         } catch (IllegalArgumentException e) {
             throw new UnknownResetTypeException(resetType);
         }

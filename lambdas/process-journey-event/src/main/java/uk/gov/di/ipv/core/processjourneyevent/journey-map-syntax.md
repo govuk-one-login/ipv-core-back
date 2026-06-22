@@ -28,7 +28,7 @@ A basic state is defined by a name, a list of `events` that state accepts and op
 BASIC_STATE_NAME:
   response: # This defines the Step Response from the State Machine when transitioning to this state
     type: process
-    lambda: reset-session-identity
+    lambda: reset-identity
   events:
     event_name_1: # These are the events the state supports, which define what will happen if the State Machine receives this event whilst at this state
       ...
@@ -232,10 +232,10 @@ Examples of the various options allowed with events:
 STATE_WITH_DISABLED_CRI_CONDITION:
   response:
     type: process
-    lambda: reset-session-identity
+    lambda: reset-identity
   events:
     next: # this is the event name
-      targetState: STATE_2 # if the reset-session-identity lambda emits a "next" event, the State Machine will transition to "STATE_2"
+      targetState: STATE_2 # if the reset-identity lambda emits a "next" event, the State Machine will transition to "STATE_2"
       journeyContextToSet: fraudCheck # this adds "fraudCheck" to the Journey Contexts if the next state is STATE_2
       journeyContextToUnset: internationalAddress # this removes "internationalAddress" from the Journey Contexts if the next state is STATE_2
       checkIfDisabled:
@@ -290,10 +290,10 @@ This means that if the `dcmaw` CRI is disabled, the State Machine will transitio
 STATE_1:
   response:
     type: process
-    lambda: reset-session-identity
+    lambda: reset-identity
   events:
     next:
-      targetState: STATE_2 # if the reset-session-identity lambda emits a "next" event, the State Machine will transition to "STATE_2" by default
+      targetState: STATE_2 # if the reset-identity lambda emits a "next" event, the State Machine will transition to "STATE_2" by default
       checkMitigation:
         invalid-dl:
           targetJourney: MITIGATION_STATE # if "invalid-dl" is an applicable mitigation AND "dcmaw" is enabled, the State Machine will transition to MITIGATION_STATE
@@ -311,7 +311,7 @@ It's possible to emit an audit event if the Journey Engine receives a particular
 STATE_WITH_AUDIT_EVENT:
   response:
     type: process
-    lambda: reset-session-identity
+    lambda: reset-identity
   events:
     next:
       targetState: STATE_2

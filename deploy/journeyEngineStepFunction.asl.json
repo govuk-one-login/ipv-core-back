@@ -35,8 +35,14 @@
         },
         {
           "Variable": "$.journey",
+          "StringMatches": "/journey/reset-identity",
+          "Next": "ResetIdentityLambda"
+        },
+        {
+          "Comment": "TEMPORARY: backward-compatible path during deployment. Remove after full rollout.",
+          "Variable": "$.journey",
           "StringMatches": "/journey/reset-session-identity",
-          "Next": "ResetSessionIdentityLambda"
+          "Next": "ResetIdentityLambda"
         },
         {
           "Variable": "$.journey",
@@ -91,9 +97,9 @@
         "MaxDelaySeconds": 4
       }]
     },
-    "ResetSessionIdentityLambda": {
+    "ResetIdentityLambda": {
       "Type": "Task",
-      "Resource": "${ResetSessionIdentityFunctionArn}",
+      "Resource": "${ResetIdentityFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",

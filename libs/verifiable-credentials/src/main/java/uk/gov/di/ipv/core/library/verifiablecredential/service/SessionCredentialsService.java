@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
+import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -100,13 +100,12 @@ public class SessionCredentialsService {
     }
 
     public void deleteSessionCredentialsForResetType(
-            String ipvSessionId, SessionCredentialsResetType resetType)
-            throws VerifiableCredentialException {
+            String ipvSessionId, IdentityResetType resetType) throws VerifiableCredentialException {
         try {
             var sessionCredentialItems = dataStore.getItems(ipvSessionId);
             var vcsToDelete =
                     switch (resetType) {
-                        case ALL, ALL_INC_DCMAW_ASYNC_PENDING, PENDING_F2F_ALL, REINSTATE ->
+                        case ALL, PENDING_F2F_ALL, PENDING_DCMAW_ASYNC_ALL, REINSTATE ->
                                 sessionCredentialItems;
                         case ADDRESS_ONLY_CHANGE ->
                                 sessionCredentialItems.stream()
@@ -121,7 +120,7 @@ public class SessionCredentialsService {
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW.getId().equals(item.getCriId()))
                                         .toList();
-                        case DCMAW_ASYNC, PENDING_DCMAW_ASYNC_ALL ->
+                        case DCMAW_ASYNC ->
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW_ASYNC.getId().equals(item.getCriId()))
                                         .toList();

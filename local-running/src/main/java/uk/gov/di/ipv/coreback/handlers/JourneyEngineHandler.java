@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.service.LocalConfigService;
 import uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
-import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
+import uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
@@ -31,7 +31,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXIS
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROCESS_CANDIDATE_IDENTITY;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 
 public class JourneyEngineHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
@@ -49,7 +49,7 @@ public class JourneyEngineHandler {
     private final LocalConfigService configService;
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
-    private final ResetSessionIdentityHandler resetSessionIdentityHandler;
+    private final ResetIdentityHandler resetIdentityHandler;
     private final BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private final BuildClientOauthResponseHandler buildClientOauthResponseHandler;
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
@@ -61,7 +61,7 @@ public class JourneyEngineHandler {
         this.configService = new LocalConfigService();
         this.processJourneyEventHandler = new ProcessJourneyEventHandler(configService);
         this.checkExistingIdentityHandler = new CheckExistingIdentityHandler(configService);
-        this.resetSessionIdentityHandler = new ResetSessionIdentityHandler(configService);
+        this.resetIdentityHandler = new ResetIdentityHandler(configService);
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler(configService);
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler(configService);
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler(configService);
@@ -126,8 +126,8 @@ public class JourneyEngineHandler {
             case JOURNEY_CHECK_EXISTING_IDENTITY_PATH ->
                     checkExistingIdentityHandler.handleRequest(
                             buildJourneyRequest(ctx, "", journeyStep), EMPTY_CONTEXT);
-            case JOURNEY_RESET_SESSION_IDENTITY_PATH ->
-                    resetSessionIdentityHandler.handleRequest(
+            case JOURNEY_RESET_IDENTITY_PATH ->
+                    resetIdentityHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH ->
                     buildClientOauthResponseHandler.handleRequest(

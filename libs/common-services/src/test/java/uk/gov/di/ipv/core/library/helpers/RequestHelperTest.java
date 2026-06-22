@@ -34,7 +34,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_INFORMATION_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
@@ -546,28 +546,28 @@ class RequestHelperTest {
     }
 
     @Test
-    void getSessionCredentialsResetTypeShouldReturnResetType() throws Exception {
+    void getIdentityResetTypeShouldReturnResetType() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
                         .lambdaInput(Map.of("resetType", NAME_ONLY_CHANGE.name()))
                         .build();
 
-        assertEquals(NAME_ONLY_CHANGE, RequestHelper.getSessionCredentialsResetType(request));
+        assertEquals(NAME_ONLY_CHANGE, RequestHelper.getIdentityResetType(request));
     }
 
     @Test
-    void getSessionCredentialsResetTypeShouldThrowIfMissingResetType() {
+    void getIdentityResetTypeShouldThrowIfMissingResetType() {
         ProcessRequest request = ProcessRequest.processRequestBuilder().build();
 
         var thrown =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getSessionCredentialsResetType(request));
+                        () -> RequestHelper.getIdentityResetType(request));
         assertEquals(MISSING_RESET_TYPE, thrown.getErrorResponse());
     }
 
     @Test
-    void getSessionCredentialsResetTypeShouldThrowIfUnknownResetType() {
+    void getIdentityResetTypeShouldThrowIfUnknownResetType() {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
                         .lambdaInput(Map.of("resetType", "nooo"))
@@ -576,7 +576,7 @@ class RequestHelperTest {
         var thrown =
                 assertThrows(
                         UnknownResetTypeException.class,
-                        () -> RequestHelper.getSessionCredentialsResetType(request));
+                        () -> RequestHelper.getIdentityResetType(request));
         assertEquals("nooo", thrown.getResetType());
     }
 

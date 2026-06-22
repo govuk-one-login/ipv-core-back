@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.resetsessionidentity;
+package uk.gov.di.ipv.core.resetidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -41,10 +41,9 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL_INC_DCMAW_ASYNC_PENDING;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_DCMAW_ASYNC_ALL;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC_ALL;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_F2F_ALL;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
@@ -53,8 +52,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
-public class ResetSessionIdentityHandler
-        implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
@@ -68,7 +66,7 @@ public class ResetSessionIdentityHandler
     private final CriResponseService criResponseService;
     private final EvcsService evcsService;
 
-    public ResetSessionIdentityHandler(
+    public ResetIdentityHandler(
             AuditService auditService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
@@ -86,12 +84,12 @@ public class ResetSessionIdentityHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ResetSessionIdentityHandler() {
+    public ResetIdentityHandler() {
         this(ConfigService.create());
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ResetSessionIdentityHandler(ConfigService configService) {
+    public ResetIdentityHandler(ConfigService configService) {
         this.configService = configService;
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
@@ -125,23 +123,22 @@ public class ResetSessionIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             if (!clientOAuthSessionItem.isReverification()) {
-                evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
+                evcsService.invalidateStoredIdentityRecord(userId);
             }
 
             ipvSessionItem.setVot(P0);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            var sessionCredentialsResetType = RequestHelper.getSessionCredentialsResetType(input);
-            sessionCredentialsService.deleteSessionCredentialsForResetType(
-                    ipvSessionId, sessionCredentialsResetType);
+            var resetType = RequestHelper.getIdentityResetType(input);
+
+            sessionCredentialsService.deleteSessionCredentialsForResetType(ipvSessionId, resetType);
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 
-            if (sessionCredentialsResetType == REINSTATE) {
+            // Reinstate existing CURRENT identity from EVCS into session
+            if (resetType == REINSTATE) {
                 var existingIdentityVcs =
                         evcsService.getVerifiableCredentials(
-                                clientOAuthSessionItem.getUserId(),
-                                clientOAuthSessionItem.getEvcsAccessToken(),
-                                CURRENT);
+                                userId, clientOAuthSessionItem.getEvcsAccessToken(), CURRENT);
                 sessionCredentialsService.persistCredentials(
                         existingIdentityVcs, ipvSessionId, false);
                 LOGGER.info(
@@ -149,8 +146,8 @@ public class ResetSessionIdentityHandler
                                 "Existing identity persisted in session credentials store"));
             }
 
-            if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
-                doResetForPendingVc(clientOAuthSessionItem, F2F);
+            if (resetType.equals(PENDING_F2F_ALL)) {
+                resetPendingIdentity(clientOAuthSessionItem, F2F);
                 // This audit event is relied on and consumed by the F2F team. Do not remove or
                 // change it without talking to them first.
                 auditService.sendAuditEvent(
@@ -162,9 +159,8 @@ public class ResetSessionIdentityHandler
                                         input.getDeviceInformation())));
             }
 
-            if (sessionCredentialsResetType.equals(PENDING_DCMAW_ASYNC_ALL)
-                    || sessionCredentialsResetType.equals(ALL_INC_DCMAW_ASYNC_PENDING)) {
-                doResetForPendingVc(clientOAuthSessionItem, DCMAW_ASYNC);
+            if (resetType.equals(PENDING_DCMAW_ASYNC_ALL)) {
+                resetPendingIdentity(clientOAuthSessionItem, DCMAW_ASYNC);
             }
 
             return JOURNEY_NEXT;
@@ -202,7 +198,7 @@ public class ResetSessionIdentityHandler
         }
     }
 
-    private void doResetForPendingVc(ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri)
+    private void resetPendingIdentity(ClientOAuthSessionItem clientOAuthSessionItem, Cri asyncCri)
             throws EvcsServiceException {
         var userId = clientOAuthSessionItem.getUserId();
         criResponseService.deleteCriResponseItem(userId, asyncCri);

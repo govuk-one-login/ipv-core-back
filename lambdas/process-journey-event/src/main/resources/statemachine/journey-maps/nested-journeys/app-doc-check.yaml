@@ -40,22 +40,22 @@ nestedJourneyStates:
         targetState: FAILED
         checkMitigation:
           alternate-doc-invalid-dl:
-            targetState: RESET_SESSION_INVALID_DL
+            targetState: REMOVE_DCMAW_INVALID_DL
 
   REMOVE_DCMAW_FROM_SESSION:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: DCMAW
     events:
       next:
         targetState: DL_DETAILS_INCORRECT_PAGE
 
-  RESET_SESSION_INVALID_DL:
+  REMOVE_DCMAW_INVALID_DL:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: DCMAW
     events:
@@ -71,3 +71,14 @@ nestedJourneyStates:
         targetState: CRI_DCMAW
       end:
         exitEventToEmit: incomplete-invalid-dl
+
+  # TEMPORARY: backward-compatible state name during deployment. Remove after full rollout.
+  RESET_SESSION_INVALID_DL:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: DCMAW
+    events:
+      next:
+        exitEventToEmit: alternate-doc-invalid-dl
