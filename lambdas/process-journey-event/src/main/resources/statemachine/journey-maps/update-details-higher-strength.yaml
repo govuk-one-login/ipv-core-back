@@ -43,7 +43,7 @@ states:
   REINSTATE_EXISTING_IDENTITY:
     response:
       type: process
-      lambda: reset-session-identity
+      lambda: reset-identity
       lambdaInput:
         resetType: REINSTATE
     events:
@@ -74,7 +74,7 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-  
+
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
       type: page
