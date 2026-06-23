@@ -39,12 +39,6 @@
           "Next": "ResetIdentityLambda"
         },
         {
-          "Comment": "TEMPORARY: backward-compatible path during deployment. Remove after full rollout.",
-          "Variable": "$.journey",
-          "StringMatches": "/journey/reset-session-identity",
-          "Next": "ResetIdentityLambda"
-        },
-        {
           "Variable": "$.journey",
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
