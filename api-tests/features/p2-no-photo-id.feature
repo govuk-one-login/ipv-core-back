@@ -113,7 +113,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
 
@@ -167,7 +167,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response
+      Then I get a 'no-photo-id-web-find-another-way' page response
 
     Scenario: P2 no photo id journey - Experian - Breaching BAV CI
       When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -294,7 +294,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response
+      Then I get a 'no-photo-id-web-find-another-way' page response
 
     Scenario: P2 no photo id journey - KBV mitigation - Strategic app
       Given I activate the 'strategicApp' feature set
@@ -341,7 +341,7 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
 

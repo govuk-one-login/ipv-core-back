@@ -36,7 +36,7 @@ Feature: P1 Web Journeys
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response
+    Then I get a 'photo-id-web-find-another-way' page response
     When I submit a 'f2f' event
     Then I get a 'f2f' CRI response
     When I get an error from the async CRI stub
@@ -167,7 +167,7 @@ Feature: P1 Web Journeys
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+    Then I get a 'photo-id-web-find-another-way' page response and pageContext
       | Context | Value   |
       | reason  | dropout |
 
@@ -194,7 +194,7 @@ Feature: P1 Web Journeys
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response
+    Then I get a 'photo-id-web-find-another-way' page response
 
   Scenario Outline: P1 journey used when both P1 and P2 are present in JAR request
     When I start a new 'low-medium-confidence' journey

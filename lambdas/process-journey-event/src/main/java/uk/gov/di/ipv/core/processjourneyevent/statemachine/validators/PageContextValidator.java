@@ -10,11 +10,13 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry(
                             "need-more-information-confirm-change-details", Set.of("journeyType")),
                     Map.entry("no-photo-id-security-questions-find-another-way", Set.of("reason")),
+                    Map.entry("no-photo-id-web-find-another-way", Set.of("reason")),
                     Map.entry("page-dcmaw-success", Set.of("noAddress")),
                     Map.entry("page-ipv-success", Set.of("journeyType")),
                     Map.entry("page-multiple-doc-check", Set.of("allowNino")),
                     Map.entry("page-update-name", Set.of("journeyType")),
                     Map.entry("photo-id-security-questions-find-another-way", Set.of("reason")),
+                    Map.entry("photo-id-web-find-another-way", Set.of("reason")),
                     Map.entry("prove-identity-another-type-photo-id", Set.of("invalidDoc")),
                     Map.entry("prove-identity-another-way", Set.of("removeF2f")),
                     Map.entry("prove-identity-no-other-photo-id", Set.of("invalidDoc")),

@@ -133,7 +133,7 @@ Feature: P2 Web document journey
       When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response
+      Then I get a 'photo-id-web-find-another-way' page response
       When I submit a 'f2f' event
       Then I get a 'f2f' CRI response
       When I get an error from the async CRI stub
@@ -331,7 +331,7 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
       When I submit an 'appTriage' event
@@ -365,7 +365,7 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
       When I submit an 'f2f' event
@@ -387,7 +387,7 @@ Feature: P2 Web document journey
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
       When I submit an 'appTriage' event

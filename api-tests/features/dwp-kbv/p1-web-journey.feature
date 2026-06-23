@@ -192,7 +192,7 @@ Feature: P1 Web Journeys - DWP KBV
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response
       When I submit a 'end' event
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response and pageContext
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
         | Context | Value   |
         | reason  | dropout |
       When I submit an 'appTriage' event
