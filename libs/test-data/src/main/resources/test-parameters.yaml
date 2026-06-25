@@ -299,6 +299,25 @@ core:
           requiresApiKey: false
           requiresAdditionalEvidence: false
           jwksUrl: https://nino-cri.stubs.account.gov.uk/.well-known/jwks.json
+    openBanking:
+      id: openBanking
+      name: Open Banking
+      enabled: "false"
+      unavailable: false # temporarily unavailable
+      allowedSharedAttributes: "name,birthDate"
+      activeConnection: "stub"
+      connections:
+        stub:
+          authorizeUrl: https://open-banking-cri.stubs.account.gov.uk/authorize
+          tokenUrl: https://open-banking-cri.stubs.account.gov.uk/token
+          credentialUrl: https://open-banking-cri.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-build
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}' # pragma: allowlist secret
+          componentId: https://open-banking-cri.stubs.account.gov.uk
+          clientCallbackUrl: https://identity.staging.account.gov.uk/credential-issuer/callback?id=openBanking
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://open-banking-cri.stubs.account.gov.uk/.well-known/jwks.json
     bav:
       id: bav
       name: Bank account verification

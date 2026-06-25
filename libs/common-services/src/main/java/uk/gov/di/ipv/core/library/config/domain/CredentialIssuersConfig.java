@@ -22,6 +22,7 @@ public class CredentialIssuersConfig {
     @NonNull CriConnectionWrapper<OauthCriConfig> claimedIdentity;
     @NonNull CriConnectionWrapper<OauthCriConfig> f2f;
     @NonNull CriConnectionWrapper<OauthCriConfig> nino;
+    CriConnectionWrapper<OauthCriConfig> openBanking;
     @NonNull CriConnectionWrapper<OauthCriConfig> bav;
     @NonNull CriConnectionWrapper<OauthCriConfig> dwpKbv;
     @NonNull CriConnectionWrapper<RestCriConfig> ticf;
@@ -43,6 +44,7 @@ public class CredentialIssuersConfig {
                     case "claimedIdentity" -> claimedIdentity;
                     case "f2f" -> f2f;
                     case "nino" -> nino;
+                    case "openBanking" -> openBanking;
                     case "bav" -> bav;
                     case "dwpKbv" -> dwpKbv;
                     case "ticf" -> ticf;

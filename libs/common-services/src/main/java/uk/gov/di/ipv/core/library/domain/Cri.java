@@ -20,6 +20,7 @@ public enum Cri {
     EXPERIAN_KBV("experianKbv"),
     F2F("f2f"),
     NINO("nino"),
+    OPEN_BANKING("openBanking"),
     PASSPORT("ukPassport"),
     TICF("ticf");
 

@@ -19,6 +19,7 @@ const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   nino: "nino-cri",
   dwpKbv: "dwp-kbv-cri",
   bav: "bav-cri",
+  openBanking: "open-banking-cri",
 };
 
 export const buildCredentialIssuerUrl = (criId: string) =>

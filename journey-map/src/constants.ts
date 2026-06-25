@@ -56,6 +56,7 @@ export const CRI_NAMES: Record<string, string> = {
   fraud: "Experian fraud",
   experianKbv: "Experian KBV",
   nino: "HMRC check (NINO)",
+  openBanking: "Open Banking",
   ukPassport: "Passport (web)",
   ticf: "TICF",
 };
