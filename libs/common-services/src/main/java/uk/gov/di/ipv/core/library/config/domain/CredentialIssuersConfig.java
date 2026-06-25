@@ -22,7 +22,7 @@ public class CredentialIssuersConfig {
     @NonNull CriConnectionWrapper<OauthCriConfig> claimedIdentity;
     @NonNull CriConnectionWrapper<OauthCriConfig> f2f;
     @NonNull CriConnectionWrapper<OauthCriConfig> nino;
-    CriConnectionWrapper<OauthCriConfig> openBanking;
+    @NonNull CriConnectionWrapper<OauthCriConfig> openBanking;
     @NonNull CriConnectionWrapper<OauthCriConfig> bav;
     @NonNull CriConnectionWrapper<OauthCriConfig> dwpKbv;
     @NonNull CriConnectionWrapper<RestCriConfig> ticf;
