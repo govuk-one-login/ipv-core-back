@@ -323,27 +323,6 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  PYI_KBV_DROPOUT_PHOTO_ID:
-    response:
-      type: page
-      pageId: photo-id-security-questions-find-another-way
-      pageContext:
-        reason: dropout
-    events:
-      appTriage:
-        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmawAsync:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
-        checkIfDisabled:
-          f2f:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-
   DROPOUT_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
@@ -558,28 +537,6 @@ states:
       return-to-rp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
-  MITIGATION_KBV_FAIL_NO_PHOTO_ID:
-    response:
-      type: page
-      pageId: no-photo-id-security-questions-find-another-way
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
-        checkIfDisabled:
-          f2f:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      appTriage:
-        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmawAsync:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-
   MITIGATION_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
       type: page
@@ -637,30 +594,6 @@ states:
       relyingParty:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-
-  PYI_KBV_DROPOUT_NO_PHOTO_ID:
-    response:
-      type: page
-      pageId: no-photo-id-security-questions-find-another-way
-      pageContext:
-        reason: dropout
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
-        checkIfDisabled:
-          f2f:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      appTriage:
-        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmawAsync:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
 
   DROPOUT_NO_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
@@ -772,25 +705,6 @@ states:
             targetState: INELIGIBLE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  MITIGATION_KBV_FAIL_PHOTO_ID:
-    response:
-      type: page
-      pageId: photo-id-security-questions-find-another-way
-    events:
-      appTriage:
-        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmawAsync:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
-        checkIfDisabled:
-          f2f:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
 
   MITIGATION_PHOTO_ID_WEB_FIND_ANOTHER_WAY:
     response:
