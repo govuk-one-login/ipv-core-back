@@ -6,8 +6,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     SIS_VERIFICATION("sisVerificationEnabled"),
     INTERVENTION_REPROVE_VIA_APP_ONLY("reproveViaAppOnlyEnabled"),
     EVCS_API_UPDATES("evcsApiUpdatesEnabled"),
-    MITIGATIONS_9020("mitigations9020Enabled"),
-    OPEN_BANKING("openBankingEnabled");
+    MITIGATIONS_9020("mitigations9020Enabled");
 
     private final String name;
 

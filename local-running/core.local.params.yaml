@@ -364,21 +364,19 @@ core:
     evcsApiUpdatesEnabled: true
     mitigations9020Enabled: false
     coi6mfcDeadEndRoutingEnabled: false
-    openBankingEnabled: false
 
   features:
     coi6mfcDeadEndRouting:
       featureFlags:
         coi6mfcDeadEndRoutingEnabled: true
     openBanking:
-      featureFlags:
-        openBankingEnabled: true
       credentialIssuers:
         openBanking:
           enabled: true
     openBankingDisabled:
-      featureFlags:
-        openBankingEnabled: false
+      credentialIssuers:
+        openBanking:
+          enabled: false
     mitigations9020:
       featureFlags:
         mitigations9020Enabled: true
