@@ -3908,6 +3908,62 @@ Resources:
           Label: "DWP KBV CRI Return Rate"
           ReturnData: true
 
+  JourneyStartsTooHighAlarm:
+    Condition: IsNotDevelopment
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services"
+      AlarmName: !Sub "${AWS::StackName}-JourneyStartsTooHighAlarm"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+      OKActions:
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+      InsufficientDataActions: [ ]
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: processJourneyEvent
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: identityProving
+              Dimensions:
+                - Name: Service
+                  Value: !Sub "process-journey-event-${Environment}"
+            Period: 300 # 5 minutes
+            Stat: Sum
+          ReturnData: false
+        - Id: checkExistingIdentity
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: identityProving
+              Dimensions:
+                - Name: Service
+                  Value: !Sub "check-existing-identity-${Environment}"
+            Period: 300 # 5 minutes
+            Stat: Sum
+          ReturnData: false
+        - Id: checkReverificationIdentity
+          MetricStat:
+            Metric:
+              Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+              MetricName: identityProving
+              Dimensions:
+                - Name: Service
+                  Value: !Sub "check-reverification-identity-${Environment}"
+            Period: 300 # 5 minutes
+            Stat: Sum
+          ReturnData: false
+        - Id: totalJps
+          Expression: "(processJourneyEvent + checkExistingIdentity + checkReverificationIdentity) / 300"
+          Label: "Total journey starts per second"
+          ReturnData: true
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 18
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
   ####################################################################
   #                                                                  #
   # Canary Alarms for individual lambdas                             #
