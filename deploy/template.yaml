@@ -3909,7 +3909,8 @@ Resources:
           ReturnData: true
 
   JourneyStartsTooHighAlarm:
-    Condition: IsNotDevelopment
+#    Condition: IsNotDevelopment
+    Condition: IsBuild
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services"
@@ -3961,7 +3962,8 @@ Resources:
           ReturnData: true
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-      Threshold: 18
+#      Threshold: 18
+      Threshold: 0.017 # 1 journey per minute
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   ####################################################################
