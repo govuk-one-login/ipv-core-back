@@ -10,7 +10,6 @@ Feature: Update details higher strength
         | CRI   | scenario        |
         | fraud | kenneth-score-2 |
       And I have an existing stored identity record with a 'P3' vot
-      And I activate the 'coi6mfcDeadEndRouting' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -40,7 +39,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value             |
         | journeyType          | repeatFraudCheck  |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -67,7 +66,7 @@ Feature: Update details higher strength
         | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
-        | journeyType | coi   | 
+        | journeyType | coi   |
 
     Scenario: Successful 6MFC identity recovery via App for Name change only
       When I submit a 'given-names-only' event
@@ -95,7 +94,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value             |
         | journeyType          | repeatFraudCheck  |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -122,7 +121,7 @@ Feature: Update details higher strength
         | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
-        | journeyType | coi   | 
+        | journeyType | coi   |
 
     Scenario: User abandons 6MFC App recovery
       When I submit a 'given-names-only' event
@@ -150,7 +149,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value            |
         | journeyType          | repeatFraudCheck |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -171,7 +170,7 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value            |
         | reason  | repeatFraudCheck |
-    
+
     Scenario: 6MFC identity recovery via App for Name change only profile unmet
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response and pageContext
@@ -208,7 +207,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value            |
         | journeyType          | repeatFraudCheck |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -235,7 +234,7 @@ Feature: Update details higher strength
         | evidence_requested | {"identityFraudScore":1} |
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
-        | journeyType | coi   | 
+        | journeyType | coi   |
 
 
   Rule: Update details
@@ -246,7 +245,6 @@ Feature: Update details higher strength
         | address | kenneth-current        |
         | fraud   | kenneth-score-2        |
       And I have an existing stored identity record with a 'P3' vot
-      And I activate the 'coi6mfcDeadEndRouting' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-reuse' page response
       When I submit a 'update-details' event
@@ -276,7 +274,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
         | journeyType          | updateDetails |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -329,7 +327,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
         | journeyType          | updateDetails |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -382,7 +380,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
         | journeyType          | updateDetails |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -427,7 +425,7 @@ Feature: Update details higher strength
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
         | Context              | Value         |
         | journeyType          | updateDetails |
-      When I submit an 'passport' event  
+      When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
