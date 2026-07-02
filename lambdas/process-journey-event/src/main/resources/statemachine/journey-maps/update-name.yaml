@@ -335,6 +335,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      liveness-likeness:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # SHARED STATES
   PROCESS_UPDATE_IDENTITY:

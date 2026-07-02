@@ -36,10 +36,6 @@ core:
         detectedScore: 11
         checkedScore: -11
         returnCode: "breaching-p2-when-combined-with-non-breaching"
-      - ci: "BREACHING-P3-WHEN-COMBINED-WITH-NON-BREACHING"
-        detectedScore: 1
-        checkedScore: -1
-        returnCode: "breaching-p3-when-combined-with-non-breaching"
       - ci: "BREACHING"
         detectedScore: 31
         checkedScore: -31
@@ -52,6 +48,15 @@ core:
         detectedScore: 31
         checkedScore: -31
         returnCode: "needs-alternate-doc"
+      - ci: "NEEDS-LIVENESS-LIKENESS"
+        detectedScore: 31
+        checkedScore: -31
+      - ci: "NEEDS-LIVENESS-LIKENESS-P1-WHEN-COMBINED-WITH-NON-BREACHING"
+        detectedScore: 21
+        checkedScore: -21
+      - ci: "NEEDS-LIVENESS-LIKENESS-P2-WHEN-COMBINED-WITH-NON-BREACHING"
+        detectedScore: 11
+        checkedScore: -11
       - ci: "ALWAYS-REQUIRED"
         detectedScore: 1
         checkedScore: -1

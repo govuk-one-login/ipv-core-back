@@ -80,7 +80,7 @@ Feature: P1 Fraud mitigation
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2-breaching-p1-when-combined-with-non-breaching' details with attributes to the CRI stub
+      When I submit 'kenneth-score-2-liveness-likeness-p1-when-combined-with-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'retry-prove-identity-app' page response

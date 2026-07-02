@@ -123,6 +123,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      liveness-likeness:
+        targetJourney: FAILED
+        targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_UPDATE_IDENTITY
 

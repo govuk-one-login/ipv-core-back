@@ -296,6 +296,12 @@ states:
         checkFeatureFlag:
           mitigations9020Enabled:
             targetState: MITIGATE_CI_VIA_APP
+      liveness-likeness:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_CI_VIA_APP
 
   CHECK_FRAUD_AFTER_DL:
     response:
@@ -409,6 +415,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      liveness-likeness:
+        targetJourney: FAILED
+        targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -435,6 +444,12 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_CI_VIA_APP
+      liveness-likeness:
         targetJourney: FAILED
         targetState: FAILED
         checkFeatureFlag:
@@ -497,6 +512,12 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: MITIGATE_CI_VIA_APP
+      liveness-likeness:
         targetJourney: FAILED
         targetState: FAILED
         checkFeatureFlag:
