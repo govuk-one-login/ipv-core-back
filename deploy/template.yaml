@@ -3908,13 +3908,13 @@ Resources:
           Label: "DWP KBV CRI Return Rate"
           ReturnData: true
 
-  JourneyStartsTooHighAlarm:
+  ProvingJourneyStartsTooHighAlarm:
 #    Condition: IsNotDevelopment
     Condition: IsBuild
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services"
-      AlarmName: !Sub "${AWS::StackName}-JourneyStartsTooHighAlarm"
+      AlarmName: !Sub "${AWS::StackName}-ProvingJourneyStartsTooHighAlarm"
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
