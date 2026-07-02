@@ -46,3 +46,5 @@ nestedJourneyStates:
         exitEventToEmit: fraud-fail-with-no-ci-fatal
       fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      liveness-likeness:
+        exitEventToEmit: liveness-likeness

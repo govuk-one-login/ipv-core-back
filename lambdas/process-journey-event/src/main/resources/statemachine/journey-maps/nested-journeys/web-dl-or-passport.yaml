@@ -80,6 +80,8 @@ nestedJourneyStates:
         targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      liveness-likeness:
+        exitEventToEmit: liveness-likeness
   PROVE_ANOTHER_WAY_AFTER_PASSPORT:
     response:
       type: page
@@ -155,6 +157,8 @@ nestedJourneyStates:
         targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      liveness-likeness:
+        exitEventToEmit: liveness-likeness
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
