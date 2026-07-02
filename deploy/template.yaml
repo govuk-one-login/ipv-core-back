@@ -3909,8 +3909,7 @@ Resources:
           ReturnData: true
 
   ProvingJourneyStartsTooHighAlarm:
-#    Condition: IsNotDevelopment
-    Condition: IsBuild
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services"
@@ -3958,12 +3957,11 @@ Resources:
           ReturnData: false
         - Id: totalJps
           Expression: "(processJourneyEvent + checkExistingIdentity + checkReverificationIdentity) / 300"
-          Label: "Total journey starts per second"
+          Label: "Total identity proving journey starts per second"
           ReturnData: true
       EvaluationPeriods: 1
       DatapointsToAlarm: 1
-#      Threshold: 18
-      Threshold: 0.017 # 1 journey per minute
+      Threshold: 18
       ComparisonOperator: GreaterThanOrEqualToThreshold
 
   ####################################################################
