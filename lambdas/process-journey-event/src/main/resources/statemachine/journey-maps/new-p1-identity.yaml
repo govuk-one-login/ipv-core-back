@@ -301,13 +301,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
-      liveness-likeness:
-        targetJourney: FAILED
-        targetState: FAILED
-        checkFeatureFlag:
-          mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
 
   PYI_ESCAPE:
     response:
@@ -406,9 +404,6 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      liveness-likeness:
-        targetJourney: FAILED
-        targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -439,13 +434,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
-      liveness-likeness:
-        targetJourney: FAILED
-        targetState: FAILED
-        checkFeatureFlag:
-          mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -494,13 +487,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
-      liveness-likeness:
-        targetJourney: FAILED
-        targetState: FAILED
-        checkFeatureFlag:
-          mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
