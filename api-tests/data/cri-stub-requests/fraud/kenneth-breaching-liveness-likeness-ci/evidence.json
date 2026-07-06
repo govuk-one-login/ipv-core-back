@@ -24,7 +24,7 @@
       "txn": "RB000117397035"
     }
   ],
-  "ci": ["BREACHING-P2-WHEN-COMBINED-WITH-NON-BREACHING"],
+  "ci": ["NEEDS-LIVENESS-LIKENESS"],
   "txn": "RB000117420948",
   "identityFraudScore": 2,
   "type": "IdentityCheck"

@@ -301,7 +301,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
 
   PYI_ESCAPE:
     response:
@@ -430,7 +434,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -479,7 +487,11 @@ states:
         targetState: FAILED
         checkFeatureFlag:
           mitigations9020Enabled:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
