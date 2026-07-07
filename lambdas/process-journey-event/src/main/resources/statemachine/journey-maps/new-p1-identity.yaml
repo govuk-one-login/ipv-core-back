@@ -404,6 +404,13 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_PASSPORT
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -704,6 +711,16 @@ states:
       pageId: retry-prove-identity-app
     events:
       useApp:
+        targetState: MITIGATION_PASSPORT_BIOMETRIC_CHIP
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  MITIGATE_CI_VIA_PASSPORT:
+    response:
+      type: page
+      pageId: retry-prove-identity-passport
+    events:
+      retryPassport:
         targetState: MITIGATION_PASSPORT_BIOMETRIC_CHIP
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
