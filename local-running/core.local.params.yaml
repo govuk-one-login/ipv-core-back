@@ -388,6 +388,9 @@ core:
     coi6mfcDeadEndRouting:
       featureFlags:
         coi6mfcDeadEndRoutingEnabled: true
+    coi6mfcDeadEndRoutingDisabled:
+      featureFlags:
+        coi6mfcDeadEndRoutingEnabled: false
     openBanking:
       credentialIssuers:
         openBanking:
