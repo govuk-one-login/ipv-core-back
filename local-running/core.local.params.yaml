@@ -396,12 +396,15 @@ core:
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: true
     mitigations9020Enabled: false
-    coi6mfcDeadEndRoutingEnabled: false
+    coi6mfcDeadEndRoutingEnabled: true
 
   features:
     coi6mfcDeadEndRouting:
       featureFlags:
         coi6mfcDeadEndRoutingEnabled: true
+    coi6mfcDeadEndRoutingDisabled:
+      featureFlags:
+        coi6mfcDeadEndRoutingEnabled: false
     openBanking:
       credentialIssuers:
         openBanking:
