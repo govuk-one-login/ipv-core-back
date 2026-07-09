@@ -64,6 +64,75 @@ Feature: P2 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+  Rule: Photo ID app journey
+    Background: Start P2 driving licence app journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+
+    Scenario: Non-breaching, non-failing fraud CI continues on journey
+      When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+
+    Scenario: Non-breaching, failing fraud CI fails journey
+      When I submit 'kenneth-score-0-non-breaching' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Breaching fraud CI goes to mitigation route
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-passport' page response
+      When I submit a 'retryPassport' event
+      Then I get a 'passport-biometric-chip' page response
+
+    Scenario: Breaching fraud CI goes back to RP
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-passport' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
   Rule: Combined CI score breach
     Scenario: Combined breaching fraud CI goes to mitigation route
       When I start a new 'medium-confidence' journey

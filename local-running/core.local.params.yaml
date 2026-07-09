@@ -28,14 +28,6 @@ core:
         detectedScore: 10
         checkedScore: -10
         returnCode: "non-breaching"
-      - ci: "BREACHING-P1-WHEN-COMBINED-WITH-NON-BREACHING"
-        detectedScore: 21
-        checkedScore: -21
-        returnCode: "breaching-p1-when-combined-with-non-breaching"
-      - ci: "BREACHING-P2-WHEN-COMBINED-WITH-NON-BREACHING"
-        detectedScore: 11
-        checkedScore: -11
-        returnCode: "breaching-p2-when-combined-with-non-breaching"
       - ci: "BREACHING"
         detectedScore: 31
         checkedScore: -31
