@@ -19,6 +19,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("prove-identity-another-way", Set.of(REMOVE_F2F)),
                     Map.entry("prove-identity-no-other-photo-id", Set.of(INVALID_DOC)),
                     Map.entry("prove-identity-no-photo-id", Set.of(NINO_ONLY)),
+                    Map.entry("prove-identity-online", Set.of(PHOTO_ID)),
                     Map.entry("pyi-no-match", Set.of(REASON)),
                     Map.entry("pyi-technical", Set.of(IS_UNRECOVERABLE)),
                     Map.entry("pyi-triage-desktop-download-app", Set.of(SMARTPHONE, IS_APP_ONLY)),
