@@ -2,7 +2,6 @@
 Feature: P2 no photo id journey
   Rule: Experian KBV
     Background: Start P2 no photo id with Experian KBV
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -181,7 +180,6 @@ Feature: P2 no photo id journey
 
   Rule: Abandon
     Background: Abandon P2 no photo id journey
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -234,7 +232,6 @@ Feature: P2 no photo id journey
 
   Rule: Escape
     Background: Escape P2 no photo id journey
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -260,7 +257,6 @@ Feature: P2 no photo id journey
 
   Rule: KBV mitigation
     Background: Start P2 no photo id KBV mitigation journey
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -307,7 +303,6 @@ Feature: P2 no photo id journey
 
   Rule: KBV dropout
     Background: Start P2 no photo id KBV mitigation journey
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

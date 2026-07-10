@@ -131,7 +131,6 @@ Feature: TICF failed/error journeys
 
   Rule: Via no-photo-id
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
-      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
