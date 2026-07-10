@@ -1,7 +1,9 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 @TrafficGeneration
 Feature: P2 Web document journey
-  Scenario Outline: <journey-type> - successful web journey - attains P2 with <cri>
+  #  PYIC-9059 this test will need an equivalent version once it is possible to get an identity via Open Banking
+  Scenario Outline: <journey-type> - successful web journey - attains P2 with <cri> - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new '<journey-type>' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -49,8 +51,9 @@ Feature: P2 Web document journey
       | medium-confidence      | drivingLicence | kenneth-driving-permit-valid |
       | medium-confidence      | ukPassport     | kenneth-passport-valid       |
 
-  Rule: P2 VTR only - User starts P2 web journey
+  Rule: P2 VTR only - User starts P2 web journey - no Open Banking
     Background: Start P2 journey and ineligible for the app
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -68,7 +71,8 @@ Feature: P2 Web document journey
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
 
-    Scenario: Successful web journey with driving licence CRI - dva
+    #  PYIC-9059 this test will need an equivalent version under the rule below once it is possible to get an identity via Open Banking
+    Scenario: Successful web journey with driving licence CRI - dva - no Open Banking
       When I submit an 'drivingLicence' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-dva-valid' details to the CRI stub
@@ -93,7 +97,7 @@ Feature: P2 Web document journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score
+    Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score - no Open Banking
       When I submit an 'drivingLicence' event
       Then I get a 'drivingLicence' CRI response
       When I submit '<details>' details to the CRI stub
@@ -111,11 +115,12 @@ Feature: P2 Web document journey
       And I don't have a stored identity in EVCS
 
       Examples:
-      | driving-licence-type | details                          |
-      | dva                  | kenneth-driving-permit-dva-valid |
-      | dvla                 | kenneth-driving-permit-valid     |
+        | driving-licence-type | details                          |
+        | dva                  | kenneth-driving-permit-dva-valid |
+        | dvla                 | kenneth-driving-permit-valid     |
 
-    Scenario: P2 fallback for users who fail KBV and F2F but can successfully prove their identity
+    #  PYIC-9059 this test will need an equivalent version under the rule below once it is possible to get an identity via Open Banking
+    Scenario: P2 fallback for users who fail KBV and F2F but can successfully prove their identity - no Open Banking
       When I submit an 'ukPassport' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -167,8 +172,8 @@ Feature: P2 Web document journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
-          | Attribute          | Values                                      |
-          | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -179,7 +184,8 @@ Feature: P2 Web document journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI
+    #  PYIC-9059 this test will need an equivalent version under the rule below once it is possible to get an identity via Open Banking
+    Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI - no Open Banking
       When I submit a '<initial-cri>' event
       Then I get a '<initial-cri>' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -215,8 +221,141 @@ Feature: P2 Web document journey
         | ukPassport     | drivingLicence      | kenneth-driving-permit-valid | passport                                     |
         | drivingLicence | ukPassport          | kenneth-passport-valid       | drivingLicence                               |
 
+    Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without an identity - no Open Banking
+      When I submit a 'ukPassport' event
+      Then I get a 'ukPassport' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
+        | Context    | Value    |
+        | invalidDoc | passport |
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity - no Open Banking
+      When I submit a 'ukPassport' event
+      Then I get a 'ukPassport' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
+        | Context    | Value    |
+        | invalidDoc | passport |
+      When I submit an 'f2f' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario Outline: Failed P2 journey via Web using <cri> - no Open Banking
+      When I submit a '<cri>' event
+      Then I get a '<cri>' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-0-breaching' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+
+      Examples:
+        | cri            | details                      |
+        | drivingLicence | kenneth-driving-permit-valid |
+        | ukPassport     | kenneth-passport-valid       |
+
+    Scenario: Driving permit with fraud score 1 results in failed journey - no Open Banking
+      When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+  Rule: P2 VTR only - User starts P2 web journey
+    Background: Start P2 journey and ineligible for the app
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+
+    Scenario Outline: Unsuccessful web journey with driving licence CRI - <driving-licence-type> - low fraud score
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+      Examples:
+      | driving-licence-type | details                          |
+      | dva                  | kenneth-driving-permit-dva-valid |
+      | dvla                 | kenneth-driving-permit-valid     |
+
     Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without an identity
       When I submit a 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
@@ -230,6 +369,12 @@ Feature: P2 Web document journey
 
     Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity
       When I submit a 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
@@ -262,6 +407,12 @@ Feature: P2 Web document journey
 
     Scenario Outline: Failed P2 journey via Web using <cri>
       When I submit a '<cri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub
       Then I get an 'address' CRI response
@@ -279,6 +430,12 @@ Feature: P2 Web document journey
 
     Scenario: Driving permit with fraud score 1 results in failed journey
       When I submit a 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
       Then I get an 'address' CRI response
@@ -294,8 +451,10 @@ Feature: P2 Web document journey
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-  Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks
+  #  PYIC-9059 these tests will need equivalent Open Banking versions once it is possible to get through KBV with Open Banking
+  Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks - no Open Banking
     Background: Navigate to KBV CRI
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

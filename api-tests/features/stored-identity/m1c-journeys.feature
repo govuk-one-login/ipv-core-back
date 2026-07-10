@@ -46,12 +46,41 @@ Feature: Stored Identity - M1C Outcomes
         | kenneth-passport-valid |
         | kenneth-brp-valid      |
 
-    Scenario: No stored identity - unsuccessful M1C journey
+    Scenario: No stored identity - unsuccessful M1C journey - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-unavailable' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: No stored identity - unsuccessful M1C journey
+      Given I activate the 'openBanking' feature set
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit an 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
       Then I get an 'address' CRI response

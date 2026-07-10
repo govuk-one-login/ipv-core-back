@@ -1,6 +1,9 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
+# These tests check what happens if a user gets to KBVs and then needs enhanced verification with DCMAW
+#  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
 Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
   Scenario Outline: Same session mitigation via app - successful <attained-vot> attained
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new '<journey-type>' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -68,6 +71,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     | high-medium-confidence | P3           | kenneth-passport-valid       |
 
   Scenario Outline: Separate session mitigation - <journey-type> - successful <attained-vot> attained - passport
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new '<journey-type>' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -148,6 +152,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
 
   Rule: Unsuccessful mitigation
     Background: Navigate through P2 to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

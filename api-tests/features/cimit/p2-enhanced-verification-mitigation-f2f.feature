@@ -1,6 +1,9 @@
+#  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
+
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Mitigating CIs with enhanced verification using the F2F CRI
   Background:
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

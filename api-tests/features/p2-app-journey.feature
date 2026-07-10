@@ -192,7 +192,8 @@ Feature: P2 App journey
       When I submit the returned journey event
       Then I get a 'page-multiple-doc-check' page response
 
-    Scenario: MAM journey abandoned without a VC
+    Scenario: MAM journey abandoned without a VC - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -211,6 +212,27 @@ Feature: P2 App journey
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: MAM journey abandoned without a VC
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces an 'access_denied' error response
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'select-photo-id' page response
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
       When I submit an 'appTriage' event
@@ -233,7 +255,8 @@ Feature: P2 App journey
       When I submit the returned journey event
       Then I get a 'page-multiple-doc-check' page response
 
-    Scenario: MAM journey no compatible smartphone
+    Scenario: MAM journey no compatible smartphone - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -248,6 +271,23 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: MAM journey no compatible smartphone
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
       When I submit an 'appTriage' event
@@ -329,7 +369,9 @@ Feature: P2 App journey
       When I submit the returned journey event
       Then I get an 'pyi-no-match' page response
 
-    Scenario: MAM journey - passport fails with ci (score 1) and goes to alternative document check
+    #  PYIC-9059 this test will need an equivalent version once it is possible to get an identity via Open Banking
+    Scenario: MAM journey - passport fails with ci (score 1) and goes to alternative document check - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -391,7 +433,9 @@ Feature: P2 App journey
       When I submit the returned journey event
       Then I get an 'page-multiple-doc-check' page response
 
-    Scenario: DAD journey - BRP fails with with ci (score 1) goes to alternative document check
+    #  PYIC-9059 this test will need an equivalent version once it is possible to get an identity via Open Banking
+    Scenario: DAD journey - BRP fails with with ci (score 1) goes to alternative document check - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
@@ -432,7 +476,8 @@ Feature: P2 App journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: DAD journey no compatible smartphone
+    Scenario: DAD journey no compatible smartphone - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
@@ -443,6 +488,19 @@ Feature: P2 App journey
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: DAD journey no compatible smartphone
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
 
     Scenario: Strategic app uk address user wants to go back over identify-device page
       When I submit an 'appTriage' event

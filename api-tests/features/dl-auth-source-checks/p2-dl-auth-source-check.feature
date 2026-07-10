@@ -78,8 +78,10 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
 
+    # PYIC-9215 we will need an Open Banking version of this test once we have a route
     Scenario: CI on auth check asks for alternative document
-      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+      When I activate the 'openBankingDisabled' feature set
+      And I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'pyi-driving-licence-no-match-another-way' page response
@@ -302,9 +304,10 @@ Feature: P2 Journeys with DL authoritative source check
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+  #  PYIC-9059 these tests will need equivalent Open Banking versions once it is possible to get an identity via Open Banking
   Rule: Web Journey
     Background: Start web journey
-      Given I activate the 'drivingLicenceAuthCheck' feature set
+      Given I activate the 'drivingLicenceAuthCheck,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

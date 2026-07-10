@@ -21,8 +21,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
 
+    #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get to KBVs via Open Banking
     Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure
-      Given I activate the 'dcmawAsyncDisabled' feature set
+      Given I activate the 'dcmawAsyncDisabled,openBankingDisabled' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -65,8 +66,9 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-technical' page response
 
+    #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get to KBVs via Open Banking
     Scenario: Same session enhanced verification mitigation with DCMAW leads to technical failure
-      Given I activate the 'dcmawAsyncDisabled' feature set
+      Given I activate the 'dcmawAsyncDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -107,8 +109,9 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
+    # This test doesn't need an Open Banking equivalent as Open Banking is offered if the user doesn't have photo ID so F2F being disabled is irrelevant
     Scenario: No photo ID leads to ineligible
-      Given I activate the 'f2fDisabled' feature set
+      Given I activate the 'f2fDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -116,8 +119,8 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-another-way' page response
 
-    Scenario: Choosing not to use passport or driving licence routes to the escape page
-      Given I activate the 'f2fDisabled' feature set
+    Scenario: Choosing not to use passport or driving licence routes to the escape page - no Open Banking
+      Given I activate the 'f2fDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -137,8 +140,56 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-    Scenario Outline: Choosing another way after access-denied from passport or DL CRIs leads to escape page
-      Given I activate the 'f2fDisabled' feature set
+    Scenario: Choosing not to use passport or driving licence with photo ID routes to the escape page
+      Given I activate the 'f2fDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit an 'anotherWay' event
+      Then I get a 'pyi-escape' page response
+
+    Scenario: Choosing not to use passport or driving licence without photo ID routes to the escape page
+      Given I activate the 'f2fDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit a 'neither' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'pyi-escape' page response
+
+    Scenario Outline: Choosing another way after access-denied from passport or DL CRIs leads to escape page - no Open Banking
+      Given I activate the 'f2fDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -156,6 +207,44 @@ Feature: Disabled CRI journeys
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
       When I submit a '<cri>' event
+      Then I get a '<cri>' CRI response
+      When I submit an 'access-denied' event
+      Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
+        | Context    | Value     |
+        | invalidDoc | <context> |
+      When I submit an 'f2f' event
+      Then I get a 'pyi-escape' page response
+
+      Examples:
+        | cri            | context        |
+        | ukPassport     | passport       |
+        | drivingLicence | drivingLicence |
+
+    Scenario Outline: Choosing another way after access-denied from passport or DL CRIs leads to escape page
+      Given I activate the 'f2fDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an '<cri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a '<cri>' CRI response
       When I submit an 'access-denied' event
       Then I get a 'prove-identity-another-type-photo-id' page response and pageContext
@@ -250,8 +339,8 @@ Feature: Disabled CRI journeys
 
   Rule: BAV is disabled
 
-    Scenario: Not having ID suitable for F2F leads to the escape page
-      Given I activate the 'bavDisabled' feature set
+    Scenario: Not having ID suitable for F2F leads to the escape page - no Open Banking
+      Given I activate the 'bavDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -261,8 +350,22 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-    Scenario: Choosing to prove your identity another way on web journey leads to the escape page
-      Given I activate the 'bavDisabled' feature set
+    Scenario: Not having ID suitable for F2F leads to the escape page
+      Given I activate the 'bavDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'pyi-escape' page response
+
+    # When Open Banking is enabled BAV won't be used so we don't need an Open Banking version of this test
+    Scenario: Choosing to prove your identity another way on web journey leads to the escape page - no Open Banking
+      Given I activate the 'bavDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -284,8 +387,10 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
+  #  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
   Rule: DWP KBVs are disabled or unsuitable
     Background: User starts a web journey to KBV
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

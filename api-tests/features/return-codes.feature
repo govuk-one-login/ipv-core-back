@@ -41,8 +41,9 @@ Feature: Return exit codes
     And I have a stored identity record with a 'P3' max vot
     And I don't get any return codes
 
-  Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
-    Given I start a new 'medium-confidence' journey
+  Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -59,8 +60,31 @@ Feature: Return exit codes
     And I don't have a stored identity in EVCS
     And I get 'non-ci-breaching' return code
 
+  Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
+    Given I activate the 'openBanking' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-online' page response
+    When I submit a 'anotherWay' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-no-photo-id' page response
+    When I submit a 'end' event
+    Then I get a 'no-photo-id-exit-find-another-way' page response
+    When I submit a 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P0' identity
+    And I don't have a stored identity in EVCS
+    And I get 'non-ci-breaching' return code
+
+  #  PYIC-9059 this test will need an equivalent version once it is possible to get to KBVs via Open Banking
   Scenario: KBV score zero and failure to complete journey - non-ci-breaching code returned
-    Given I start a new 'medium-confidence' journey
+    Given I activate the 'openBankingDisabled' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -193,7 +217,9 @@ Feature: Return exit codes
     And I have a stored identity record with a 'P3' max vot
     And I get 'always-required' return code
 
+  #  PYIC-9059 this test will need an equivalent version once it is possible to get to KBVs via Open Banking
   Scenario: Breaching CI codes generate return codes, including mitigated CIs - CI codes returned
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event

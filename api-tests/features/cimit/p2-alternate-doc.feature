@@ -1,8 +1,11 @@
+#  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to complete a journey via Open Banking
+
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 CIMIT - Alternate doc - Experian KBV
   Rule: No existing identity
     Background:
-      Given I start a new 'medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -205,7 +208,8 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
 
   Rule: High-medium confidence journey
     Scenario Outline: High-medium confidence journey - alternate-doc mitigation
-      Given I start a new 'high-medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'high-medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response

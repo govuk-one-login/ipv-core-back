@@ -1,8 +1,9 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 F2F journey
-  Rule: Pending F2F journey
+  Rule: Pending F2F journey - no Open Banking
     Background: User has pending f2f verification
-      Given I start a new 'medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -24,12 +25,13 @@ Feature: P2 F2F journey
       Then I get a 'page-face-to-face-handoff' page response
 
     Scenario: Pending F2F request
-      # Initial journey
+      # Return journey
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-pending' page response
 
-  Rule: Successful F2F journeys
+  Rule: Successful F2F journeys - no Open Banking
     Scenario Outline: Successful P2 identity via F2F using <doc> - <journey-type>
+      Given I activate the 'openBankingDisabled' feature set
       # Initial journey
       When I start a new '<journey-type>' journey
       Then I get a 'live-in-uk' page response
@@ -68,6 +70,7 @@ Feature: P2 F2F journey
         | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
     Scenario: Failed F2F journey using passport with CI (score 1) - allow user to start again
+      Given I activate the 'openBankingDisabled' feature set
       # Initial journey
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -96,6 +99,7 @@ Feature: P2 F2F journey
       Then I get a 'live-in-uk' page response
 
     Scenario Outline: Successful P2 identity via F2F using <doc> - no valid device to go through app
+      Given I activate the 'openBankingDisabled' feature set
       # Initial journey
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -142,9 +146,10 @@ Feature: P2 F2F journey
         | passport | kenneth-passport-valid       |
         | DL       | kenneth-driving-permit-valid |
 
-  Rule: Oauth error F2F journeys
+  Rule: Oauth error F2F journeys - no Open Banking
     Background: User starts F2F journey
-      Given I start a new 'medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -184,19 +189,21 @@ Feature: P2 F2F journey
       When I submit a 'end' event
       Then I get an OAuth response
 
-  Scenario: F2F PYI escape route
-    Given I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'uk' event
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'end' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response
-    When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response
+    Scenario: F2F PYI escape route
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-no-photo-id' page response
 
-  Rule: F2F evidence requested strength score
+  Rule: F2F evidence requested strength score - no Open Banking
     Background: User has pending F2F verification
-      And I start a new 'medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       When I submit an 'appTriage' event
@@ -260,13 +267,353 @@ Feature: P2 F2F journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
       Then I get a 'page-face-to-face-handoff' page response
 
-  Rule: Failed F2F journeys are only shown the fail page once
+  Rule: Failed F2F journeys are only shown the fail page once - no Open Banking
     Background:
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-verification-1' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: User chooses to prove their identity again
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      And I submit a 'next' event
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+
+      # Start another return journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+
+    Scenario: User chooses to return to the service
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      And I submit an 'end' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity without a TICF VC
+      And I don't have a stored identity in EVCS
+
+      # Start another return journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+
+  Rule: Pending F2F journey
+    Background: User has pending f2f verification
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: Pending F2F request
+      # Return journey
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-pending' page response
+
+  Rule: Successful F2F journeys
+    Scenario Outline: Successful P2 identity via F2F using <doc> - <journey-type>
+      Given I activate the 'openBanking' feature set
+      # Initial journey
+      When I start a new '<journey-type>' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit '<details>' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new '<journey-type>' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | journey-type           | doc      | details                      |
+        | high-medium-confidence | passport | kenneth-passport-valid       |
+        | high-medium-confidence | DL       | kenneth-driving-permit-valid |
+        | medium-confidence      | passport | kenneth-passport-valid       |
+        | medium-confidence      | DL       | kenneth-driving-permit-valid |
+
+    Scenario: Failed F2F journey using passport with CI (score 1) - allow user to start again
+      Given I activate the 'openBanking' feature set
+      # Initial journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-expired' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey - Inform user on unsuccessful check and allow to start journey again
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      When I submit a 'next' event
+      Then I get a 'live-in-uk' page response
+
+    Scenario Outline: Successful P2 identity via F2F using <doc> - no valid device to go through app
+      Given I activate the 'openBanking' feature set
+      # Initial journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit an 'anotherWay' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      When I submit '<details>' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | doc      | details                      |
+        | passport | kenneth-passport-valid       |
+        | DL       | kenneth-driving-permit-valid |
+
+  Rule: Oauth error F2F journeys
+    Background: User starts F2F journey
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+
+    Scenario: Oauth access_denied error F2F
+      # Initial journey
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'pyi-another-way' page response
+
+    Scenario: Oauth temporarily_unavailable error F2F
+      # Initial journey
+      When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'pyi-technical' page response
+
+    Scenario: Async queue error
+      When I get an error from the async CRI stub
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+      When I submit a 'end' event
+      Then I get an OAuth response
+
+    Scenario: F2F PYI escape route
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-no-photo-id' page response
+
+  Rule: F2F evidence requested strength score
+    Background: User has pending F2F verification
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit an 'anotherWay' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+
+    Scenario: requested strength score three for fraud score 2
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: requested strength score four for fraud score 1
+      When I submit 'kenneth-score-1' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: requested strength score four fraud score 1 and history 0
+      When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: requested strength score four for fraud score 2 and history 0
+      When I submit 'kenneth-score-2-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+  Rule: Failed F2F journeys are only shown the fail page once
+    Background:
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response

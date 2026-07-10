@@ -1,8 +1,9 @@
 @Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI and driving licence authoritative source check
+  #  PYIC-9059 these tests will need equivalent Open Banking versions once it is possible to get an identity via Open Banking
   Rule: Same session mitigation
     Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
-      Given I activate the 'drivingLicenceAuthCheck' feature set
+      Given I activate the 'drivingLicenceAuthCheck,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -269,8 +270,9 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       And I don't have a stored identity in EVCS
 
   Rule: Web journey via DL initially
+    #  PYIC-9059 this test will need an equivalent version once it is possible to get an identity via Open Banking
     Scenario Outline: Same session - DL auth source check not required when user already has a DL VC - <journey-type>
-      Given I activate the 'drivingLicenceAuthCheck' feature set
+      Given I activate the 'drivingLicenceAuthCheck,openBankingDisabled' feature set
       When I start a new '<journey-type>' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

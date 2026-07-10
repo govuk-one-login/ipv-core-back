@@ -11,8 +11,6 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
-
-    Scenario: MAM journey cross-browser scenario happy path
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
@@ -21,6 +19,8 @@ Feature: P2 V2 App Cross Browser Scenario
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
+
+    Scenario: MAM journey cross-browser scenario happy path
       When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
@@ -51,14 +51,6 @@ Feature: P2 V2 App Cross Browser Scenario
       And I have a stored identity record with a 'P3' max vot
 
     Scenario: Cross-browser DL auth source check
-      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
-        | Context    | Value |
-        | deviceType | mam   |
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
-        | Context    | Value  |
-        | smartphone | iphone |
-        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
@@ -90,16 +82,10 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
-      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
-        | Context    | Value |
-        | deviceType | mam   |
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
-        | Context    | Value  |
-        | smartphone | iphone |
-        | isAppOnly  | false  |
-      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+    # PYIC-9059 We need a version of this for open banking when we have the full route implemented
+    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI - no Open Banking
+      When I activate the 'openBankingDisabled' feature set
+      And the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -137,14 +123,6 @@ Feature: P2 V2 App Cross Browser Scenario
       And I have a stored identity record with a 'P2' max vot
 
     Scenario: MAM journey cross-browser scenario unsuccessful VC with CI
-      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
-        | Context    | Value |
-        | deviceType | mam   |
-      When I submit an 'iphone' event
-      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
-        | Context    | Value  |
-        | smartphone | iphone |
-        | isAppOnly  | false  |
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
@@ -164,8 +142,10 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-  Rule: Cross-browser during same-session enhanced verification mitigation
+  Rule: Cross-browser during same-session enhanced verification mitigation - no Open Banking
+    # PYIC-9059 We need versions of these tests for open banking when we have the full route implemented
     Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
