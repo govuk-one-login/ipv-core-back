@@ -1,0 +1,23 @@
+{
+  "name": "issue-client-access-token",
+  "version": "1.0.0",
+  "description": "Issue client access token lambda",
+  "scripts": {
+    "test": "echo TODO"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.654.0",
+    "@aws-sdk/client-secrets-manager": "^3.654.0",
+    "@aws-sdk/client-ssm": "^3.654.0",
+    "@aws-sdk/lib-dynamodb": "^3.654.0",
+    "@types/aws-lambda": "^8.10.140",
+    "@types/node": "^20.14.7",
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/logger": "^2.8.0",
+    "@aws-lambda-powertools/parameters": "^2.8.0",
+    "aws-xray-sdk": "^3.10.1",
+    "jose": "^5.4.1"
+  }
+}
