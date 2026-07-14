@@ -133,6 +133,45 @@ Feature: P2 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+  Rule: Chipped passport auto-mitigation
+    Scenario: Chipped passport auto-mitigates breaching fraud CI
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I tell the CIMIT stub that the 'BREACHING' CI is already mitigated
+      And  I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity with a fraud VC
+      And I have a stored identity record with a 'P2' max vot
+
   Rule: Combined CI score breach
     Scenario: Combined breaching fraud CI goes to mitigation route
       When I start a new 'medium-confidence' journey
