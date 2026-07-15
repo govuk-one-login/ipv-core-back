@@ -303,7 +303,7 @@ Feature: Update details higher strength
         | Context     | Value |
         | journeyType | coi   |
 
-    Scenario: COI recovery fails at final Fraud check
+    Scenario: COI recovery fails at final Fraud check - given name only
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
       When I submit an 'update-name' event
@@ -355,6 +355,18 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value         |
         | reason  | updateDetails |
+
+    Scenario: COI recovery when failing initial fraud check - address only
+      When I submit a 'address-only' event
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-changed' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+        | Context              | Value         |
+        | journeyType          | updateDetails |
 
     Scenario: User fails twice with app
       When I submit a 'given-names-only' event

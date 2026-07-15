@@ -71,6 +71,10 @@ states:
         targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_UPDATE_IDENTITY
+        checkFeatureFlag:
+          coi6mfcDeadEndRoutingEnabled:
+            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+            targetState: START_HIGHER_STRENGTH
 
   PROCESS_UPDATE_IDENTITY:
     response:
