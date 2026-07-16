@@ -633,8 +633,7 @@ states:
     response:
       type: cri
       criId: claimedIdentity
-#      TODO: TBD what context value we want here
-#      context: bank_account
+      context: bank_account
     parent: CRI_STATE
     events:
       next:
