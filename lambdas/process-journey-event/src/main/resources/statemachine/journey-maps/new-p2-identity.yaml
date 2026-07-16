@@ -484,11 +484,55 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: PROCESS_NEW_IDENTITY
+      access-denied:
+        targetState: OPEN_BANKING_PHOTO_ID_ANOTHER_WAY
+      fail-with-no-ci:
+        targetState: OPEN_BANKING_PHOTO_ID_WEB_ANOTHER_WAY
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+      error:
+        targetState: OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
+
+  OPEN_BANKING_PHOTO_ID_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: photo-id-banking-another-way
+    events:
+      tryAgain:
+        targetState: OPEN_BANKING_CRI_PHOTO_ID
+      answerSecurityQuestions:
+        targetState: KBV_PHOTO_ID
+        targetEntryEvent: next
+
+  OPEN_BANKING_PHOTO_ID_WEB_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: photo-id-web-find-another-way
+      pageContext:
+        reason: openBanking
+    events:
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      f2f:
+        targetState: PYI_POST_OFFICE
+
+  OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: OPEN_BANKING_CRI_PHOTO_ID
+      app:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      postOffice:
+        targetState: PYI_POST_OFFICE
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   OPEN_BANKING_CRI_NO_PHOTO_ID:
     response:
