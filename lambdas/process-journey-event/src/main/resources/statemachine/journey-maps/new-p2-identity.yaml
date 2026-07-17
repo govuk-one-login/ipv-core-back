@@ -163,6 +163,7 @@ states:
         journeyContextToUnset: appOnly
       anotherWay:
         targetState: SELECT_PHOTO_ID
+        journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
@@ -654,7 +655,7 @@ states:
       next:
         targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID_OPEN_BANKING
       access-denied:
-        # TODO: Currently TBD where this event should go with open banking
+        # PYIC-9224: Currently TBD where this event should go with open banking
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:
