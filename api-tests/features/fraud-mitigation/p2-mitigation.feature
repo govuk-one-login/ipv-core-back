@@ -64,6 +64,31 @@ Feature: P2 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+    Scenario: Breaching fraud CI and user returns later goes to mitigation route
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      # New journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+
+    Scenario: Breaching fraud CI and user returns later goes back to RP
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      # New journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
   Rule: Photo ID app journey
     Background: Start P2 driving licence app journey
       When I start a new 'medium-confidence' journey

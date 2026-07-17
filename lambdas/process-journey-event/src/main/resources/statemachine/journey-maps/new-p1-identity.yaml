@@ -23,6 +23,8 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+          liveness-likeness:
+            targetState: MITIGATE_CI_VIA_APP
 
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
