@@ -553,6 +553,74 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
+        void shouldReturnReuseWhenExistingIdentityExistsWithPendingDcmawAsyncVc() throws Exception {
+            // Arrange - user has CURRENT VCs (existing identity) AND PENDING_RETURN VCs from an
+            // incomplete update journey with a DCMAW_ASYNC CRI response
+            var currentVcs =
+                    List.of(
+                            vcWebPassportSuccessful(),
+                            vcAddressM1a(),
+                            vcExperianFraudM1a(),
+                            vcExperianKbvM1a());
+            var pendingReturnVcs = List.of(vcDcmawAsyncDrivingPermitDva());
+
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, currentVcs, PENDING_RETURN, pendingReturnVcs));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            // Bundle contains both CURRENT + PENDING_RETURN VCs, isPendingReturn=true
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    DCMAW_ASYNC,
+                                    AsyncCriStatus.STATUS_PENDING,
+                                    false,
+                                    true,
+                                    false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            // Profile match finds existing identity from the combined VCs
+            var allVcs = new ArrayList<>(currentVcs);
+            allVcs.addAll(pendingReturnVcs);
+            when(mockVotMatcher.findStrongestMatches(List.of(P2), allVcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+            when(mockVotMatcher.findStrongestMatches(
+                            Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, allVcs, List.of(), true))
+                    .thenReturn(buildMatchResultFor(P2, M1A));
+
+            mockVcHelper
+                    .when(
+                            () ->
+                                    VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                                            any(), any(), any()))
+                    .thenReturn(false);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert - should route to reuse, not DCMAW continuation
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+
+            // Should have persisted all credentials
+            verify(mockSessionCredentialService).persistCredentials(allVcs, TEST_SESSION_ID, false);
+
+            verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                    auditEventArgumentCaptor.getValue().getEventName());
+
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
         void shouldReturnNoMatchResponseIfVCsDoNotCorrelate() throws Exception {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))

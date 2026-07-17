@@ -392,8 +392,7 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_FAIL_WITH_CI;
             }
 
-            // Check for an expired driving licence only if the credential bundle does
-            // not contain PENDING_RETURN VCs
+            // Check for an expired driving licence in current VCs only
             var hasExpiredDcmawDrivingPermit = false;
             if (!credentialBundle.isPendingReturn()) {
                 var successfulDcmawDlVc =
@@ -537,19 +536,24 @@ public class CheckExistingIdentityHandler
                 evcsService.fetchEvcsVerifiableCredentialsByState(
                         userId, evcsAccessToken, false, CURRENT, PENDING_RETURN);
 
+        var currentVcs = vcs.getOrDefault(CURRENT, List.of());
+
         // PENDING_RETURN vcs need a pending record to be valid
         var pendingRecords = criResponseService.getCriResponseItems(userId);
         var pendingReturnVcs = vcs.getOrDefault(PENDING_RETURN, List.of());
         var hasValidPendingReturnVcs =
                 !pendingRecords.isEmpty() && !isNullOrEmpty(pendingReturnVcs);
 
+        // Include both CURRENT and valid PENDING_RETURN VCs so that existing identities
+        // are evaluated alongside any pending async VCs. This ensures that users with an
+        // existing identity are routed to reuse/RFC rather than DCMAW cross-browser recovery.
+        // Without this, a user who abandons or fails an update details journey (which leaves
+        // a pending DCMAW VC) could return and be routed onto a web proving journey, bypassing
+        // the requirement to update via the app.
         var evcsIdentityVcs = new ArrayList<VerifiableCredential>();
+        evcsIdentityVcs.addAll(currentVcs);
         if (hasValidPendingReturnVcs) {
-            // + pending return VCs
             evcsIdentityVcs.addAll(pendingReturnVcs);
-        } else {
-            // + all vcs
-            evcsIdentityVcs.addAll(vcs.getOrDefault(CURRENT, List.of()));
         }
 
         return new VerifiableCredentialBundle(evcsIdentityVcs, hasValidPendingReturnVcs);

@@ -602,3 +602,54 @@ Feature: P2 V2 App Cross Browser Scenario
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+  Rule: User with existing identity returning after incomplete update journey sees reuse
+    # PYIC-8941: When a user with an existing identity starts an update details journey via
+    # the app and doesn't complete it (or gets a zero-scoring VC), a pending DCMAW async VC
+    # is left behind. On returning in a new session, the user should be routed back to
+    # reuse/RFC rather than being treated as a cross-browser recovery. Cross-browser recovery
+    # is not supported for users with an existing identity because it would allow them to
+    # bypass the requirement to update via the app and instead be routed onto a web proving
+    # journey.
+
+    Scenario: User with existing identity returns after failed DCMAW update and sees reuse
+      Given the subject already has the following credentials
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
+        | fraud   | kenneth-score-2        |
+      And I have an existing stored identity record with a 'P3' vot
+
+      # User starts an update details journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
+      When I submit an 'update-details' event
+      Then I get an 'update-details' page response
+      When I submit a 'given-names-only' event
+      Then I get a 'page-update-name' page response
+      When I submit an 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+
+      # DCMAW produces a zero-scoring VC (likeness/liveness fail)
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'sorry-could-not-confirm-details' page response
+
+      # User abandons and returns in a new session - should see reuse, not a new identity journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
