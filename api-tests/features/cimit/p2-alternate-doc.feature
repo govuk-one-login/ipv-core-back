@@ -1,7 +1,164 @@
-#  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to complete a journey via Open Banking
-
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
-Feature: P2 CIMIT - Alternate doc - Experian KBV
+Feature: P2 CIMIT - Alternate doc
+  Rule: No existing identity
+    Background:
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+
+    Scenario Outline: Alternate doc mitigation via passport or DL
+      When I submit an '<initialCri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport    | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence| kenneth-driving-permit-valid |
+
+    Scenario Outline: Alternate doc mitigation via passport or DL - separate session
+      When I submit an '<initialCri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigatingCri>' CRI response
+
+      # User drops out of previous CRI without mitigating and starts a new journey
+      Given I start a new 'medium-confidence' journey
+      Then I get a '<separateSessionNoMatch>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigationStart>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   |mitigatingCri   | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+
+    Scenario Outline: Mitigation of alternate-doc CI via <mitigating-cri> when user initially drops out of <mitigating-cri>
+      When I submit a '<initial-cri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a '<initial-cri>' CRI response
+      When I submit '<initial-invalid-doc>' details to the CRI stub
+      Then I get a '<no-match-page>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigating-cri>' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'prove-identity-no-other-photo-id' page response and pageContext
+        | Context    | Value                 |
+        | invalidDoc | <invalid-doc-context> |
+      When I submit a 'back' event
+      Then I get a '<mitigating-cri>' CRI response
+      When I submit '<mitigating-doc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | initial-cri    | initial-invalid-doc                        | no-match-page                            | mitigating-cri | mitigating-doc               | invalid-doc-context |
+        | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid | drivingLicence      |
+        | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       | passport            |
+
+    Scenario: Returns P0 when user continues to service from prove-identity-no-other-photo-id page during CI mitigation
+      When I submit a 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-needs-alternate-doc' details to the CRI stub
+      Then I get a 'pyi-passport-no-match-another-way' page response
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'prove-identity-no-other-photo-id' page response and pageContext
+        | Context    | Value          |
+        | invalidDoc | drivingLicence |
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
   Rule: No existing identity
     Background:
       Given I activate the 'openBankingDisabled' feature set
@@ -207,6 +364,59 @@ Feature: P2 CIMIT - Alternate doc - Experian KBV
 #      Then I get a 'pyi-no-match' page response
 
   Rule: High-medium confidence journey
+    Scenario Outline: High-medium confidence journey - alternate-doc mitigation
+      Given I activate the 'openBanking' feature set
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an '<initialCri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a '<initialCri>' CRI response
+      When I submit '<initialInvalidDoc>' details to the CRI stub
+      Then I get a '<noMatchPage>' page response
+      When I submit a 'next' event
+      Then I get a '<mitigatingCri>' CRI response
+      When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigatingCri  | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid |
+
+
+  Rule: High-medium confidence journey - no Open Banking
     Scenario Outline: High-medium confidence journey - alternate-doc mitigation
       Given I activate the 'openBankingDisabled' feature set
       When I start a new 'high-medium-confidence' journey

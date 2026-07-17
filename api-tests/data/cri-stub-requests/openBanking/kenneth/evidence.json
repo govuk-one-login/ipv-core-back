@@ -1,0 +1,16 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "strengthScore": 3,
+  "validityScore": 3,
+  "verificationScore": 2,
+  "checkDetails": [
+    {
+      "checkMethod": "data",
+      "identityCheckPolicy": "none"
+    },
+    {
+      "checkMethod": "auth"
+    }
+  ]
+}

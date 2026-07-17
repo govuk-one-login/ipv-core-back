@@ -39,7 +39,6 @@ Feature: Audit Events
     And I have a stored identity record with a 'P3' max vot
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
-  #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get complete a journey via Open Banking
   @QualityGateRegressionTest
   Scenario: New identity - p2 web journey - no Open Banking
     Given I activate the 'openBankingDisabled' feature set
@@ -76,6 +75,50 @@ Feature: Audit Events
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
+    And audit events for 'new-identity-p2-web-journey-kbv' are recorded [local only]
+
+  @QualityGateRegressionTest
+  Scenario: New identity - p2 web journey
+    Given I activate the 'openBanking' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
+    Then I get a 'select-photo-id' page response
+    When I submit an 'drivingLicence' event
+    Then I get a 'prove-identity-online' page response and pageContext
+      | Context | Value |
+      | photoId | true  |
+    When I submit a 'next' event
+    Then I get a 'prove-identity-online-banking' page response
+    When I submit a 'next' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get an 'openBanking' CRI response
+    When I submit 'kenneth' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -637,8 +680,7 @@ Feature: Audit Events
     Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
     And audit events for 'reverification-failed-journey' are recorded [local only]
 
-  #  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
-  Rule: DWP KBV
+  Rule: DWP KBV - no Open Banking
     Background: Start a journey to DWP KBV CRI
       Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
@@ -666,6 +708,74 @@ Feature: Audit Events
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+
+    @QualityGateNewFeatureTest
+    Scenario: DWP KBV - successful response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      And audit events for 'dwp-kbv-successful-journey-no-open-banking' are recorded [local only]
+
+    @QualityGateNewFeatureTest
+    Scenario: DWP KBV - dropout via thin file
+      When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-different-security-questions' page response
+      And audit events for 'dwp-kbv-dropout-via-thin-file-no-open-banking' are recorded [local only]
+
+    @QualityGateNewFeatureTest
+    Scenario: DWP KBV - user abandons CRI
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      And audit events for 'dwp-kbv-dropout-user-abandons-cri-no-open-banking' are recorded [local only]
+
+  Rule: DWP KBV
+    Background: Start a journey to DWP KBV CRI
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
       Then I get a 'personal-independence-payment' page response
       When I submit a 'next' event
       Then I get a 'page-pre-dwp-kbv-transition' page response

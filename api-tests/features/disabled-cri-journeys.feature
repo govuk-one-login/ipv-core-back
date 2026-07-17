@@ -21,8 +21,48 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
 
-    #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get to KBVs via Open Banking
     Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure
+      Given I activate the 'dcmawAsyncDisabled,openBanking' feature set
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-0' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-web-find-another-way' page response and pageContext
+        | Context | Value   |
+        | reason  | dropout |
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-technical' page response
+
+    Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure - no Open Banking
       Given I activate the 'dcmawAsyncDisabled,openBankingDisabled' feature set
       Given I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -66,8 +106,46 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'pyi-technical' page response
 
-    #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get to KBVs via Open Banking
     Scenario: Same session enhanced verification mitigation with DCMAW leads to technical failure
+      Given I activate the 'dcmawAsyncDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-web-find-another-way' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-technical' page response
+
+    Scenario: Same session enhanced verification mitigation with DCMAW leads to technical failure - no Open Banking
       Given I activate the 'dcmawAsyncDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -387,8 +465,63 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-  #  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
   Rule: DWP KBVs are disabled or unsuitable
+    Background: User starts a web journey to KBV
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+
+    Scenario: Experian KBV is offered first
+      Given I activate the 'dwpKbvDisabled' feature sets
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+
+    Scenario: Experian KBV is offered if DWP KBV unsuitable
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit an 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+
+  Rule: DWP KBVs are disabled or unsuitable - no Open Banking
     Background: User starts a web journey to KBV
       Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey

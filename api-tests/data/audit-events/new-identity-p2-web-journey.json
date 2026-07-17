@@ -212,18 +212,6 @@
     }
   },
   {
-    "event_name": "IPV_DWP_KBV_HANDOFF_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "session_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
     "user": {
@@ -244,24 +232,12 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "iss": "https://experian-kbv-cri.stubs.account.gov.uk",
+      "iss": "https://open-banking-cri.stubs.account.gov.uk",
       "evidence": [
         {
           "checkDetails": [
             {
-              "checkMethod": "kbv",
-              "kbvQuality": 3,
-              "kbvResponseMode": "multiple_choice"
-            },
-            {
-              "checkMethod": "kbv",
-              "kbvQuality": 3,
-              "kbvResponseMode": "multiple_choice"
-            },
-            {
-              "checkMethod": "kbv",
-              "kbvQuality": 2,
-              "kbvResponseMode": "multiple_choice"
+              "checkMethod": "data"
             }
           ],
           "type": "IdentityCheck",
@@ -284,7 +260,7 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "cri": "experianKbv",
+      "cri": "openBanking",
       "type": "vc"
     },
     "restricted": {
@@ -368,7 +344,7 @@
         "evidences": [
           {
             "strength": 3,
-            "validity": 2
+            "validity": 3
           }
         ],
         "activity": 1,

@@ -1,7 +1,186 @@
 @Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI and driving licence authoritative source check
-  #  PYIC-9059 these tests will need equivalent Open Banking versions once it is possible to get an identity via Open Banking
   Rule: Same session mitigation
+    Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
+      Given I activate the 'drivingLicenceAuthCheck,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-web-find-another-way' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+
+    Scenario: Same session DCMAW enhanced verification mitigation - successful
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Same session DCMAW enhanced verification mitigation - dropout DL auth source check - mitigate via f2f
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response
+      When I submit a 'postOffice' event
+      Then I get a 'pyi-post-office' page response
+
+    Scenario: Same session DCMAW enhanced verification mitigation - DL auth check incomplete
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit a 'next' event
+
+      # Attempt 2 - retry after viewing prove-identity-another-way
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response
+      When I submit an 'anotherTypePhotoId' event
+
+      # Attempt 3 - give up
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+  Rule: Same session mitigation - no Open Banking
     Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
       Given I activate the 'drivingLicenceAuthCheck,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
@@ -270,8 +449,85 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       And I don't have a stored identity in EVCS
 
   Rule: Web journey via DL initially
-    #  PYIC-9059 this test will need an equivalent version once it is possible to get an identity via Open Banking
     Scenario Outline: Same session - DL auth source check not required when user already has a DL VC - <journey-type>
+      Given I activate the 'drivingLicenceAuthCheck,openBanking' feature set
+      When I start a new '<journey-type>' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-web-find-another-way' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | journey-type           |
+        | medium-confidence      |
+        | high-medium-confidence |
+
+    Scenario Outline: Same session - DL auth source check not required when user already has a DL VC - <journey-type> - no Open Banking
       Given I activate the 'drivingLicenceAuthCheck,openBankingDisabled' feature set
       When I start a new '<journey-type>' journey
       Then I get a 'live-in-uk' page response
