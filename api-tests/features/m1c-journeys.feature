@@ -2,7 +2,8 @@
 Feature: M1C Unavailable Journeys
   Rule: Medium-confidence journeys
     Background:
-      Given I start a new 'medium-confidence' journey
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -45,6 +46,7 @@ Feature: M1C Unavailable Journeys
       | kenneth-passport-valid |
       | kenneth-brp-valid      |
 
+    #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to complete a journey via Open Banking
     Scenario: Unsuccessful M1C P2 identity via web DL using DL
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response

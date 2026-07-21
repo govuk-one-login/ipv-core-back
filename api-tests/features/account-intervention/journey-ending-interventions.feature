@@ -208,13 +208,38 @@ Feature: Journey ending interventions
       | evidence_requested | {"identityFraudScore":1} |
     Then I get an OAuth response with error code 'session_invalidated'
 
-  Scenario: Blocked intervention at end of initial F2F journey
+  Scenario: Blocked intervention at end of initial F2F journey - no Open Banking
     Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
+    And I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit a 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When The AIS stub will return an 'AIS_ACCOUNT_BLOCKED' result
+    And I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get an OAuth response with error code 'session_invalidated'
+    And I don't have a stored identity in EVCS
+
+  Scenario: Blocked intervention at end of initial F2F journey
+    Given The AIS stub will return an 'AIS_NO_INTERVENTION' result
+    And I activate the 'openBanking' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-online' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response

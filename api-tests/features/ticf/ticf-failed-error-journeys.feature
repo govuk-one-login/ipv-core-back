@@ -1,7 +1,10 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: TICF failed/error journeys
+  # These tests check what happens if a user gets to KBVs and then needs enhanced verification
+  #  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
   Rule: Via enhanced-verification journey
     Background: Start TICF enhanced verification journey
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -109,7 +112,8 @@ Feature: TICF failed/error journeys
         | type | RiskAssessment               |
 
   Rule: Via post-office
-    Scenario: TICF failed post-office journey - PYI_ESCAPE
+    Scenario: TICF failed post-office journey - PYI_ESCAPE - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -129,9 +133,32 @@ Feature: TICF failed/error journeys
         | cis  |                              |
         | type | RiskAssessment               |
 
+    Scenario: TICF failed post-office journey - PYI_ESCAPE
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-no-photo-id' page response
+      When I submit an 'end' event
+      Then I get a 'no-photo-id-exit-find-another-way' page response
+      When I submit an 'end' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
+
   Rule: Via no-photo-id
-    Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
-      Given I activate the 'm2bBetaExperianKbv' feature set
+    Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -154,6 +181,41 @@ Feature: TICF failed/error journeys
       Then I get a 'prove-identity-no-photo-id' page response
       When I submit an 'end' event
       Then I get a 'no-photo-id-exit-find-another-way' page response
+      When I submit an 'end' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
+
+    Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit an 'anotherWay' event
+      Then I get a 'pyi-post-office' page response
+      When I submit an 'end' event
+      Then I get a 'pyi-escape' page response
       When I submit an 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

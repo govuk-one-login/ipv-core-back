@@ -39,8 +39,10 @@ Feature: Audit Events
     And I have a stored identity record with a 'P3' max vot
     And audit events for 'new-identity-p2-app-journey' are recorded [local only]
 
+  #  PYIC-9059 this test will need an equivalent duplicate version once it is possible to get complete a journey via Open Banking
   @QualityGateRegressionTest
-  Scenario: New identity - p2 web journey
+  Scenario: New identity - p2 web journey - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -133,8 +135,9 @@ Feature: Audit Events
     And audit events for 'reuse-journey-identity-compared' are recorded [local only]
 
   @QualityGateRegressionTest
-  Scenario: New identity - via F2F journey
-    And I start a new 'medium-confidence' journey
+  Scenario: New identity - via F2F journey - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -170,7 +173,48 @@ Feature: Audit Events
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
   @QualityGateRegressionTest
-  Scenario: F2F return after VC error
+  Scenario: New identity - via F2F journey
+    Given I activate the 'openBanking' feature set
+    And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-online' page response
+    When I submit an 'anotherWay' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit a 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'f2f' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+      | Attribute          | Values                                      |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+    Then I get a 'page-face-to-face-handoff' page response
+
+    # Return journey
+    # We want to wait a suitable period of time to let the request to the process-async-cri lambda to finish before
+    # starting a new session. This will hopefully reduce flakiness with this test where we expect an exact sequence
+    # of audit events to be generated.
+    When I wait for 5 seconds for the async credential to be processed
+    And I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
+    And audit events for 'new-identity-f2f-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
+  Scenario: F2F return after VC error - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -200,7 +244,41 @@ Feature: Audit Events
     And audit events for 'f2f-vc-error-journey' are recorded [local only]
 
   @QualityGateRegressionTest
-  Scenario: Alternate doc mitigation
+  Scenario: F2F return after VC error
+    Given I activate the 'openBanking' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-online' page response
+    When I submit an 'anotherWay' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit a 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                   |
+      | evidence_requested | {"identityFraudScore":2} |
+    Then I get a 'f2f' CRI response
+    When I get an error from the async CRI stub
+    Then I get a 'page-face-to-face-handoff' page response
+
+    # Return journey
+    When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
+    When I submit a 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P0' identity without a TICF VC
+    And I don't have a stored identity in EVCS
+    And audit events for 'f2f-vc-error-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
+  Scenario: Alternate doc mitigation - no Open Banking
+    Given I activate the 'openBankingDisabled' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'uk' event
@@ -218,6 +296,39 @@ Feature: Audit Events
     When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
     When I submit an 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-needs-alternate-doc' details to the CRI stub
+    Then I get a 'pyi-driving-licence-no-match-another-way' page response
+    When I submit a 'next' event
+    Then I get a 'ukPassport' CRI response
+    And audit events for 'alternate-doc-mitigation-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
+  Scenario: Alternate doc mitigation
+    Given I activate the 'openBanking' feature set
+    And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
+    Then I get a 'select-photo-id' page response
+    When I submit an 'drivingLicence' event
+    Then I get a 'prove-identity-online' page response and pageContext
+      | Context | Value |
+      | photoId | true  |
+    When I submit an 'next' event
+    Then I get a 'prove-identity-online-banking' page response
+    When I submit an 'next' event
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details to the CRI stub
     Then I get a 'pyi-driving-licence-no-match-another-way' page response
@@ -526,8 +637,10 @@ Feature: Audit Events
     Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
     And audit events for 'reverification-failed-journey' are recorded [local only]
 
+  #  PYIC-9059 these tests will need equivalent duplicate versions once it is possible to get to KBVs via Open Banking
   Rule: DWP KBV
     Background: Start a journey to DWP KBV CRI
+      Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event

@@ -46,14 +46,46 @@ Feature: TICF successful responses
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
 
-    Scenario: New P2 identity via F2F - TICF request returns a CI
+    Scenario: New P2 identity via F2F - no Open Banking - TICF request returns a CI
       Given TICF CRI will respond with default parameters
         | cis  | BREACHING                    |
+      And I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+      And the TICF VC has properties
+        | cis  | BREACHING                    |
+        | type | RiskAssessment               |
+
+    Scenario: New P2 identity via F2F - TICF request returns a CI
+      Given TICF CRI will respond with default parameters
+        | cis  | BREACHING                    |
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response

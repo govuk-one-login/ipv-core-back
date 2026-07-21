@@ -50,7 +50,9 @@ Feature: Stored Identity - P2 journeys
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
 
-    Scenario: Successful stored identity storage - P2 web journey
+    #  PYIC-9059 this test will need an equivalent version once it is possible to get to complete a journey via Open Banking
+    Scenario: Successful stored identity storage - P2 web journey - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -123,7 +125,8 @@ Feature: Stored Identity - P2 journeys
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P3' max vot
 
-    Scenario: Successful stored identity storage - P2 F2F journey
+    Scenario: Successful stored identity storage - P2 F2F journey - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit a 'next' event
@@ -149,8 +152,78 @@ Feature: Stored Identity - P2 journeys
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: Successful stored identity storage - P2 no photo ID journey
+    Scenario: Successful stored identity storage - P2 F2F journey
+      Given I activate the 'openBanking' feature set
       When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'anotherWay' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+        # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Successful stored identity storage - P2 no photo ID journey - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-no-photo-id' page response
+      When I submit an 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'bav' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Successful stored identity storage - P2 no photo ID journey
+      Given I activate the 'openBanking' feature set
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-no-photo-id' page response

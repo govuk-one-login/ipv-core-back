@@ -39,7 +39,17 @@ states:
   DCMAW_ASYNC_ANOTHER_WAY:
     events:
       next:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: SELECT_PHOTO_ID
+        checkIfDisabled:
+          openBanking:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+            checkMitigation:
+              enhanced-verification:
+                targetState: MITIGATION_01_PYI_POST_OFFICE
+                checkIfDisabled:
+                  f2f:
+                    targetJourney: INELIGIBLE
+                    targetState: INELIGIBLE
         checkMitigation:
           enhanced-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
@@ -138,11 +148,14 @@ states:
           dcmawAsync:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       end:
-        targetState: F2F_START_PAGE
+        targetState: PROVE_IDENTITY_ONLINE_NO_PHOTO_ID
         checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
+          openBanking:
+            targetState: F2F_START_PAGE
+            checkIfDisabled:
+              f2f:
+                targetJourney: INELIGIBLE
+                targetState: INELIGIBLE
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -151,7 +164,7 @@ states:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
         journeyContextToUnset: appOnly
       anotherWay:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: SELECT_PHOTO_ID
         journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
@@ -160,12 +173,24 @@ states:
               f2f:
                 targetJourney: INELIGIBLE
                 targetState: INELIGIBLE
+        checkIfDisabled:
+          openBanking:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+            journeyContextToUnset: appOnly
+            checkMitigation:
+              enhanced-verification:
+                targetState: MITIGATION_01_PYI_POST_OFFICE
+                checkIfDisabled:
+                  f2f:
+                    targetJourney: INELIGIBLE
+                    targetState: INELIGIBLE
       incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
         journeyContextToUnset: appOnly
       failedDlAuthCheckInvalidDl:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl-another-way
+#       PYIC-9058 Need a decision on where this goes for Open Banking - probably need a new page that explains Open Banking.
+        targetJourney: FAILED
+        targetState: FAILED
         journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
@@ -175,6 +200,19 @@ states:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+        checkIfDisabled:
+          openBanking:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: alternate-doc-invalid-dl-another-way
+            journeyContextToUnset: appOnly
+            checkMitigation:
+              enhanced-verification:
+                targetJourney: FAILED
+                targetState: FAILED
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
       failWithCiFromApp:
         targetJourney: FAILED
         targetState: FAILED
@@ -216,6 +254,104 @@ states:
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
+  PROVE_IDENTITY_ONLINE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: prove-identity-online
+    events:
+      next:
+        targetState: OPEN_BANKING_START_PAGE_NO_PHOTO_ID
+      anotherWay:
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  OPEN_BANKING_START_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: prove-identity-online-banking
+    events:
+      next:
+        targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID_OPEN_BANKING
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+      anotherWay:
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  SELECT_PHOTO_ID:
+    response:
+      type: page
+      pageId: select-photo-id
+    events:
+      ukPassport:
+        targetState: PROVE_IDENTITY_ONLINE_PASSPORT
+      drivingLicence:
+        targetState: PROVE_IDENTITY_ONLINE_DRIVING_LICENCE
+      neither:
+        targetState: PROVE_IDENTITY_ONLINE_NO_PHOTO_ID
+
+  PROVE_IDENTITY_ONLINE_PASSPORT:
+    response:
+      type: page
+      pageId: prove-identity-online
+      pageContext:
+        photoId: true
+    events:
+      next:
+        targetState: OPEN_BANKING_START_PAGE_PASSPORT
+      anotherWay:
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  OPEN_BANKING_START_PAGE_PASSPORT:
+    response:
+      type: page
+      pageId: prove-identity-online-banking
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
+      anotherWay:
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  PROVE_IDENTITY_ONLINE_DRIVING_LICENCE:
+    response:
+      type: page
+      pageId: prove-identity-online
+      pageContext:
+        photoId: true
+    events:
+      next:
+        targetState: OPEN_BANKING_START_PAGE_DRIVING_LICENCE
+      anotherWay:
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  OPEN_BANKING_START_PAGE_DRIVING_LICENCE:
+    response:
+      type: page
+      pageId: prove-identity-online-banking
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
+      anotherWay:
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
   F2F_START_PAGE:
     response:
       type: page
@@ -237,10 +373,13 @@ states:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
-        targetState: BANK_ACCOUNT_START_PAGE
+        targetState: PYI_ESCAPE
         checkIfDisabled:
-          bav:
-            targetState: PYI_ESCAPE
+          openBanking:
+            targetState: BANK_ACCOUNT_START_PAGE
+            checkIfDisabled:
+              bav:
+                targetState: PYI_ESCAPE
 
   BANK_ACCOUNT_START_PAGE:
     response:
@@ -275,8 +414,11 @@ states:
       next-dl:
         targetState: CHECK_FRAUD_AFTER_DL
       next-passport:
-        targetState: KBV_PHOTO_ID
-        targetEntryEvent: next
+        targetState: OPEN_BANKING_CRI_PHOTO_ID
+        checkIfDisabled:
+          openBanking:
+            targetState: KBV_PHOTO_ID
+            targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -312,9 +454,38 @@ states:
         scoreThreshold: 2
     events:
       met:
-        targetState: KBV_PHOTO_ID
-        targetEntryEvent: next
+        targetState: OPEN_BANKING_CRI_PHOTO_ID
+        checkIfDisabled:
+          openBanking:
+            targetState: KBV_PHOTO_ID
+            targetEntryEvent: next
       unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  OPEN_BANKING_CRI_PHOTO_ID:
+    response:
+      type: cri
+      criId: openBanking
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  OPEN_BANKING_CRI_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: openBanking
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
 
@@ -460,7 +631,62 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
-  # No photo id journey (M2B)
+  # No photo id journey with Open Banking
+  CRI_CLAIMED_IDENTITY_NO_PHOTO_ID_OPEN_BANKING:
+    response:
+      type: cri
+      criId: claimedIdentity
+      context: bank_account
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_NINO_WITH_SCOPE_NO_PHOTO_ID_OPEN_BANKING
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  CRI_NINO_WITH_SCOPE_NO_PHOTO_ID_OPEN_BANKING:
+    response:
+      type: cri
+      criId: nino
+      evidenceRequest:
+        scoringPolicy: gpg45
+        strengthScore: 2
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID_OPEN_BANKING
+      access-denied:
+        # PYIC-9224: Currently TBD where this event should go with open banking
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NINO
+
+  ADDRESS_AND_FRAUD_NO_PHOTO_ID_OPEN_BANKING:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: OPEN_BANKING_CRI_NO_PHOTO_ID
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      fraud-fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP
+      fraud-fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # No photo id journey with BAV (M2B)
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
     response:
       type: cri
