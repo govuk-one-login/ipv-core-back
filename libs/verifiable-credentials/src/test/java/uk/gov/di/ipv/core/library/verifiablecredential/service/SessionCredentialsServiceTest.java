@@ -257,18 +257,34 @@ class SessionCredentialsServiceTest {
             var fraudVc =
                     generateVerifiableCredential(
                             "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
+            var dcmawAsyncVc =
+                    generateVerifiableCredential("userId", DCMAW_ASYNC, vcClaimFailedWithCis(null));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
 
-            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionDcmawAsyncCredentialItem =
+                    dcmawAsyncVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
 
             when(mockDataStore.getItems(SESSION_ID))
-                    .thenReturn(List.of(sessionFraudCredentialItem, sessionAddressCredentialItem));
+                    .thenReturn(
+                            List.of(
+                                    sessionAddressCredentialItem,
+                                    sessionFraudCredentialItem,
+                                    sessionDcmawAsyncCredentialItem,
+                                    sessionDcmawCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForResetType(
                     SESSION_ID, NAME_ONLY_CHANGE);
 
             verify(mockDataStore).getItems(SESSION_ID);
-            verify(mockDataStore).delete(List.of(sessionFraudCredentialItem));
+            verify(mockDataStore)
+                    .delete(
+                            List.of(
+                                    sessionFraudCredentialItem,
+                                    sessionDcmawAsyncCredentialItem,
+                                    sessionDcmawCredentialItem));
         }
 
         @Test
@@ -279,7 +295,6 @@ class SessionCredentialsServiceTest {
             var fraudVc =
                     generateVerifiableCredential(
                             "userId", EXPERIAN_FRAUD, vcClaimFailedWithCis(null));
-
             var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaimFailedWithCis(null));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
