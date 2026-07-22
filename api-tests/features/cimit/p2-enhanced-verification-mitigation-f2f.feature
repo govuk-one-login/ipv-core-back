@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateRegressionTest @qqqq
+@Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: Mitigating CIs with enhanced verification using the F2F CRI
   Rule: Same session journeys
     Background:
