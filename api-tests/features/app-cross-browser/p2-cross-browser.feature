@@ -422,12 +422,9 @@ Feature: P2 V2 App Cross Browser Scenario
   Rule: Cross-browser during separate-session enhanced verification mitigation
     Background: Start separate-session enhanced verification mitigation
       Given I activate the 'drivingLicenceAuthCheck' feature set
-      And the subject already has the following credentials
-        | CRI         | scenario                            |
-        | ukPassport  | kenneth-passport-valid              |
-        | address     | kenneth-current                     |
-        | fraud       | kenneth-score-2                     |
-        | experianKbv | kenneth-needs-enhanced-verification |
+      And the subject has the following CIs
+        | Code                        |
+        | NEEDS-ENHANCED-VERIFICATION |
 
       # Separate session mitigation
       When I start a new 'medium-confidence' journey
