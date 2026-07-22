@@ -42,6 +42,9 @@ export MANAGEMENT_CIMIT_STUB_API_KEY
 CIMIT_INTERNAL_API_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/cimitApi/apiKey | jq -r .SecretString)
 export CIMIT_INTERNAL_API_KEY
 
+JAR_SIGNING_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/orchStub/signingKey | jq -r .SecretString)
+export JAR_SIGNING_KEY
+
 cd /api-tests
 
 if [[ "${DEV_PLATFORM_STAGE}" == "TRAFFIC_TEST" ]]; then
