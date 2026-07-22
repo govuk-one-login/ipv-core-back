@@ -30,3 +30,4 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       TICF_API_KEY: ${{ secrets.TICF_API_KEY }}
       MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
+      JAR_SIGNING_KEY: ${{ secrets.JAR_SIGNING_KEY }}
