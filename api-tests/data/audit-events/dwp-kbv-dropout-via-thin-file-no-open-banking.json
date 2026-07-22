@@ -201,33 +201,6 @@
     }
   },
   {
-    "event_name": "IPV_REDIRECT_TO_CRI",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_CRI_AUTH_RESPONSE_RECEIVED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]"
-    },
-    "extensions": {
-      "error_code": "access_denied",
-      "error_description": "No error description provided",
-      "credential_issuer_id": null
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_DWP_KBV_HANDOFF_START",
     "component_id": "https://identity.local.account.gov.uk",
     "user": {

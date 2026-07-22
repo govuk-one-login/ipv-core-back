@@ -82,7 +82,45 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    # PYIC-9059 We need a version of this for open banking when we have the full route implemented
+    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
+      When I activate the 'openBanking' feature set
+      And the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+        # And the user returns from the app to core-front
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+        # This simulates the user clicking continue on the problem-different-browser
+        # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+        # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+        # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'select-photo-id' page response
+      When I submit a 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
     Scenario: MAM journey cross-browser scenario unsuccessful VC without CI - no Open Banking
       When I activate the 'openBankingDisabled' feature set
       And the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
@@ -142,8 +180,132 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+
+  Rule: Cross-browser during same-session enhanced verification mitigation
+    Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'photo-id-web-find-another-way' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+
+    Scenario: Successful mitigation with DL auth source check
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+        # And the user returns from the app to core-front
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+        # This simulates the user clicking continue on the problem-different-browser
+        # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+        # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+        # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
   Rule: Cross-browser during same-session enhanced verification mitigation - no Open Banking
-    # PYIC-9059 We need versions of these tests for open banking when we have the full route implemented
     Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
       Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
