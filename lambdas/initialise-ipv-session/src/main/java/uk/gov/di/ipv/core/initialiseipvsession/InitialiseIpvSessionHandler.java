@@ -315,12 +315,13 @@ public class InitialiseIpvSessionHandler
 
     private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
         boolean isInvalid = false;
+        String clientId = sessionParams.get(CLIENT_ID_PARAM_KEY);
 
-        if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
+        if (StringUtils.isBlank(clientId)) {
             LOGGER.warn(LogHelper.buildLogMessage("Missing client_id query parameter"));
             isInvalid = true;
         }
-        LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
+        LogHelper.attachClientIdToLogs(clientId);
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
             LOGGER.warn(LogHelper.buildLogMessage("Missing request query parameter"));
@@ -330,6 +331,12 @@ public class InitialiseIpvSessionHandler
         if (isInvalid) {
             return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
+
+        if (configService.getConfiguration().getClientConfig(clientId) == null) {
+            LOGGER.warn(LogHelper.buildLogMessage("Unknown client_id query parameter provided"));
+            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
+        }
+
         return Optional.empty();
     }
 }
