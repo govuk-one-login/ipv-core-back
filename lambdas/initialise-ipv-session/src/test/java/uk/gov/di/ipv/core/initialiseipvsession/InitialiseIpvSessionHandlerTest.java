@@ -38,6 +38,8 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidatio
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.domain.ClientConfig;
+import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -76,6 +78,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -117,6 +120,9 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
+    @Mock private Config mockConfig;
+    @Mock private ClientConfig mockClientConfig;
+
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     @Captor private ArgumentCaptor<ErrorObject> errorObjectArgumentCaptor;
@@ -155,7 +161,11 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
         clientOAuthSessionItem.setReproveIdentity(false);
 
-        when(mockConfigService.getComponentId()).thenReturn("https://core-component.example");
+        lenient()
+                .when(mockConfigService.getComponentId())
+                .thenReturn("https://core-component.example");
+        lenient().when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
+        lenient().when(mockConfig.getClientConfig(anyString())).thenReturn(mockClientConfig);
     }
 
     @AfterEach
@@ -520,6 +530,31 @@ class InitialiseIpvSessionHandlerTest {
         // Act
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(missingRequestEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfUnknownClientId() throws JsonProcessingException {
+        // Arrange
+        when(mockConfig.getClientConfig("unknown-client")).thenReturn(null);
+
+        APIGatewayProxyRequestEvent unknownClientEvent = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "unknown-client", "request", signedEncryptedJwt.serialize());
+        unknownClientEvent.setBody(OBJECT_MAPPER.writeValueAsString(sessionParams));
+        unknownClientEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(unknownClientEvent, mockContext);
 
         // Assert
         Map<String, Object> responseBody =

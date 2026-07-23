@@ -314,22 +314,29 @@ public class InitialiseIpvSessionHandler
     }
 
     private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
-        boolean isInvalid = false;
-
-        if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
-            LOGGER.warn(LogHelper.buildLogMessage("Missing client_id query parameter"));
-            isInvalid = true;
+        if (sessionParams == null) {
+            LOGGER.warn(LogHelper.buildLogMessage("Session parameters map is null"));
+            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
-        LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
+
+        String clientId = sessionParams.get(CLIENT_ID_PARAM_KEY);
+        if (StringUtils.isBlank(clientId)) {
+            LOGGER.warn(LogHelper.buildLogMessage("Missing client_id query parameter"));
+            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
+        }
+
+        LogHelper.attachClientIdToLogs(clientId);
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
             LOGGER.warn(LogHelper.buildLogMessage("Missing request query parameter"));
-            isInvalid = true;
-        }
-
-        if (isInvalid) {
             return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
+
+        if (configService.getConfiguration().getClientConfig(clientId) == null) {
+            LOGGER.warn(LogHelper.buildLogMessage("Unknown client_id query parameter provided"));
+            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
+        }
+
         return Optional.empty();
     }
 }
