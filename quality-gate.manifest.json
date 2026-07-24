@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.14.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.15.0/schemas/schema.json",
   "services": [
     {
       "product": "IPV-Core",
@@ -7,52 +7,70 @@
       "promotionType": "securePipelines",
       "automated": [
         {
-          "checkTypes": [
-            "secret scanning"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/automated-tests.yaml",
             "path": "$.jobs.detect-secrets"
-          }
+          },
+          "checks": [
+            {
+              "name": "secret scanning"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "code style and linting",
-            "unit test coverage",
-            "unit"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/automated-tests.yaml",
             "path": "$.jobs.test-java"
-          }
+          },
+          "checks": [
+            {
+              "name": "code style and linting"
+            },
+            {
+              "name": "unit test coverage"
+            },
+            {
+              "name": "unit"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "code style and linting",
-            "integration",
-            "regression",
-            "new feature"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/automated-tests.yaml",
             "path": "$.jobs.api-test"
-          }
+          },
+          "checks": [
+            {
+              "name": "code style and linting"
+            },
+            {
+              "name": "integration"
+            },
+            {
+              "name": "regression"
+            },
+            {
+              "name": "new feature"
+            }
+          ]
         },
         {
-          "checkTypes": [
-            "contract"
-          ],
           "phase": "pre-merge",
           "provider": "GitHub",
           "config": {
             "file": ".github/workflows/contract-tests.yaml"
-          }
+          },
+          "checks": [
+            {
+              "name": "contract"
+            }
+          ]
         }
       ]
     }
