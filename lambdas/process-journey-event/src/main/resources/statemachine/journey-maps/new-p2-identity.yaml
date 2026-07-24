@@ -327,6 +327,8 @@ states:
     response:
       type: page
       pageId: prove-identity-online-banking
+      pageContext:
+        photoId: true
     events:
       next:
         targetState: WEB_DL_OR_PASSPORT
@@ -356,6 +358,8 @@ states:
     response:
       type: page
       pageId: prove-identity-online-banking
+      pageContext:
+        photoId: true
     events:
       next:
         targetState: WEB_DL_OR_PASSPORT
