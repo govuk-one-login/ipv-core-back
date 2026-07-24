@@ -1,7 +1,7 @@
 name: Update Name Higher Strength
 
 description: >-
-  A journey for users to retry with higher srength doc
+  A journey for users to retry with higher strength doc
 
 states:
 
@@ -23,7 +23,10 @@ states:
         journeyType: updateDetails
     events:
       passport:
-        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_ONLY
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_WITH_ADDRESS
       continueToService:
         targetState: REINSTATE_EXISTING_IDENTITY
 
@@ -35,7 +38,10 @@ states:
         journeyType: repeatFraudCheck
     events:
       passport:
-        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_ONLY
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_WITH_ADDRESS
       returnToRp:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
@@ -452,7 +458,18 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  RESET_IDENTITY_BEFORE_NEW_IDENTITY:
+  RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_ONLY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: NAME_ONLY_CHANGE
+    events:
+      next:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+
+  RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_WITH_ADDRESS:
     response:
       type: process
       lambda: reset-identity
