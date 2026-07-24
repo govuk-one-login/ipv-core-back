@@ -414,7 +414,9 @@ Feature: P2 Fraud mitigation
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub
@@ -442,7 +444,9 @@ Feature: P2 Fraud mitigation
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub

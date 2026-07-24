@@ -26,7 +26,9 @@ Feature: P2 CIMIT - Alternate doc
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub
@@ -60,7 +62,9 @@ Feature: P2 CIMIT - Alternate doc
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub
@@ -102,7 +106,9 @@ Feature: P2 CIMIT - Alternate doc
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initial-cri>' CRI response
       When I submit '<initial-invalid-doc>' details to the CRI stub
@@ -142,7 +148,9 @@ Feature: P2 CIMIT - Alternate doc
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-needs-alternate-doc' details to the CRI stub
@@ -387,7 +395,9 @@ Feature: P2 CIMIT - Alternate doc
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub

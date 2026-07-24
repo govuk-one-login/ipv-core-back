@@ -79,7 +79,9 @@ Feature: Stored Identity - M1C Outcomes
         | Context | Value |
         | photoId | true  |
       When I submit an 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit an 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub

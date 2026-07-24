@@ -26,7 +26,9 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub
@@ -70,7 +72,9 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub
@@ -122,7 +126,9 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub
@@ -166,7 +172,9 @@ Feature: P2 CIMIT - Alternate doc - DWP KBV
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initialCri>' CRI response
       When I submit '<initialInvalidDoc>' details to the CRI stub

@@ -56,7 +56,9 @@ Feature: M1C Unavailable Journeys
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
