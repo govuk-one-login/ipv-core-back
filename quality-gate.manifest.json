@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.15.0/schemas/schema.json",
+  "$schema": "https://raw.githubusercontent.com/govuk-one-login/quality-gates/refs/tags/v0.16.0/schemas/schema.json",
   "services": [
     {
       "product": "IPV-Core",
@@ -50,13 +50,11 @@
               "name": "code style and linting"
             },
             {
-              "name": "integration"
-            },
-            {
-              "name": "regression"
-            },
-            {
-              "name": "new feature"
+              "name": "integration",
+              "purpose": [
+                "regression",
+                "new feature"
+              ]
             }
           ]
         },
