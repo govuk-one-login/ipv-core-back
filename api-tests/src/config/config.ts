@@ -32,6 +32,7 @@ const config = {
   orch: {
     redirectUrl: getMandatoryConfig("ORCHESTRATOR_REDIRECT_URL"),
     signingKey: getMandatoryConfig("JAR_SIGNING_KEY"),
+    evcsStubVerifyKey: getMandatoryConfig("EVCS_STUB_VERIFY_KEY"),
   },
   asyncQueue: {
     name: getMandatoryConfig("ASYNC_QUEUE_NAME"),

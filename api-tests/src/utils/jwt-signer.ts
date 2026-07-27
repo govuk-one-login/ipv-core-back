@@ -6,6 +6,8 @@ import { JWTPayload } from "jose";
 const sigAlg = "ES256";
 const orchSigningKey = JSON.parse(config.orch.signingKey) as jose.JWK;
 const sigKey = await jose.importJWK(orchSigningKey, sigAlg);
+const evcsStubVerifyKey = JSON.parse(config.orch.evcsStubVerifyKey) as jose.JWK;
+const evcsStubVerifyJWK = await jose.importJWK(evcsStubVerifyKey, sigAlg);
 
 export const createSignedJwt = async (
   payload?: JWTPayload,
@@ -26,5 +28,5 @@ export const createEvcsAccessToken = async (
   return await new jose.SignJWT()
     .setProtectedHeader({ alg: sigAlg })
     .setSubject(subject)
-    .sign(sigKey);
+    .sign(evcsStubVerifyJWK);
 };
