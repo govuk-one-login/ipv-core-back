@@ -290,12 +290,9 @@ public class CheckExistingIdentityHandler
             }
 
             if (configService.enabled(SIS_VERIFICATION)) {
-                // Call this before we invalidate the stored identity!
                 sisService.compareStoredIdentityWithStoredVcs(
                         clientOAuthSessionItem, auditEventUser);
             }
-
-            evcsService.invalidateStoredIdentityRecord(clientOAuthSessionItem.getUserId());
 
             return getJourneyResponse(
                             ipvSessionItem,
@@ -309,7 +306,7 @@ public class CheckExistingIdentityHandler
                     .toObjectMap();
         } catch (AccountInterventionException e) {
             return JOURNEY_ACCOUNT_INTERVENTION.toObjectMap();
-        } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
+        } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();

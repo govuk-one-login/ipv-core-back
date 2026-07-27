@@ -303,7 +303,7 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
             verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-            verify(mockEvcsService, times(1)).invalidateStoredIdentityRecord(TEST_USER_ID);
+            verify(mockEvcsService, never()).invalidateStoredIdentityRecord(TEST_USER_ID);
         }
 
         @Test
