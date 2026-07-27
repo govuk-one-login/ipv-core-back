@@ -25,6 +25,8 @@ on:
         required: true
       JAR_SIGNING_KEY:
         required: true
+      EVCS_STUB_VERIFY_KEY:
+        required: true
 
 env:
   SAM_CLI_TELEMETRY: "0"
@@ -171,6 +173,7 @@ jobs:
           MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
           CIMIT_INTERNAL_API_KEY: ${{ secrets.API_KEY_CIMIT }}
           JAR_SIGNING_KEY: ${{ secrets.JAR_SIGNING_KEY }}
+          EVCS_STUB_VERIFY_KEY: ${{ secrets.EVCS_STUB_VERIFY_KEY }}
           POWERTOOLS_METRICS_DISABLED: true
         run: npm run test:ci
 
