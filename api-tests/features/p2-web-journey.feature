@@ -73,7 +73,9 @@ Feature: P2 Web document journey
       | Context | Value |
       | photoId | true  |
     When I submit a 'next' event
-    Then I get a 'prove-identity-online-banking' page response
+    Then I get a 'prove-identity-online-banking' page response and pageContext
+      | Context | Value |
+      | photoId | true  |
     When I submit a 'next' event
     Then I get a '<cri>' CRI response
     When I submit '<details>' details to the CRI stub
@@ -371,7 +373,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-dva-valid' details to the CRI stub
@@ -396,7 +400,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit '<details>' details to the CRI stub
@@ -424,7 +430,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
@@ -498,7 +506,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<initial-cri>' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -534,7 +544,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -553,7 +565,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -591,7 +605,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub
@@ -614,7 +630,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
@@ -655,7 +673,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-dva-valid' details to the CRI stub
@@ -875,7 +895,9 @@ Feature: P2 Web document journey
         | Context | Value |
         | photoId | true  |
       When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a 'ukPassport' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
