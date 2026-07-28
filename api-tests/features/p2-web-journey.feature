@@ -1,6 +1,7 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 @TrafficGeneration
 Feature: P2 Web document journey
+  @RunThisTest
   Scenario Outline: <journey-type> - successful web journey - attains P2 with <cri> - no Open Banking
     Given I activate the 'openBankingDisabled' feature set
     When I start a new '<journey-type>' journey
