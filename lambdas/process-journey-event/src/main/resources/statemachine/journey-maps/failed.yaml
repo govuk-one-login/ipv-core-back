@@ -74,6 +74,11 @@ states:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
 
+  FAILED_OPEN_BANKING:
+    events:
+      next:
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_OPEN_BANKING
+
   FAILED_HIGHER_STRENGTH_DEAD_END:
     events:
       next:
@@ -240,6 +245,24 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
+  PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_OPEN_BANKING:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: NO_MATCH_PAGE_OPEN_BANKING
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: NO_MATCH_PAGE_OPEN_BANKING
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_REPEAT_FRAUD_CHECK:
     response:
       type: process
@@ -389,6 +412,16 @@ states:
       pageId: pyi-no-match
       pageContext:
         reason: nino
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  NO_MATCH_PAGE_OPEN_BANKING:
+    response:
+      type: page
+      pageId: pyi-no-match
+      pageContext:
+        reason: openBanking
     events:
       next:
         targetState: RETURN_TO_RP

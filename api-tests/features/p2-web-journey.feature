@@ -707,6 +707,30 @@ Feature: P2 Web document journey
         | reason  | openBanking |
       When I submit a 'appTriage' event
       Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User fails to select current account and tries Post Office
       When I submit 'kenneth-score-0' details to the CRI stub
@@ -718,7 +742,9 @@ Feature: P2 Web document journey
 
     Scenario: User fails Open Banking with breaching CI
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
 
     Scenario: Open Banking CRI returns an error - user tries again
       When I call the CRI stub and get a 'server_error' OAuth error

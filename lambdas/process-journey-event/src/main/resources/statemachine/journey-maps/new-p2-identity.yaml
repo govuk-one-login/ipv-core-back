@@ -495,7 +495,7 @@ states:
         targetState: OPEN_BANKING_PHOTO_ID_WEB_ANOTHER_WAY
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_OPEN_BANKING
       error:
         targetState: OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
 
@@ -518,7 +518,7 @@ states:
         reason: openBanking
     events:
       appTriage:
-        targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         targetEntryEvent: appTriage
       f2f:
         targetState: PYI_POST_OFFICE
@@ -549,7 +549,7 @@ states:
         targetState: FAILED
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_OPEN_BANKING
 
   PYI_ESCAPE:
     response:
