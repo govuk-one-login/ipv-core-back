@@ -718,7 +718,9 @@ Feature: P2 Web document journey
 
     Scenario: User fails Open Banking with breaching CI
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
 
     Scenario: Open Banking CRI returns an error - user tries again
       When I call the CRI stub and get a 'server_error' OAuth error
