@@ -518,7 +518,7 @@ states:
         reason: openBanking
     events:
       appTriage:
-        targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         targetEntryEvent: appTriage
       f2f:
         targetState: PYI_POST_OFFICE
