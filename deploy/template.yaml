@@ -3912,13 +3912,15 @@ Resources:
     Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: "Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services"
+      AlarmDescription: !Sub
+        - 'Trigger the alarm if we have a high enough rate of journey starts to cause issues for downstream services. See runbook: ${RunbookUrl}#responding-to-provingjourneystartstoohighalarm'
+        - RunbookUrl: !FindInMap [ Constants, Urls, pagerDutyRunbook ]
       AlarmName: !Sub "${AWS::StackName}-ProvingJourneyStartsTooHighAlarm"
       ActionsEnabled: true
       AlarmActions:
-        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+        - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
       OKActions:
-        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+        - !ImportValue di-ipv-core-notifications-PagerDutySNSTopicArn
       InsufficientDataActions: [ ]
       TreatMissingData: notBreaching
       Metrics:
