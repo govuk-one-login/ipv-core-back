@@ -531,7 +531,7 @@ states:
       tryAgain:
         targetState: OPEN_BANKING_CRI_PHOTO_ID
       app:
-        targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         targetEntryEvent: appTriage
       postOffice:
         targetState: PYI_POST_OFFICE
