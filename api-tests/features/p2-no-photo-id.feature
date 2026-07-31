@@ -1,5 +1,214 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 no photo id journey
+  Rule: Open Banking CRI results
+    Background: Start P2 no photo id journey
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit an 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+
+    Scenario: Successful web journey - user retries Open Banking
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'no-photo-id-banking-another-way' page response
+      When I submit an 'onlineBanking' event
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: User switches to F2F
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'no-photo-id-banking-another-way' page response
+      When I submit an 'postOffice' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: User fails to select current account and tries app
+      When I submit 'kenneth-score-0' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+    Scenario: User fails to select current account and tries Post Office
+      When I submit 'kenneth-score-0' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'f2f' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: User fails to select current account and returns to RP
+      When I submit 'kenneth-score-0' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: User fails Open Banking with breaching CI
+      When I submit 'kenneth-with-breaching-ci' details to the CRI stub
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Open Banking CRI returns an error - user tries again
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response
+      When I submit a 'tryAgain' event
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Open Banking CRI returns an error - user tries app
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response
+      When I submit a 'app' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+    Scenario: Open Banking CRI returns an error - user tries Post Office
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response
+      When I submit a 'postOffice' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Open Banking CRI returns an error - user returns to RP
+      When I call the CRI stub and get a 'server_error' OAuth error
+      Then I get a 'sorry-technical-problem' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
   Rule: Experian KBV
     Background: Start P2 no photo id with Experian KBV
       Given I activate the 'openBankingDisabled' feature set
@@ -179,7 +388,7 @@ Feature: P2 no photo id journey
         | Context | Value       |
         | reason  | bankAccount |
 
-  Rule: Abandon
+  Rule: Abandon NINO
     Background: Abandon P2 no photo id journey
       Given I activate the 'openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
@@ -355,188 +564,7 @@ Feature: P2 no photo id journey
       Then I get a 'f2f' CRI response
 
   # Duplicate tests with Open Banking enabled
-  Rule: Experian KBV
-    Background: Start P2 no photo id with Experian KBV
-      Given I activate the 'openBanking' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'live-in-uk' page response
-      When I submit a 'uk' event
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
-      Then I get a 'claimedIdentity' CRI response
-
-    Scenario: P2 no photo id journey - Experian - Happy path
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I am issued a 'P2' identity
-      And I have a stored identity record with a 'P2' max vot
-
-    Scenario: P2 no photo id journey - Experian - BAV dropout:
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'no-photo-id-abandon-find-another-way' page response
-
-    Scenario: P2 no photo id journey - Experian - Breaching BAV CI
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response and pageContext
-        | Context | Value       |
-        | reason  | bankAccount |
-
-    Scenario: P2 no photo id journey - Experian - NINO dropout:
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'no-photo-id-abandon-find-another-way' page response
-
-    Scenario: P2 no photo id journey - Experian - Breaching NINO CI
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'pyi-no-match' page response and pageContext
-        | Context | Value |
-        | reason  | nino  |
-
-    Scenario: P2 no photo id journey - Experian - Drops out via thin file or failed checks
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-score-0' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
-        | Context | Value   |
-        | reason  | dropout |
-
-    Scenario: P2 no photo id journey - Experian - Breaching KBV CI
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'pyi-no-match' page response
-
-    Scenario: P2 no photo id journey - Experian - KBV CI mitigation:
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-web-find-another-way' page response
-
-    Scenario: P2 no photo id journey - Experian - Breaching BAV CI
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response and pageContext
-        | Context | Value       |
-        | reason  | bankAccount |
-
-  Rule: Abandon
+  Rule: Abandon NINO
     Background: Abandon P2 no photo id journey
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
@@ -545,50 +573,22 @@ Feature: P2 no photo id journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
       When I submit an 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
       Then I get a 'nino' CRI response
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
-        | Attribute          | Values                                          |
+        | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'no-photo-id-abandon-find-another-way' page response
+      # PYIC-9224: Currently TBD where this event should go with open banking
+      Then I get a 'pyi-no-match' page response
 
-    Scenario: P2 no photo id journey - Abandon - Strategic app
-      Given I activate the 'strategicApp' feature set
-      When I submit an 'mobileApp' event
-      Then I get an 'identify-device' page response
-
-    Scenario: P2 no photo id journey - Abandon - Passport
-      When I submit an 'passport' event
-      Then I get a 'ukPassport' CRI response
-
-    Scenario: P2 no photo id journey - Abandon - Driving licence
-      When I submit an 'drivingLicence' event
-      Then I get a 'drivingLicence' CRI response
-
-    Scenario: P2 no photo id journey - Abandon - F2F
-      When I submit an 'postOffice' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'f2f' CRI response
-
-    Scenario: P2 no photo id journey - Abandon - Return to RP
-      When I submit an 'relyingParty' event
+    Scenario: P2 no photo id journey - Abandon - Failure
+      When I submit a 'next' event
       Then I get an OAuth response
 
   Rule: Escape
@@ -603,118 +603,12 @@ Feature: P2 no photo id journey
       When I submit an 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'end' event
-      Then I get a 'no-photo-id-exit-find-another-way' page response
+      Then I get a 'pyi-escape' page response
 
-    Scenario: P2 no photo id journey - Escape - Use photo id
+    Scenario: P2 no photo id journey - Escape - Try again
       When I submit an 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
-
-    Scenario: P2 no photo id journey - Escape - Return to no photo id
-      When I submit an 'bankAccount' event
-      Then I get a 'prove-identity-no-photo-id' page response
 
     Scenario: P2 no photo id journey - Escape - Return to RP
       When I submit an 'end' event
       Then I get an OAuth response
-
-  Rule: KBV mitigation
-    Background: Start P2 no photo id KBV mitigation journey
-      Given I activate the 'openBanking' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'live-in-uk' page response
-      When I submit a 'uk' event
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-web-find-another-way' page response
-
-    Scenario: P2 no photo id journey - KBV mitigation - Strategic app
-      Given I activate the 'strategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get an 'identify-device' page response
-
-    Scenario: P2 no photo id journey - KBV mitigation - F2F
-      When I submit an 'f2f' event
-      Then I get a 'f2f' CRI response
-
-  Rule: KBV dropout
-    Background: Start P2 no photo id KBV mitigation journey
-      Given I activate the 'openBanking' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'live-in-uk' page response
-      When I submit a 'uk' event
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-score-0' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
-        | Context | Value   |
-        | reason  | dropout |
-
-    Scenario: P2 no photo id journey - KBV dropout - Strategic app
-      Given I activate the 'strategicApp' feature set
-      When I submit an 'appTriage' event
-      Then I get an 'identify-device' page response
-
-    Scenario: P2 no photo id journey - KBV dropout - F2F
-      When I submit an 'f2f' event
-      Then I get a 'f2f' CRI response

@@ -74,17 +74,13 @@ Feature: P2 Fraud mitigation
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
       Then I get a 'nino' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
         | Attribute          | Values                                      |
@@ -97,7 +93,7 @@ Feature: P2 Fraud mitigation
       When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
+      Then I get an 'openBanking' CRI response
 
     Scenario: Non-breaching, failing fraud CI fails journey
       When I submit 'kenneth-score-0-non-breaching' details with attributes to the CRI stub
@@ -302,17 +298,13 @@ Feature: P2 Fraud mitigation
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'anotherWay' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
       When I submit an 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
         | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
       Then I get a 'nino' CRI response
       When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                                      |

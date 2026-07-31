@@ -700,6 +700,25 @@ Feature: P2 Web document journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
+    Scenario: User switches to KBV
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
     Scenario: User fails to select current account and tries app
       When I submit 'kenneth-score-0' details to the CRI stub
       Then I get a 'photo-id-web-find-another-way' page response and pageContext

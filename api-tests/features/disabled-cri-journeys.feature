@@ -12,14 +12,23 @@ Feature: Disabled CRI journeys
         | Context  | Value  |
         | ninoOnly | true   |
 
-    Scenario: A P2 journey takes the user down the web route instead
-      Given I activate the 'dcmawAsyncDisabled' feature set
+    Scenario: A P2 journey takes the user down the web route instead - no Open Banking
+      Given I activate the 'dcmawAsyncDisabled,openBankingDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: A P2 journey takes the user down the web route instead
+      Given I activate the 'dcmawAsyncDisabled,openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'select-photo-id' page response
 
     Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure
       Given I activate the 'dcmawAsyncDisabled,openBanking' feature set
