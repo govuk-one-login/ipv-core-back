@@ -314,7 +314,7 @@ Feature: Audit Events
 
     # Return journey
     When I start new 'medium-confidence' journeys until I get a 'pyi-f2f-technical' page response
-    When I submit a 'end' event
+    And I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I am issued a 'P0' identity without a TICF VC
@@ -638,6 +638,8 @@ Feature: Audit Events
       | smartphone | iphone |
       | isAppOnly  | false  |
     When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    # Wait for the VC to be processed so the audit events are in a reliable order
+    And I wait for 5 seconds for the async credential to be processed
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
     Then I get a 'problem-different-browser' page response

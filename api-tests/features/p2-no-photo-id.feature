@@ -584,7 +584,7 @@ Feature: P2 no photo id journey
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      # PYIC-9224: Currently TBD where this event should go with open banking
+      # PYIC-9215: Currently TBD where this event should go with open banking
       Then I get a 'pyi-no-match' page response
 
     Scenario: P2 no photo id journey - Abandon - Failure

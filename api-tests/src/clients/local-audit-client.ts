@@ -16,5 +16,15 @@ export const getAuditEvents = async (
     );
   }
 
-  return (await response.json()) as AuditEvent[];
+  const events = (await response.json()) as AuditEvent[];
+
+  const deduplicated = events.filter(
+    (event, index) =>
+      events.findIndex((e) => JSON.stringify(e) === JSON.stringify(event)) ===
+      index,
+  );
+
+  return deduplicated.sort(
+    (a, b) => a.event_timestamp_ms - b.event_timestamp_ms,
+  );
 };

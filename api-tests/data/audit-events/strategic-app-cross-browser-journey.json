@@ -38,13 +38,6 @@
     }
   },
   {
-    "event_name": "IPV_APP_MISSING_CONTEXT",
-    "component_id": "https://identity.local.account.gov.uk",
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_ASYNC_CRI_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "user": {
@@ -123,6 +116,13 @@
         }
       ],
       "docExpiryDate": "2030-01-01"
+    }
+  },
+  {
+    "event_name": "IPV_APP_MISSING_CONTEXT",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
     }
   },
   {
