@@ -37,6 +37,8 @@ Feature: Stored Identity
       Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
+      When I submit a 'update-name' event
+      Then I get an 'identify-device' page response
       And I have a stored identity record with a 'P2' max vot that is 'invalid'
 
     Scenario: Update address invalidates stored identity
@@ -53,4 +55,6 @@ Feature: Stored Identity
       Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
         | journeyType | repeatFraudCheck |
+      When I submit a 'update-name' event
+      Then I get an 'identify-device' page response
       And I have a stored identity record with a 'P2' max vot that is 'invalid'
