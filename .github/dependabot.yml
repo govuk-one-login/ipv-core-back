@@ -4,9 +4,10 @@ version: 2
 registries:
   github-npm:
     type: npm-registry
-    url: https://npm.pkg.github.com/@govuk-one-login
+    url: https://npm.pkg.github.com
     username: ${{ secrets.DEPENDABOT_GITHUB_USERNAME }}
     password: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
+    replaces-base: true
   github-maven:
     type: maven-repository
     url: https://maven.pkg.github.com
