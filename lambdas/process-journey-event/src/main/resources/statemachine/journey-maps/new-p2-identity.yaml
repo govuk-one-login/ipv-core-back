@@ -1153,10 +1153,8 @@ states:
       type: page
       pageId: passport-biometric-chip
     events:
-      next:
-        # PYIC-9068 Implement mitigation route
-        targetJourney: FAILED
-        targetState: FAILED
+      appTriage:
+        targetState: MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE
       abandon:
         targetState: MITIGATION_NEED_BIOMETRIC_PASSPORT
 
@@ -1165,12 +1163,18 @@ states:
       type: page
       pageId: need-biometric-passport
     events:
+      useApp:
+        targetState: MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
-      useApp:
-        # PYIC-9068 Implement mitigation route
-        targetJourney: FAILED
-        targetState: FAILED
+
+  MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: PROCESS_NEW_IDENTITY
+
+
 
   # End of journey steps
 
