@@ -27,7 +27,7 @@ services:
       ORCHESTRATOR_REDIRECT_URL: http://localhost:4500/callback
       EVCS_ACCESS_TOKEN_ENDPOINT: https://token-generator.reuse.stubs.account.gov.uk/generate
       EVCS_ACCESS_TOKEN_TTL: 60
-      EVCS_ACCESS_TOKEN_SIGNING_JWK: '{"kty":"EC","kid":"evcs-token-local-running-FI4xysvMVdRtkt6xmO5gqcaTF4Tf9NKD1zdg3T8y69M","use":"sig","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
+      EVCS_ACCESS_TOKEN_SIGNING_JWK: <Extract from ipv-stubs-common-infra>
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
     ports:
       - "4500:4500"
