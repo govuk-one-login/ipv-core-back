@@ -7,7 +7,7 @@ registries:
     url: https://npm.pkg.github.com
     username: ${{ secrets.DEPENDABOT_GITHUB_USERNAME }}
     password: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
-    replaces-base: true
+    scope: "@govuk-one-login"
   github-maven:
     type: maven-repository
     url: https://maven.pkg.github.com
