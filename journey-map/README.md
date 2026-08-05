@@ -1,84 +1,79 @@
 # IPV Core Journey Map
 
-This is a small JavaScript-based tool to display the journey map in an interactive page
+An interactive JavaScript based tool for visualising and navigating IPV Core state machine user journeys.
 
-## Prerequisites
+---
 
-- Node and NPM installed
+## Prerequisites & Local Setup
 
-## Running the map locally
+* **Node & NPM:** Ensure Node and NPM are installed.
 
-- Copy the `.env.template` file to `.env` and add the API gateway IDs and keys for any environments you want to query data from (note that production is currently used to get the default feature configuration).
-  - For local dev you will need to find the ID of the API gateway hosted in relevant account. You can find this in `AWS Console / API Gateway / APIs` then copy the ID of the `IPV Core Analytics API Gateway <env>` gateway.
-  - For the API Keys look in the stubs production account SSM parameter store.
-- Run `npm install` to install dependencies.
-- Run `npm run dev` to start the application in watch mode
-- Open [http://localhost:3000] in a web browser
-- Username and password are set in the `.env` file and default to `map` and `map`
+### Configuration
+Copy `.env.template` to `.env` and configure your credentials
 
-### Tests
+Populate `.env` with API Gateway IDs and keys for target environments (Note: Production is used by default for feature configuration)
+* **API Gateway IDs:** Find under `AWS Console > API Gateway > APIs` and copy the ID for `IPV Core Analytics API Gateway <env>`.
+* **API Keys:** Retrieve from the SSM Parameter Store in the stubs production account.
+* **Basic Auth:** Default local credentials are set in `.env` (`map` / `map`).
 
-The unit tests can be run with `npm run test`, and use the vitest test runner.
-
-The tests should run in Idea with default settings, if they don't you may need to update Idea to the latest version. (Note that you might have to use the update function in Idea multiple times to get to the latest version)
-
-Linting and typechecking are available with `npm run lint` and `npm run tsc`.
-
-### Build process
-
-To build
-- `npm run build` will build the frontend JavaScript into `/public`
-- `npm run build-server` will build the server code into `/build`
-
-Use `npm start` to run the built code.
-
-In production, the journey map uses `../journey-map.Dockerfile` to run these steps.
-
-## Running the map in a dev environment
-
-To test the journey map deployed to AWS, it can be deployed to your dev environment.
-Note that a deployed journey-map requires authentication via Google SSO. To get this working,
-ask a member of the team with edit access to the [IPV Core Journey Map Link Google Cloud Project](https://console.cloud.google.com/welcome?project=ipv-core-journey-map-link) to:
-
-- add your journey-map dev URI as a valid redirect URI. Your dev redirect URI will take a form like `https://dev-{username}-journey-map.02.core.dev.stubs.account.gov.uk/oauth2/idresponse`.
-- add you to the `Identity-IPV-Core` Google Group to give you access to the project
-
-The journey map can be deployed to your dev environment with the dev-deploy tool:
-
+### Running Locally
+```bash
+npm install        # Install dependencies
+npm run dev        # Start development server with hot-reload
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Development & Building
+
+### Testing & Quality Checks
+* `npm run test` — Run unit tests using Vitest.
+* `npm run lint` — Run ESLint checks.
+* `npm run tsc` — Execute TypeScript type checking.
+
+### Build & Run
+```bash
+npm run build         # Build client bundle into /public
+npm run build-server  # Build server source into /build
+npm start             # Start the production server
+```
+*(Production builds use `../journey-map.Dockerfile` to containerise these steps).*
+
+---
+
+## Deployment to Development Environment
+
+Deploy the journey map tool to an AWS developer environment using `dev-deploy`:
+
+```bash
 dev-deploy deploy -u <username> -s journey-map
 ```
 
-Replace `<username>` with your dev-deploy username e.g. `theab`. For more information about the `dev-deploy` tool,
-including how to set it up, see the documentation [here](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md).
+> **Google SSO Requirement:** Deployed instances require Google SSO authentication. Ask an administrator with edit access to the [IPV Core Journey Map Google Cloud Project](https://console.cloud.google.com/welcome?project=ipv-core-journey-map-link) to:
+> 1. Add your dev redirect URI (e.g. `https://dev-{username}-journey-map.02.core.dev.stubs.account.gov.uk/oauth2/idresponse`).
+> 2. Add your account to the `Identity-IPV-Core` Google Group.
 
-## Using the map
+For details on setting up `dev-deploy`, see the [ipv-core-common-infra documentation](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md).
 
-You should be able to pan and zoom using the mouse and scroll wheel,
-as well as viewing the differences when a CRI is marked as disabled, or a particular feature flag is enabled.
+---
 
-You can customise analytics api request to fetch journey transitions. Currently available options are:
-- Target environment:
-   - Production
-   - Integration
-   - Staging
-   - Build
-   - Shared Dev
-- Date and time window
-- Fetch by journey id, session id or all journeys
+## Using the Map
 
-N.B. for clarity, the map only displays states that are accessible via preconfigured entry states.
+* **Feature Controls:** Toggle CRIs on/off or enable specific feature flags to inspect journey variations.
+* **Analytics Filters:** Customise requests via the Analytics API to fetch transition data:
+  * **Target Environments:** Production, Integration, Staging, Build, or Shared Dev.
+  * **Time Window:** Filter by specific date/time ranges.
+  * **Filter Query:** Fetch transitions by journey ID, session ID, or all journeys.
 
-## Implementation
+*(Note: The map renders states accessible via preconfigured entry states).*
 
-We run a very lightweight express server to serve the static HTML and JS,
-and provide a route to expose the journey map as a JSON object.
+---
 
-We use an [analytics API Gateway](../openAPI/core-back-analytics.yaml) in core-back to fetch real data via Lambda endpoints:
-- fetch journey transition numbers
-- fetch system settings, e.g. real feature flag settings
+## Technical Architecture
 
-The frontend converts this to mermaid format, and renders using two publicly available libraries:
-
-- [mermaid-js](https://mermaid.js.org/)
-- [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom)
+* **Server:** Lightweight Express server providing static HTML/JS assets and exposing a JSON route for the journey map.
+* **Backend Ingestion:** Uses the [Core Back Analytics API Gateway](../openAPI/core-back-analytics.yaml) and Lambdas to query live transition metrics and AppConfig settings.
+* **Frontend Rendering:** Converts journey logic into Mermaid format and renders using:
+  * [mermaid-js](https://mermaid.js.org/) — Diagram rendering.
+  * [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom) — Viewport interaction.
