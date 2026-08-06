@@ -250,8 +250,7 @@ Then(
     this: World,
     expectedPage: string,
     clientOAuthSessionIdExists:
-      | " with a non-empty clientOAuthSessionId"
-      | undefined,
+      " with a non-empty clientOAuthSessionId" | undefined,
   ) {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
@@ -280,8 +279,7 @@ Then(
     this: World,
     expectedPage: string,
     clientOAuthSessionIdExists:
-      | " with a non-empty clientOAuthSessionId"
-      | undefined,
+      " with a non-empty clientOAuthSessionId" | undefined,
     dataTable: DataTable,
   ): void {
     if (!this.lastJourneyEngineResponse) {

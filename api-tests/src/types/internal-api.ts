@@ -13,11 +13,7 @@ export interface AuthRequestBody {
 }
 
 export type JourneyEngineResponse =
-  | JourneyResponse
-  | PageResponse
-  | CriResponse
-  | ClientResponse
-  | ErrorResponse;
+  JourneyResponse | PageResponse | CriResponse | ClientResponse | ErrorResponse;
 
 export interface JourneyResponse {
   journey: string;
