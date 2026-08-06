@@ -264,9 +264,7 @@ Feature: TICF failed/error journeys
       When I submit a 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'end' event
-      Then I get a 'no-photo-id-exit-find-another-way' page response
+      Then I get a 'pyi-escape' page response
       When I submit an 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

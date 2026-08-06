@@ -378,10 +378,13 @@ states:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
-        targetState: BANK_ACCOUNT_START_PAGE
+        targetState: PYI_ESCAPE
         checkIfDisabled:
-          bav:
-            targetState: PYI_ESCAPE
+          openBanking:
+            targetState: BANK_ACCOUNT_START_PAGE
+            checkIfDisabled:
+              bav:
+                targetState: PYI_ESCAPE
 
   F2F_PYI_POST_OFFICE:
     response:
@@ -531,7 +534,7 @@ states:
       tryAgain:
         targetState: OPEN_BANKING_CRI_PHOTO_ID
       app:
-        targetState: STRATEGIC_APP_TRIAGE
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         targetEntryEvent: appTriage
       postOffice:
         targetState: PYI_POST_OFFICE
@@ -545,11 +548,58 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: PROCESS_NEW_IDENTITY
+      access-denied:
+        targetState: OPEN_BANKING_NO_PHOTO_ID_ANOTHER_WAY
+      fail-with-no-ci:
+        targetState: OPEN_BANKING_NO_PHOTO_ID_WEB_ANOTHER_WAY
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_OPEN_BANKING
+      error:
+        targetState: OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
+
+  OPEN_BANKING_NO_PHOTO_ID_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: no-photo-id-banking-another-way
+    events:
+      onlineBanking:
+        targetState: OPEN_BANKING_CRI_NO_PHOTO_ID
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+      postOffice:
+        targetState: PYI_POST_OFFICE
+
+  OPEN_BANKING_NO_PHOTO_ID_WEB_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: no-photo-id-web-find-another-way
+      pageContext:
+        reason: openBanking
+    events:
+      appTriage:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriage
+      f2f:
+        targetState: PYI_POST_OFFICE
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: OPEN_BANKING_CRI_NO_PHOTO_ID
+      app:
+        targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriage
+      postOffice:
+        targetState: PYI_POST_OFFICE
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
 
   PYI_ESCAPE:
     response:
@@ -719,7 +769,7 @@ states:
       next:
         targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID_OPEN_BANKING
       access-denied:
-        # PYIC-9224: Currently TBD where this event should go with open banking
+        # PYIC-9215: Currently TBD where this event should go with open banking
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:

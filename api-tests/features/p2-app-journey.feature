@@ -171,7 +171,8 @@ Feature: P2 App journey
         | smartphone | android |
         | isAppOnly  | false   |
 
-    Scenario: MAM Fail DCMAW with no CI - route to alternative IPV method
+    Scenario: MAM Fail DCMAW with no CI - route to alternative IPV method - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -191,6 +192,28 @@ Feature: P2 App journey
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: MAM Fail DCMAW with no CI - route to alternative IPV method
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+        # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'select-photo-id' page response
 
     Scenario: MAM journey abandoned without a VC - no Open Banking
       Given I activate the 'openBankingDisabled' feature set
@@ -234,7 +257,8 @@ Feature: P2 App journey
       When I submit the returned journey event
       Then I get a 'select-photo-id' page response
 
-    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
+    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
@@ -254,6 +278,28 @@ Feature: P2 App journey
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-multiple-doc-check' page response
+
+    Scenario: MAM journey cross-browser scenario unsuccessful VC without CI
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'select-photo-id' page response
 
     Scenario: MAM journey no compatible smartphone - no Open Banking
       Given I activate the 'openBankingDisabled' feature set
@@ -461,7 +507,8 @@ Feature: P2 App journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: DAD journey credential fails with with no ci and continues to other methods
+    Scenario: DAD journey credential fails with with no ci and continues to other methods - no Open Banking
+      Given I activate the 'openBankingDisabled' feature set
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
       When I submit a 'computer-or-tablet' event
@@ -478,6 +525,25 @@ Feature: P2 App journey
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get an 'page-multiple-doc-check' page response
+
+    Scenario: DAD journey credential fails with with no ci and continues to other methods
+      Given I activate the 'openBanking' feature set
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'select-photo-id' page response
 
     Scenario: DAD journey - BRP fails with with ci (score 1) goes to alternative document check
       Given I activate the 'openBanking' feature set
