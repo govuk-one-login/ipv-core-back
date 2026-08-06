@@ -4,8 +4,8 @@ export interface ObjectPartialEqualityResult {
 }
 
 enum SupportedTypeMatchers {
-  "string",
-  "number",
+  string,
+  number,
 }
 
 const TYPE_CHECK_REGEX = /^type\[(\w+)\]$/;

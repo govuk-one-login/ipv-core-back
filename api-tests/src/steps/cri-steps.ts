@@ -482,8 +482,7 @@ When(
     this: World,
     expired: "expired " | undefined,
     overrideDocumentExpiryDate:
-      | " with overridden document expiry date"
-      | undefined,
+      " with overridden document expiry date" | undefined,
     table: DataTable,
   ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
