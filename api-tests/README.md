@@ -10,8 +10,6 @@
 
 ## Installation
 
-- [Create a GitHub personal access token][create-pat] with package:read scope
-- Copy `.npmrc.template` to `.npmrc` and replace `GITHUB_PAT_WITH_READ:PACKAGES` with your personal access token
 - Run `npm install`
 
 ## Running the tests

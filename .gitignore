@@ -59,7 +59,6 @@ local-running/core.local.secrets.yaml
 
 api-tests/reports/*
 !api-tests/reports/.gitkeep
-api-tests/.npmrc
 api-tests/.env*
 !api-tests/.env.template
 !api-tests/.env.dev.template
