@@ -19,6 +19,8 @@ entryEvents:
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
+  liveness-likeness-return:
+    targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
 
 nestedJourneyStates:
   # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
@@ -91,6 +93,9 @@ nestedJourneyStates:
           appOnly:
             targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
             journeyContextToSet: dadIphone
+        checkMitigation:
+          liveness-likeness:
+            targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -155,6 +160,9 @@ nestedJourneyStates:
         targetEntryEvent: dl-auth-source-check
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkMitigation:
+          liveness-likeness:
+            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP
@@ -241,6 +249,9 @@ nestedJourneyStates:
         targetEntryEvent: dl-auth-source-check
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkMitigation:
+          liveness-likeness:
+            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP
@@ -281,6 +292,9 @@ nestedJourneyStates:
           appOnly:
             targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
             journeyContextToSet: dadAndroid
+        checkMitigation:
+          liveness-likeness:
+            targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -314,6 +328,9 @@ nestedJourneyStates:
           appOnly:
             targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
             journeyContextToSet: mamIphone
+        checkMitigation:
+          liveness-likeness:
+            targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -353,6 +370,9 @@ nestedJourneyStates:
         targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkMitigation:
+          liveness-likeness:
+            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
         checkJourneyContext:
           internationalAddress:
             targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NEED_APP
@@ -386,6 +406,9 @@ nestedJourneyStates:
           appOnly:
             targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
             journeyContextToSet: mamAndroid
+        checkMitigation:
+          liveness-likeness:
+            targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -425,6 +448,9 @@ nestedJourneyStates:
         targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkMitigation:
+          liveness-likeness:
+            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
         checkJourneyContext:
           internationalAddress:
             targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NEED_APP
@@ -526,6 +552,49 @@ nestedJourneyStates:
         targetState: DAD_ANDROID_START_SESSION
       noDevice:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+        checkMitigation:
+          liveness-likeness:
+            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
         checkJourneyContext:
           internationalAddress:
             targetState: DAD_SELECT_SMARTPHONE_NEED_APP
+
+  MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP:
+    response:
+      type: page
+      pageId: need-smartphone-prove-identity-app
+    events:
+      useApp:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+      returnToRp:
+        exitEventToEmit: returnToRp
+
+  MITIGATION_APP_PASSPORT_PROVE_IDENTITY:
+    response:
+      type: page
+      pageId: app-passport-prove-identity
+    events:
+      useApp:
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
+        checkJourneyContext:
+          mamIphone:
+            targetState: MOBILE_IPHONE_START_SESSION
+          mamAndroid:
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+      returnToRp:
+        exitEventToEmit: returnToRp

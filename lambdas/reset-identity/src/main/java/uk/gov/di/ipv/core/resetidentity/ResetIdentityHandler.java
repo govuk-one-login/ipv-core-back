@@ -42,6 +42,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_IS
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC_ALL;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.REINSTATE;
@@ -160,7 +161,9 @@ public class ResetIdentityHandler implements RequestHandler<ProcessRequest, Map<
                                         input.getDeviceInformation())));
             }
 
-            if (resetType.equals(PENDING_DCMAW_ASYNC_ALL) || resetType.equals(NAME_ONLY_CHANGE)) {
+            if (resetType.equals(PENDING_DCMAW_ASYNC_ALL)
+                    || resetType.equals(NAME_ONLY_CHANGE)
+                    || resetType.equals(PENDING_DCMAW_ASYNC)) {
                 resetPendingIdentity(clientOAuthSessionItem, DCMAW_ASYNC);
             }
 

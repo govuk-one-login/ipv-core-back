@@ -55,6 +55,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSIO
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_DCMAW_ASYNC_ALL;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.IdentityResetType.REINSTATE;
@@ -269,7 +270,7 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmaw() throws Exception {
+    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmawAsyncAll() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -300,7 +301,7 @@ class ResetIdentityHandlerTest {
     }
 
     @Test
-    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmawV2() throws Exception {
+    void handleRequestShouldCleanupVcsAndReturnNextForPendingDcmawAsyncAllV2() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -329,6 +330,69 @@ class ResetIdentityHandlerTest {
         verify(mockEvcsService)
                 .abandonPendingIdentityV2(TEST_USER_ID, TEST_EVCS_TOKEN, TEST_JOURNEY_ID);
 
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    // Can be removed with EVCS_API_UPDATES feature flag removal ticket
+    @Test
+    void handleRequestShouldCleanupAsyncDcmawVcAndPendingRecordAndReturnNextForPendingDcmawAsync()
+            throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ASYNC.name()))
+                        .build();
+
+        // Act
+        var journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void handleRequestShouldCleanupAsyncDcmawVcAndPendingRecordAndReturnNextForPendingDcmawAsyncV2()
+            throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(true);
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_DCMAW_ASYNC.name()))
+                        .build();
+
+        // Act
+        var journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_DCMAW_ASYNC);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, DCMAW_ASYNC);
+        verify(mockEvcsService)
+                .abandonPendingIdentityV2(TEST_USER_ID, TEST_EVCS_TOKEN, TEST_JOURNEY_ID);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 
