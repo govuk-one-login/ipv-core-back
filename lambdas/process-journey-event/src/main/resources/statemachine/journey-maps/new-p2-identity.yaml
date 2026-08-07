@@ -583,7 +583,7 @@ states:
         targetEntryEvent: appTriage
       f2f:
         targetState: PYI_POST_OFFICE
-      returnToRp:
+      end:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
   OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR:
