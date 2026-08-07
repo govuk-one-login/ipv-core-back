@@ -63,12 +63,7 @@ To spin up minimal resources to run through a journey:
 ## Logging & Debugging
 
 * **Isolated Logs**: Pass `--attach core-back` to `docker-compose up` to restrict console output to core-back's readable, non-JSON logs.
-* **Remote Debugging**: All running containers expose a debug port **2000 ports higher** than their HTTP port:
-  * Core-Back Debug Port: `6502`
-  * Core-Front Debug Port: `6501`
-  * Orch-Stub Debug Port: `6500`
-
-Refer to the Docker compose file to see which port to use for which service.
+* **Remote Debugging**: Running containers expose specific debug ports for local attachment. Refer to `compose.yaml` for the exact host-to-container debug port mappings for each service (e.g., core-back, core-front, orch-stub).
 
 ---
 

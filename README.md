@@ -18,8 +18,22 @@ Explore the subfolder documentation for details on architecture, testing, local 
 * [Journey Engine Architecture](lambdas/process-journey-event/src/main/java/uk/gov/di/ipv/core/processjourneyevent/journey-engine.md) — Dive into state machine execution logic and event processing mechanics.
 * [Journey Map Syntax](lambdas/process-journey-event/src/main/java/uk/gov/di/ipv/core/processjourneyevent/journey-map-syntax.md) — Specification and syntax guide for configuring journey map state transitions.
 * [Local Running Guide](local-running/README.md) — Guide for running core-back locally and debugging Java code without AWS.
-* [API Tests Guide](api-tests/README.md) — Documentation for executing Cucumber integration and Pact contract tests.
+* [API Tests Guide](api-tests/README.md) — Documentation for executing Cucumber integration tests.
 * [Deployment Documentation](deploy/README.md) — Deployment options and guidelines for dev environments and CI pipelines.
+
+---
+
+## Code Structure
+
+```
+├── deploy/           # CloudFormation templates and Step Function definitions
+├── lambdas/          # Java source code for AWS Lambdas
+├── libs/             # Shared Java source code used across lambdas
+├── local-running/    # Local application server and Docker configurations
+├── api-tests/        # Integration test suite
+├── journey-map/      # Web application for visualising journey transitions
+└── openAPI/          # OpenAPI specifications for Core Gateways
+```
 
 ---
 
@@ -27,21 +41,13 @@ Explore the subfolder documentation for details on architecture, testing, local 
 
 The `di-ipv-core-back` repository consists of Java-based AWS Lambdas. The following section will guide you through setting up your local environment.
 
-### Prerequisites
-We mainly use Mac and Linux environments when developing `di-ipv-core-back`. Most of the tools can be installed through [Homebrew](https://brew.sh/):
-
-```bash
-brew install --cask intellij-idea
-brew install --cask docker
-brew install jq
-brew install awscli
-brew install pre-commit
-brew install cfn-lint
-brew install checkov
-```
-
 ### Pre-Commit Setup
 We use [pre-commit](https://pre-commit.com/) to help with linting and automated formatting (JSON formatting, EOF fixes, trailing whitespace removal, credential detection, CloudFormation linter, Checkov).
+
+If you haven't already installed pre-commit via Homebrew, run:
+```bash
+brew install pre-commit
+```
 
 To set up pre-commit in your local:
 ```bash
@@ -75,7 +81,7 @@ The application is configured as a Gradle multi-project:
 Instantiating core-back to run in a safe environment can be done using:
 * [local-running](local-running/README.md) - Exposes core-back on `localhost:4502`.
 * [dev-deploy tool](https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/dev-deploy/README.md) - Deploys a stack to your personal dev environment.
-* [dev-pipeline](https://github.com/govuk-one-login/ipv-core-back/actions/workflows/secure-post-merge.yml) - Deploys to the shared dev environment on merge to `main`.
+* [dev-pipeline](https://github.com/govuk-one-login/ipv-core-back/actions/workflows/secure-post-merge.yml) - Allows manual deployment (`workflow_dispatch`) of a selected branch to the shared dev environment.
 
 ---
 
@@ -102,7 +108,7 @@ To run provider Pact tests locally, you will need a local copy of the target Pac
 6. Copy the JSON from the **Response Body** section.
 7. Save the JSON file inside `lambdas/<lambda-name>/pacts/` (e.g. `pact.json`).
 8. Ensure your test class uses `@PactFolder("pacts")` and any `@PactBroker` annotations are temporarily removed.
-9. Execute `./gradlew pactTest`.
+9. Execute `./gradlew pactProviderTests`.
 
 ---
 
@@ -126,17 +132,3 @@ git commit -m "some message [skip canary]"
 ```
 
 ---
-
-## Code Structure
-
-```
-├── docs/             # Technical architecture and journey engine documentation
-├── deploy/           # CloudFormation templates and Step Function definitions
-├── lambdas/          # Java source code for AWS Lambdas
-├── libs/             # Shared Java source code used across lambdas
-├── local-running/    # Local application server and Docker configurations
-├── api-tests/        # Integration test suite
-├── journey-map/      # Web application for visualising journey transitions
-└── openAPI/          # OpenAPI specifications for Core Gateways
-```
-
