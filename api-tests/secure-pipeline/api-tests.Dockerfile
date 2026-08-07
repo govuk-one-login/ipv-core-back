@@ -13,10 +13,7 @@ WORKDIR /api-tests
 
 ARG GITHUB_PAT
 
-RUN cp .npmrc.template .npmrc && \
-    sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/${GITHUB_PAT}/ .npmrc && \
-    npm ci && \
-    rm .npmrc && \
+RUN npm ci && \
     cp .env.template .env
 
 ENTRYPOINT ["/run-tests.sh"]
