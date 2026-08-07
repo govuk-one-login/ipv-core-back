@@ -24,7 +24,12 @@ states:
             auditContext:
               mitigationType: enhanced-verification
           liveness-likeness:
-            targetState: MITIGATE_CI_VIA_APP
+            targetJourney: TECHNICAL_ERROR # Should never happen
+            targetState: ERROR
+            checkFeatureFlag:
+              mitigations9020Enabled:
+                targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+                targetEntryEvent: liveness-likeness-return
 
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
@@ -1153,8 +1158,8 @@ states:
       type: page
       pageId: passport-biometric-chip
     events:
-      appTriage:
-        targetState: MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE
+      next:
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
       abandon:
         targetState: MITIGATION_NEED_BIOMETRIC_PASSPORT
 
@@ -1164,20 +1169,49 @@ states:
       pageId: need-biometric-passport
     events:
       useApp:
-        targetState: MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
 
-  MITIGATION_FRAUD_STRATEGIC_APP_TRIAGE:
+  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC
+    events:
+      next:
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+        journeyContextToUnset: internationalAddress
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MITIGATION_STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
         targetState: PROCESS_NEW_IDENTITY
-
-
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+      anotherWay:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      incompleteDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED
+      failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED
+      failWithCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED
+      failWithNoCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # End of journey steps
-
   PROCESS_NEW_IDENTITY:
     response:
       type: process
