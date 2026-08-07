@@ -120,7 +120,7 @@ public class SessionCredentialsService {
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW.getId().equals(item.getCriId()))
                                         .toList();
-                        case DCMAW_ASYNC ->
+                        case DCMAW_ASYNC, PENDING_DCMAW_ASYNC ->
                                 sessionCredentialItems.stream()
                                         .filter(item -> DCMAW_ASYNC.getId().equals(item.getCriId()))
                                         .toList();

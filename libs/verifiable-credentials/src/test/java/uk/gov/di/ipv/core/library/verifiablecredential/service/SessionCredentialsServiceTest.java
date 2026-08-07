@@ -378,9 +378,10 @@ class SessionCredentialsServiceTest {
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
         }
 
-        @Test
-        void deleteSessionCredentialsForResetTypeDcmawAsyncShouldDeleteDcmawAsyncVcs()
-                throws Exception {
+        @ParameterizedTest
+        @EnumSource(names = {"DCMAW_ASYNC", "PENDING_DCMAW_ASYNC"})
+        void deleteSessionCredentialsForResetTypeDcmawAsyncShouldDeleteDcmawAsyncVcs(
+                IdentityResetType resetType) throws Exception {
             var addressVc =
                     generateVerifiableCredential("userId", ADDRESS, vcClaimFailedWithCis(null));
             var fraudVc =
@@ -401,8 +402,7 @@ class SessionCredentialsServiceTest {
                                     sessionAddressCredentialItem,
                                     sessionDcmawCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, IdentityResetType.DCMAW_ASYNC);
+            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, resetType);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));

@@ -169,7 +169,9 @@ public class EvcsService {
                                         new EvcsUpdateUserVCsDto(
                                                 getVcSignature(vc.vc()), ABANDONED, null))
                         .toList();
-        if (!vcsToUpdates.isEmpty()) evcsClient.updateUserVCs(userId, vcsToUpdates);
+        if (!vcsToUpdates.isEmpty()) {
+            evcsClient.updateUserVCs(userId, vcsToUpdates);
+        }
     }
 
     public void abandonPendingIdentityV2(
