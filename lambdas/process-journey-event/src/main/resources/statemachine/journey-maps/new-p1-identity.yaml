@@ -24,12 +24,7 @@ states:
             auditContext:
               mitigationType: enhanced-verification
           liveness-likeness:
-            targetJourney: TECHNICAL_ERROR # Should never happen
-            targetState: ERROR
-            checkFeatureFlag:
-              mitigations9020Enabled:
-                targetState: MITIGATION_STRATEGIC_APP_TRIAGE
-                targetEntryEvent: liveness-likeness-return
+            targetState: MITIGATE_CI_VIA_APP
 
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
@@ -775,8 +770,8 @@ states:
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
       anotherWay:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: liveness-likeness-another-way
       incompleteDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED

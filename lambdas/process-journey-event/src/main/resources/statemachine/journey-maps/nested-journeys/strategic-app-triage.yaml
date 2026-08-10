@@ -19,7 +19,7 @@ entryEvents:
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
-  liveness-likeness-return:
+  liveness-likeness-another-way:
     targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
 
 nestedJourneyStates:
