@@ -20,6 +20,15 @@ entryEvents:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
   liveness-likeness-another-way:
+    checkJourneyContext:
+      mamIphone:
+        targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
+      mamAndroid:
+        targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
+      dadIphone:
+        targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+      dadAndroid:
+        targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
     targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
 
 nestedJourneyStates:
@@ -96,6 +105,7 @@ nestedJourneyStates:
         checkMitigation:
           liveness-likeness:
             targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+            journeyContextToSet: dadIphone
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -295,6 +305,7 @@ nestedJourneyStates:
         checkMitigation:
           liveness-likeness:
             targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+            journeyContextToSet: dadAndroid
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -331,6 +342,7 @@ nestedJourneyStates:
         checkMitigation:
           liveness-likeness:
             targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+            journeyContextToSet: mamIphone
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -409,6 +421,7 @@ nestedJourneyStates:
         checkMitigation:
           liveness-likeness:
             targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+            journeyContextToSet: mamAndroid
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -568,14 +581,10 @@ nestedJourneyStates:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE
         targetEntryEvent: identify-device
         checkJourneyContext:
-          mamIphone:
-            targetState: MOBILE_IPHONE_START_SESSION
-          mamAndroid:
-            targetState: MOBILE_ANDROID_START_SESSION
           dadIphone:
-            targetState: DAD_IPHONE_START_SESSION
+            targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
           dadAndroid:
-            targetState: DAD_ANDROID_START_SESSION
+            targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       returnToRp:
         exitEventToEmit: returnToRp
 
@@ -589,12 +598,8 @@ nestedJourneyStates:
         targetEntryEvent: identify-device
         checkJourneyContext:
           mamIphone:
-            targetState: MOBILE_IPHONE_START_SESSION
+            targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
           mamAndroid:
-            targetState: MOBILE_ANDROID_START_SESSION
-          dadIphone:
-            targetState: DAD_IPHONE_START_SESSION
-          dadAndroid:
-            targetState: DAD_ANDROID_START_SESSION
+            targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
       returnToRp:
         exitEventToEmit: returnToRp
