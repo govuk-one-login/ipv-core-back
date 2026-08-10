@@ -578,13 +578,7 @@ nestedJourneyStates:
       pageId: need-smartphone-prove-identity-app
     events:
       useApp:
-        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
-        targetEntryEvent: identify-device
-        checkJourneyContext:
-          dadIphone:
-            targetState: DESKTOP_APP_ONLY_IPHONE_DOWNLOAD_PAGE
-          dadAndroid:
-            targetState: DESKTOP_APP_ONLY_ANDROID_DOWNLOAD_PAGE
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
       returnToRp:
         exitEventToEmit: returnToRp
 
@@ -594,12 +588,29 @@ nestedJourneyStates:
       pageId: app-passport-prove-identity
     events:
       useApp:
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
+      returnToRp:
+        exitEventToEmit: returnToRp
+
+  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC
+    events:
+      next:
         targetState: STRATEGIC_APP_IDENTIFY_DEVICE
         targetEntryEvent: identify-device
         checkJourneyContext:
           mamIphone:
-            targetState: MOBILE_APP_ONLY_IPHONE_DOWNLOAD_PAGE
+            targetState: MOBILE_IPHONE_START_SESSION
           mamAndroid:
-            targetState: MOBILE_APP_ONLY_ANDROID_DOWNLOAD_PAGE
-      returnToRp:
-        exitEventToEmit: returnToRp
+            targetState: MOBILE_ANDROID_START_SESSION
+          dadIphone:
+            targetState: DAD_IPHONE_START_SESSION
+          dadAndroid:
+            targetState: DAD_ANDROID_START_SESSION
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
