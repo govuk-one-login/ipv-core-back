@@ -104,7 +104,6 @@ Feature: P2 Fraud mitigation
         | smartphone | <device> |
         | isAppOnly  | true     |
       When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
-      # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt
@@ -199,7 +198,6 @@ Feature: P2 Fraud mitigation
         | smartphone | <device> |
         | isAppOnly  | true     |
       When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
-      # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt
@@ -492,7 +490,7 @@ Feature: P2 Fraud mitigation
       When I submit 'kenneth' details to the CRI stub
       Then I get a 'nino' CRI response
 
-      # First CI
+      # First non breaching CI
       When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
