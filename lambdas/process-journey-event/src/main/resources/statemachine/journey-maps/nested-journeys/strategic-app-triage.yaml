@@ -30,6 +30,7 @@ entryEvents:
       dadAndroid:
         targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
     targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
+    journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
 
 nestedJourneyStates:
   # PYIC-8896 Remove this state once there is no danger of anyone still being in it.
