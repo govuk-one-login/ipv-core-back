@@ -7,6 +7,8 @@ public enum IdentityResetType {
     DCMAW,
     /** Deletes only DCMAW_ASYNC VC from session. */
     DCMAW_ASYNC,
+    /** Deletes DCMAW_ASYNC VC from session and pending record. */
+    PENDING_DCMAW_ASYNC,
     /** Deletes all session + pending VCs except address. */
     NAME_ONLY_CHANGE,
     /** Deletes address + fraud VCs from session. */

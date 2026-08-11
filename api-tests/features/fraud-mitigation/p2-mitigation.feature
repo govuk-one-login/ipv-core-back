@@ -1,5 +1,6 @@
-@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest @DomAll
 Feature: P2 Fraud mitigation
+
   Background: Enable fraud mitigation
     Given I activate the 'mitigations9020' feature set
 
@@ -46,13 +47,79 @@ Feature: P2 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: Breaching fraud CI goes to mitigation route - no Open Banking
+    Scenario Outline: Breaching fraud CI - no Open Banking - Happy path DAD journey - <device>
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
+
+    Scenario Outline: Breaching fraud CI - no Open Banking - Happy path MAM journey - <device>
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
 
     Scenario: Breaching fraud CI goes back to RP - no Open Banking
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
@@ -106,13 +173,79 @@ Feature: P2 Fraud mitigation
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: Breaching fraud CI goes to mitigation route
+    Scenario Outline: Breaching fraud CI - Happy path MAM journey - <device>
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
+
+    Scenario Outline: Breaching fraud CI - Happy path DAD journey - <device>
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
 
     Scenario: Breaching fraud CI goes back to RP
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
@@ -207,6 +340,21 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-passport' page response
       When I submit a 'retryPassport' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Breaching fraud CI goes back to RP
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
@@ -277,18 +425,45 @@ Feature: P2 Fraud mitigation
       Then I get a 'bav' CRI response
       When I submit 'kenneth' details to the CRI stub
       Then I get a 'nino' CRI response
+      # First CI
       When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
+      # Second CI
       When I submit 'kenneth-score-2-liveness-likeness-p2-when-combined-with-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+      # Mitigation journey
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      # Mitigate second CI
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS-P2-WHEN-COMBINED-WITH-NON-BREACHING' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Combined breaching fraud CI goes to mitigation route
       Given I activate the 'openBanking' feature set
@@ -306,18 +481,49 @@ Feature: P2 Fraud mitigation
         | Attribute | Values         |
         | context   | "bank_account" |
       Then I get a 'nino' CRI response
+
+      # First non breaching CI
       When I submit 'kenneth-score-2-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
+
+      # Second CI
       When I submit 'kenneth-score-2-liveness-likeness-p2-when-combined-with-non-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
+
+      # Mitigation journey
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+
+      # Mitigate second CI
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS-P2-WHEN-COMBINED-WITH-NON-BREACHING' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: Web document journey - no Open Banking
     Background: Start P2 web document journey
@@ -374,6 +580,29 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | cri            | details                      |
@@ -451,6 +680,29 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
       Examples:
         | cri            | details                      |
@@ -491,6 +743,29 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: F2F journey
     Background: Start P2 F2F journey
@@ -528,3 +803,330 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+  Rule: Abandoned fraud mitigation and retry
+    Background: Start P2 photo id journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+
+    Scenario: DAD abandoned journey - user retried
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-passport' page response
+      When I submit a 'retryPassport' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+
+      # User abandon journey
+      When the async DCMAW CRI produces an 'access_denied' error response
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'need-smartphone-prove-identity-app' page response
+
+      # User retried to mitigate via app
+      When I submit a 'useApp' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+    Scenario: MAM abandoned journey - user retried
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-passport' page response
+      When I submit a 'retryPassport' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+
+      # User abandon journey
+      When the async DCMAW CRI produces an 'access_denied' error response
+      And I fetch user OAuthState
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'app-passport-prove-identity' page response
+
+      # User retried to mitigate via app
+      When I submit a 'useApp' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+
+  Rule: Failed DCMAW async and alternative routes
+    Background:
+      Given I activate the 'openBankingDisabled' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-multiple-doc-check' page response
+      When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'abandon' event
+      Then I get a 'need-biometric-passport' page response
+      When I submit a 'useApp' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+
+    Scenario Outline: DAD journeys - user drop off from download page
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When I submit an 'preferNoApp' event
+      Then I get a 'need-smartphone-prove-identity-app' page response
+      When I submit an 'useApp' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When I submit an 'anotherWay' event
+      Then I get a 'need-smartphone-prove-identity-app' page response
+      When I submit an 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
+
+    Scenario Outline: MAM journeys - user drop off from download page
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an '<device>' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When I submit an 'preferNoApp' event
+      Then I get a 'app-passport-prove-identity' page response
+      When I submit an 'useApp' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | <device> |
+        | isAppOnly  | true     |
+      When I submit an 'anotherWay' event
+      Then I get a 'app-passport-prove-identity' page response
+      When I submit an 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+      Examples:
+        | device  |
+        | iphone  |
+        | android |
+
+    Scenario: User failed to mitigate Fraud CI:
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      And I pass on the DCMAW callback
+      Then I get an 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: User failed to mitigate Fraud CI with new CI:
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'ALWAYS-REQUIRED' CI
+      And I pass on the DCMAW callback
+      Then I get an 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: User failed to mitigate Fraud CI by using driving licence in app:
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I pass on the DCMAW callback
+      Then I get an 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      # User passed DL check but doesn't have sufficient score to achieve P2
+      Then I get an 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS

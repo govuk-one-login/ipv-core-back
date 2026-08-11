@@ -733,9 +733,7 @@ states:
       pageId: passport-biometric-chip
     events:
       next:
-        # PYIC-9068 Implement mitigation route
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
       abandon:
         targetState: MITIGATION_NEED_BIOMETRIC_PASSPORT
 
@@ -747,10 +745,45 @@ states:
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
       useApp:
-        # PYIC-9068 Implement mitigation route
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
+
+  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC
+    events:
+      next:
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+        journeyContextToUnset: internationalAddress
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MITIGATION_STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: PROCESS_NEW_IDENTITY
+      returnToRp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+      anotherWay:
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: liveness-likeness-another-way
+      incompleteDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED
-
+      failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED
+      failWithCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED
+      failWithNoCiFromApp:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # End of journey steps
 

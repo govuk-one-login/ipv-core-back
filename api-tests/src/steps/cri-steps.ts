@@ -603,6 +603,13 @@ When(
   },
 );
 
+When("I fetch user OAuthState", async function (this: World): Promise<void> {
+  this.oauthState = await getOAuthState(this.userId);
+  if (!this.oauthState) {
+    throw new Error("Oauth state must not be undefined");
+  }
+});
+
 When(
   /^I pass on the DCMAW callback( in a separate session)?$/,
   async function (
