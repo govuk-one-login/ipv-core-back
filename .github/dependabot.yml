@@ -83,3 +83,17 @@ updates:
     - dependabot
     commit-message:
       prefix: BAU
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+    target-branch: main
+    labels:
+    - dependabot
+    commit-message:
+      prefix: BAU
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
