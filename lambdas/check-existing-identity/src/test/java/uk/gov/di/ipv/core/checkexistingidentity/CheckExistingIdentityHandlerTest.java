@@ -120,6 +120,7 @@ import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpiredFailNoCi;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
@@ -421,6 +422,201 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(expectedJourney, journeyResponse);
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
+            verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            assertEquals(
+                    TEST_PREVIOUS_IPV_SESSION_ID,
+                    ((AuditExtensionPreviousIpvSessionId)
+                                    auditEventArgumentCaptor.getValue().getExtensions())
+                            .getPreviousIpvSessionId());
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @ParameterizedTest
+        @MethodSource("lowAndMediumConfidenceVtrs")
+        void
+                shouldPersistPendingReturnVcInTheSessionWithPreviousSessionVcsAndReturnDcmawAsyncVcReceivedForDcmawAsyncComplete(
+                        List<String> vtr, JourneyResponse expectedJourney)
+                        throws IpvSessionNotFoundException,
+                                HttpResponseExceptionWithErrorBody,
+                                CredentialParseException,
+                                VerifiableCredentialException,
+                                EvcsServiceException {
+            // Arrange
+            when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
+                    .thenReturn(
+                            CriResponseItem.builder()
+                                    .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                    .build());
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
+                    .thenReturn(
+                            CriOAuthSessionItem.builder()
+                                    .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                                    .build());
+
+            var previousIpvSession = new IpvSessionItem();
+            previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
+            when(ipvSessionService.getIpvSessionByClientOAuthSessionId(
+                            TEST_CLIENT_OAUTH_SESSION_ID))
+                    .thenReturn(previousIpvSession);
+
+            // Previous session had address, fraud, and DCMAW_ASYNC VC
+            var previousSessionDcmawAsyncPassportVc = vcDcmawAsyncPassport();
+            var previousSessionAddressVc = vcAddressM1a();
+            var previousSessionFraudVc = vcExperianFraudM1a();
+            var previousSessionVcs =
+                    List.of(
+                            previousSessionAddressVc,
+                            previousSessionFraudVc,
+                            previousSessionDcmawAsyncPassportVc);
+
+            when(mockSessionCredentialService.getCredentials(
+                            TEST_PREVIOUS_IPV_SESSION_ID, TEST_USER_ID, true))
+                    .thenReturn(previousSessionVcs);
+
+            // DCMAW_ASYNC VC from EVCS
+            var evcsDcmawAsyncPassportVc = vcDcmawAsyncDrivingPermitDva();
+            var evcsVcs = List.of(evcsDcmawAsyncPassportVc);
+
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    DCMAW_ASYNC,
+                                    AsyncCriStatus.STATUS_PENDING,
+                                    false,
+                                    true,
+                                    false));
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, evcsVcs));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            clientOAuthSessionItem.setVtr(vtr);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            assertEquals(expectedJourney, journeyResponse);
+            var vcsCaptor = ArgumentCaptor.forClass(List.class);
+            verify(mockSessionCredentialService)
+                    .persistCredentials(vcsCaptor.capture(), eq(TEST_SESSION_ID), eq(true));
+
+            var persistedVcs = (List<VerifiableCredential>) vcsCaptor.getValue();
+            assertEquals(3, persistedVcs.size());
+            assertTrue(
+                    persistedVcs.stream()
+                            .anyMatch(
+                                    vc ->
+                                            vc.getCri().equals(DCMAW_ASYNC)
+                                                    && vc == evcsDcmawAsyncPassportVc));
+            assertTrue(persistedVcs.contains(previousSessionAddressVc));
+            assertTrue(persistedVcs.contains(previousSessionFraudVc));
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            assertEquals(
+                    TEST_PREVIOUS_IPV_SESSION_ID,
+                    ((AuditExtensionPreviousIpvSessionId)
+                                    auditEventArgumentCaptor.getValue().getExtensions())
+                            .getPreviousIpvSessionId());
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @ParameterizedTest
+        @MethodSource("lowAndMediumConfidenceVtrs")
+        void
+                shouldPersistOnlyPendingReturnVcInTheSessionWhenPreviousSessionVcsIsEmptyAndReturnDcmawAsyncVcReceivedForDcmawAsyncComplete(
+                        List<String> vtr, JourneyResponse expectedJourney)
+                        throws IpvSessionNotFoundException,
+                                HttpResponseExceptionWithErrorBody,
+                                CredentialParseException,
+                                VerifiableCredentialException,
+                                EvcsServiceException {
+            // Arrange
+            when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
+                    .thenReturn(
+                            CriResponseItem.builder()
+                                    .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                    .build());
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(DCMAW_ASYNC.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
+                    .thenReturn(
+                            CriOAuthSessionItem.builder()
+                                    .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                                    .build());
+
+            var previousIpvSession = new IpvSessionItem();
+            previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
+            when(ipvSessionService.getIpvSessionByClientOAuthSessionId(
+                            TEST_CLIENT_OAUTH_SESSION_ID))
+                    .thenReturn(previousIpvSession);
+
+            // Previous session had no VCs
+            when(mockSessionCredentialService.getCredentials(
+                            TEST_PREVIOUS_IPV_SESSION_ID, TEST_USER_ID, true))
+                    .thenReturn(List.of());
+
+            // DCMAW_ASYNC VC from EVCS
+            var evcsDcmawAsyncPassportVc = vcDcmawAsyncPassport();
+            var evcsVcs = List.of(evcsDcmawAsyncPassportVc);
+
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    DCMAW_ASYNC,
+                                    AsyncCriStatus.STATUS_PENDING,
+                                    false,
+                                    true,
+                                    false));
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, evcsVcs));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            clientOAuthSessionItem.setVtr(vtr);
+
+            // Act
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            // Assert
+            verify(mockSessionCredentialService).persistCredentials(evcsVcs, TEST_SESSION_ID, true);
+
+            assertEquals(expectedJourney, journeyResponse);
+            var vcsCaptor = ArgumentCaptor.forClass(List.class);
+            verify(mockSessionCredentialService)
+                    .persistCredentials(vcsCaptor.capture(), eq(TEST_SESSION_ID), eq(true));
+
+            var persistedVcs = (List<VerifiableCredential>) vcsCaptor.getValue();
+            assertEquals(1, persistedVcs.size());
+            assertTrue(
+                    persistedVcs.stream()
+                            .anyMatch(
+                                    vc ->
+                                            vc.getCri().equals(DCMAW_ASYNC)
+                                                    && vc == evcsDcmawAsyncPassportVc));
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
                     AuditEventTypes.IPV_APP_SESSION_RECOVERED,

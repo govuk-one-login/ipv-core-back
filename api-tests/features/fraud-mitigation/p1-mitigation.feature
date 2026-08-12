@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest @DomAll
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
 Feature: P1 Fraud mitigation
   Background: Enable fraud mitigation
     Given I activate the 'mitigations9020' feature set
@@ -530,7 +530,7 @@ Feature: P1 Fraud mitigation
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'ALWAYS-REQUIRED' CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
       And I pass on the DCMAW callback
       Then I get an 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt

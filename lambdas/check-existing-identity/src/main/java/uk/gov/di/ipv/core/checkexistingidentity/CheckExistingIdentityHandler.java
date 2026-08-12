@@ -72,6 +72,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -641,8 +642,33 @@ public class CheckExistingIdentityHandler
                 deviceInformation,
                 new AuditExtensionPreviousIpvSessionId(previousIpvSessionItem.getIpvSessionId()));
 
-        sessionCredentialsService.persistCredentials(
-                credentialBundle.credentials, auditEventUser.getSessionId(), true);
+        var previousSessionVcs =
+                sessionCredentialsService.getCredentials(
+                        previousIpvSessionItem.getIpvSessionId(),
+                        clientOAuthSessionItem.getUserId(),
+                        true);
+
+        if (!previousSessionVcs.isEmpty()) {
+            // In the Fraud Mitigation journey, we reset only the DCMAW ASYNC VC from the session.
+            // As app is the final step, and there is no address or fraud CRI after,
+            // we need to access the VCs from the previous session in the process-candidate-identity
+            // Lambda.
+            // We also want to use the VC extracted from EVCS for the DCMAW ASYNC VC rather than the
+            // one
+            // from the previous session, as it may not have been updated.
+            var newSessionVcs =
+                    Stream.concat(
+                                    credentialBundle.credentials.stream()
+                                            .filter(vc -> vc.getCri().equals(DCMAW_ASYNC)),
+                                    previousSessionVcs.stream()
+                                            .filter(vc -> !vc.getCri().equals(DCMAW_ASYNC)))
+                            .toList();
+            sessionCredentialsService.persistCredentials(
+                    newSessionVcs, auditEventUser.getSessionId(), true);
+        } else {
+            sessionCredentialsService.persistCredentials(
+                    credentialBundle.credentials, auditEventUser.getSessionId(), true);
+        }
 
         var forcedJourney =
                 criCheckingService.checkVcResponse(

@@ -47,17 +47,27 @@ states:
               f2f:
                 targetJourney: INELIGIBLE
                 targetState: INELIGIBLE
+          liveness-likeness:
+            targetJourney: FAILED
+            targetState: FAILED
 
   DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK:
     events:
       next:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: dl-auth-source-check
+        checkMitigation:
+          liveness-likeness:
+            targetJourney: FAILED
+            targetState: FAILED
 
   DCMAW_ASYNC_COMPLETE:
     events:
       next:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        checkMitigation:
+          liveness-likeness:
+            targetState: PROCESS_NEW_IDENTITY
 
   IDENTITY_DOCUMENT_START:
     events:

@@ -363,3 +363,126 @@ Feature: P1 V2 App Cross Browser Scenario
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+  Rule: Cross-browser during separate-session liveness-likeness mitigation
+    Background:
+      Given I activate the 'mitigations9020' feature set
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'page-multiple-doc-check' page response and pageContext
+        | Context   | Value |
+        | allowNino | true  |
+      When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+
+    Scenario: Separate session DCMAW liveness-likeness mitigation - successful
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+        # And the user returns from the app to core-front
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+        # This simulates the user clicking continue on the problem-different-browser
+        # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+        # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+        # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P3' max vot
+
+    Scenario: Separate session DCMAW liveness-likeness mitigation - user fails DCMAW with no ci
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'low-confidence' journey
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Separate session DCMAW liveness-likeness mitigation - user fails DCMAW with CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'low-confidence' journey
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Separate session DCMAW liveness-likeness mitigation - DL auth check
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'low-confidence' journey
+      # User should not use DL in the app
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
