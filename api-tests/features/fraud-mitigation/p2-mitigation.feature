@@ -999,9 +999,14 @@ Feature: P2 Fraud mitigation
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
 
-    Scenario Outline: DAD journeys - user drop off from download page
+    Scenario Outline: DAD journeys - user goes back and drop off from download page
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit an 'back' event
+      Then I get a 'need-biometric-passport' page response
+      When I submit a 'useApp' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
       When I submit a 'computer-or-tablet' event
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
@@ -1032,6 +1037,7 @@ Feature: P2 Fraud mitigation
         | android |
 
     Scenario Outline: MAM journeys - user drop off from download page
+      Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
