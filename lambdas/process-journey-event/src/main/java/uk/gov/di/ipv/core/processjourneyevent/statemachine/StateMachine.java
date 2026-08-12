@@ -30,6 +30,7 @@ public class StateMachine {
 
     public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();
+        System.out.println("Change that should never end up in main branch! Created to trigger API tests in GHA.");
     }
 
     public TransitionResult transition(
