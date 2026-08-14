@@ -16,7 +16,5 @@ public class Events {
     public static final String ALTERNATE_DOC_INVALID_DL_EVENT = "alternate-doc-invalid-dl";
     public static final String ALTERNATE_DOC_INVALID_PASSPORT_EVENT =
             "alternate-doc-invalid-passport";
-    public static final String LIVENESS_LIKENESS = "liveness-likeness";
-
     public static final String FAIL_WITH_CI_EVENT = "fail-with-ci";
 }

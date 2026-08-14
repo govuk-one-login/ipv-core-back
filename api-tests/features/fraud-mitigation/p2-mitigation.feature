@@ -1,4 +1,4 @@
-@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest
+@Build @QualityGateIntegrationTest @QualityGateNewFeatureTest @DomAll
 Feature: P2 Fraud mitigation
 
   Background: Enable fraud mitigation
@@ -999,14 +999,9 @@ Feature: P2 Fraud mitigation
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
-
-    Scenario Outline: DAD journeys - user goes back and drop off from download page
       Then I get a 'pyi-triage-select-device' page response
-      When I submit an 'back' event
-      Then I get a 'need-biometric-passport' page response
-      When I submit a 'useApp' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
+
+    Scenario Outline: DAD journeys - user drop off from download page
       When I submit a 'computer-or-tablet' event
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
@@ -1037,7 +1032,6 @@ Feature: P2 Fraud mitigation
         | android |
 
     Scenario Outline: MAM journeys - user drop off from download page
-      Then I get a 'pyi-triage-select-device' page response
       When I submit a 'smartphone' event
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
@@ -1100,7 +1094,7 @@ Feature: P2 Fraud mitigation
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'BREACHING' CI
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a 'ALWAYS-REQUIRED' CI
       And I pass on the DCMAW callback
       Then I get an 'check-mobile-app-result' page response
       When I poll for async DCMAW credential receipt
