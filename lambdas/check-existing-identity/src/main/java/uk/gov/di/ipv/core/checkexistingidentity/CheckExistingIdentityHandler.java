@@ -608,6 +608,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private JourneyResponse buildDCMAWContinuationResponse(
             VerifiableCredentialBundle credentialBundle,
             List<ContraIndicator> contraIndicators,

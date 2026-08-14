@@ -1,4 +1,4 @@
-@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest @Dom
+@Build @InitialisesDCMAWSessionState @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 V2 App Cross Browser Scenario
   Rule: New identity proving journey - no mitigations
     Background: Start journey

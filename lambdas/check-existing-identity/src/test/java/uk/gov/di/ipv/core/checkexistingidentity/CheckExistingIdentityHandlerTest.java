@@ -88,6 +88,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -518,12 +519,7 @@ class CheckExistingIdentityHandlerTest {
 
             var persistedVcs = (List<VerifiableCredential>) vcsCaptor.getValue();
             assertEquals(3, persistedVcs.size());
-            assertTrue(
-                    persistedVcs.stream()
-                            .anyMatch(
-                                    vc ->
-                                            vc.getCri().equals(DCMAW_ASYNC)
-                                                    && vc == evcsDcmawAsyncPassportVc));
+            assertTrue(persistedVcs.stream().anyMatch(vc -> vc.equals(evcsDcmawAsyncPassportVc)));
             assertTrue(persistedVcs.contains(previousSessionAddressVc));
             assertTrue(persistedVcs.contains(previousSessionFraudVc));
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -582,8 +578,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of());
 
             // DCMAW_ASYNC VC from EVCS
-            var evcsDcmawAsyncPassportVc = vcDcmawAsyncPassport();
-            var evcsVcs = List.of(evcsDcmawAsyncPassportVc);
+            var dcmawAsyncPassportVc = vcDcmawAsyncPassport();
+            var evcsVcs = List.of(dcmawAsyncPassportVc);
 
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                     .thenReturn(
@@ -612,15 +608,9 @@ class CheckExistingIdentityHandlerTest {
             var vcsCaptor = ArgumentCaptor.forClass(List.class);
             verify(mockSessionCredentialService)
                     .persistCredentials(vcsCaptor.capture(), eq(TEST_SESSION_ID), eq(true));
-
             var persistedVcs = (List<VerifiableCredential>) vcsCaptor.getValue();
             assertEquals(1, persistedVcs.size());
-            assertTrue(
-                    persistedVcs.stream()
-                            .anyMatch(
-                                    vc ->
-                                            vc.getCri().equals(DCMAW_ASYNC)
-                                                    && vc == evcsDcmawAsyncPassportVc));
+            assertSame(persistedVcs.getFirst(), dcmawAsyncPassportVc);
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(
@@ -670,8 +660,8 @@ class CheckExistingIdentityHandlerTest {
             when(ipvSessionService.getIpvSessionByClientOAuthSessionId(
                             TEST_CLIENT_OAUTH_SESSION_ID))
                     .thenReturn(previousIpvSession);
-            var passportVc = vcDcmawAsyncPassport();
-            var vcs = List.of(passportVc);
+            var dcmawAsyncPassportVc = vcDcmawAsyncPassport();
+            var vcs = List.of(dcmawAsyncPassportVc);
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -702,9 +692,7 @@ class CheckExistingIdentityHandlerTest {
 
             var persistedVcs = (List<VerifiableCredential>) vcsCaptor.getValue();
             assertEquals(1, persistedVcs.size());
-            assertTrue(
-                    persistedVcs.stream()
-                            .anyMatch(vc -> vc.getCri().equals(DCMAW_ASYNC) && vc == passportVc));
+            assertSame(persistedVcs.getFirst(), dcmawAsyncPassportVc);
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, true);
             verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
