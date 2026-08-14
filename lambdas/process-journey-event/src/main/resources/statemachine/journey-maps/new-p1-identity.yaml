@@ -47,17 +47,27 @@ states:
               f2f:
                 targetJourney: INELIGIBLE
                 targetState: INELIGIBLE
+          liveness-likeness:
+            targetJourney: FAILED
+            targetState: FAILED
 
   DCMAW_ASYNC_DL_AUTH_SOURCE_CHECK:
     events:
       next:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: dl-auth-source-check
+        checkMitigation:
+          liveness-likeness:
+            targetJourney: FAILED
+            targetState: FAILED
 
   DCMAW_ASYNC_COMPLETE:
     events:
       next:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        checkMitigation:
+          liveness-likeness:
+            targetState: PROCESS_NEW_IDENTITY
 
   IDENTITY_DOCUMENT_START:
     events:
@@ -307,7 +317,7 @@ states:
             targetState: FAILED
             checkMitigation:
               liveness-likeness:
-                targetState: MITIGATE_CI_VIA_APP
+                targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
 
   PYI_ESCAPE:
     response:
@@ -412,7 +422,7 @@ states:
             targetState: FAILED
             checkMitigation:
               liveness-likeness:
-                targetState: MITIGATE_CI_VIA_PASSPORT
+                targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_PHOTO_ID
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -447,7 +457,7 @@ states:
             targetState: FAILED
             checkMitigation:
               liveness-likeness:
-                targetState: MITIGATE_CI_VIA_APP
+                targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -500,7 +510,7 @@ states:
             targetState: FAILED
             checkMitigation:
               liveness-likeness:
-                targetState: MITIGATE_CI_VIA_APP
+                targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -733,7 +743,9 @@ states:
       pageId: passport-biometric-chip
     events:
       next:
-        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+        journeyContextToUnset: internationalAddress
       abandon:
         targetState: MITIGATION_NEED_BIOMETRIC_PASSPORT
 
@@ -742,12 +754,14 @@ states:
       type: page
       pageId: need-biometric-passport
     events:
+      useApp:
+        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+        journeyContextToUnset: internationalAddress
       returnToRp:
         targetState: PROCESS_INCOMPLETE_IDENTITY
-      useApp:
-        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP
 
-  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP:
+  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID:
     response:
       type: process
       lambda: reset-identity
@@ -755,9 +769,20 @@ states:
         resetType: PENDING_DCMAW_ASYNC
     events:
       next:
-        targetState: MITIGATION_STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
-        journeyContextToUnset: internationalAddress
+        targetState: MITIGATE_CI_VIA_APP
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_PHOTO_ID:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_DCMAW_ASYNC
+    events:
+      next:
+        targetState: MITIGATE_CI_VIA_PASSPORT
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
