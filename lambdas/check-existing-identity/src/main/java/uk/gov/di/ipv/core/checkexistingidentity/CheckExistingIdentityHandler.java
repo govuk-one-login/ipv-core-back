@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
+import uk.gov.di.ipv.core.library.journeys.Events;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -72,6 +73,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -491,6 +493,7 @@ public class CheckExistingIdentityHandler
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
+                                    contraIndicators,
                                     ipAddress,
                                     ipvSessionItem,
                                     targetVot,
@@ -605,8 +608,10 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private JourneyResponse buildDCMAWContinuationResponse(
             VerifiableCredentialBundle credentialBundle,
+            List<ContraIndicator> contraIndicators,
             String ipAddress,
             IpvSessionItem ipvSessionItem,
             Vot lowestGpg45ConfidenceRequested,
@@ -641,8 +646,33 @@ public class CheckExistingIdentityHandler
                 deviceInformation,
                 new AuditExtensionPreviousIpvSessionId(previousIpvSessionItem.getIpvSessionId()));
 
-        sessionCredentialsService.persistCredentials(
-                credentialBundle.credentials, auditEventUser.getSessionId(), true);
+        if (isLivenessLikenessMitigation(contraIndicators, lowestGpg45ConfidenceRequested)) {
+            // In the Fraud Mitigation journey, we reset only the DCMAW ASYNC VC from the session
+            // and pending record from criResponse.
+            // As app is the final step, and there is no address or fraud CRI after,
+            // we need to access the VCs from the previous session in the process-candidate-identity
+            // Lambda.
+            // We also want to use the VC extracted from EVCS for the DCMAW ASYNC VC rather than the
+            // one
+            // from the previous session
+            var previousSessionVcs =
+                    sessionCredentialsService.getCredentials(
+                            previousIpvSessionItem.getIpvSessionId(),
+                            clientOAuthSessionItem.getUserId(),
+                            true);
+            var newSessionVcs =
+                    Stream.concat(
+                                    credentialBundle.credentials.stream()
+                                            .filter(vc -> vc.getCri().equals(DCMAW_ASYNC)),
+                                    previousSessionVcs.stream()
+                                            .filter(vc -> !vc.getCri().equals(DCMAW_ASYNC)))
+                            .toList();
+            sessionCredentialsService.persistCredentials(
+                    newSessionVcs, auditEventUser.getSessionId(), true);
+        } else {
+            sessionCredentialsService.persistCredentials(
+                    credentialBundle.credentials, auditEventUser.getSessionId(), true);
+        }
 
         var forcedJourney =
                 criCheckingService.checkVcResponse(
@@ -674,6 +704,13 @@ public class CheckExistingIdentityHandler
             case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
             default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
         };
+    }
+
+    private boolean isLivenessLikenessMitigation(List<ContraIndicator> contraIndicators, Vot vot) {
+        var mitigationEvent =
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(contraIndicators, vot);
+        return mitigationEvent.isPresent()
+                && mitigationEvent.get().equals(Events.LIVENESS_LIKENESS);
     }
 
     private JourneyResponse buildReuseResponse(
