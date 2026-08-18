@@ -69,6 +69,14 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+                targetState: START_HIGHER_STRENGTH
       fraud-fail-with-no-ci-fatal:
         targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
         targetState: START_HIGHER_STRENGTH
