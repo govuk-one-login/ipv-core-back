@@ -110,13 +110,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       failWithNoCiFromApp:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-        journeyContextToUnset: appOnly
-        checkFeatureFlag:
-          coi6mfcDeadEndRoutingEnabled:
-            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
-            targetState: START_HIGHER_STRENGTH
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: START_HIGHER_STRENGTH
       returnToRp:
         targetState: RETURN_TO_RP
         journeyContextToUnset: appOnly
@@ -156,11 +151,8 @@ states:
       fail-with-no-ci:
         targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci-fatal:
-        targetState: PROCESS_UPDATE_IDENTITY
-        checkFeatureFlag:
-          coi6mfcDeadEndRoutingEnabled:
-            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
-            targetState: START_HIGHER_STRENGTH
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: START_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
@@ -253,14 +245,9 @@ states:
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
         journeyContextToUnset: appOnly
       failWithNoCiFromApp:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-        journeyContextToUnset: appOnly
-        checkFeatureFlag:
-          coi6mfcDeadEndRoutingEnabled:
-            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
-            targetState: START_HIGHER_STRENGTH
-            journeyContextToSet: nameAndAddress
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: START_HIGHER_STRENGTH
+        journeyContextToSet: nameAndAddress
       returnToRp:
         targetState: RETURN_TO_RP
         journeyContextToUnset: appOnly
@@ -326,12 +313,9 @@ states:
       fraud-fail-with-no-ci:
         targetState: PROCESS_UPDATE_IDENTITY
       fraud-fail-with-no-ci-fatal:
-        targetState: PROCESS_UPDATE_IDENTITY
-        checkFeatureFlag:
-          coi6mfcDeadEndRoutingEnabled:
-            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
-            targetState: START_HIGHER_STRENGTH
-            journeyContextToSet: nameAndAddress
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: START_HIGHER_STRENGTH
+        journeyContextToSet: nameAndAddress
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
@@ -360,12 +344,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       profile-unmet:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          coi6mfcDeadEndRoutingEnabled:
-            targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
-            targetState: START_HIGHER_STRENGTH
+        targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+        targetState: START_HIGHER_STRENGTH
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
