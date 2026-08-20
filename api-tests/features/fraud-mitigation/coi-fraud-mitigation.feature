@@ -13,7 +13,7 @@ Feature: Identity reuse update details
       When I submit a 'update-details' event
       Then I get a 'update-details' page response
 
-    Scenario: Update Given Name with Fraud CI mitigation
+    Scenario: Reuse - Update Given Name with Fraud CI mitigation
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
@@ -76,8 +76,14 @@ Feature: Identity reuse update details
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And my identity 'GivenName' is 'Ken'
+      And I have a stored identity record with a 'P3' max vot
 
-    Scenario: Update Address with Fraud CI mitigation
+    Scenario: Reuse - Update Address with Fraud CI mitigation
       When I submit a 'address-only' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -118,8 +124,15 @@ Feature: Identity reuse update details
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And my address 'buildingNumber' is '28'
+      And my address 'addressLocality' is 'Bristol'
+      And I have a stored identity record with a 'P3' max vot
 
-    Scenario: Update details - Given Name and Address with Fraud CI mitigation
+    Scenario: Reuse - Update details - Given Name and Address with Fraud CI mitigation
       When I submit a 'given-names-and-address' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
@@ -150,7 +163,6 @@ Feature: Identity reuse update details
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
@@ -185,3 +197,11 @@ Feature: Identity reuse update details
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And my identity 'GivenName' is 'Ken'
+      And my address 'buildingNumber' is '28'
+      And my address 'addressLocality' is 'Bristol'
+      And I have a stored identity record with a 'P3' max vot

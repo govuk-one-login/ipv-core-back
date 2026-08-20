@@ -12,7 +12,7 @@ Feature: Fraud mitigation - 6mfc
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
-    Scenario: Fraud 6 Months Expiry + Given Name Update
+    Scenario: Fraud 6 Months Expiry + Given Name Update and Fraud CI mitigation
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
@@ -80,7 +80,7 @@ Feature: Fraud mitigation - 6mfc
       And my identity 'GivenName' is 'Ken'
       And I have a stored identity record with a 'P3' max vot
 
-    Scenario: Fraud 6 Months Expiry + Address Update
+    Scenario: Fraud 6 Months Expiry + Address Update and Fraud CI mitigation
       When I submit a 'address-only' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -129,7 +129,7 @@ Feature: Fraud mitigation - 6mfc
       And my address 'addressLocality' is 'Bristol'
       And I have a stored identity record with a 'P3' max vot
 
-    Scenario: Fraud 6 Months Expiry + Address and Given Name Update
+    Scenario: Fraud 6 Months Expiry + Address and Given Name Update and Fraud CI mitigation
       When I submit a 'given-names-and-address' event
       Then I get a 'page-update-name' page response and pageContext
         | Context     | Value            |
