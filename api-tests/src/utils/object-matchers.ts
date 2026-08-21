@@ -10,10 +10,6 @@ enum SupportedTypeMatchers {
 
 const TYPE_CHECK_REGEX = /^type\[(\w+)\]$/;
 
-// In node v23, there is a feature called partialDeepStrictEqual which does what we want
-// However, since we are on node v22, we create a partial matcher from scratch.
-// When we upgrade to node >=v23, we could replace this matcher with partialDeepStrictEqual instead.
-// Read up on docs for the feature here: https://nodejs.org/api/assert.html#assertpartialdeepstrictequalactual-expected-message
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const comparePartialEqualityBetweenObjects = (
   actualObject: Record<string, any>,

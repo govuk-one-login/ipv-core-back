@@ -513,7 +513,7 @@ Then(
       const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
       assert.ok(
         comparisonResult.isPartiallyEqual,
-        comparisonResult.errorMessage,
+        comparisonResult.errorMessage || "Missing error message",
       );
     }
   },
