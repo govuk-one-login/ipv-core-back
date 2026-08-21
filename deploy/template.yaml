@@ -426,7 +426,7 @@ Resources:
         - IsDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
-      RetentionInDays: 30
+      RetentionInDays: 180
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -664,7 +664,7 @@ Resources:
         - IsDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
-      RetentionInDays: 30
+      RetentionInDays: 180
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -844,7 +844,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/manual-f2f-pending-reset-${Environment}"
 
   ManualF2fPendingResetFunctionLogGroupSubscriptionFilter:
@@ -1156,7 +1156,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
 
   IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
@@ -1251,7 +1251,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
 
   BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
@@ -1378,7 +1378,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
 
   InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
@@ -1487,7 +1487,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
 
   BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
@@ -1627,7 +1627,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/process-cri-callback-${Environment}"
 
   ProcessCriCallbackLogGroupSubscriptionFilter:
@@ -1741,7 +1741,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/process-mobile-app-callback-${Environment}"
 
   ProcessMobileAppCallbackLogGroupSubscriptionFilter:
@@ -1856,7 +1856,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/check-mobile-app-vc-receipt-${Environment}"
 
   CheckMobileAppVcReceiptLogGroupSubscriptionFilter:
@@ -1971,7 +1971,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
 
   BuildUserIdentityFunctionLogGroupSubscriptionFilter:
@@ -2076,7 +2076,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/user-reverification-${Environment}"
 
   UserReverificationFunctionLogGroupSubscriptionFilter:
@@ -2212,7 +2212,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
 
   JourneyEngineStepFunctionLogGroupSubscriptionFilter:
@@ -2313,7 +2313,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
 
   IPVProcessJourneyEventFunctionLogGroupSubscriptionFilter:
@@ -2427,7 +2427,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/build-proven-user-identity-details-${Environment}"
 
   BuildProvenUserIdentityDetailsFunctionLogGroupSubscriptionFilter:
@@ -2541,7 +2541,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/check-existing-identity-${Environment}"
 
   CheckExistingIdentityFunctionLogGroupSubscriptionFilter:
@@ -2710,7 +2710,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/process-async-cri-credential-${Environment}"
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
@@ -2833,7 +2833,7 @@ Resources:
   CheckGpg45ScoreFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2989,7 +2989,7 @@ Resources:
   CallDcmawAsyncCriFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/call-dcmaw-async-cri-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -3089,7 +3089,7 @@ Resources:
   ResetIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/reset-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -3174,7 +3174,7 @@ Resources:
   CheckReverificationIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/check-reverification-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -3291,7 +3291,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      RetentionInDays: 30
+      RetentionInDays: 180
       LogGroupName: !Sub "/aws/lambda/process-candidate-identity-${Environment}"
 
   ProcessCandidateIdentityFunctionLogGroupSubscriptionFilter:
