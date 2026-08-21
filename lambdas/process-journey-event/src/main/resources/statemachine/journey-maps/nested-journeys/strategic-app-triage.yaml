@@ -582,6 +582,8 @@ nestedJourneyStates:
         targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
       returnToRp:
         exitEventToEmit: returnToRp
+      back:
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
 
   MITIGATION_APP_PASSPORT_PROVE_IDENTITY:
     response:
@@ -592,6 +594,9 @@ nestedJourneyStates:
         targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
       returnToRp:
         exitEventToEmit: returnToRp
+      back:
+        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
+
 
   MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY:
     response:

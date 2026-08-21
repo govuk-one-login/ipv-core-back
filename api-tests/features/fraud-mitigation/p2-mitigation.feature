@@ -881,7 +881,7 @@ Feature: P2 Fraud mitigation
       Then I get a 'need-smartphone-prove-identity-app' page response
 
       # User retried to mitigate via app
-      When I submit a 'useApp' event
+      When I submit a 'back' event
       Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
@@ -945,7 +945,7 @@ Feature: P2 Fraud mitigation
       Then I get a 'app-passport-prove-identity' page response
 
       # User retried to mitigate via app
-      When I submit a 'useApp' event
+      When I submit a 'back' event
       Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
         | Context    | Value  |
         | smartphone | iphone |
