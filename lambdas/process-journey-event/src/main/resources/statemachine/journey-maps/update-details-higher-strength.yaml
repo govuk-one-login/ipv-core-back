@@ -14,6 +14,16 @@ states:
           rfc:
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
 
+  MITIGATION_START_HIGHER_STRENGTH:
+    events:
+      next:
+        # Temporary - User with CI cannot continue journey without updating their details
+        # need-more-information-confirm-change-details needs new context which doesn't indicate 6MFC
+        # Curren wiring from this journey is to page with updateDetails context which indicate that user's identity is valid
+        # as user won't be able to continue due to the existing CI and profile unmet evaluation in process-candidate-identity lambda
+        # we want to redirect user to page which will display accurate information
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+
   # Journey States
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
     response:
