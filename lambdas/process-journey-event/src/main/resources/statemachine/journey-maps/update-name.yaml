@@ -156,6 +156,14 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+            checkMitigation:
+              liveness-likeness:
+                targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+                targetState: MITIGATION_START_HIGHER_STRENGTH
 
   NAMES_ONLY_AFTER_RFC:
     response:
@@ -319,6 +327,16 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetJourney: FAILED
+            targetState: FAILED
+            checkMitigation:
+              liveness-likeness:
+                targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
+                targetState: MITIGATION_START_HIGHER_STRENGTH
+                journeyContextToSet: nameAndAddress
+
 
   # SHARED STATES
   PROCESS_UPDATE_IDENTITY:
