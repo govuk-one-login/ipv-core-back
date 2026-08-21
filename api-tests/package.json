@@ -15,7 +15,7 @@
     "lint-fix": "eslint --fix . && prettier . --write"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=24.19"
   },
   "devDependencies": {
     "@cucumber/cucumber": "13.2.0",
