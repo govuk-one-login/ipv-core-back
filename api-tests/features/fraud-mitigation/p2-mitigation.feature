@@ -878,7 +878,7 @@ Feature: P2 Fraud mitigation
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'need-smartphone-prove-identity-app' page response
+      Then I get a 'app-passport-prove-identity' page response
 
       # User retried to mitigate via app
       When I submit a 'useApp' event
@@ -1011,20 +1011,35 @@ Feature: P2 Fraud mitigation
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'app-passport-prove-identity' page response
+      When I submit a 'back' event
+      Then I get an 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'app-passport-prove-identity' page response
+      When I submit a 'useApp' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
       When I submit an '<device>' event
       Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value    |
         | smartphone | <device> |
         | isAppOnly  | true     |
       When I submit an 'preferNoApp' event
-      Then I get a 'need-smartphone-prove-identity-app' page response
+      Then I get a 'app-passport-prove-identity' page response
       When I submit an 'useApp' event
       Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
         | Context    | Value    |
         | smartphone | <device> |
         | isAppOnly  | true     |
       When I submit an 'anotherWay' event
-      Then I get a 'need-smartphone-prove-identity-app' page response
+      Then I get a 'app-passport-prove-identity' page response
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

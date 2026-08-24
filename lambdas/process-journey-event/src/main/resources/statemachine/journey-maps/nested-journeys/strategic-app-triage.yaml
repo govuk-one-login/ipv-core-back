@@ -26,9 +26,9 @@ entryEvents:
       mamAndroid:
         targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
       dadIphone:
-        targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+        targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
       dadAndroid:
-        targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+        targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
     targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
     journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
 
@@ -173,7 +173,7 @@ nestedJourneyStates:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkMitigation:
           liveness-likeness:
-            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NEED_APP
@@ -262,7 +262,7 @@ nestedJourneyStates:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkMitigation:
           liveness-likeness:
-            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NEED_APP
@@ -568,7 +568,7 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
         checkMitigation:
           liveness-likeness:
-            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
+            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
         checkJourneyContext:
           internationalAddress:
             targetState: DAD_SELECT_SMARTPHONE_NEED_APP
@@ -579,7 +579,8 @@ nestedJourneyStates:
       pageId: need-smartphone-prove-identity-app
     events:
       useApp:
-        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
+        targetState: STRATEGIC_APP_IDENTIFY_DEVICE
+        targetEntryEvent: identify-device
       returnToRp:
         exitEventToEmit: returnToRp
 
