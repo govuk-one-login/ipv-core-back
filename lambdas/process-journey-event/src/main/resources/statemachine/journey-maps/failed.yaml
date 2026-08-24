@@ -63,6 +63,13 @@ states:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
+        checkMitigation:
+          liveness-likeness:
+            targetState: PROCESS_INCOMPLETE_IDENTITY_UPDATE_DETAILS_INVALID_IDENTITY
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
 
   FAILED_BAV:
     events:

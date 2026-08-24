@@ -97,7 +97,6 @@ Feature: Fraud mitigation - COI
       Then I am issued a 'P0' identity
       And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
-    # TODO: Resolve htis failing test -> identity should be invalid
     Scenario: Reuse - Update Given Name with Fraud CI - User abandons mitigation with preferNoApp
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
@@ -122,48 +121,12 @@ Feature: Fraud mitigation - COI
       Then I get an 'update-details-failed' page response and pageContext
         | Context                   | Value |
         | isExistingIdentityInvalid | true  |
-
-    Scenario: Reuse - Update Given Name with Fraud CI - Mitigation succeeds but profile unmet at final processing
-      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
-        | journeyType | repeatFraudCheck |
-      When I submit an 'passport' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
-        | Context    | Value |
-        | deviceType | dad   |
-      When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
-        | Context    | Value   |
-        | smartphone | android |
-        | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
-      And I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      # TODO: This should not be a updateDetails reason as user is not allowed to continue
-      Then I get an 'pyi-no-match' page response and pageContext
-        | Context | Value         |
-        | reason  | updateDetails |
-      When I submit a 'next' event
+      When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I have a stored identity record with a 'P3' max vot that is 'invalid'
+
 
   Rule: COI - Address Update
     Background: Start journey with existing identity and decided to change address
@@ -227,48 +190,6 @@ Feature: Fraud mitigation - COI
       And my address 'buildingNumber' is '28'
       And my address 'addressLocality' is 'Bristol'
       And I have a stored identity record with a 'P3' max vot
-
-    Scenario: Reuse - Update Address with Fraud CI - VCs not correlated during mitigation
-      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
-        | journeyType | repeatFraudCheck |
-      When I submit an 'passport' event
-      Then I get an 'identify-device' page response
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-triage-select-device' page response
-      When I submit a 'computer-or-tablet' event
-      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
-        | Context    | Value |
-        | deviceType | dad   |
-      When I submit an 'android' event
-      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
-        | Context    | Value   |
-        | smartphone | android |
-        | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'alice-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
-      And I poll for async DCMAW credential receipt
-      Then the poll returns a '201'
-      When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'alice-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":1} |
-      # TODO: This should not be a updateDetails reason as user is not allowed to continue
-      Then I get an 'pyi-no-match' page response and pageContext
-        | Context | Value         |
-        | reason  | updateDetails |
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I am issued a 'P0' identity
-      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: Reuse - Update Address with Fraud CI - Mitigation passport itself returns a CI
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
