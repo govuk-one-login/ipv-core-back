@@ -44,7 +44,7 @@ import {
   primeResponseForUser,
 } from "../clients/ais-management-api.js";
 
-const RETRY_DELAY_MILLIS = 2000;
+const RETRY_DELAY_MILLIS = 5000;
 const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
