@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -148,6 +149,20 @@ public class InitialiseIpvSessionHandler
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatusCode.BAD_REQUEST, ErrorResponse.MISSING_VTR);
+            }
+
+            if (!isListEmpty(vtr)) {
+                for (String vtrItem : vtr) {
+                    if (Vot.parse(vtrItem).isEmpty()) {
+                        LOGGER.error(
+                                LogHelper.buildLogMessage(
+                                        String.format(
+                                                "Invalid VTR value provided in authorize request: %s",
+                                                vtrItem)));
+                        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                                HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_VTR_CLAIM);
+                    }
+                }
             }
 
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
