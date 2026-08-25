@@ -19,3 +19,5 @@ nestedJourneyStates:
     events:
       eventOne:
         exitEventToEmit: exitEventFromDoublyNestedStateTwo
+      eventOneWithAuditLog:
+        exitEventToEmit: exitEventFromDoublyNestedStateTwoWithAuditLog
