@@ -13,16 +13,9 @@ states:
         checkJourneyContext:
           rfc:
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
-
-  MITIGATION_START_HIGHER_STRENGTH:
-    events:
-      next:
-        # Temporary - User with CI cannot continue journey without updating their details
-        # need-more-information-confirm-change-details needs new context which doesn't indicate 6MFC
-        # Curren wiring from this journey is to page with updateDetails context which indicate that user's identity is valid
-        # as user won't be able to continue due to the existing CI and profile unmet evaluation in process-candidate-identity lambda
-        # we want to redirect user to page which will display accurate information
-        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+        checkMitigation:
+          liveness-likeness:
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
 
   # Journey States
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
@@ -127,8 +120,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -327,7 +319,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -387,7 +379,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -429,7 +421,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       failWithCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED
       failWithNoCiFromApp:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -460,7 +452,7 @@ states:
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END

@@ -47,7 +47,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
@@ -89,7 +89,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
@@ -102,7 +102,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
@@ -153,7 +153,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
@@ -196,7 +196,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
@@ -215,10 +215,7 @@ Feature: Fraud mitigation - COI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      # TODO: This should not be a updateDetails reason as user is not allowed to continue
-      Then I get an 'pyi-no-match' page response and pageContext
-        | Context | Value         |
-        | reason  | updateDetails |
+      Then I get an 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -272,7 +269,7 @@ Feature: Fraud mitigation - COI
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context     | Value         |
+        | Context     | Value            |
         | journeyType | repeatFraudCheck |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
@@ -392,10 +389,7 @@ Feature: Fraud mitigation - COI
       When I submit 'kenneth-changed-given-name-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      # TODO: This should not be a updateDetails reason as user is not allowed to continue
-      Then I get an 'pyi-no-match' page response and pageContext
-        | Context | Value         |
-        | reason  | updateDetails |
+      Then I get an 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
