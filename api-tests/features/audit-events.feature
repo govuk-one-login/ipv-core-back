@@ -384,6 +384,38 @@ Feature: Audit Events
     And audit events for 'alternate-doc-mitigation-journey' are recorded [local only]
 
   @QualityGateRegressionTest
+  Scenario: Alternate doc mitigation after app
+    Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | dad   |
+    When I submit an 'android' event
+    Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+      | Context    | Value   |
+      | smartphone | android |
+      | isAppOnly  | false   |
+    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    And I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'pyi-driving-licence-no-match-another-way' page response
+    When I submit a 'next' event
+    Then I get a 'ukPassport' CRI response
+    And audit events for 'alternate-doc-app-mitigation-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
   Scenario: Reprove identity journey with AIS
     Given the subject already has the following credentials
       | CRI     | scenario                     |
