@@ -177,6 +177,14 @@ states:
         targetState: PAGE_STATE
         auditEvents:
           - IPV_NO_PHOTO_ID_JOURNEY_START
+      exitEventTwo:
+        targetState: PAGE_STATE
+        checkIfDisabled:
+          openBanking:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: eventEight
+            auditEvents:
+              - IPV_NO_PHOTO_ID_JOURNEY_START
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE

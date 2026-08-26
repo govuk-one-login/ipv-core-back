@@ -20,6 +20,8 @@ nestedJourneyStates:
             exitEventToEmit: exitEventFromNestedStateOne
       eventOneWithAuditLog:
         exitEventToEmit: exitEventFromNestedStateOneWithAuditLog
+      eventTwo:
+        exitEventToEmit: exitEventTwo
   NESTED_STATE_TWO:
     response:
       type: page
