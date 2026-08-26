@@ -568,7 +568,7 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
         checkMitigation:
           liveness-likeness:
-            targetState: MITIGATION_APP_PASSPORT_PROVE_IDENTITY
+            targetState: MITIGATION_NEED_SMARTPHONE_PROVE_IDENTITY_APP
         checkJourneyContext:
           internationalAddress:
             targetState: DAD_SELECT_SMARTPHONE_NEED_APP
