@@ -1012,13 +1012,13 @@ Feature: P2 Fraud mitigation
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
-      Then I get a 'app-passport-prove-identity' page response
+      Then I get a 'need-smartphone-prove-identity-app' page response
       When I submit a 'back' event
       Then I get an 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | dad   |
       When I submit a 'neither' event
-      Then I get a 'app-passport-prove-identity' page response
+      Then I get a 'need-smartphone-prove-identity-app' page response
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
