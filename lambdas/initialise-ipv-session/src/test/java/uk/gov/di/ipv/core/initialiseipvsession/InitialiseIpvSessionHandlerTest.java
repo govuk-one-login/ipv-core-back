@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -410,6 +411,35 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_VTR.getCode(), responseBody.get("code"));
         assertEquals(ErrorResponse.MISSING_VTR.getMessage(), responseBody.get("message"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Cl.Cm.P2", "c1.cm.P2", "INVALID_VOT", "P99"})
+    void shouldReturn400IfInvalidVtrValueProvided(String invalidVtr)
+            throws JsonProcessingException,
+                    InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
+                    ParseException,
+                    JarValidationException {
+        // Arrange
+        var invalidVtrClaimsBuilder = getValidClaimsBuilder();
+        invalidVtrClaimsBuilder.claim(VTR, List.of(invalidVtr));
+        var invalidVtrSignedJwt = getSignedJWT(invalidVtrClaimsBuilder);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(invalidVtrSignedJwt.getJWTClaimsSet());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_VTR_CLAIM.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.INVALID_VTR_CLAIM.getMessage(), responseBody.get("message"));
     }
 
     @ParameterizedTest
