@@ -402,7 +402,7 @@ Feature: Audit Events
       | Context    | Value   |
       | smartphone | android |
       | isAppOnly  | false   |
-    When the async DCMAW CRI produces a 'kennethD' 'drivingPermit' 'success' VC
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     When I submit the returned journey event

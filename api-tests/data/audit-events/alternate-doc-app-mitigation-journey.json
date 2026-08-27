@@ -70,8 +70,7 @@
         {
           "checkDetails": [
             {
-              "checkMethod": "vcrypt",
-              "identityCheckPolicy": "published"
+              "checkMethod": "vri"
             },
             {
               "biometricVerificationProcessLevel": 3,
@@ -102,8 +101,7 @@
         {
           "checkDetails": [
             {
-              "checkMethod": "vcrypt",
-              "identityCheckPolicy": "published"
+              "checkMethod": "vri"
             },
             {
               "biometricVerificationProcessLevel": 3,
@@ -126,16 +124,16 @@
           "nameParts": [
             {
               "type": "GivenName",
-              "value": "Kenneth"
+              "value": "KENNETH"
             },
             {
               "type": "FamilyName",
-              "value": "Decerqueira"
+              "value": "DECERQUEIRA"
             }
           ]
         }
       ],
-      "docExpiryDate": "2026-09-25"
+      "docExpiryDate": "2033-01-18"
     }
   },
   {
