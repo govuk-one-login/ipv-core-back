@@ -391,7 +391,8 @@ states:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
-        targetState: PYI_ESCAPE
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
         checkIfDisabled:
           openBanking:
             targetState: BANK_ACCOUNT_START_PAGE
@@ -407,7 +408,8 @@ states:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
-        targetState: PYI_ESCAPE
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
         checkIfDisabled:
           openBanking:
             targetState: BANK_ACCOUNT_START_PAGE

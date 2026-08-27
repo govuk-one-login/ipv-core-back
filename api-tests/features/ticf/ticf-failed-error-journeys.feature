@@ -264,8 +264,8 @@ Feature: TICF failed/error journeys
       When I submit a 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'pyi-escape' page response
-      When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
@@ -333,8 +333,8 @@ Feature: TICF failed/error journeys
       When I submit an 'anotherWay' event
       Then I get a 'pyi-post-office' page response
       When I submit an 'end' event
-      Then I get a 'pyi-escape' page response
-      When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity

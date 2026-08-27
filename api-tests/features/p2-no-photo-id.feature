@@ -616,7 +616,7 @@ Feature: P2 no photo id journey
       Then I get an OAuth response
 
   Rule: Escape
-    Background: Escape P2 no photo id journey
+    Scenario: P2 no photo id journey - Escape - Return to RP
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -627,12 +627,6 @@ Feature: P2 no photo id journey
       When I submit an 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'pyi-escape' page response
-
-    Scenario: P2 no photo id journey - Escape - Try again
-      When I submit an 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response
-
-    Scenario: P2 no photo id journey - Escape - Return to RP
-      When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit a 'next' event
       Then I get an OAuth response
