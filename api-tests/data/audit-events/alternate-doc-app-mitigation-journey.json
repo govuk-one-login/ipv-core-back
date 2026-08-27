@@ -1,0 +1,229 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "journey_type": "NEW_P2_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "cri": "dcmawAsync",
+      "type": "pending"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_APP_HANDOFF_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": null
+    },
+    "extensions": {
+      "iss": "https://dcmaw-async.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "checkDetails": [
+            {
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "biometricVerificationProcessLevel": 3,
+              "checkMethod": "bvr"
+            }
+          ],
+          "strengthScore": 3,
+          "type": "IdentityCheck",
+          "validityScore": 2
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]",
+      "credential_issuer_id": "dcmawAsync"
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_CONSUMED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": null
+    },
+    "extensions": {
+      "iss": "https://dcmaw-async.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "checkDetails": [
+            {
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "biometricVerificationProcessLevel": 3,
+              "checkMethod": "bvr"
+            }
+          ],
+          "strengthScore": 3,
+          "type": "IdentityCheck",
+          "validityScore": 2
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]",
+      "credential_issuer_id": "dcmawAsync"
+    },
+    "restricted": {
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "Kenneth"
+            },
+            {
+              "type": "FamilyName",
+              "value": "Decerqueira"
+            }
+          ]
+        }
+      ],
+      "docExpiryDate": "2026-09-25"
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "iss": "https://driving-licence-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 0,
+          "ci": ["NEEDS-ALTERNATE-DOC"],
+          "failedCheckDetails": [
+            {
+              "checkMethod": "data",
+              "identityCheckPolicy": "published"
+            }
+          ],
+          "strengthScore": 3,
+          "type": "IdentityCheck",
+          "validityScore": 0
+        }
+      ],
+      "successful": false,
+      "isUkIssued": true,
+      "age": "type[number]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "cri": "drivingLicence",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_MITIGATION_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "extensions": {
+      "mitigation_type": "invalid-dl"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "user": {
+      "user_id": "type[string]",
+      "session_id": "type[string]",
+      "govuk_signin_journey_id": "type[string]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  }
+]
