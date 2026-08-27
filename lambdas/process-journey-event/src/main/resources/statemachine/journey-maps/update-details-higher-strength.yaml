@@ -13,6 +13,9 @@ states:
         checkJourneyContext:
           rfc:
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+        checkMitigation:
+          liveness-likeness:
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
 
   # Journey States
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
@@ -117,8 +120,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -317,7 +319,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -377,7 +379,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -419,7 +421,7 @@ states:
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       failWithCiFromApp:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED
       failWithNoCiFromApp:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
@@ -450,7 +452,7 @@ states:
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END

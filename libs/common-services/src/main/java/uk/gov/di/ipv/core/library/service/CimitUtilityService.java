@@ -160,6 +160,8 @@ public class CimitUtilityService {
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
             List<ContraIndicator> contraIndicators) {
+        // If user has already mitigated CI this method will return empty string
+        // This is because Core allows only one mitigation to happen per user
         return contraIndicators.stream().filter(this::isMitigated).findFirst();
     }
 

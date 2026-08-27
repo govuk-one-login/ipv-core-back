@@ -157,6 +157,8 @@ public class EventResolver {
             throw new MissingSecurityCheckCredential("Missing security check credential");
         }
 
+        // If user has already mitigated CI this method will return empty string
+        // This is because Core allows only one mitigation to happen per user
         var validMitigation =
                 cimitUtilityService.getMitigationEventIfBreachingOrActive(
                         securityCheckCredential,
