@@ -831,3 +831,69 @@ Feature: P2 V2 App Cross Browser Scenario
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+    Rule: Reuse - Cross-browser during separate-session liveness-likeness mitigation
+      Scenario: Update details goes through mitigation journey in separate session
+        Given the subject already has the following credentials
+          | CRI         | scenario               |
+          | ukPassport  | kenneth-passport-valid |
+          | address     | kenneth-current        |
+          | fraud       | kenneth-score-2        |
+          | experianKbv | kenneth-score-2        |
+        And I activate the 'mitigations9020' feature set
+        And I have an existing stored identity record with a 'P2' vot
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+        When I submit a 'update-details' event
+        Then I get a 'update-details' page response
+        When I submit a 'address-only' event
+        Then I get a 'address' CRI response
+        When I submit 'kenneth-changed' details with attributes to the CRI stub
+          | Attribute | Values               |
+          | context   | "international_user" |
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+          | Attribute          | Values                   |
+          | evidence_requested | {"identityFraudScore":2} |
+        Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+          | Context     | Value            |
+          | journeyType | repeatFraudCheck |
+        When I submit an 'passport' event
+        Then I get an 'identify-device' page response
+        When I submit an 'appTriage' event
+        Then I get a 'pyi-triage-select-device' page response
+        When I submit a 'smartphone' event
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+          | Context    | Value |
+          | deviceType | mam   |
+        When I submit an 'iphone' event
+        Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+          | Context    | Value  |
+          | smartphone | iphone |
+          | isAppOnly  | true   |
+        When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+    # And the user returns from the app to core-front
+        And I pass on the DCMAW callback in a separate session
+        Then I get a 'problem-different-browser' page response
+    # This simulates the user clicking continue on the problem-different-browser
+    # page which sends a 'build-client-oauth-response' event to the journey engine
+        When I submit a 'build-client-oauth-response' event in a separate session
+        Then I get an OAuth response with error code 'access_denied'
+    # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+    # has managed to log back in to the site.
+        When I poll for async DCMAW credential receipt
+        And I start a new 'medium-confidence' journey
+        Then I get a 'address' CRI response
+        When I submit 'kenneth-changed' details to the CRI stub
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-score-2' details with attributes to the CRI stub
+          | Attribute          | Values                   |
+          | evidence_requested | {"identityFraudScore":1} |
+        Then I get a 'page-ipv-success' page response
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I am issued a 'P2' identity
+        And my address 'buildingNumber' is '28'
+        And my address 'addressLocality' is 'Bristol'
+        And I have a stored identity record with a 'P3' max vot
