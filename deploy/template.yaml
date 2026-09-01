@@ -144,7 +144,7 @@ Conditions:
   IsPerformanceSensitive: !Or
     - !Not [ !Condition IsDevelopment ]
     - !Condition IsDevPerf
-  UseDynatrace: false
+  UseDynatrace: false #also skipping canaries
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
