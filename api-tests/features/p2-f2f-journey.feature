@@ -532,7 +532,7 @@ Feature: P2 F2F journey
     When I submit an 'anotherWay' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit an 'end' event
-    Then I get a 'pyi-escape' page response
+    Then I get a 'pyi-another-way' page response
 
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification

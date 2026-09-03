@@ -78,8 +78,7 @@ Feature: P2 Journeys with DL authoritative source check
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
 
-    # PYIC-9215 we will need an Open Banking version of this test once we have a route
-    Scenario: CI on auth check asks for alternative document
+    Scenario: CI on auth check asks for alternative document - no open banking
       When I activate the 'openBankingDisabled' feature set
       And I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
         | Attribute | Values          |
@@ -90,6 +89,50 @@ Feature: P2 Journeys with DL authoritative source check
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+    Scenario: CI on auth check asks for alternative document
+      When I activate the 'openBanking' feature set
+      And I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'sorry-could-not-confirm-details-driving-licence' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: CI on auth check asks for alternative document uses passport
+      When I activate the 'openBanking' feature set
+      And I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'sorry-could-not-confirm-details-driving-licence' page response
+      When I submit a 'passport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
 
     Scenario: Auth check access_denied
       When I call the CRI stub and get an 'access_denied' OAuth error

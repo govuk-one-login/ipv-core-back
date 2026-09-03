@@ -565,7 +565,7 @@ Feature: P2 no photo id journey
 
   # Duplicate tests with Open Banking enabled
   Rule: Abandon NINO
-    Background: Abandon P2 no photo id journey
+    Background: P2 no photo id journey - Abandon NINO
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -584,15 +584,39 @@ Feature: P2 no photo id journey
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      # PYIC-9215: Currently TBD where this event should go with open banking
-      Then I get a 'pyi-no-match' page response
+      Then I get a 'no-photo-id-abandon-find-another-way' page response
 
-    Scenario: P2 no photo id journey - Abandon - Failure
-      When I submit a 'next' event
+    Scenario: P2 no photo id journey - Abandon - Strategic app
+      Given I activate the 'strategicApp' feature set
+      When I submit an 'mobileApp' event
+      Then I get an 'identify-device' page response
+
+    Scenario: P2 no photo id journey - Abandon - Passport
+      When I submit an 'passport' event
+      Then I get a 'ukPassport' CRI response
+
+    Scenario: P2 no photo id journey - Abandon - Driving licence
+      When I submit an 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+
+    Scenario: P2 no photo id journey - Abandon - F2F
+      When I submit an 'postOffice' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+
+    Scenario: P2 no photo id journey - Abandon - Return to RP
+      When I submit an 'relyingParty' event
       Then I get an OAuth response
 
   Rule: Escape
-    Background: Escape P2 no photo id journey
+    Scenario: P2 no photo id journey - Escape - Return to RP
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -603,12 +627,6 @@ Feature: P2 no photo id journey
       When I submit an 'anotherWay' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'pyi-escape' page response
-
-    Scenario: P2 no photo id journey - Escape - Try again
-      When I submit an 'next' event
-      Then I get a 'page-ipv-identity-document-start' page response
-
-    Scenario: P2 no photo id journey - Escape - Return to RP
-      When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit a 'next' event
       Then I get an OAuth response
