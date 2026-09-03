@@ -367,12 +367,8 @@ public class CheckExistingIdentityHandler
                     && !isInterventionReprovingWithF2f(asyncCriStatus, credentialBundle)) {
                 EmbeddedMetricHelper.identityProving();
 
-                if (isInterventionReprove
-                        && !isInterventionReprovingWithF2f(asyncCriStatus, credentialBundle)) {
-                    EmbeddedMetricHelper.identityProving();
-                    LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
-                    return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
-                }
+                LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
+                return JOURNEY_INTERVENTION_REPROVE_IDENTITY;
             }
 
             // PYIC-6901 Currently we just check against the lowest Vot requested for this journey.

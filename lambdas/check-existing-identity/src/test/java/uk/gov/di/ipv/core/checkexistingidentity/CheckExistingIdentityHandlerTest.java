@@ -1687,7 +1687,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSet() {
+        void shouldReturnReproveJourneyForReproveIdentity() {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1700,7 +1700,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndPendingF2FDoesNotHaveFlag() {
+        void shouldReturnReproveJourneyWhenPendingF2FIsNotReproveIdentity() {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -1715,8 +1715,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndIdentityIsNotPending()
-                throws Exception {
+        void shouldReturnReproveJourneyWhenIdentityIsNotPending() throws Exception {
             var vcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
@@ -1735,7 +1734,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
+        void shouldNotReturnReproveJourneyIfUserHasPendingF2FReproveIdentity() throws Exception {
             var vcs = new ArrayList<>(List.of(f2fVc));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
