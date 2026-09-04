@@ -111,7 +111,6 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisSt
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INTERVENTION_REPROVE_VIA_APP_ONLY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -249,7 +248,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
         lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
-        lenient().when(configService.enabled(INTERVENTION_REPROVE_VIA_APP_ONLY)).thenReturn(false);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -1677,142 +1675,9 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Nested
-    class ReproveIdentity {
-        @BeforeEach
-        void beforeEach() throws Exception {
-            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
-                    .thenReturn(ipvSessionItem);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisState(TEST_USER_ID))
-                    .thenReturn(createReproveIdentityAisState());
-        }
-
-        @Test
-        void shouldReturnReproveP2JourneyIfReproveIdentityFlagSet() {
-            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(emptyAsyncCriStatus);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-
-        @Test
-        void shouldReturnReproveP1JourneyIfReproveIdentityFlagSet() {
-            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(emptyAsyncCriStatus);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH, journeyResponse.getJourney());
-        }
-
-        @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndPendingF2FDoesNotHaveFlag() {
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, false, false, false));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-
-        @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndIdentityIsNotPending()
-                throws Exception {
-            var vcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(CURRENT, vcs));
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, false))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, true));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-
-        @Test
-        void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
-            var vcs = new ArrayList<>(List.of(f2fVc));
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, vcs));
-            when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                    .thenReturn(
-                            List.of(
-                                    CriResponseItem.builder()
-                                            .credentialIssuer(F2F.getId())
-                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                            .build()));
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, true, true, true));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_F2F_PENDING_PATH, journeyResponse.getJourney());
-
-            verify(criResponseService, never()).updateCriResponseItem(any());
-        }
-
-        @Test
-        void shouldAllowReproveJourneyToContinueAndSendAisAuditEvent() {
-            // Arrange
-            when(mockAisService.fetchAisState(TEST_USER_ID))
-                    .thenReturn(createReproveIdentityAisState());
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                    .thenReturn(emptyAsyncCriStatus);
-
-            // Act
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            // Assert
-            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            var auditEvent = auditEventArgumentCaptor.getValue();
-            var extension = (AuditExtensionAccountIntervention) auditEvent.getExtensions();
-            assertEquals(AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START, auditEvent.getEventName());
-            assertEquals("reprove_identity", extension.getType());
-            assertNull(extension.getSuccess());
-            assertTrue(clientOAuthSessionItem.getReproveIdentity());
-            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
-        }
-    }
-
-    @Nested
     class InterventionReproveIdentity {
         @BeforeEach
         void beforeEach() throws Exception {
-            lenient()
-                    .when(configService.enabled(INTERVENTION_REPROVE_VIA_APP_ONLY))
-                    .thenReturn(true);
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1822,7 +1687,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSet() {
+        void shouldReturnReproveJourneyForReproveIdentity() {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -1835,7 +1700,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndPendingF2FDoesNotHaveFlag() {
+        void shouldReturnReproveJourneyWhenPendingF2FIsNotReproveIdentity() {
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(
                             new AsyncCriStatus(
@@ -1850,8 +1715,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnReproveJourneyIfReproveIdentityFlagSetAndIdentityIsNotPending()
-                throws Exception {
+        void shouldReturnReproveJourneyWhenIdentityIsNotPending() throws Exception {
             var vcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
@@ -1870,7 +1734,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
+        void shouldNotReturnReproveJourneyIfUserHasPendingF2FReproveIdentity() throws Exception {
             var vcs = new ArrayList<>(List.of(f2fVc));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))

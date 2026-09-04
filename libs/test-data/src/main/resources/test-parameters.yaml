@@ -363,7 +363,6 @@ core:
   featureFlags:
     testFeatureFlagEnabled: true
     testFeatureFlagDisabled: false
-    reproveViaAppOnlyEnabled: false
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: true
@@ -380,9 +379,6 @@ core:
     evcsApiUpdates:
       featureFlags:
         evcsApiUpdatesEnabled: true
-    reproveViaAppOnly:
-      featureFlags:
-        reproveViaAppOnlyEnabled: true
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0

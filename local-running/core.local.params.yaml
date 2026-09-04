@@ -383,7 +383,6 @@ core:
     asyncQueue:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
-    reproveViaAppOnlyEnabled: true
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     evcsApiUpdatesEnabled: true
@@ -407,9 +406,6 @@ core:
     evcsApiUpdates:
         featureFlags:
           evcsApiUpdatesEnabled: true
-    disableReproveViaAppOnly:
-      featureFlags:
-        reproveViaAppOnlyEnabled: false
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
