@@ -379,9 +379,6 @@ class ProcessJourneyEventHandlerTest {
                         JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE,
                         "/journey/cri/build-oauth-request/aCriId"),
                 Arguments.of(
-                        JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE,
-                        "/journey/cri/build-oauth-request/aCriId"),
-                Arguments.of(
                         JOURNEY_TEST_WITH_CONTEXT_WITH_EMPTY_CURRENT_PAGE,
                         "/journey/cri/build-oauth-request/aCriId?context=test_context"));
     }
@@ -918,6 +915,140 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(
                 new JourneyState(
                         INITIAL_JOURNEY_SELECTION, "NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE"),
+                ipvSession.getState());
+
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+
+        var auditEvent = auditEventCaptor.getValue();
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, auditEvent.getEventName());
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldRecoredAuditEventWhenExitingNestedJourney() throws Exception {
+        // Arrange
+        var inputToEnterNestedStates =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOneWithAuditLog")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
+        var ipvSession = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockCimitUtilityService,
+                        testPageContextValidator);
+
+        // Act
+        var nextResponse =
+                processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
+
+        // Assert
+        assertEquals("page-id-for-page-state", nextResponse.get("page"));
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), ipvSession.getState());
+
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+
+        var auditEvent = auditEventCaptor.getValue();
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, auditEvent.getEventName());
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldRecoredAuditEventWhenExitingDoublyNestedJourney() throws Exception {
+        // Arrange
+        var inputToEnterNestedStates =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOneWithAuditLog")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout(
+                "NESTED_JOURNEY_INVOKE_STATE/DOUBLY_NESTED_INVOKE_STATE/DOUBLY_NESTED_STATE_TWO");
+        var ipvSession = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockCimitUtilityService,
+                        testPageContextValidator);
+
+        // Act
+        var nextResponse =
+                processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
+
+        // Assert
+        assertEquals("page-id-for-page-state", nextResponse.get("page"));
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), ipvSession.getState());
+
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+
+        var auditEvent = auditEventCaptor.getValue();
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, auditEvent.getEventName());
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldRecoredAuditEventWhenExitingAndEnteringNestedJourneys() throws Exception {
+        // Arrange
+        var inputToEnterNestedStates =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventTwo")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
+        var ipvSession = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockCimitUtilityService,
+                        testPageContextValidator);
+
+        // Act
+        var nextResponse =
+                processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
+
+        // Assert
+        assertEquals("identify-device", nextResponse.get("page"));
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "STRATEGIC_APP_TRIAGE/IDENTIFY_DEVICE"),
                 ipvSession.getState());
 
         InOrder auditInOrderOne = inOrder(mockAuditService);

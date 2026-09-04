@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNullElse;
-import static uk.gov.di.ipv.core.library.collections.Merging.mergeLists;
-import static uk.gov.di.ipv.core.library.collections.Merging.mergeMaps;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 public class StateMachine {
@@ -68,16 +66,9 @@ public class StateMachine {
                     result.state()
                             .transition(
                                     entryEvent, startState, eventResolveParameters, eventResolver);
-            // Add audit events and context from the outer event
-            return new TransitionResult(
-                    nestedResult.state(),
-                    mergeLists(result.auditEvents(), nestedResult.auditEvents()),
-                    mergeMaps(result.auditContext(), nestedResult.auditContext()),
-                    nestedResult.targetEntryEvent(),
-                    mergeLists(result.journeyContextsToSet(), nestedResult.journeyContextsToSet()),
-                    mergeLists(
-                            result.journeyContextsToUnset(),
-                            nestedResult.journeyContextsToUnset()));
+
+            // Merge in audit events and context from the outer event
+            return new TransitionResult(nestedResult, result);
         }
 
         return result;

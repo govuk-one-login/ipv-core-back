@@ -72,12 +72,16 @@ public class NestedJourneyInvokeState implements State {
 
         if (result.state() instanceof NestedJourneyInvokeState) {
             var entryEvent = requireNonNullElse(result.targetEntryEvent(), eventName);
-            return result.state()
-                    .transition(
-                            entryEvent,
-                            String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
-                            eventResolveParameters,
-                            eventResolver);
+            var nestedResult =
+                    result.state()
+                            .transition(
+                                    entryEvent,
+                                    String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
+                                    eventResolveParameters,
+                                    eventResolver);
+
+            // Merge in audit events and context from the outer event
+            return new TransitionResult(nestedResult, result);
         }
 
         return result;

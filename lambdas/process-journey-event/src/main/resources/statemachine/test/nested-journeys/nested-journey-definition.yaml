@@ -18,6 +18,10 @@ nestedJourneyStates:
         checkMitigation:
           first-mitigation:
             exitEventToEmit: exitEventFromNestedStateOne
+      eventOneWithAuditLog:
+        exitEventToEmit: exitEventFromNestedStateOneWithAuditLog
+      eventTwo:
+        exitEventToEmit: exitEventTwo
   NESTED_STATE_TWO:
     response:
       type: page
@@ -33,3 +37,6 @@ nestedJourneyStates:
     exitEvents:
       exitEventFromDoublyNestedStateTwo:
         exitEventToEmit: exitEventFromDoublyNestedInvokeState
+      exitEventFromDoublyNestedStateTwoWithAuditLog:
+        exitEventToEmit: exitEventFromDoublyNestedInvokeStateWithAuditLog
+
