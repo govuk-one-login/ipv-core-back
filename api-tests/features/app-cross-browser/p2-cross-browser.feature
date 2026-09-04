@@ -609,7 +609,7 @@ Feature: P2 V2 App Cross Browser Scenario
 
   Rule: Cross-browser during separate-session liveness-likeness mitigation
     Background:
-      Given I activate the 'openBankingDisabled' feature set
+      Given I activate the 'openBanking' feature set
       And I activate the 'mitigations9020' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -626,8 +626,16 @@ Feature: P2 V2 App Cross Browser Scenario
       When I submit a 'neither' event
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
-      Then I get a 'page-multiple-doc-check' page response
-      When I submit a 'drivingLicence' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
       Then I get an 'address' CRI response
@@ -647,7 +655,6 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'pyi-triage-select-smartphone' page response and pageContext
         | Context    | Value |
         | deviceType | mam   |
-
 
     Scenario: Separate session DCMAW liveness-likeness mitigation - User drop off while in app
       When I submit an 'iphone' event
