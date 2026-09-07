@@ -60,7 +60,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_API_UPDATES;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.AFTER_KEY_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.X_API_KEY_HEADER;
@@ -142,7 +141,6 @@ class EvcsClientTest {
         when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getEvcs()).thenReturn(mockEvcs);
         stubEvcsBaseUrl(EVCS_APPLICATION_URL);
-        lenient().when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(false);
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);
@@ -331,7 +329,7 @@ class EvcsClientTest {
         verify(mockHttpClient, times(2)).send(httpRequestCaptor.capture(), any());
         var httpRequests = httpRequestCaptor.getAllValues();
 
-        var initialRequest = httpRequests.get(0);
+        var initialRequest = httpRequests.getFirst();
         var expectedInitialUri =
                 new URIBuilder(
                                 "%s/vcs/%s"
@@ -472,7 +470,10 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.storeUserVCs(TEST_USER_ID, EVCS_CREATE_USER_VCS_DTO);
+            var evcsRequestBody =
+                    new EvcsCreateUserVCsRequestBody(
+                            TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, EVCS_CREATE_USER_VCS_DTO);
+            evcsClient.storeUserVcs(evcsRequestBody);
 
             // Assert
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -484,24 +485,13 @@ class EvcsClientTest {
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
-            var userVCsForEvcs =
+            var requestBody =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
-                            new TypeReference<List<EvcsCreateUserVCsDto>>() {});
+                            stringCaptor.getAllValues().getFirst(),
+                            EvcsCreateUserVCsRequestBody.class);
+            var userVCsForEvcs = requestBody.vcs();
             assertFalse(userVCsForEvcs.stream().anyMatch(dto -> !dto.state().equals(CURRENT)));
         }
-    }
-
-    @Test
-    void testCreateUserVCs_shouldThrowException_ifBadUrl() {
-        // Arrange
-        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
-        when(badUri.toString()).thenReturn("\\");
-        // Act
-        // Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> evcsClient.storeUserVCs("user%^", EVCS_CREATE_USER_VCS_DTO));
     }
 
     @Test
@@ -512,7 +502,10 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            var res = evcsClient.updateUserVCs(TEST_USER_ID, EVCS_UPDATE_USER_VCS_DTO);
+            var evcsRequestBody =
+                    new EvcsUpdateUserVCsRequestBody(
+                            TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, EVCS_UPDATE_USER_VCS_DTO);
+            var res = evcsClient.updateUserVcs(evcsRequestBody);
 
             // Assert
             assertEquals(HttpStatusCode.ACCEPTED, res.statusCode());
@@ -525,24 +518,13 @@ class EvcsClientTest {
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
-            var userVCsForEvcs =
+            var requestBody =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
-                            new TypeReference<List<EvcsUpdateUserVCsDto>>() {});
+                            stringCaptor.getAllValues().getFirst(),
+                            EvcsUpdateUserVCsRequestBody.class);
+            var userVCsForEvcs = requestBody.vcs();
             assertFalse(userVCsForEvcs.stream().anyMatch(dto -> dto.state().equals(CURRENT)));
         }
-    }
-
-    @Test
-    void testUpdateUserVCs_shouldThrowException_ifBadUrl() {
-        // Arrange
-        when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
-        when(badUri.toString()).thenReturn("\\");
-        // Act
-        // Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () -> evcsClient.updateUserVCs("user%^", EVCS_UPDATE_USER_VCS_DTO));
     }
 
     @Test
@@ -612,7 +594,7 @@ class EvcsClientTest {
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
             var evcsPostIdentityDto =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
+                            stringCaptor.getAllValues().getFirst(),
                             new TypeReference<EvcsPostIdentityDto>() {});
             assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
             assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
@@ -644,7 +626,7 @@ class EvcsClientTest {
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
             var evcsPostIdentityDto =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
+                            stringCaptor.getAllValues().getFirst(),
                             new TypeReference<EvcsPostIdentityDto>() {});
             assertEquals("storedIdentityJwt", evcsPostIdentityDto.si().jwt());
             assertEquals(Vot.P2, evcsPostIdentityDto.si().vot());
@@ -656,42 +638,10 @@ class EvcsClientTest {
     }
 
     @Test
-    void invalidateStoredIdentityRecordShouldSuccessfullySendRequest() throws Exception {
+    void invalidateStoredIdentityRecordShouldSendRequest() throws Exception {
         // Arrange
         when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NO_CONTENT);
-
-        // Act
-        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
-                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            var res = evcsClient.invalidateStoredIdentityRecord(TEST_USER_ID);
-
-            // Assert
-            assertEquals(HttpStatusCode.NO_CONTENT, res.statusCode());
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            HttpRequest httpRequest = httpRequestCaptor.getValue();
-            assertEquals("POST", httpRequest.method());
-            assertTrue(httpRequest.bodyPublisher().isPresent());
-            assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
-            assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-            assertEquals("/v1/identity/invalidate", httpRequest.uri().getPath());
-
-            mockedBodyPublishers.verify(
-                    () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
-            var evcsInvalidateSiDto =
-                    OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
-                            new TypeReference<EvcsInvalidateStoredIdentityDto>() {});
-            assertEquals(TEST_USER_ID, evcsInvalidateSiDto.userId());
-        }
-    }
-
-    @Test
-    void invalidateStoredIdentityRecordShouldSendRequestToNewUrlIfFlagEnabled() throws Exception {
-        // Arrange
-        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.NO_CONTENT);
-        when(mockConfigService.enabled(EVCS_API_UPDATES)).thenReturn(true);
 
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
@@ -712,7 +662,7 @@ class EvcsClientTest {
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
             var evcsInvalidateSiDto =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
+                            stringCaptor.getAllValues().getFirst(),
                             new TypeReference<EvcsInvalidateStoredIdentityDto>() {});
             assertEquals(TEST_USER_ID, evcsInvalidateSiDto.userId());
         }
@@ -749,7 +699,7 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            evcsClient.storeUserVcsV2(requestBody);
+            evcsClient.storeUserVcs(requestBody);
 
             // Assert
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -764,7 +714,7 @@ class EvcsClientTest {
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
             var sentBody =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
+                            stringCaptor.getAllValues().getFirst(),
                             new TypeReference<EvcsCreateUserVCsRequestBody>() {});
             assertEquals(TEST_USER_ID, sentBody.userId());
             assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, sentBody.govuk_signin_journey_id());
@@ -773,7 +723,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testStoreUserVcsV2_shouldThrowException_ifBadUrl() {
+    void testStoreUserVcs_shouldThrowException_ifBadUrl() {
         // Arrange
         when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
         when(badUri.toString()).thenReturn("\\");
@@ -782,7 +732,7 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () ->
-                        evcsClient.storeUserVcsV2(
+                        evcsClient.storeUserVcs(
                                 new EvcsCreateUserVCsRequestBody(
                                         TEST_USER_ID,
                                         TEST_GOVUK_SIGNIN_JOURNEY_ID,
@@ -800,7 +750,7 @@ class EvcsClientTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            var res = evcsClient.updateUserVcsV2(requestBody);
+            var res = evcsClient.updateUserVcs(requestBody);
 
             // Assert
             assertEquals(HttpStatusCode.ACCEPTED, res.statusCode());
@@ -816,7 +766,7 @@ class EvcsClientTest {
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
             var sentBody =
                     OBJECT_MAPPER.readValue(
-                            stringCaptor.getAllValues().get(0),
+                            stringCaptor.getAllValues().getFirst(),
                             new TypeReference<EvcsUpdateUserVCsRequestBody>() {});
             assertEquals(TEST_USER_ID, sentBody.userId());
             assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, sentBody.govuk_signin_journey_id());
@@ -825,7 +775,7 @@ class EvcsClientTest {
     }
 
     @Test
-    void testUpdateUserVcsV2_shouldThrowException_ifBadUrl() {
+    void testUpdateUserVcs_shouldThrowException_ifBadUrl() {
         // Arrange
         when(mockEvcs.getApplicationUrl()).thenReturn(badUri);
         when(badUri.toString()).thenReturn("\\");
@@ -834,7 +784,7 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () ->
-                        evcsClient.updateUserVcsV2(
+                        evcsClient.updateUserVcs(
                                 new EvcsUpdateUserVCsRequestBody(
                                         TEST_USER_ID,
                                         TEST_GOVUK_SIGNIN_JOURNEY_ID,

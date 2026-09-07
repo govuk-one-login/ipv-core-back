@@ -61,6 +61,11 @@ To swap in a remote stub, update the relevant URLs, API keys, and signing/encryp
 - `CIMIT_INTERNAL_API_KEY` — Internal API key of the dev environment CIMIT stub
 - `MANAGEMENT_CIMIT_STUB_API_KEY` — External API key of the dev environment CIMIT stub
 
+If you want to run API tests against local running core-back instance, make sure it's connected to the same stub. You can adjust this settings in:
+
+- [core.local.params](../local-running/core.local.params.yaml)
+- [core.local.secrets](../local-running/core.local.secrets.yaml) (make sure you have copied and populated the template file)
+
 #### Finding Dev Environment API Keys in AWS
 
 1. Open the AWS Console and navigate to **API Gateway > API Keys**.

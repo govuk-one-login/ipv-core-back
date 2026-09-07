@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -61,33 +60,22 @@ public class StoreIdentityService {
         var isPendingIdentity = identityType.equals(CandidateIdentityType.PENDING);
         var hasStoredSiObject = false;
 
-        if (configService.enabled(CoreFeatureFlag.EVCS_API_UPDATES)) {
-            hasStoredSiObject =
-                    storeIdentityUpdated(
-                            userId,
-                            govukSigninJourneyId,
-                            sessionCredentials,
-                            evcsVcs,
-                            achievedVot,
-                            strongestMatchedVot,
-                            isPendingIdentity);
-        } else {
-            hasStoredSiObject =
-                    storeIdentityLegacy(
-                            userId,
-                            sessionCredentials,
-                            evcsVcs,
-                            achievedVot,
-                            strongestMatchedVot,
-                            isPendingIdentity);
-        }
+        hasStoredSiObject =
+                storeIdentity(
+                        userId,
+                        govukSigninJourneyId,
+                        sessionCredentials,
+                        evcsVcs,
+                        achievedVot,
+                        strongestMatchedVot,
+                        isPendingIdentity);
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
         sendIdentityStoredEvent(
                 strongestMatchedVot, identityType, auditEventParameters, hasStoredSiObject);
     }
 
-    private boolean storeIdentityUpdated(
+    private boolean storeIdentity(
             String userId,
             String govukSigninJourneyId,
             List<VerifiableCredential> sessionCredentials,
@@ -99,7 +87,7 @@ public class StoreIdentityService {
 
         if (isPendingIdentity) {
             LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
-            evcsService.storePendingIdentityWithPostVcsV2(
+            evcsService.storePendingIdentityWithPostVcs(
                     userId, govukSigninJourneyId, sessionCredentials, evcsVcs);
             return false;
         }
@@ -117,41 +105,6 @@ public class StoreIdentityService {
                         achievedVot);
 
         return response.statusCode() == HttpStatusCode.ACCEPTED;
-    }
-
-    private boolean storeIdentityLegacy(
-            String userId,
-            List<VerifiableCredential> sessionCredentials,
-            List<EvcsGetUserVCDto> evcsVcs,
-            Vot achievedVot,
-            VotMatchingResult.VotAndProfile strongestMatchedVot,
-            boolean isPendingIdentity)
-            throws EvcsServiceException {
-
-        LOGGER.info(LogHelper.buildLogMessage("Storing user VCs with POST"));
-        evcsService.storeCompletedOrPendingIdentityWithPostVcs(
-                userId, sessionCredentials, evcsVcs, isPendingIdentity);
-
-        if (isPendingIdentity) {
-            return false;
-        }
-
-        try {
-            var response =
-                    evcsService.storeStoredIdentityRecord(
-                            userId, sessionCredentials, strongestMatchedVot, achievedVot);
-            return response.statusCode() == HttpStatusCode.ACCEPTED;
-        } catch (FailedToCreateStoredIdentityForEvcsException e) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "Failed to create stored identity record. Stored identity record was not saved to EVCS."));
-        } catch (EvcsServiceException e) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                            "Failed to store stored identity record to EVCS. Continuing user journey."));
-        }
-
-        return false;
     }
 
     private void sendIdentityStoredEvent(
