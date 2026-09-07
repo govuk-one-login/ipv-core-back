@@ -1151,3 +1151,56 @@ Feature: P2 Fraud mitigation
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+  Rule: User cannot go through Fraud mitigation journey if already has mitigated different CI
+    Scenario: NEEDS-ALTERNATE-DOC mitigation before breaching fraud CI - failure
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'drivingLicence' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'drivingLicence' CRI response
+#      First CI
+      When I submit 'kenneth-driving-permit-needs-alternate-doc' details to the CRI stub
+      Then I get a 'pyi-driving-licence-no-match-another-way' page response
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+#      First CI mitigation
+      When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+#      Breaching Fraud CI (with existing mitigation route)
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+#      User is not allowed to go through second mitigation journey
+#      Core only allows one mitigation per all user's CIs
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
