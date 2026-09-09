@@ -888,8 +888,6 @@ class ContractTest {
                 });
     }
 
-    // POST /identity/invalidate/si tests
-    // PYIC-9011 Remove EVCS_API_UPDATES flag mocking after go-live cleanup
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postIdentityInvalidateSiReturns204(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
