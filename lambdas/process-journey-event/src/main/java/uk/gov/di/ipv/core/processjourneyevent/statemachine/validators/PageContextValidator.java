@@ -10,6 +10,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("delete-handover", Set.of(JOURNEY_TYPE)),
                     Map.entry("need-more-information-confirm-change-details", Set.of(JOURNEY_TYPE)),
                     Map.entry("no-photo-id-web-find-another-way", Set.of(REASON)),
+                    Map.entry("no-photo-id-abandon-find-another-way", Set.of(IS_OPEN_BANKING)),
                     Map.entry("page-dcmaw-success", Set.of(NO_ADDRESS)),
                     Map.entry("page-ipv-success", Set.of(JOURNEY_TYPE)),
                     Map.entry("page-multiple-doc-check", Set.of(ALLOW_NINO)),
