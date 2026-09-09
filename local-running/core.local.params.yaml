@@ -385,7 +385,6 @@ core:
   featureFlags:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
-    evcsApiUpdatesEnabled: true
     mitigations9020Enabled: false
 
   features:
@@ -403,9 +402,6 @@ core:
     mitigations9020Disabled:
       featureFlags:
         mitigations9020Enabled: false
-    evcsApiUpdates:
-        featureFlags:
-          evcsApiUpdatesEnabled: true
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
