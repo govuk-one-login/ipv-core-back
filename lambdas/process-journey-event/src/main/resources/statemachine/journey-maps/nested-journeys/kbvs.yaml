@@ -26,9 +26,9 @@ nestedJourneyStates:
         auditEvents:
           - IPV_DWP_KBV_CRI_THIN_FILE_ENCOUNTERED
       access-denied:
-        targetState: PRE_EXPERIAN_PAGE
+        targetState: DWP_DROPOUT_PAGE
       error:
-        targetState: PRE_EXPERIAN_PAGE
+        targetState: DWP_DROPOUT_PAGE
       fail-with-ci:
         exitEventToEmit: fail-with-ci
   EXPERIAN_KBV_CRI:
@@ -64,6 +64,15 @@ nestedJourneyStates:
     response:
       type: page
       pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: EXPERIAN_KBV_CRI
+  DWP_DROPOUT_PAGE:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+      pageContext:
+        isDwpDropout: true
     events:
       next:
         targetState: EXPERIAN_KBV_CRI

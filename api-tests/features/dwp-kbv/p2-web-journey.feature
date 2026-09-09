@@ -300,7 +300,9 @@ Feature: P2 Web document journey - DWP KBV
       When I call the CRI stub with attributes and get an '<oauth_error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -609,7 +611,9 @@ Feature: P2 Web document journey - DWP KBV
       When I call the CRI stub with attributes and get an '<oauth_error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
