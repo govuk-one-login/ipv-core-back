@@ -10,34 +10,29 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 class AuditExtensionGpg45ProfileMatchedTest {
 
     private static final ObjectMapper om = new ObjectMapper();
-    private static MockedStatic<Clock> clockMock;
+    private static MockedStatic<Instant> instantMock;
+    private static final Instant FIXED_INSTANT = Instant.ofEpochMilli(1666170506321L);
 
     @BeforeAll
     public static void setup() {
-        clockMock = mockStatic(Clock.class);
-        Clock spyClock = spy(Clock.class);
-        clockMock.when(Clock::systemUTC).thenReturn(spyClock);
-        Instant instantValue = Instant.ofEpochMilli(1666170506321L);
-        when(spyClock.instant()).thenReturn(instantValue);
-        when(spyClock.instant().now()).thenReturn(instantValue);
+        instantMock = mockStatic(Instant.class, CALLS_REAL_METHODS);
+        instantMock.when(Instant::now).thenReturn(FIXED_INSTANT);
     }
 
     @AfterAll
     public static void tearDown() {
-        clockMock.close();
+        instantMock.close();
     }
 
     @Test
