@@ -100,4 +100,4 @@ nestedJourneyStates:
       pageId: page-different-security-questions
     events:
       next:
-        targetState: PRE_EXPERIAN_PAGE
+        targetState: DWP_DROPOUT_PAGE
