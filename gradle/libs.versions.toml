@@ -1,9 +1,9 @@
 [versions]
-awsSdk = "2.54.7"
+awsSdk = "2.54.13"
 jackson = "2.22.1"
 log4j = "2.26.1"
 mockito = "5.23.0"
-pact = "4.7.3"
+pact = "4.7.5"
 powertools = "2.10.0"
 
 [libraries]
