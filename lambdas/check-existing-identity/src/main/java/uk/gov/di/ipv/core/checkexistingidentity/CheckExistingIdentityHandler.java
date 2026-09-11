@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -265,6 +267,12 @@ public class CheckExistingIdentityHandler
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
+            var auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
+            var auditInformation = new AuditEventInformation(auditEventUser, deviceInformation);
+
+            // Check whether there is a blocking account intervention
             var fetchedAisState = aisService.fetchAisState(userId);
             if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(fetchedAisState)) {
                 ipvSessionService.invalidateSession(
@@ -272,13 +280,11 @@ public class CheckExistingIdentityHandler
                 throw new AccountInterventionException();
             }
 
+            // Find out if there is a "reprove" account intervention
             var isInterventionReprove = AccountInterventionEvaluator.isReprove(fetchedAisState);
 
             clientOAuthSessionItem.setReproveIdentity(isInterventionReprove);
             clientOAuthSessionDetailsService.updateClientSessionDetails(clientOAuthSessionItem);
-
-            var auditEventUser =
-                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             if (isInterventionReprove) {
                 auditService.sendAuditEvent(
@@ -298,10 +304,7 @@ public class CheckExistingIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             ipAddress,
-                            deviceInformation,
-                            userId,
-                            govukSigninJourneyId,
-                            auditEventUser,
+                            auditInformation,
                             isInterventionReprove)
                     .toObjectMap();
         } catch (AccountInterventionException e) {
@@ -322,21 +325,16 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @SuppressWarnings({
-        "java:S3776", // Cognitive Complexity of methods should not be too high
-        "java:S6541", // "Brain method" PYIC-6901 should refactor this method
-        "java:S107" // Methods should not have too many parameters
-    })
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
-            String deviceInformation,
-            String userId,
-            String govukSigninJourneyId,
-            AuditEventUser auditEventUser,
+            AuditEventInformation auditInformation,
             boolean isInterventionReprove) {
         try {
+            var userId = clientOAuthSessionItem.getUserId();
+            var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
@@ -351,10 +349,7 @@ public class CheckExistingIdentityHandler
 
             var contraIndicatorsVc =
                     cimitService.fetchContraIndicatorsVc(
-                            clientOAuthSessionItem.getUserId(),
-                            govukSigninJourneyId,
-                            ipAddress,
-                            ipvSessionItem);
+                            userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
 
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
@@ -383,62 +378,11 @@ public class CheckExistingIdentityHandler
 
             // Check for an expired driving licence only if the credential bundle does
             // not contain PENDING_RETURN VCs
-            var hasExpiredDcmawDrivingPermit = false;
+            var expiredDlCredentialsWereRemoved = false;
             if (!credentialBundle.isPendingReturn()) {
-                var successfulDcmawDlVc =
-                        credentialBundle.credentials.stream()
-                                .filter(vc -> List.of(DCMAW_ASYNC, DCMAW).contains(vc.getCri()))
-                                .filter(
-                                        vc ->
-                                                vc.getCredential()
-                                                                instanceof
-                                                                IdentityCheckCredential
-                                                                        identityCheckCredential
-                                                        && ObjectUtils.isNotEmpty(
-                                                                identityCheckCredential
-                                                                        .getCredentialSubject()
-                                                                        .getDrivingPermit()))
-                                .filter(VcHelper::isSuccessfulVc)
-                                .findFirst();
-
-                if (successfulDcmawDlVc.isPresent()) {
-                    hasExpiredDcmawDrivingPermit =
-                            VcHelper.isExpiredDrivingPermitVc(
-                                    successfulDcmawDlVc.get(), configService, Clock.systemUTC());
-
-                    if (hasExpiredDcmawDrivingPermit) {
-                        LOGGER.info(
-                                LogHelper.buildLogMessage(
-                                        "DCMAW Driving Permit VC is expired and past validity period."));
-                        var vcsForUpdate = new ArrayList<>(List.of(successfulDcmawDlVc.get()));
-                        credentialBundle.credentials.stream()
-                                .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
-                                .findFirst()
-                                .ifPresent(vcsForUpdate::add);
-
-                        evcsService.markHistoricInEvcs(userId, govukSigninJourneyId, vcsForUpdate);
-
-                        vcsForUpdate.forEach(credentialBundle.credentials::remove);
-
-                        VcHelper.extractNbf(successfulDcmawDlVc.get())
-                                .ifPresent(
-                                        nbfInstant -> {
-                                            var nbfMs = nbfInstant.toEpochMilli();
-                                            var dlVcExpiryPeriodMs =
-                                                    Duration.ofDays(
-                                                                    configService
-                                                                            .getDcmawExpiredDlValidityPeriodDays())
-                                                            .toMillis();
-
-                                            sendAuditEventWithExtension(
-                                                    AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
-                                                    auditEventUser,
-                                                    deviceInformation,
-                                                    new AuditExtensionExpiredDcmawDlVcFound(
-                                                            dlVcExpiryPeriodMs, nbfMs));
-                                        });
-                    }
-                }
+                expiredDlCredentialsWereRemoved =
+                        removeAnyExpiredDlCredentials(
+                                credentialBundle, auditInformation, userId, govukSigninJourneyId);
             }
 
             // No breaching CIs.
@@ -449,8 +393,7 @@ public class CheckExistingIdentityHandler
                     checkForProfileMatch(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            auditEventUser,
-                            deviceInformation,
+                            auditInformation,
                             credentialBundle,
                             gpg45CorrelationResult.isCorrelated(),
                             contraIndicators,
@@ -470,7 +413,7 @@ public class CheckExistingIdentityHandler
 
                     // Returned with F2F async VC. Should have matched a profile.
                     return buildF2FNoMatchResponse(
-                            gpg45CorrelationResult, auditEventUser, deviceInformation);
+                            gpg45CorrelationResult, auditInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -478,13 +421,11 @@ public class CheckExistingIdentityHandler
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
-                                    contraIndicators,
                                     ipAddress,
                                     ipvSessionItem,
                                     targetVot,
                                     clientOAuthSessionItem,
-                                    auditEventUser,
-                                    deviceInformation);
+                                    auditInformation);
 
                     if (dcmawContinuationResponse != null) {
                         return dcmawContinuationResponse;
@@ -493,7 +434,7 @@ public class CheckExistingIdentityHandler
             }
 
             // No relevant async CRI
-            return getNewIdentityJourney(targetVot, hasExpiredDcmawDrivingPermit);
+            return getNewIdentityJourney(targetVot, expiredDlCredentialsWereRemoved);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -514,6 +455,70 @@ public class CheckExistingIdentityHandler
         } catch (MissingSecurityCheckCredential e) {
             return buildErrorResponse(ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL, e);
         }
+    }
+
+    private boolean removeAnyExpiredDlCredentials(
+            VerifiableCredentialBundle credentialBundle,
+            AuditEventInformation auditInformation,
+            String userId,
+            String govukSigninJourneyId)
+            throws EvcsServiceException {
+        var successfulDcmawDlVc =
+                credentialBundle.credentials.stream()
+                        .filter(vc -> List.of(DCMAW_ASYNC, DCMAW).contains(vc.getCri()))
+                        .filter(
+                                vc ->
+                                        vc.getCredential()
+                                                        instanceof
+                                                        IdentityCheckCredential
+                                                                identityCheckCredential
+                                                && ObjectUtils.isNotEmpty(
+                                                        identityCheckCredential
+                                                                .getCredentialSubject()
+                                                                .getDrivingPermit()))
+                        .filter(VcHelper::isSuccessfulVc)
+                        .findFirst();
+
+        var hasExpiredDcmawDrivingPermit = false;
+        if (successfulDcmawDlVc.isPresent()) {
+            hasExpiredDcmawDrivingPermit =
+                    VcHelper.isExpiredDrivingPermitVc(
+                            successfulDcmawDlVc.get(), configService, Clock.systemUTC());
+
+            if (hasExpiredDcmawDrivingPermit) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "DCMAW Driving Permit VC is expired and past validity period."));
+                var vcsForUpdate = new ArrayList<>(List.of(successfulDcmawDlVc.get()));
+                credentialBundle.credentials.stream()
+                        .filter(vc -> DRIVING_LICENCE.equals(vc.getCri()))
+                        .findFirst()
+                        .ifPresent(vcsForUpdate::add);
+
+                evcsService.markHistoricInEvcs(userId, govukSigninJourneyId, vcsForUpdate);
+
+                vcsForUpdate.forEach(credentialBundle.credentials::remove);
+
+                VcHelper.extractNbf(successfulDcmawDlVc.get())
+                        .ifPresent(
+                                nbfInstant -> {
+                                    var nbfMs = nbfInstant.toEpochMilli();
+                                    var dlVcExpiryPeriodMs =
+                                            Duration.ofDays(
+                                                            configService
+                                                                    .getDcmawExpiredDlValidityPeriodDays())
+                                                    .toMillis();
+
+                                    sendAuditEventWithExtension(
+                                            AuditEventTypes.IPV_EXPIRED_DCMAW_DL_VC_FOUND,
+                                            auditInformation.getAuditEventUser(),
+                                            auditInformation.getDeviceInformation(),
+                                            new AuditExtensionExpiredDcmawDlVcFound(
+                                                    dlVcExpiryPeriodMs, nbfMs));
+                                });
+            }
+        }
+        return hasExpiredDcmawDrivingPermit;
     }
 
     private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
@@ -540,12 +545,10 @@ public class CheckExistingIdentityHandler
         return new VerifiableCredentialBundle(evcsIdentityVcs, hasValidPendingReturnVcs);
     }
 
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            AuditEventUser auditEventUser,
-            String deviceInformation,
+            AuditEventInformation auditInformation,
             VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators,
@@ -574,43 +577,38 @@ public class CheckExistingIdentityHandler
                         previousAchievedMaxVot,
                         ipvSessionItem,
                         credentialBundle,
-                        auditEventUser,
-                        deviceInformation));
+                        auditInformation));
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
             CorrelationResult correlationResult,
-            AuditEventUser auditEventUser,
-            String deviceInformation) {
+            AuditEventInformation auditInformation) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         if (!correlationResult.isCorrelated()) {
             sendAuditEventWithExtension(
                     AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                    auditEventUser,
-                    deviceInformation,
+                    auditInformation.getAuditEventUser(),
+                    auditInformation.getDeviceInformation(),
                     new AuditExtensionF2fCorrelationFail(
                             !correlationResult.isNameCorrelated(),
                             !correlationResult.isDobCorrelated()));
         } else {
             sendAuditEvent(
                     AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                    auditEventUser,
-                    deviceInformation);
+                    auditInformation.getAuditEventUser(),
+                    auditInformation.getDeviceInformation());
         }
 
         return JOURNEY_F2F_FAIL;
     }
 
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     private JourneyResponse buildDCMAWContinuationResponse(
             VerifiableCredentialBundle credentialBundle,
-            List<ContraIndicator> contraIndicators,
             String ipAddress,
             IpvSessionItem ipvSessionItem,
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            AuditEventInformation auditInformation)
             throws IpvSessionNotFoundException,
                     VerifiableCredentialException,
                     CiExtractionException,
@@ -635,12 +633,14 @@ public class CheckExistingIdentityHandler
                         criOAuthSessionItem.getClientOAuthSessionId());
         sendAuditEventWithExtension(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,
-                auditEventUser,
-                deviceInformation,
+                auditInformation.getAuditEventUser(),
+                auditInformation.getDeviceInformation(),
                 new AuditExtensionPreviousIpvSessionId(previousIpvSessionItem.getIpvSessionId()));
 
         sessionCredentialsService.persistCredentials(
-                credentialBundle.credentials, auditEventUser.getSessionId(), true);
+                credentialBundle.credentials,
+                auditInformation.getAuditEventUser().getSessionId(),
+                true);
 
         var forcedJourney =
                 criCheckingService.checkVcResponse(
@@ -679,8 +679,7 @@ public class CheckExistingIdentityHandler
             Vot previousAchievedMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
-            AuditEventUser auditEventUser,
-            String deviceInformation)
+            AuditEventInformation auditInformation)
             throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         var fraudVcs =
@@ -696,7 +695,7 @@ public class CheckExistingIdentityHandler
                             "All Fraud VCs are expired or from unavailable source"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(credentialBundle.credentials),
-                    auditEventUser.getSessionId(),
+                    auditInformation.getAuditEventUser().getSessionId(),
                     false);
 
             EmbeddedMetricHelper.identityProving();
@@ -716,8 +715,8 @@ public class CheckExistingIdentityHandler
 
                                 sendAuditEventWithExtension(
                                         AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
-                                        auditEventUser,
-                                        deviceInformation,
+                                        auditInformation.getAuditEventUser(),
+                                        auditInformation.getDeviceInformation(),
                                         new AuditExtensionExpiredFraudVcFound(
                                                 vcExpiryPeriodMs, nbfMs));
                             });
@@ -729,8 +728,8 @@ public class CheckExistingIdentityHandler
 
         sendAuditEventWithExtension(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                auditEventUser,
-                deviceInformation,
+                auditInformation.getAuditEventUser(),
+                auditInformation.getDeviceInformation(),
                 new AuditExtensionPreviousAchievedVot(
                         previousAchievedMaxVot, previousAchievedMaxVot));
         EmbeddedMetricHelper.identityReuse();
@@ -739,7 +738,9 @@ public class CheckExistingIdentityHandler
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         sessionCredentialsService.persistCredentials(
-                credentialBundle.credentials, auditEventUser.getSessionId(), false);
+                credentialBundle.credentials,
+                auditInformation.getAuditEventUser().getSessionId(),
+                false);
 
         return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
@@ -839,5 +840,12 @@ public class CheckExistingIdentityHandler
             LOGGER.warn(LogHelper.buildLogMessage("Failed to compute previous_achieved_vot"), e);
             return null;
         }
+    }
+
+    @AllArgsConstructor
+    @Getter
+    private static class AuditEventInformation {
+        private AuditEventUser auditEventUser;
+        private String deviceInformation;
     }
 }
