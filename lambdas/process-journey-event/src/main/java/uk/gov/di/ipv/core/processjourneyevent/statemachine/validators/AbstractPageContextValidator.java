@@ -15,6 +15,7 @@ public abstract class AbstractPageContextValidator implements IPageContextValida
     public static final String INVALID_DOC = "invalidDoc";
     public static final String REMOVE_F2F = "removeF2f";
     public static final String NINO_ONLY = "ninoOnly";
+    public static final String IS_DWP_DROPOUT = "isDwpDropout";
     public static final String IS_UNRECOVERABLE = "isUnrecoverable";
     public static final String SMARTPHONE = "smartphone";
     public static final String IS_APP_ONLY = "isAppOnly";

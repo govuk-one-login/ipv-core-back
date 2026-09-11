@@ -13,6 +13,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("page-dcmaw-success", Set.of(NO_ADDRESS)),
                     Map.entry("page-ipv-success", Set.of(JOURNEY_TYPE)),
                     Map.entry("page-multiple-doc-check", Set.of(ALLOW_NINO)),
+                    Map.entry("page-pre-experian-kbv-transition", Set.of(IS_DWP_DROPOUT)),
                     Map.entry("page-update-name", Set.of(JOURNEY_TYPE)),
                     Map.entry("photo-id-web-find-another-way", Set.of(REASON)),
                     Map.entry("prove-identity-another-type-photo-id", Set.of(INVALID_DOC)),
