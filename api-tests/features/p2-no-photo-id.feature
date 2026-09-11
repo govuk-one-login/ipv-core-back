@@ -584,7 +584,9 @@ Feature: P2 no photo id journey
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute          | Values                                      |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'no-photo-id-abandon-find-another-way' page response
+      Then I get a 'no-photo-id-abandon-find-another-way' page response and pageContext
+        | Context        | Value |
+        | isOpenBanking  | true  |
 
     Scenario: P2 no photo id journey - Abandon - Strategic app
       Given I activate the 'strategicApp' feature set
