@@ -792,7 +792,7 @@ states:
       next:
         targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID_OPEN_BANKING
       access-denied:
-        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID_OPEN_BANKING
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NINO
@@ -956,6 +956,31 @@ states:
     response:
       type: page
       pageId: no-photo-id-abandon-find-another-way
+    events:
+      mobileApp:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      passport:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
+      drivingLicence:
+        targetState: WEB_DL_OR_PASSPORT
+      postOffice:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      relyingParty:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  PYI_ESCAPE_ABANDON_NO_PHOTO_ID_OPEN_BANKING:
+    response:
+      type: page
+      pageId: no-photo-id-abandon-find-another-way
+      pageContext:
+        isOpenBanking: true
     events:
       mobileApp:
         targetState: STRATEGIC_APP_TRIAGE
