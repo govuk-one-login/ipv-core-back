@@ -773,7 +773,9 @@ Feature: Audit Events
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       And audit events for 'dwp-kbv-dropout-user-abandons-cri-no-open-banking' are recorded [local only]
 
   Rule: DWP KBV
@@ -843,5 +845,7 @@ Feature: Audit Events
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       And audit events for 'dwp-kbv-dropout-user-abandons-cri' are recorded [local only]
