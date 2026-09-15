@@ -25,6 +25,10 @@ states:
               mitigationType: enhanced-verification
           liveness-likeness:
             targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: higher-strength
 
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
@@ -318,6 +322,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
 
   PYI_ESCAPE:
     response:
@@ -423,6 +431,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -458,6 +470,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -511,6 +527,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED

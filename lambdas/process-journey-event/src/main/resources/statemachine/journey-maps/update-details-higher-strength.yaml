@@ -16,6 +16,10 @@ states:
         checkMitigation:
           liveness-likeness:
             targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: higher-strength
 
   # Journey States
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:

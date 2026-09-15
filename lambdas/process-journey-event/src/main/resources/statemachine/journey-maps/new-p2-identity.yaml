@@ -488,6 +488,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
 
   CHECK_FRAUD_AFTER_DL:
     response:
@@ -728,6 +732,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -763,6 +771,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -815,6 +827,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -882,6 +898,10 @@ states:
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_APP_NO_PHOTO_ID
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
