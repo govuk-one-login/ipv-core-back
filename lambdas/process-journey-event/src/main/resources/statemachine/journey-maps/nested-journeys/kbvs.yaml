@@ -28,7 +28,7 @@ nestedJourneyStates:
       access-denied:
         targetState: DWP_DROPOUT_PAGE
       error:
-        targetState: DWP_DROPOUT_PAGE
+        targetState: DWP_THIN_FILE_PAGE
       fail-with-ci:
         exitEventToEmit: fail-with-ci
   EXPERIAN_KBV_CRI:
