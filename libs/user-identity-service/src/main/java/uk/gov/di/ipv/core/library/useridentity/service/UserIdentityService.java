@@ -145,6 +145,18 @@ public class UserIdentityService {
         return false;
     }
 
+    public boolean areNamesCorrelated(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
+        var successfulVcs = getSuccessfulVcs(vcs);
+        return checkNameAndFamilyNameCorrelationInCredentials(successfulVcs);
+    }
+
+    public boolean areDoBsCorrelated(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
+        var successfulVcs = getSuccessfulVcs(vcs);
+        return checkBirthDateCorrelationInCredentials(successfulVcs);
+    }
+
     public boolean areNamesAndDobCorrelatedForReverification(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);

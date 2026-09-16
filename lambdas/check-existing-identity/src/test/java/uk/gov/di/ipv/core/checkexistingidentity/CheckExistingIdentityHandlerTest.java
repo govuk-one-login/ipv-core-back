@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionF2fCorrelationFail;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -85,6 +86,7 @@ import java.util.stream.Stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -323,12 +325,10 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldReturnF2FFailForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
+            var vcs = new ArrayList<>(List.of(vcF2fPassportPhotoM1a()));
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(
-                            Map.of(
-                                    PENDING_RETURN,
-                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
             when(criResponseService.getCriResponseItems(TEST_USER_ID))
                     .thenReturn(
                             List.of(
@@ -341,6 +341,8 @@ class CheckExistingIdentityHandlerTest {
                             new AsyncCriStatus(
                                     F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(userIdentityService.areNamesCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areDoBsCorrelated(any())).thenReturn(false);
 
             clientOAuthSessionItem.setVtr(List.of(P2.name()));
 
@@ -352,11 +354,91 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(
-                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEvent.getEventName());
 
+            var extension = (AuditExtensionF2fCorrelationFail) auditEvent.getExtensions();
+            assertFalse(extension.nameCorrelationFail());
+            assertTrue(extension.dobCorrelationFail());
+
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseForFaceToFaceIfBothNameAndDobCorrelationFail()
+                throws Exception {
+            var vcs = new ArrayList<>(List.of(vcF2fPassportPhotoM1a()));
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(userIdentityService.areNamesCorrelated(any())).thenReturn(false);
+            when(userIdentityService.areDoBsCorrelated(any())).thenReturn(false);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEvent.getEventName());
+
+            var extension = (AuditExtensionF2fCorrelationFail) auditEvent.getExtensions();
+            assertTrue(extension.nameCorrelationFail());
+            assertTrue(extension.dobCorrelationFail());
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+            assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void shouldReturnFailResponseForFaceToFaceIfOnlyDobCorrelationFails() throws Exception {
+            var vcs = new ArrayList<>(List.of(vcF2fPassportPhotoM1a()));
+            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getCriResponseItems(TEST_USER_ID))
+                    .thenReturn(
+                            List.of(
+                                    CriResponseItem.builder()
+                                            .credentialIssuer(F2F.getId())
+                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
+                                            .build()));
+            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(userIdentityService.areNamesCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areDoBsCorrelated(any())).thenReturn(false);
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEvent.getEventName());
+
+            var extension = (AuditExtensionF2fCorrelationFail) auditEvent.getExtensions();
+            assertFalse(extension.nameCorrelationFail());
+            assertTrue(extension.dobCorrelationFail());
+
+            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
             assertEquals(Vot.P0, ipvSessionItem.getVot());
         }
 
@@ -741,41 +823,6 @@ class CheckExistingIdentityHandlerTest {
                     AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                     auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
-            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-            assertEquals(Vot.P0, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(
-                            Map.of(
-                                    PENDING_RETURN,
-                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-            when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                    .thenReturn(
-                            List.of(
-                                    CriResponseItem.builder()
-                                            .credentialIssuer(F2F.getId())
-                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                            .build()));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(
-                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
             assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
             assertEquals(Vot.P0, ipvSessionItem.getVot());
