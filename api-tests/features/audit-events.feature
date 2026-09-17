@@ -845,3 +845,148 @@ Feature: Audit Events
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'page-pre-experian-kbv-transition' page response
       And audit events for 'dwp-kbv-dropout-user-abandons-cri' are recorded [local only]
+
+  Rule: Fraud Mitigation
+    Background: Enable fraud mitigation
+      Given I activate the 'mitigations9020' feature set
+
+    @QualityGateRegressionTest
+    Scenario: Start P2 driving licence app journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-passport' page response
+      When I submit a 'retryPassport' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | true   |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+      And audit events for 'new-identity-p2-fraud-mitigation' are recorded [local only]
+
+    @QualityGateRegressionTest
+    Scenario: Reuse journey
+      Given the subject already has the following credentials
+        | CRI     | scenario               |
+        | dcmaw   | kenneth-passport-valid |
+        | address | kenneth-current        |
+        | fraud   | kenneth-score-2        |
+      And I have an existing stored identity record with a 'P3' vot
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-reuse' page response
+      When I submit a 'update-details' event
+      Then I get a 'update-details' page response
+      When I submit a 'given-names-and-address' event
+      Then I get a 'page-update-name' page response
+      When I submit a 'update-name' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-driving-permit-valid' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response and pageContext
+        | Context   | Value |
+        | noAddress | true  |
+      When I submit a 'next' event
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-changed' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+        | Context     | Value            |
+        | journeyType | repeatFraudCheck |
+      When I submit an 'passport' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'android' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value   |
+        | smartphone | android |
+        | isAppOnly  | true    |
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-changed' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'page-ipv-success' page response and pageContext
+        | Context     | Value |
+        | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And my identity 'GivenName' is 'Ken'
+      And my address 'buildingNumber' is '28'
+      And my address 'addressLocality' is 'Bristol'
+      And I have a stored identity record with a 'P3' max vot
+      And audit events for 'reuse-journey-fraud-mitigation' are recorded [local only]
