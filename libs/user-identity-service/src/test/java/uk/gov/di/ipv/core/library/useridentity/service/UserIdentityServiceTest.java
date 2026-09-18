@@ -1999,6 +1999,89 @@ class UserIdentityServiceTest {
         }
     }
 
+    @Nested
+    class AreNamesCorrelatedAndAreDoBsCorrelated {
+        @Test
+        void areNamesCorrelatedShouldReturnTrueWhenNamesMatch() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesCorrelated(vcs));
+        }
+
+        @Test
+        void areNamesCorrelatedShouldReturnFalseWhenNamesDiffer() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Corky", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertFalse(userIdentityService.areNamesCorrelated(vcs));
+        }
+
+        @Test
+        void areDoBsCorrelatedShouldReturnTrueWhenDoBsMatch() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertTrue(userIdentityService.areDoBsCorrelated(vcs));
+        }
+
+        @Test
+        void areDoBsCorrelatedShouldReturnFalseWhenDoBsDiffer() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "2000-01-01")));
+
+            // Act & Assert
+            assertFalse(userIdentityService.areDoBsCorrelated(vcs));
+        }
+    }
+
     private void useP2Defaults() {
         when(mockConfigService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
         returnCodes.put("nonCiBreachingP0", "");

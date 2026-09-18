@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionF2fCorrelationFail;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -468,7 +469,10 @@ public class CheckExistingIdentityHandler
 
                     // Returned with F2F async VC. Should have matched a profile.
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated, auditEventUser, deviceInformation);
+                            areGpg45VcsCorrelated,
+                            credentialBundle.credentials,
+                            auditEventUser,
+                            deviceInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -578,15 +582,26 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildF2FNoMatchResponse(
             boolean areGpg45VcsCorrelated,
+            List<VerifiableCredential> credentials,
             AuditEventUser auditEventUser,
-            String deviceInformation) {
+            String deviceInformation)
+            throws HttpResponseExceptionWithErrorBody {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
-        sendAuditEvent(
-                !areGpg45VcsCorrelated
-                        ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
-                        : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventUser,
-                deviceInformation);
+        if (!areGpg45VcsCorrelated) {
+            var nameCorrelationFail = !userIdentityService.areNamesCorrelated(credentials);
+            var dobCorrelationFail = !userIdentityService.areDoBsCorrelated(credentials);
+
+            sendAuditEventWithExtension(
+                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                    auditEventUser,
+                    deviceInformation,
+                    new AuditExtensionF2fCorrelationFail(nameCorrelationFail, dobCorrelationFail));
+        } else {
+            sendAuditEvent(
+                    AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                    auditEventUser,
+                    deviceInformation);
+        }
 
         return JOURNEY_F2F_FAIL;
     }
