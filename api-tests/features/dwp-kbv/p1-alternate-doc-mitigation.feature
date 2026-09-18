@@ -76,7 +76,9 @@ Feature: P1 CIMIT - Alternate doc - DWP KBV
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'page-different-security-questions' page response
     When I submit a 'next' event
-    Then I get a 'page-pre-experian-kbv-transition' page response
+    Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+      | Context      | Value  |
+      | isDwpDropout | true   |
     When I submit a 'next' event
     Then I get a 'experianKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
