@@ -356,9 +356,6 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            // Only skip starting a new reprove identity journey if the user is returning from a F2F
-            // journey. Once PYIC-8896 has been live long enough that no-one will be on F2F
-            // reproving journey we should remove the isInterventionReprovingWithF2f() check.
             if (isInterventionReprove) {
                 EmbeddedMetricHelper.identityProving();
 
