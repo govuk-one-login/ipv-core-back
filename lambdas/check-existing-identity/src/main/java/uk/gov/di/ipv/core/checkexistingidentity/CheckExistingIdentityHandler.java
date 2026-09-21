@@ -60,6 +60,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.sis.service.SisService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService.CorrelationResult;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -441,8 +442,8 @@ public class CheckExistingIdentityHandler
             }
 
             // No breaching CIs.
-            var areGpg45VcsCorrelated =
-                    userIdentityService.areVcsCorrelated(credentialBundle.credentials);
+            var gpg45CorrelationResult =
+                    userIdentityService.getVcCorrelationResult(credentialBundle.credentials);
 
             var profileMatchResponse =
                     checkForProfileMatch(
@@ -451,7 +452,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             credentialBundle,
-                            areGpg45VcsCorrelated,
+                            gpg45CorrelationResult.isCorrelated(),
                             contraIndicators,
                             previousAchievedMaxVot);
             if (profileMatchResponse.isPresent()) {
@@ -469,10 +470,7 @@ public class CheckExistingIdentityHandler
 
                     // Returned with F2F async VC. Should have matched a profile.
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated,
-                            credentialBundle.credentials,
-                            auditEventUser,
-                            deviceInformation);
+                            gpg45CorrelationResult, auditEventUser, deviceInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -581,21 +579,18 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
-            boolean areGpg45VcsCorrelated,
-            List<VerifiableCredential> credentials,
+            CorrelationResult correlationResult,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws HttpResponseExceptionWithErrorBody {
+            String deviceInformation) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
-        if (!areGpg45VcsCorrelated) {
-            var nameCorrelationFail = !userIdentityService.areNamesCorrelated(credentials);
-            var dobCorrelationFail = !userIdentityService.areDoBsCorrelated(credentials);
-
+        if (!correlationResult.isCorrelated()) {
             sendAuditEventWithExtension(
                     AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
                     auditEventUser,
                     deviceInformation,
-                    new AuditExtensionF2fCorrelationFail(nameCorrelationFail, dobCorrelationFail));
+                    new AuditExtensionF2fCorrelationFail(
+                            !correlationResult.isNameCorrelated(),
+                            !correlationResult.isDobCorrelated()));
         } else {
             sendAuditEvent(
                     AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
