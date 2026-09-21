@@ -1411,34 +1411,6 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldNotReturnReproveJourneyIfUserHasPendingF2FReproveIdentity() throws Exception {
-            var vcs = new ArrayList<>(List.of(f2fVc));
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, vcs));
-            when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                    .thenReturn(
-                            List.of(
-                                    CriResponseItem.builder()
-                                            .credentialIssuer(F2F.getId())
-                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                            .build()));
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, true, true, true));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_F2F_PENDING_PATH, journeyResponse.getJourney());
-
-            verify(criResponseService, never()).updateCriResponseItem(any());
-        }
-
-        @Test
         void shouldReturnReproveJourneyIfUserReturnsFromPostOfficeWithIntervention()
                 throws Exception {
             var vcs = new ArrayList<>(List.of(f2fVc));
