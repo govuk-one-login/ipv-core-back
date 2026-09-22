@@ -220,57 +220,7 @@ Feature: P2 Web document journey - DWP KBV
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario Outline: User drops out of DWP KBV CRI via thin file - DWP KBV
-      When I submit a '<cri>' event
-      Then I get a 'prove-identity-online' page response and pageContext
-        | Context | Value |
-        | photoId | true  |
-      When I submit a 'next' event
-      Then I get a 'prove-identity-online-banking' page response and pageContext
-        | Context | Value |
-        | photoId | true  |
-      When I submit a 'next' event
-      Then I get a '<cri>' CRI response
-      When I submit '<details>' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'openBanking' CRI response
-      When I call the CRI stub and get an 'access_denied' OAuth error
-      Then I get a 'photo-id-banking-another-way' page response
-      When I submit an 'answerSecurityQuestions' event
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'next' event
-      Then I get a 'page-pre-dwp-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'dwpKbv' CRI response
-      When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-different-security-questions' page response
-      When I submit a 'next' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I am issued a 'P2' identity
-      And I have a stored identity record with a 'P2' max vot
-
-      Examples:
-        | cri            | details                      |
-        | drivingLicence | kenneth-driving-permit-valid |
-        | ukPassport     | kenneth-passport-valid       |
-
-    Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
+    Scenario Outline: User drops out of DWP KBV CRI via thin file or error - DWP KBV
       When I submit a '<cri>' event
       Then I get a 'prove-identity-online' page response and pageContext
         | Context | Value |
@@ -300,7 +250,11 @@ Feature: P2 Web document journey - DWP KBV
       When I call the CRI stub with attributes and get an '<oauth_error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-different-security-questions' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -314,10 +268,60 @@ Feature: P2 Web document journey - DWP KBV
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | cri            | details                      | oauth_error             |
-        | drivingLicence | kenneth-driving-permit-valid | access_denied           |
-        | ukPassport     | kenneth-passport-valid       | access_denied           |
-        | ukPassport     | kenneth-passport-valid       | server_error            |
+        | cri            | details                      | oauth_error     |
+        | drivingLicence | kenneth-driving-permit-valid | invalid_request |
+        | ukPassport     | kenneth-passport-valid       | invalid_request |
+        | ukPassport     | kenneth-passport-valid       | server_error    |
+
+    Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
+      When I submit a '<cri>' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a '<cri>' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'photo-id-banking-another-way' page response
+      When I submit an 'answerSecurityQuestions' event
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | cri            | details                      |
+        | drivingLicence | kenneth-driving-permit-valid |
+        | ukPassport     | kenneth-passport-valid       |
 
     Scenario: User drops out of DWP KBV due to a temporarily_unavailable error
       When I submit a 'ukPassport' event
@@ -553,45 +557,7 @@ Feature: P2 Web document journey - DWP KBV
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario Outline: User drops out of DWP KBV CRI via thin file - DWP KBV
-      When I submit a '<cri>' event
-      Then I get a '<cri>' CRI response
-      When I submit '<details>' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                   |
-        | evidence_requested | {"identityFraudScore":2} |
-      Then I get a 'personal-independence-payment' page response
-      When I submit a 'next' event
-      Then I get a 'page-pre-dwp-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'dwpKbv' CRI response
-      When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-different-security-questions' page response
-      When I submit a 'next' event
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'experianKbv' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I am issued a 'P2' identity
-      And I have a stored identity record with a 'P2' max vot
-
-      Examples:
-        | cri            | details                      |
-        | drivingLicence | kenneth-driving-permit-valid |
-        | ukPassport     | kenneth-passport-valid       |
-
-    Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
+    Scenario Outline: User drops out of DWP KBV CRI via thin file or error - DWP KBV
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub
@@ -609,7 +575,11 @@ Feature: P2 Web document journey - DWP KBV
       When I call the CRI stub with attributes and get an '<oauth_error>' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
+      Then I get a 'page-different-security-questions' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -623,10 +593,48 @@ Feature: P2 Web document journey - DWP KBV
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | cri            | details                      | oauth_error             |
-        | drivingLicence | kenneth-driving-permit-valid | access_denied           |
-        | ukPassport     | kenneth-passport-valid       | access_denied           |
-        | ukPassport     | kenneth-passport-valid       | server_error            |
+        | cri            | details                      | oauth_error     |
+        | drivingLicence | kenneth-driving-permit-valid | invalid_request |
+        | ukPassport     | kenneth-passport-valid       | invalid_request |
+        | ukPassport     | kenneth-passport-valid       | server_error    |
+
+    Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
+      When I submit a '<cri>' event
+      Then I get a '<cri>' CRI response
+      When I submit '<details>' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'next' event
+      Then I get a 'page-pre-dwp-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'dwpKbv' CRI response
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-pre-experian-kbv-transition' page response and pageContext
+        | Context      | Value  |
+        | isDwpDropout | true   |
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+      Examples:
+        | cri            | details                      |
+        | drivingLicence | kenneth-driving-permit-valid |
+        | ukPassport     | kenneth-passport-valid       |
 
     Scenario: User drops out of DWP KBV due to a temporarily_unavailable error
       When I submit a 'ukPassport' event
