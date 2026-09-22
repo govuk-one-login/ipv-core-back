@@ -1,0 +1,18 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "strengthScore": 3,
+  "validityScore": 0,
+  "verificationScore": 0,
+  "checkDetails": [
+    {
+      "checkMethod": "auth"
+    }
+  ],
+  "failedCheckDetails": [
+    {
+      "checkMethod": "data"
+    }
+  ],
+  "ci": ["NEEDS-ADDITIONAL-VERIFICATION"]
+}

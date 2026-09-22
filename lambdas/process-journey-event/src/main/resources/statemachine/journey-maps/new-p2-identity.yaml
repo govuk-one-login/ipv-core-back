@@ -583,6 +583,9 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_OPEN_BANKING
+        checkMitigation:
+          additional-verification:
+            targetState: OPEN_BANKING_NO_PHOTO_ID_WEB_ANOTHER_WAY
       error:
         targetState: OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
 
