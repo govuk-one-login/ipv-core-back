@@ -402,6 +402,7 @@ public class ProcessCandidateIdentityHandler
         boolean areVcsCorrelated = false;
         VotMatchingResult votMatchingResult = null;
         if (requiresVotMatchingResult(processIdentityType)) {
+            LOGGER.info(LogHelper.buildLogMessage("Performing VOT match"));
             areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
             votMatchingResult =
                     getVotMatchingResult(

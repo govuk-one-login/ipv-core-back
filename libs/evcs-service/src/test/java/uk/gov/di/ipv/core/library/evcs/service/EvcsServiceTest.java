@@ -640,6 +640,21 @@ class EvcsServiceTest {
     }
 
     @Test
+    void markAbandonedInEvcsShouldUpdateEvcsWithAbandonedVcs() throws Exception {
+        // Act
+        evcsService.markAbandonedInEvcs(
+                TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, List.of(VC_DRIVING_PERMIT_TEST));
+
+        // Assert
+        verify(mockEvcsClient, times(1)).updateUserVcs(evcsUpdateRequestBodyCaptor.capture());
+        var requestBody = evcsUpdateRequestBodyCaptor.getValue();
+        assertEquals(TEST_USER_ID, requestBody.userId());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, requestBody.govuk_signin_journey_id());
+        assertEquals(
+                1, requestBody.vcs().stream().filter(dto -> dto.state().equals(ABANDONED)).count());
+    }
+
+    @Test
     void markHistoricInEvcsShouldNotCallEvcsIfGivenEmptyList() throws Exception {
         // Act
         evcsService.markHistoricInEvcs(TEST_USER_ID, TEST_GOVUK_SIGNIN_JOURNEY_ID, List.of());
