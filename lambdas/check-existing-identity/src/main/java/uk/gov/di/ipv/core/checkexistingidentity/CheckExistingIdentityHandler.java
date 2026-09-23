@@ -78,6 +78,7 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
+import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
@@ -95,6 +96,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SO
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_RETRY_FRAUD_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_LOW_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
@@ -122,6 +124,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_F2F_RETRY_FRAUD =
+            new JourneyResponse(JOURNEY_F2F_RETRY_FRAUD_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -409,8 +413,11 @@ public class CheckExistingIdentityHandler
             if (asyncCriStatus.isPendingReturn()) {
                 if (asyncCriStatus.cri() == F2F) {
 
-                    // Returned with F2F async VC. Should have matched a profile.
-                    return buildF2FNoMatchResponse(areGpg45VcsCorrelated, auditInformation);
+                    return handleF2fUserReturn(
+                            credentialBundle,
+                            areGpg45VcsCorrelated,
+                            auditInformation,
+                            clientOAuthSessionItem);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -577,9 +584,12 @@ public class CheckExistingIdentityHandler
                         auditInformation));
     }
 
-    private JourneyResponse buildF2FNoMatchResponse(
+    private JourneyResponse handleF2fUserReturn(
+            VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
-            AuditEventInformation auditInformation) {
+            AuditEventInformation auditInformation,
+            ClientOAuthSessionItem clientOAuthSessionItem)
+            throws EvcsServiceException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -588,7 +598,40 @@ public class CheckExistingIdentityHandler
                 auditInformation.getAuditEventUser(),
                 auditInformation.getDeviceInformation());
 
+        if (!areGpg45VcsCorrelated) {
+            // It may be that the name entered by the user to the CIC and used for the original
+            // fraud check doesn't match the name on the document presented at the Post Office.
+            // In that case we want to try again with the name on the document.
+            LOGGER.info(LogHelper.buildLogMessage("F2F return - VCs are not correlated."));
+
+            var fraudAndCicVcs = getSuccessfulFraudAndCicVcs(credentialBundle);
+
+            // For safety only continue if we find both VCs as expected
+            if (fraudAndCicVcs.size() == 2) {
+                evcsService.markAbandonedInEvcs(
+                        clientOAuthSessionItem.getUserId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        fraudAndCicVcs);
+                credentialBundle.credentials.removeAll(fraudAndCicVcs);
+
+                sessionCredentialsService.persistCredentials(
+                        credentialBundle.credentials,
+                        auditInformation.getAuditEventUser().getSessionId(),
+                        false);
+
+                return JOURNEY_F2F_RETRY_FRAUD;
+            }
+        }
+
         return JOURNEY_F2F_FAIL;
+    }
+
+    private List<VerifiableCredential> getSuccessfulFraudAndCicVcs(
+            VerifiableCredentialBundle credentialBundle) {
+        return credentialBundle.credentials.stream()
+                .filter(vc -> List.of(CLAIMED_IDENTITY, EXPERIAN_FRAUD).contains(vc.getCri()))
+                .filter(VcHelper::isSuccessfulVc)
+                .toList();
     }
 
     private JourneyResponse buildDCMAWContinuationResponse(
