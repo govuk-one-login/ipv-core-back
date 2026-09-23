@@ -16,6 +16,11 @@ states:
       next:
         targetState: PROCESS_NEW_IDENTITY
 
+  F2F_CORRELATION_RETRY:
+    events:
+      next:
+        targetState: F2F_RETRY_FRAUD
+
   # Journey states
 
   PROCESS_NEW_IDENTITY:
@@ -68,6 +73,45 @@ states:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  F2F_RETRY_FRAUD:
+    response:
+      type: cri
+      criId: fraud
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: PROCESS_NEW_IDENTITY
+      fail-with-no-ci:
+        targetJourney: F2F_FAILED
+        targetState: FAILED
+      fail-with-no-ci-fatal:
+        targetJourney: F2F_FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: F2F_FAILED
+        targetState: FAILED
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
