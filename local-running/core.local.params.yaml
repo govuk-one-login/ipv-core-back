@@ -277,7 +277,8 @@ core:
       enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,emailAddress"
-      activeConnection: "stub"
+#      activeConnection: "stub"
+      activeConnection: "dev-danc"
       connections:
         stub:
           authorizeUrl: https://f2f-cri.stubs.account.gov.uk/authorize
@@ -290,6 +291,17 @@ core:
           requiresApiKey: false
           requiresAdditionalEvidence: false
           jwksUrl: https://f2f-cri.stubs.account.gov.uk/.well-known/jwks.json
+        dev-danc:
+          authorizeUrl: https://f2f-dev-danc.02.core.dev.stubs.account.gov.uk/authorize
+          tokenUrl: https://f2f-dev-danc.02.core.dev.stubs.account.gov.uk/token
+          credentialUrl: https://f2f-dev-danc.02.core.dev.stubs.account.gov.uk/credentials/issue
+          clientId: ipv-core-local
+          signingKey: '{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}'
+          componentId: https://f2f-dev-danc.02.core.dev.stubs.account.gov.uk
+          clientCallbackUrl: http://localhost:4501/credential-issuer/callback/f2f
+          requiresApiKey: false
+          requiresAdditionalEvidence: false
+          jwksUrl: https://f2f-dev-danc.02.core.dev.stubs.account.gov.uk/.well-known/jwks.json
     nino:
       id: nino
       name: NINO

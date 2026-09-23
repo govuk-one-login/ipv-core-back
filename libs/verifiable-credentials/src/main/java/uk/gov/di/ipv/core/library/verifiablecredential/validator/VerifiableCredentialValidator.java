@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.validator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -91,6 +93,16 @@ public class VerifiableCredentialValidator {
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
             var vc = VerifiableCredential.fromValidJwt(userId, cri, vcJwt);
+
+            //qq:DCC remove
+            try {
+                ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+                var jsonString = OBJECT_MAPPER.writeValueAsString(vc);
+                LOGGER.error(LogHelper.buildLogMessage("Credential received: " + jsonString));
+            }
+            catch (JsonProcessingException e) {
+                LOGGER.error(LogHelper.buildLogMessage("Error logging credential: " + e.getMessage()), e);
+            }
 
             validateCiCodes(vc);
 
@@ -242,6 +254,7 @@ public class VerifiableCredentialValidator {
                 LOGGER.error(
                         LogHelper.buildLogMessage(
                                 "Verifiable credential contains unrecognised CI codes"));
+
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
