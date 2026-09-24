@@ -60,6 +60,28 @@ Feature: P2 no photo id journey
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P3' max vot
 
+    Scenario: Successful Open Banking mitigation - user mitigates CI with f2f
+      When I submit 'kenneth-needs-additional-verification' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit an 'f2f' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get an 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
     Scenario: Successful web journey - user retries Open Banking
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'no-photo-id-banking-another-way' page response
