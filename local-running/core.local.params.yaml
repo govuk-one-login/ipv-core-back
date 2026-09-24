@@ -386,8 +386,12 @@ core:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
     mitigations9020Enabled: false
+    f2fRetryEnabled: false
 
   features:
+    f2fRetry:
+      featureFlags:
+        f2fRetryEnabled: true
     openBanking:
       credentialIssuers:
         openBanking:

@@ -4,7 +4,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     UNUSED_PLACEHOLDER("unusedPlaceHolder"),
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     SIS_VERIFICATION("sisVerificationEnabled"),
-    MITIGATIONS_9020("mitigations9020Enabled");
+    MITIGATIONS_9020("mitigations9020Enabled"),
+    F2F_RETRY("f2fRetryEnabled");
 
     private final String name;
 

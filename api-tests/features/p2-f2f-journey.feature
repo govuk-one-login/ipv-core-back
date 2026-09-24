@@ -70,7 +70,7 @@ Feature: P2 F2F journey
         | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
     Scenario: Successful P2 identity via F2F with initial correlation fail
-      Given I activate the 'openBankingDisabled' feature set
+      Given I activate the 'openBankingDisabled,f2fRetry' feature set
       # Initial journey
       When I start a new 'high-medium-confidence' journey
       Then I get a 'live-in-uk' page response

@@ -77,6 +77,7 @@ import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.F2F_RETRY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -598,7 +599,7 @@ public class CheckExistingIdentityHandler
                 auditInformation.getAuditEventUser(),
                 auditInformation.getDeviceInformation());
 
-        if (!areGpg45VcsCorrelated) {
+        if (!areGpg45VcsCorrelated && configService.enabled(F2F_RETRY)) {
             // It may be that the name entered by the user to the CIC and used for the original
             // fraud check doesn't match the name on the document presented at the Post Office.
             // In that case we want to try again with the name on the document.
