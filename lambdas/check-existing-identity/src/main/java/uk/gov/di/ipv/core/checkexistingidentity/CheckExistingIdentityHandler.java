@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.cricheckingservice.CriCheckingService;
-import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -357,11 +356,7 @@ public class CheckExistingIdentityHandler
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            // Only skip starting a new reprove identity journey if the user is returning from a F2F
-            // journey. Once PYIC-8896 has been live long enough that no-one will be on F2F
-            // reproving journey we should remove the isInterventionReprovingWithF2f() check.
-            if (isInterventionReprove
-                    && !isInterventionReprovingWithF2f(asyncCriStatus, credentialBundle)) {
+            if (isInterventionReprove) {
                 EmbeddedMetricHelper.identityProving();
 
                 LOGGER.info(LogHelper.buildLogMessage("Reproving identity for intervention"));
@@ -804,15 +799,6 @@ public class CheckExistingIdentityHandler
         LOGGER.error(LogHelper.buildErrorMessage(errorResponse));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
-    }
-
-    private boolean isInterventionReprovingWithF2f(
-            AsyncCriStatus f2fStatus, VerifiableCredentialBundle vcBundle) {
-        // does the user have a F2F response item that was created in response to an intervention,
-        // and they're returning to core with a pending identity
-        return f2fStatus.cri() == F2F
-                && f2fStatus.isReproveIdentity()
-                && vcBundle.isPendingReturn();
     }
 
     private Vot getStrongestAchievableVotFromBundle(List<VerifiableCredential> credentials) {
