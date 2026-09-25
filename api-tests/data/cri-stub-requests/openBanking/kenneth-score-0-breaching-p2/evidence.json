@@ -1,0 +1,11 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "verificationScore": 0,
+  "failedCheckDetails": [
+    {
+      "checkMethod": "auth"
+    }
+  ],
+  "ci": ["BREACHING-P2"]
+}
