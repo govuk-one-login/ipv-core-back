@@ -784,6 +784,18 @@ Feature: P2 Web document journey
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+    Scenario: User fails Open Banking with breaching-p2 CI
+      When I submit 'kenneth-score-0-breaching-p2' details to the CRI stub
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+
     Scenario: Successful Open Banking mitigation - user mitigates CI with f2f
       When I submit 'kenneth-needs-additional-verification' details to the CRI stub
       Then I get a 'photo-id-web-find-another-way' page response and pageContext
