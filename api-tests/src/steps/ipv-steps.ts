@@ -244,6 +244,102 @@ When(
   },
 );
 
+// Variant of the journey start that retries until it gets the desired page, but only ignores a specific response while waiting, e.g. to wait for an async F2F request
+When(
+  /I start new '([\w-]+)' journeys( with reprove identity)? ignoring '([\w-]+)' page responses until I get a '([\w-]+)' page response$/,
+  { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
+  async function (
+    this: World,
+    journeyType: string,
+    reproveIdentity: " with reprove identity" | undefined,
+    ignoredPage: string,
+    expectedPage: string,
+  ): Promise<void> {
+    let attempt = 1;
+    while (attempt <= MAX_ATTEMPTS) {
+      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
+
+      if (!this.lastJourneyEngineResponse) {
+        throw new Error("No last journey engine response found.");
+      }
+
+      try {
+        assert.ok(
+          isPageResponse(this.lastJourneyEngineResponse),
+          `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+        );
+        assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
+        return;
+      } catch (e) {
+        if (
+          !isPageResponse(this.lastJourneyEngineResponse) ||
+          this.lastJourneyEngineResponse.page != ignoredPage
+        ) {
+          throw new Error(
+            "Got unexpected journey response whilst waiting: " +
+              JSON.stringify(this.lastJourneyEngineResponse),
+            { cause: e },
+          );
+        }
+        if (attempt >= MAX_ATTEMPTS) {
+          throw e;
+        }
+      }
+
+      await delay(RETRY_DELAY_MILLIS);
+      attempt++;
+    }
+  },
+);
+
+// Variant of the journey start that retries until it gets a CRI response, e.g. to wait for an async F2F request
+When(
+  /I start new '([\w-]+)' journeys( with reprove identity)? ignoring '([\w-]+)' page responses until I get a '([\w-]+)' CRI response$/,
+  { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
+  async function (
+    this: World,
+    journeyType: string,
+    reproveIdentity: " with reprove identity" | undefined,
+    ignoredPage: string,
+    expectedCri: string,
+  ): Promise<void> {
+    let attempt = 1;
+    while (attempt <= MAX_ATTEMPTS) {
+      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
+
+      if (!this.lastJourneyEngineResponse) {
+        throw new Error("No last journey engine response found.");
+      }
+
+      try {
+        assert.ok(
+          isCriResponse(this.lastJourneyEngineResponse),
+          `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+        );
+        assert.equal(this.lastJourneyEngineResponse.cri.id, expectedCri);
+        return;
+      } catch (e) {
+        if (
+          !isPageResponse(this.lastJourneyEngineResponse) ||
+          this.lastJourneyEngineResponse.page != ignoredPage
+        ) {
+          throw new Error(
+            "Got unexpected journey response whilst waiting: " +
+              JSON.stringify(this.lastJourneyEngineResponse),
+            { cause: e },
+          );
+        }
+        if (attempt >= MAX_ATTEMPTS) {
+          throw e;
+        }
+      }
+
+      await delay(RETRY_DELAY_MILLIS);
+      attempt++;
+    }
+  },
+);
+
 Then(
   /^I get an? '([\w-]+)' page response( with a non-empty clientOAuthSessionId)?$/,
   function (
