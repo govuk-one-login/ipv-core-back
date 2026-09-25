@@ -164,7 +164,18 @@ public class UserIdentityService {
                 getFamilyNameWithCharAllowanceForCoiCheck(identityClaimsForNameCorrelation));
     }
 
+    public record CorrelationResult(boolean isNameCorrelated, boolean isDobCorrelated) {
+        public boolean isCorrelated() {
+            return isNameCorrelated && isDobCorrelated;
+        }
+    }
+
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
+        return getVcCorrelationResult(vcs).isCorrelated();
+    }
+
+    public CorrelationResult getVcCorrelationResult(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
@@ -181,7 +192,7 @@ public class UserIdentityService {
             LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
         }
 
-        return successfulDobCorrelation && successfulNameCorrelation;
+        return new CorrelationResult(successfulNameCorrelation, successfulDobCorrelation);
     }
 
     public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)

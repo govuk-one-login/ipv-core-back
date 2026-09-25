@@ -666,6 +666,97 @@ class UserIdentityServiceTest {
     }
 
     @Nested
+    class GetVcCorrelationResult {
+        @Test
+        void shouldReturnBothTrueWhenNameAndDobCorrelate() throws Exception {
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")));
+
+            var result = userIdentityService.getVcCorrelationResult(vcs);
+
+            assertTrue(result.isNameCorrelated());
+            assertTrue(result.isDobCorrelated());
+            assertTrue(result.isCorrelated());
+        }
+
+        @Test
+        void shouldReturnFalseForDobWhenOnlyDobFails() throws Exception {
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "2000-01-01")));
+
+            var result = userIdentityService.getVcCorrelationResult(vcs);
+
+            assertTrue(result.isNameCorrelated());
+            assertFalse(result.isDobCorrelated());
+            assertFalse(result.isCorrelated());
+        }
+
+        @Test
+        void shouldReturnFalseForNameWhenOnlyNameFails() throws Exception {
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Timmy", "Jones", "1000-01-01")));
+
+            var result = userIdentityService.getVcCorrelationResult(vcs);
+
+            assertFalse(result.isNameCorrelated());
+            assertTrue(result.isDobCorrelated());
+            assertFalse(result.isCorrelated());
+        }
+
+        @Test
+        void shouldReturnBothFalseWhenBothNameAndDobFail() throws Exception {
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Timmy", "Smith", "2000-01-01")));
+
+            var result = userIdentityService.getVcCorrelationResult(vcs);
+
+            assertFalse(result.isNameCorrelated());
+            assertFalse(result.isDobCorrelated());
+            assertFalse(result.isCorrelated());
+        }
+    }
+
+    @Nested
     class AreNamesAndDobCorrelated {
         private VerifiableCredential jimboJones2000 =
                 generateVerifiableCredential(
