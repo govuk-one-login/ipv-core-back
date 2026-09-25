@@ -9,6 +9,7 @@ import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityAssertionCredential;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
@@ -60,6 +62,7 @@ public interface VcFixtures {
     String PASSPORT_ISSUER_STAGING = "https://review-p.staging.account.gov.uk";
     String TICF_ISSUER = "https://ticf.stubs.account.gov.uk";
     String CIMIT_ISSUER = "https://cimit.stubs.account.gov.uk";
+    String CLAIMED_IDENTITY_ISSUER = "https://review-c.staging.account.gov.uk";
     String DEFAULT_DOB = "1965-07-08";
     Instant INSTANT_2099_01_01_00_00_00_UTC = Instant.ofEpochSecond(4070908800L);
     Instant INSTANT_2022_07_26_10_02_38_UTC = Instant.ofEpochSecond(1658829758L);
@@ -67,6 +70,21 @@ public interface VcFixtures {
     Instant INSTANT_2024_01_09_17_49_30_UTC = Instant.ofEpochSecond(1704822570L);
     Instant INSTANT_2022_05_19_09_38_00_UTC = Instant.ofEpochSecond(1652953080L);
     Instant INSTANT_2023_10_12_07_55_26_UTC = Instant.ofEpochSecond(1697097326L);
+
+    private static IdentityAssertionCredential vcClaimedIdentiyValid() {
+        return IdentityAssertionCredential.builder()
+                .withType(
+                        List.of(
+                                VerifiableCredentialType.VERIFIABLE_CREDENTIAL,
+                                VerifiableCredentialType.IDENTITY_ASSERTION_CREDENTIAL))
+                .withCredentialSubject(
+                        IdentityCheckSubject.builder()
+                                .withName(List.of(kennethDecerqueiraName()))
+                                .withBirthDate(
+                                        List.of(BirthDate.builder().withValue(DEFAULT_DOB).build()))
+                                .build())
+                .build();
+    }
 
     private static IdentityCheckCredential vcClaimWebPassportValid() {
         return IdentityCheckCredential.builder()
@@ -1342,6 +1360,15 @@ public interface VcFixtures {
                 vcClaimExperianKbv(),
                 EXPERIAN_KBV_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1653403140)); // 2022-05-24 14:39:00 UTC
+    }
+
+    static VerifiableCredential vcClaimedIdentity() {
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                CLAIMED_IDENTITY,
+                vcClaimedIdentiyValid(),
+                CLAIMED_IDENTITY_ISSUER,
+                INSTANT_2024_01_23_05_08_41_UTC);
     }
 
     static VerifiableCredential vcDwpKbv() {

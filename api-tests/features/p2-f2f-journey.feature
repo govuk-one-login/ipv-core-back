@@ -69,6 +69,42 @@ Feature: P2 F2F journey
         | medium-confidence      | passport | kenneth-passport-valid       |
         | medium-confidence      | DL       | kenneth-driving-permit-valid |
 
+    Scenario: Successful P2 identity via F2F with initial correlation fail
+      Given I activate the 'openBankingDisabled,f2fRetry' feature set
+      # Initial journey
+      When I start a new 'high-medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details to the F2F CRI stub with attributes with a different Post Office subject
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start new 'high-medium-confidence' journeys until I get a 'fraud' CRI response
+      When I submit 'kenny-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
     Scenario: Failed F2F journey using passport with CI (score 1) - allow user to start again
       Given I activate the 'openBankingDisabled' feature set
       # Initial journey

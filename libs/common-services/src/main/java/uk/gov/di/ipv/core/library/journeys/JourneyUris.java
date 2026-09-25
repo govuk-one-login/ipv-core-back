@@ -28,6 +28,7 @@ public class JourneyUris {
             "/journey/dl-auth-source-check-medium";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
+    public static final String JOURNEY_F2F_RETRY_FRAUD_PATH = "/journey/f2f-retry-fraud";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
     public static final String JOURNEY_FRAUD_FAIL_WITH_NO_CI_FATAL_PATH =
