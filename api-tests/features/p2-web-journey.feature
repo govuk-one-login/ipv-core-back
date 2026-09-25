@@ -822,8 +822,7 @@ Feature: P2 Web document journey
         | passport        | kenneth-driving-permit-valid |
         | driving licence | kenneth-passport-valid       |
 
-
-    Scenario: Successful Open Banking mitigation - user mitigated CI with app
+    Scenario Outline: Successful Open Banking mitigation - user mitigates CI with app using <doc>
       When I submit 'kenneth-needs-additional-verification' details to the CRI stub
       Then I get a 'photo-id-web-find-another-way' page response and pageContext
         | Context | Value       |
@@ -841,7 +840,7 @@ Feature: P2 Web document journey
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
-      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
 
       # Return journey
       And I pass on the DCMAW callback
@@ -853,8 +852,14 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I am issued a 'P2' identity
-      And I have a stored identity record with a 'P3' max vot
+      Then I am issued a '<attained-vot>' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
+
+      Examples:
+        | doc             | valid-document               | attained-vot | stored-identity-score |
+        | BRC             | kenneth-brc-valid            | P2           | P2                    |
+        | BRP             | kenneth-brp-valid            | P2           | P3                    |
+        | passport        | kenneth-passport-valid       | P2           | P3                    |
 
     Scenario: Open Banking CRI returns an error - user tries again
       When I call the CRI stub and get a 'server_error' OAuth error

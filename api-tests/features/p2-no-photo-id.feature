@@ -28,7 +28,7 @@ Feature: P2 no photo id journey
         | evidence_requested | {"identityFraudScore":2} |
       Then I get an 'openBanking' CRI response
 
-    Scenario: Successful Open Banking mitigation - user mitigated CI with app
+    Scenario Outline: Successful Open Banking mitigation - user mitigates CI with app using <doc>
       When I submit 'kenneth-needs-additional-verification' details to the CRI stub
       Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
         | Context | Value       |
@@ -46,7 +46,7 @@ Feature: P2 no photo id journey
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
-      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
       # And the user returns from the app to core-front
       And I pass on the DCMAW callback
       Then I get a 'check-mobile-app-result' page response
@@ -57,8 +57,14 @@ Feature: P2 no photo id journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I am issued a 'P2' identity
-      And I have a stored identity record with a 'P3' max vot
+      Then I am issued a '<attained-vot>' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
+
+      Examples:
+        | doc             | valid-document               | attained-vot | stored-identity-score |
+        | BRC             | kenneth-brc-valid            | P2           | P2                    |
+        | BRP             | kenneth-brp-valid            | P2           | P3                    |
+        | passport        | kenneth-passport-valid       | P2           | P3                    |
 
     Scenario Outline: Successful Open Banking mitigation - user mitigates CI with f2f using <doc>
       When I submit 'kenneth-needs-additional-verification' details to the CRI stub
