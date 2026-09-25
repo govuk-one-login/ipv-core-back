@@ -20,7 +20,7 @@ import { IdentityCheckSubjectClass } from "@govuk-one-login/data-vocab/credentia
 
 const ORCHESTRATOR_CLIENT_ID = "orchApiTest";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-type JsonType = "credentialSubject" | "evidence";
+type JsonType = "credentialSubject" | "credentialPoSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
@@ -70,6 +70,7 @@ export const generateCriStubBody = async (
   f2f?: {
     sendVcToQueue: boolean;
     sendErrorToQueue: boolean;
+    useDifferentSubjectForPostOffice?: boolean;
   },
   mitigatedCis?: string[],
   overrideDocumentExpiry?: {
@@ -84,6 +85,10 @@ export const generateCriStubBody = async (
         sendErrorToQueue: f2f.sendErrorToQueue,
         queueName: config.asyncQueue.name,
         delaySeconds: config.asyncQueue.delaySeconds,
+        queueSubjectJson:
+          f2f.useDifferentSubjectForPostOffice && scenario
+            ? await readJsonFile(criId, scenario, "credentialPoSubject")
+            : undefined,
       }
     : undefined;
   const mitigations = mitigatedCis

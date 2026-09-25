@@ -190,6 +190,61 @@ When(
   },
 );
 
+// This is a special step for the F2F CRI stub to allow it to send back one subject in the pending VC response and
+// a different subject in the VC from the Post Office.
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub didn't contain any extra attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
+When(
+  /^I submit (expired )?'([\w-]+)' details to the F2F CRI stub with attributes with a different Post Office subject$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    scenarioForFullVc: string,
+    dataTable: DataTable | undefined,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenarioForFullVc,
+        redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
+        {
+          sendVcToQueue: true,
+          sendErrorToQueue: false,
+          useDifferentSubjectForPostOffice: true,
+        },
+      ),
+      redirectUrl,
+    );
+
+    if (!dataTable?.rows()) {
+      throw new Error("No data specified for test");
+    }
+
+    dataTable?.rows().forEach(([key, expected]) => {
+      const actualValue = jarPayload[key as keyof typeof jarPayload];
+      const expectedValue = JSON.parse(expected);
+
+      assert.deepStrictEqual(actualValue, expectedValue);
+    });
+
+    const expectedValueNames = dataTable?.rows().map((r) => r[0]);
+    assertNoUnexpectedJarProperties(jarPayload, expectedValueNames);
+  },
+);
+
 // This step is used to provide an override to the document's expiry date. By default,
 // the document's expiry date is set to 180 days after the VC's nbf. If specified to be expired,
 // the document's expiry date is set to 180 days before the VC's issue date (specified

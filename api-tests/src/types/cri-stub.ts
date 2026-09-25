@@ -12,6 +12,7 @@ export interface CriStubRequest {
   f2f?: {
     sendVcToQueue: boolean;
     sendErrorToQueue: boolean;
+    queueSubjectJson?: string;
     queueName: string;
     delaySeconds?: number;
   };
