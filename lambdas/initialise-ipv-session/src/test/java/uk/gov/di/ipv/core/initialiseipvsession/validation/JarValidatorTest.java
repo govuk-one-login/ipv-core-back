@@ -48,7 +48,10 @@ import java.util.Map;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_FORBIDDEN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -665,6 +668,49 @@ class JarValidatorTest {
                 errorObject.getDescription());
     }
 
+    @Nested
+    class JarClaimsParsingTests {
+        @Test
+        void shouldParseWhenUpdateIdentityIsAbsent() {
+            // Arrange
+            var claims = new HashMap<String, Object>();
+            claims.put("userinfo", Map.of());
+
+            // Act & Assert
+            var jarClaims =
+                    assertDoesNotThrow(() -> OBJECT_MAPPER.convertValue(claims, JarClaims.class));
+            assertNull(jarClaims.updateIdentity());
+        }
+
+        @Test
+        void shouldParseWhenUpdateIdentityIsTrue() {
+            // Arrange
+            var claims = new HashMap<String, Object>();
+            claims.put("update_identity", true);
+            claims.put("userinfo", Map.of());
+
+            // Act & Assert
+            var jarClaims =
+                    assertDoesNotThrow(() -> OBJECT_MAPPER.convertValue(claims, JarClaims.class));
+            assertTrue(jarClaims.updateIdentity());
+        }
+
+        @Test
+        void shouldParseWhenUpdateIdentityIsFalse() {
+            // This should never happen — orchestration only includes this field when the user
+            // requires an identity update.
+            // Arrange
+            var claims = new HashMap<String, Object>();
+            claims.put("update_identity", false);
+            claims.put("userinfo", Map.of());
+
+            // Act & Assert
+            var jarClaims =
+                    assertDoesNotThrow(() -> OBJECT_MAPPER.convertValue(claims, JarClaims.class));
+            assertFalse(jarClaims.updateIdentity());
+        }
+    }
+
     private SignedJWT generateJWT(Map<String, Object> claimsSetValues) throws Exception {
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
@@ -694,6 +740,7 @@ class JarValidatorTest {
         validClaims.put(
                 CLAIMS_CLAIM,
                 new JarClaims(
+                        null,
                         new JarUserInfo(
                                 null,
                                 null,
