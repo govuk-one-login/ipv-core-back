@@ -904,3 +904,295 @@ Feature: P2 V2 App Cross Browser Scenario
         And my address 'buildingNumber' is '28'
         And my address 'addressLocality' is 'Bristol'
         And I have a stored identity record with a 'P3' max vot
+
+  Rule: Cross-browser during same-session additional verification mitigation
+    Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ADDITIONAL-VERIFICATION CI
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit an 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth-needs-additional-verification' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+
+    Scenario: Successful mitigation with DL auth source check
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+        # And the user returns from the app to core-front
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+        # This simulates the user clicking continue on the problem-different-browser
+        # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+        # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+        # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Same session DCMAW additional verification mitigation - DL auth check acquires CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+  Rule: Cross-browser during separate-session additional verification mitigation
+    Background: Start separate-session additional verification mitigation
+      Given I activate the 'openBanking' feature set
+      And the subject has the following CIs
+        | Code                          |
+        | NEEDS-ADDITIONAL-VERIFICATION |
+
+      # Separate session mitigation
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+
+    Scenario: Separate session DCMAW additional verification mitigation - successful - DL
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Separate session DCMAW additional verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'pyi-post-office' page response
+
+    Scenario: Separate session DCMAW additional verification mitigation - breaching CI received from DCMAW
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Separate session DCMAW additional verification mitigation - DL auth check acquires CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: Separate session DCMAW additional verification mitigation - DL auth check incomplete
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      And I pass on the DCMAW callback in a separate session
+      Then I get a 'problem-different-browser' page response
+      # This simulates the user clicking continue on the problem-different-browser
+      # page which sends a 'build-client-oauth-response' event to the journey engine
+      When I submit a 'build-client-oauth-response' event in a separate session
+      Then I get an OAuth response with error code 'access_denied'
+      # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+      # has managed to log back in to the site.
+      When I poll for async DCMAW credential receipt
+      And I start a new 'medium-confidence' journey
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit a 'next' event
+
+      # Attempt 2 - retry after viewing prove-identity-another-way
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response
+      When I submit an 'anotherTypePhotoId' event
+
+      # Attempt 3 - give up
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response and pageContext
+        | Context            | Value |
+        | isFromStrategicApp | true  |
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
