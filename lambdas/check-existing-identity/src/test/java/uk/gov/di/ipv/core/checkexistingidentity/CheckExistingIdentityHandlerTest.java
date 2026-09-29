@@ -110,6 +110,7 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createNoInterventionAisSta
 import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.F2F_RETRY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -338,8 +339,10 @@ class CheckExistingIdentityHandlerTest {
         void shouldRaiseAuditEventAndRouteCorrectlyForNonCorrelatedF2fVcs(
                 boolean isNameCorrelated,
                 boolean isDobCorrelated,
+                boolean isF2fRetryEnabled,
                 JourneyResponse expectedJourneyResponse)
                 throws Exception {
+            lenient().when(configService.enabled(F2F_RETRY)).thenReturn(isF2fRetryEnabled);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(
@@ -386,9 +389,12 @@ class CheckExistingIdentityHandlerTest {
 
         static Stream<Arguments> correlationResults() {
             return Stream.of(
-                    Arguments.of(true, false, JOURNEY_F2F_FAIL),
-                    Arguments.of(false, true, JOURNEY_F2F_RETRY_FRAUD),
-                    Arguments.of(false, false, JOURNEY_F2F_FAIL));
+                    Arguments.of(true, false, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, true, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, false, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(true, false, true, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, true, true, JOURNEY_F2F_RETRY_FRAUD),
+                    Arguments.of(false, false, true, JOURNEY_F2F_FAIL));
         }
 
         @ParameterizedTest
