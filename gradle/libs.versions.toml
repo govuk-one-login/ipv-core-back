@@ -1,6 +1,6 @@
 [versions]
 awsSdk = "2.55.6"
-jackson = "2.22.1"
+jackson = "2.22.3"
 log4j = "2.26.1"
 mockito = "5.23.0"
 pact = "4.7.5"
