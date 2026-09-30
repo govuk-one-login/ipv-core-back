@@ -906,7 +906,7 @@ Feature: P2 V2 App Cross Browser Scenario
         And I have a stored identity record with a 'P3' max vot
 
   Rule: Cross-browser during same-session additional verification mitigation
-    Background: Submit web passport details, then navigate to KBV CRI and apply NEEDS-ADDITIONAL-VERIFICATION CI
+    Background: Submit web passport details, then navigate to Open Banking CRI and apply NEEDS-ADDITIONAL-VERIFICATION CI
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
