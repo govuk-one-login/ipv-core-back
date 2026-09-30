@@ -411,7 +411,9 @@ Feature: P1 V2 App Cross Browser Scenario
         | smartphone | iphone |
         | isAppOnly  | true  |
       When I start a new 'low-confidence' journey
-      Then I get a 'retry-prove-identity-app' page response
+      Then I get a 'retry-prove-identity-app' page response and pageContext
+        | Context       | Value |
+        | returningUser | true  |
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
       When I submit a 'next' event

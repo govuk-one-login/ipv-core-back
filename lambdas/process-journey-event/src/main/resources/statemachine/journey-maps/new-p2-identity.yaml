@@ -1342,6 +1342,8 @@ states:
     response:
       type: page
       pageId: retry-prove-identity-app
+      pageContext:
+        returningUser: true
     events:
       useApp:
         targetState: MITIGATION_PASSPORT_BIOMETRIC_CHIP_SEPARATE_SESSION
