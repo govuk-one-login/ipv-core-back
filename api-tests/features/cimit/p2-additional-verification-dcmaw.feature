@@ -179,3 +179,69 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
     When I use the OAuth response to get my identity
     Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
+
+  Scenario: Successful Open Banking mitigation - user mitigates CI with app using driving licence
+    When I submit a 'appTriage' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | false  |
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
+
+  Scenario Outline: Successful Open Banking mitigation - user mitigates CI with app using <doc>
+    When I submit a 'appTriage' event
+    Then I get an 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+      | Context    | Value |
+      | deviceType | mam   |
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+      | Context    | Value  |
+      | smartphone | iphone |
+      | isAppOnly  | false  |
+    When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a '<attained-vot>' identity
+    And I have a stored identity record with a '<stored-identity-score>' max vot
+
+    Examples:
+      | doc             | valid-document               | attained-vot | stored-identity-score |
+      | BRC             | kenneth-brc-valid            | P2           | P2                    |
+      | BRP             | kenneth-brp-valid            | P2           | P3                    |
+      | passport        | kenneth-passport-valid       | P2           | P3                    |

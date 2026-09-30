@@ -198,3 +198,26 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
     When I use the OAuth response to get my identity
     Then I am issued a 'P2' identity
     And I have a stored identity record with a 'P2' max vot
+
+  Scenario Outline: Successful Open Banking mitigation - user mitigates CI with f2f using <doc>
+    When I submit an 'f2f' event
+    Then I get a 'pyi-post-office' page response
+    When I submit a 'next' event
+    Then I get an 'f2f' CRI response
+    When I submit '<valid-document>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      | Attribute          | Values                                      |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+    Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+    When I start new 'medium-confidence' journeys until I get a 'page-ipv-reuse' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I am issued a 'P2' identity
+    And I have a stored identity record with a 'P2' max vot
+
+    Examples:
+      | doc             | valid-document               |
+      | passport        | kenneth-driving-permit-valid |
+      | driving licence | kenneth-passport-valid       |
