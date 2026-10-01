@@ -7,5 +7,5 @@
       "checkMethod": "auth"
     }
   ],
-  "ci": ["BREACHING-P2"]
+  "ci": ["BREACHING"]
 }

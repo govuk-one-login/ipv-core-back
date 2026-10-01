@@ -137,8 +137,8 @@ Feature: P2 no photo id journey
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: User fails Open Banking with breaching-p2 CI
-      When I submit 'kenneth-score-0-breaching-p2' details to the CRI stub
+    Scenario: User fails Open Banking with breaching CI
+      When I submit 'kenneth-score-0-breaching' details to the CRI stub
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value       |
         | reason  | openBanking |
