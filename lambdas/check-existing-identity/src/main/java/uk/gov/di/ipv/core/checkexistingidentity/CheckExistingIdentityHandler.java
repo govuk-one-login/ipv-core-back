@@ -610,7 +610,7 @@ public class CheckExistingIdentityHandler
             // It may be that the name entered by the user to the CIC and used for the original
             // fraud check doesn't match the name on the document presented at the Post Office.
             // In that case we want to try again with the name on the document.
-            LOGGER.info(LogHelper.buildLogMessage("F2F return - VCs are not correlated."));
+            LOGGER.info(LogHelper.buildLogMessage("F2F return - VC names are not correlated."));
 
             var fraudAndCicVcs = getSuccessfulFraudAndCicVcs(credentialBundle);
 
