@@ -905,8 +905,8 @@ Feature: P2 V2 App Cross Browser Scenario
         And my address 'addressLocality' is 'Bristol'
         And I have a stored identity record with a 'P3' max vot
 
-  Rule: Cross-browser during same-session additional verification mitigation
-    Background: Submit web passport details, then navigate to Open Banking CRI and apply NEEDS-ENHANCED-VERIFICATION-P2 CI
+  Rule: Cross-browser during same-session enhanced verification mitigation
+    Background: No Photo ID P2 journey, navigate to Open Banking CRI and apply NEEDS-ENHANCED-VERIFICATION-P2 CI
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -982,7 +982,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: Same session DCMAW additional verification mitigation - DL auth check acquires CI
+    Scenario: Same session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -1013,8 +1013,8 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-  Rule: Cross-browser during separate-session additional verification mitigation
-    Background: Start separate-session additional verification mitigation
+  Rule: Cross-browser during separate-session enhanced verification mitigation
+    Background: Start separate-session enhanced verification mitigation
       Given I activate the 'openBanking' feature set
       And the subject has the following CIs
         | Code                          |
@@ -1037,7 +1037,7 @@ Feature: P2 V2 App Cross Browser Scenario
         | smartphone | iphone |
         | isAppOnly  | false  |
 
-    Scenario: Separate session DCMAW additional verification mitigation - successful - DL
+    Scenario: Separate session DCMAW enhanced verification mitigation - successful - DL
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -1068,7 +1068,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
 
-    Scenario: Separate session DCMAW additional verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
+    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
       When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -1082,7 +1082,7 @@ Feature: P2 V2 App Cross Browser Scenario
       And I start a new 'medium-confidence' journey
       Then I get a 'pyi-post-office' page response
 
-    Scenario: Separate session DCMAW additional verification mitigation - breaching CI received from DCMAW
+    Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
       When the async DCMAW CRI produces a 'kenneth-driving-permit-with-breaching-ci' VC
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -1101,7 +1101,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: Separate session DCMAW additional verification mitigation - DL auth check acquires CI
+    Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check acquires CI
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -1124,7 +1124,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: Separate session DCMAW additional verification mitigation - DL auth check incomplete
+    Scenario: Separate session DCMAW enhanced verification mitigation - DL auth check incomplete
       When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response

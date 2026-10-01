@@ -1,5 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
-Feature:  Mitigating CIs with additional verification using the F2F CRI
+Feature:  Mitigating P2 CIs with enhanced verification using the F2F CRI
   Background: Start P2 no photo id journey
     Given I activate the 'openBanking' feature set
     When I start a new 'medium-confidence' journey
@@ -31,7 +31,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | Context | Value       |
       | reason  | openBanking |
 
-  Scenario: Same session F2F additional verification mitigation - OAuth error from F2F CRI
+  Scenario: Same session F2F enhanced verification mitigation - OAuth error from F2F CRI
     When I submit an 'f2f' event
     Then I get a 'pyi-post-office' page response
     When I submit a 'next' event
@@ -41,7 +41,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'pyi-technical' page response
 
-  Scenario: Same session F2F additional verification mitigation - async queue error - dropout
+  Scenario: Same session F2F enhanced verification mitigation - async queue error - dropout
     When I submit an 'f2f' event
     Then I get a 'pyi-post-office' page response
     When I submit a 'next' event
@@ -57,7 +57,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
     Then I am issued a 'P0' identity without a TICF VC
     And I don't have a stored identity in EVCS
 
-  Scenario Outline: Separate session F2F additional verification mitigation - successful
+  Scenario Outline: Separate session F2F enhanced verification mitigation - successful
     When I start a new 'medium-confidence' journey
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -89,7 +89,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | kenneth-passport-valid       |
       | kenneth-driving-permit-valid |
 
-  Scenario: Separate session F2F additional verification mitigation - async queue error
+  Scenario: Separate session F2F enhanced verification mitigation - async queue error
     When I start a new 'medium-confidence' journey
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -114,7 +114,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
     Then I am issued a 'P0' identity without a TICF VC
     And I don't have a stored identity in EVCS
 
-  Scenario: Separate session F2F additional verification mitigation - user abandons DCMAW and mitigates with F2F
+  Scenario: Separate session F2F enhanced verification mitigation - user abandons DCMAW and mitigates with F2F
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -152,7 +152,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
     Then I am issued a 'P2' identity
     And I have a stored identity record with a 'P2' max vot
 
-  Scenario: Separate session F2F additional verification mitigation - user fails DCMAW (e.g. failed likeness) - mitigate via F2F
+  Scenario: Separate session F2F enhanced verification mitigation - user fails DCMAW (e.g. failed likeness) - mitigate via F2F
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event

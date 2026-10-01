@@ -1,5 +1,5 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
-Feature:  Mitigating CIs with additional verification using the DCMAW CRI
+Feature:  Mitigating P2 CIs with enhanced verification using the DCMAW CRI
   Background: Start P2 no photo id journey
     Given I activate the 'openBanking' feature set
     When I start a new 'medium-confidence' journey
@@ -121,7 +121,7 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
     Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
 
-  Scenario: Same session DCMAW additional verification mitigation - breaching CI received from DCMAW
+  Scenario: Same session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
     When I submit an 'appTriage' event
     Then I get an 'identify-device' page response
     When I submit an 'appTriage' event
@@ -149,7 +149,7 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
     Then I am issued a 'P0' identity
     And I don't have a stored identity in EVCS
 
-  Scenario: Separate session DCMAW additional verification mitigation - breaching CI received from DCMAW
+  Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
     # Separate session
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
