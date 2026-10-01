@@ -26,7 +26,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
     Then I get an 'openBanking' CRI response
-    When I submit 'kenneth-needs-additional-verification' details to the CRI stub
+    When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
     Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
       | Context | Value       |
       | reason  | openBanking |

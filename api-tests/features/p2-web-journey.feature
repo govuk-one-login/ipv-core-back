@@ -914,7 +914,7 @@ Feature: P2 Web document journey
         Then I get an 'openBanking' CRI response
 
         # Second CI raised - unable to mitigate
-        When I submit 'kenneth-needs-additional-verification' details to the CRI stub
+        When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
         Then I get a 'pyi-no-match' page response and pageContext
           | Context | Value       |
           | reason  | openBanking |
