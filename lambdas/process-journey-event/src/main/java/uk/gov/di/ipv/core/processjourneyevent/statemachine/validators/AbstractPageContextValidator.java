@@ -25,6 +25,7 @@ public abstract class AbstractPageContextValidator implements IPageContextValida
     public static final String IS_FROM_STRATEGIC_APP = "isFromStrategicApp";
     public static final String IS_OPEN_BANKING = "isOpenBanking";
     public static final String PHOTO_ID = "photoId";
+    public static final String RETURNING_USER = "returningUser";
 
     @Override
     public void validate(String pageId, Map<String, Object> pageContext) {
