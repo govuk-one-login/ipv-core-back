@@ -94,23 +94,23 @@ states:
         targetJourney: F2F_FAILED
         targetState: FAILED
       not-found:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetJourney: F2F_FAILED
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetJourney: F2F_FAILED
+        targetState: FAILED
       invalid-request:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetJourney: F2F_FAILED
+        targetState: FAILED
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetJourney: F2F_FAILED
+        targetState: FAILED
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
