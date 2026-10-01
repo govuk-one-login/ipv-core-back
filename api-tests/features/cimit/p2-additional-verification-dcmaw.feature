@@ -48,7 +48,7 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get a 'check-mobile-app-result' page response
@@ -194,7 +194,7 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get a 'check-mobile-app-result' page response
@@ -226,7 +226,7 @@ Feature:  Mitigating CIs with additional verification using the DCMAW CRI
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get a 'check-mobile-app-result' page response

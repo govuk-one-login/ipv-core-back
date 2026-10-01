@@ -14,5 +14,5 @@
       "checkMethod": "data"
     }
   ],
-  "ci": ["NEEDS-ADDITIONAL-VERIFICATION"]
+  "ci": ["NEEDS-ENHANCED-VERIFICATION-P2"]
 }

@@ -71,7 +71,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
     Then I get an 'f2f' CRI response
-    When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
@@ -139,7 +139,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
     Then I get an 'f2f' CRI response
-    When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
@@ -186,7 +186,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":2} |
     Then I get an 'f2f' CRI response
-    When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
@@ -204,7 +204,7 @@ Feature:  Mitigating CIs with additional verification using the F2F CRI
     Then I get a 'pyi-post-office' page response
     When I submit a 'next' event
     Then I get an 'f2f' CRI response
-    When I submit '<valid-document>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+    When I submit '<valid-document>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response

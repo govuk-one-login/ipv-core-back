@@ -906,7 +906,7 @@ Feature: P2 V2 App Cross Browser Scenario
         And I have a stored identity record with a 'P3' max vot
 
   Rule: Cross-browser during same-session additional verification mitigation
-    Background: Submit web passport details, then navigate to Open Banking CRI and apply NEEDS-ADDITIONAL-VERIFICATION CI
+    Background: Submit web passport details, then navigate to Open Banking CRI and apply NEEDS-ENHANCED-VERIFICATION-P2 CI
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -951,7 +951,7 @@ Feature: P2 V2 App Cross Browser Scenario
         | isAppOnly  | false  |
 
     Scenario: Successful mitigation with DL auth source check
-      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
         # And the user returns from the app to core-front
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
@@ -983,7 +983,7 @@ Feature: P2 V2 App Cross Browser Scenario
       And I have a stored identity record with a 'P2' max vot
 
     Scenario: Same session DCMAW additional verification mitigation - DL auth check acquires CI
-      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
       # This simulates the user clicking continue on the problem-different-browser
@@ -995,7 +995,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I poll for async DCMAW credential receipt
       And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response
@@ -1018,7 +1018,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Given I activate the 'openBanking' feature set
       And the subject has the following CIs
         | Code                          |
-        | NEEDS-ADDITIONAL-VERIFICATION |
+        | NEEDS-ENHANCED-VERIFICATION-P2 |
 
       # Separate session mitigation
       When I start a new 'medium-confidence' journey
@@ -1038,7 +1038,7 @@ Feature: P2 V2 App Cross Browser Scenario
         | isAppOnly  | false  |
 
     Scenario: Separate session DCMAW additional verification mitigation - successful - DL
-      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
       And I pass on the DCMAW callback in a separate session
       Then I get a 'problem-different-browser' page response
       # This simulates the user clicking continue on the problem-different-browser
@@ -1050,7 +1050,7 @@ Feature: P2 V2 App Cross Browser Scenario
       When I poll for async DCMAW credential receipt
       And I start a new 'medium-confidence' journey
       Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ADDITIONAL-VERIFICATION' CI
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response
