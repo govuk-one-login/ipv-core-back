@@ -63,7 +63,7 @@ core:
       - ci: "NEEDS-ADDITIONAL-VERIFICATION"
         detectedScore: 21
         checkedScore: -21
-        returnCode: "needs-additional-verification"
+        returnCode: "needs-enhanced-verification"
     ciScoringThresholdByVot:
       P1: 30
       P2: 20
@@ -121,7 +121,7 @@ core:
       NEEDS-LIVENESS-LIKENESS-P2-WHEN-COMBINED-WITH-NON-BREACHING:
         - event: '/journey/liveness-likeness'
       NEEDS-ADDITIONAL-VERIFICATION:
-        - event: '/journey/additional-verification'
+        - event: '/journey/enhanced-verification'
     apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
     # example dev env URL apiBaseUrl: https://cimit-api-dev-danc.02.core.dev.stubs.account.gov.uk
   evcs:

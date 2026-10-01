@@ -23,8 +23,6 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
-          additional-verification:
-            targetState: MITIGATION_01_IDENTITY_START_PAGE
           liveness-likeness:
             targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
 
@@ -57,12 +55,6 @@ states:
                 targetState: FAILED
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-          additional-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
             checkIfDisabled:
               f2f:
@@ -197,12 +189,6 @@ states:
               f2f:
                 targetJourney: INELIGIBLE
                 targetState: INELIGIBLE
-          additional-verification:
-            targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
         checkIfDisabled:
           openBanking:
             targetState: MULTIPLE_DOC_CHECK_PAGE
@@ -222,9 +208,6 @@ states:
         journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
-            targetJourney: FAILED
-            targetState: FAILED
-          additional-verification:
             targetJourney: FAILED
             targetState: FAILED
         auditEvents:
@@ -252,12 +235,6 @@ states:
         journeyContextToUnset: appOnly
         checkMitigation:
           enhanced-verification:
-            targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-          additional-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
             checkIfDisabled:
               f2f:
@@ -294,12 +271,6 @@ states:
             targetState: INELIGIBLE
         checkMitigation:
           enhanced-verification:
-            targetState: PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
-          additional-verification:
             targetState: PYI_POST_OFFICE
             checkIfDisabled:
               f2f:
@@ -556,7 +527,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED_OPEN_BANKING
         checkMitigation:
-          additional-verification:
+          enhanced-verification:
             targetState: OPEN_BANKING_PHOTO_ID_WEB_ANOTHER_WAY
       error:
         targetState: OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
@@ -616,7 +587,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED_OPEN_BANKING
         checkMitigation:
-          additional-verification:
+          enhanced-verification:
             targetState: OPEN_BANKING_NO_PHOTO_ID_WEB_ANOTHER_WAY
       error:
         targetState: OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
