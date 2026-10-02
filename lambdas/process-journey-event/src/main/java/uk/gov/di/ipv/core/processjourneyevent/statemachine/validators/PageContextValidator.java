@@ -28,6 +28,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                     Map.entry("pyi-triage-desktop-download-app", Set.of(SMARTPHONE, IS_APP_ONLY)),
                     Map.entry("pyi-triage-mobile-download-app", Set.of(SMARTPHONE, IS_APP_ONLY)),
                     Map.entry("pyi-triage-select-smartphone", Set.of(DEVICE_TYPE)),
+                    Map.entry("retry-prove-identity-app", Set.of(RETURNING_USER)),
                     Map.entry(
                             "sorry-could-not-confirm-details", Set.of(IS_EXISTING_IDENTITY_VALID)),
                     Map.entry("sorry-technical-problem", Set.of(REASON)),

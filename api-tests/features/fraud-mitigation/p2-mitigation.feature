@@ -265,7 +265,9 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       # New journey
       When I start a new 'medium-confidence' journey
-      Then I get a 'retry-prove-identity-app' page response
+      Then I get a 'retry-prove-identity-app' page response and pageContext
+        | Context       | Value |
+        | returningUser | true  |
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
 
@@ -276,7 +278,9 @@ Feature: P2 Fraud mitigation
       Then I get a 'retry-prove-identity-app' page response
       # New journey
       When I start a new 'medium-confidence' journey
-      Then I get a 'retry-prove-identity-app' page response
+      Then I get a 'retry-prove-identity-app' page response and pageContext
+        | Context       | Value |
+        | returningUser | true  |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
