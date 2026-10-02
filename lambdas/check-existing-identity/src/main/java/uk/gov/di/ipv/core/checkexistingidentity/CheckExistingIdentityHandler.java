@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionF2fCorrelationFail;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -58,6 +59,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.sis.service.SisService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService.CorrelationResult;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -435,8 +437,8 @@ public class CheckExistingIdentityHandler
             }
 
             // No breaching CIs.
-            var areGpg45VcsCorrelated =
-                    userIdentityService.areVcsCorrelated(credentialBundle.credentials);
+            var gpg45CorrelationResult =
+                    userIdentityService.getVcCorrelationResult(credentialBundle.credentials);
 
             var profileMatchResponse =
                     checkForProfileMatch(
@@ -445,7 +447,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             credentialBundle,
-                            areGpg45VcsCorrelated,
+                            gpg45CorrelationResult.isCorrelated(),
                             contraIndicators,
                             previousAchievedMaxVot);
             if (profileMatchResponse.isPresent()) {
@@ -463,7 +465,7 @@ public class CheckExistingIdentityHandler
 
                     // Returned with F2F async VC. Should have matched a profile.
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated, auditEventUser, deviceInformation);
+                            gpg45CorrelationResult, auditEventUser, deviceInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -572,16 +574,24 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
-            boolean areGpg45VcsCorrelated,
+            CorrelationResult correlationResult,
             AuditEventUser auditEventUser,
             String deviceInformation) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
-        sendAuditEvent(
-                !areGpg45VcsCorrelated
-                        ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
-                        : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
-                auditEventUser,
-                deviceInformation);
+        if (!correlationResult.isCorrelated()) {
+            sendAuditEventWithExtension(
+                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
+                    auditEventUser,
+                    deviceInformation,
+                    new AuditExtensionF2fCorrelationFail(
+                            !correlationResult.isNameCorrelated(),
+                            !correlationResult.isDobCorrelated()));
+        } else {
+            sendAuditEvent(
+                    AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
+                    auditEventUser,
+                    deviceInformation);
+        }
 
         return JOURNEY_F2F_FAIL;
     }
