@@ -7,6 +7,5 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 @ExcludeFromGeneratedCoverageReport
 public record AuditExtensionPreviousAchievedVot(
         @JsonProperty(value = "previous_achieved_vot", required = true) Vot previousAchievedVot,
-        @JsonProperty(value = "previous_achieved_max_vot", required = true)
-                Vot previousAchievedMaxVot)
+        @JsonProperty(value = "previous_max_vot", required = true) Vot previousMaxVot)
         implements AuditExtensions {}

@@ -7,7 +7,8 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "vtr": ["P2"]
+      "vtr": ["P2"],
+      "requested_vots": ["P2"]
     },
     "restricted": {
       "device_information": {}
@@ -22,7 +23,7 @@
     },
     "extensions": {
       "previous_achieved_vot": "P2",
-      "previous_achieved_max_vot": "P2"
+      "previous_max_vot": "P2"
     },
     "restricted": {
       "device_information": {}
@@ -161,7 +162,8 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "vtr": ["P2"]
+      "vtr": ["P2"],
+      "requested_vots": ["P2"]
     },
     "restricted": {
       "device_information": {}
@@ -207,7 +209,7 @@
     },
     "extensions": {
       "previous_achieved_vot": "P2",
-      "previous_achieved_max_vot": "P2"
+      "previous_max_vot": "P2"
     },
     "restricted": {
       "device_information": {}
@@ -828,6 +830,7 @@
     },
     "extensions": {
       "levelOfConfidence": "P2",
+      "vot": "P2",
       "ciFail": false,
       "hasMitigations": false,
       "returnCodes": []

@@ -337,8 +337,7 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
-            var previousAchievedMaxVot =
-                    getStrongestAchievableVotFromBundle(credentialBundle.credentials);
+            var previousMaxVot = getStrongestAchievableVotFromBundle(credentialBundle.credentials);
 
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
@@ -447,7 +446,7 @@ public class CheckExistingIdentityHandler
                             credentialBundle,
                             areGpg45VcsCorrelated,
                             contraIndicators,
-                            previousAchievedMaxVot);
+                            previousMaxVot);
             if (profileMatchResponse.isPresent()) {
                 return profileMatchResponse.get();
             }
@@ -542,7 +541,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators,
-            Vot previousAchievedMaxVot)
+            Vot previousMaxVot)
             throws VerifiableCredentialException {
         // Check for attained vot from requested vots
         var votMatchingResult =
@@ -564,7 +563,7 @@ public class CheckExistingIdentityHandler
         return Optional.of(
                 buildReuseResponse(
                         requestedMatch.vot(),
-                        previousAchievedMaxVot,
+                        previousMaxVot,
                         ipvSessionItem,
                         credentialBundle,
                         auditEventUser,
@@ -661,7 +660,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
-            Vot previousAchievedMaxVot,
+            Vot previousMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
             AuditEventUser auditEventUser,
@@ -716,8 +715,7 @@ public class CheckExistingIdentityHandler
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventUser,
                 deviceInformation,
-                new AuditExtensionPreviousAchievedVot(
-                        previousAchievedMaxVot, previousAchievedMaxVot));
+                new AuditExtensionPreviousAchievedVot(previousMaxVot, previousMaxVot));
         EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
