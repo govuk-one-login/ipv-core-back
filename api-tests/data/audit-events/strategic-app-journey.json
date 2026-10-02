@@ -3,7 +3,8 @@
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "vtr": ["P2"]
+      "vtr": ["P2"],
+      "requested_vots": ["P2"]
     },
     "restricted": {
       "device_information": {}
