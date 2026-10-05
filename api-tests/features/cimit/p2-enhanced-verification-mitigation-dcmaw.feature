@@ -19,7 +19,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
     Then I get a 'select-photo-id' page response
-    When I submit an 'drivingLicence' event
+    When I submit a 'drivingLicence' event
     Then I get a 'prove-identity-online' page response and pageContext
       | Context | Value |
       | photoId | true  |
@@ -167,7 +167,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
     Then I get a 'select-photo-id' page response
-    When I submit an 'drivingLicence' event
+    When I submit a 'drivingLicence' event
     Then I get a 'prove-identity-online' page response and pageContext
       | Context | Value |
       | photoId | true  |
@@ -455,9 +455,9 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'prove-identity-online-banking' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
@@ -553,9 +553,9 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'prove-identity-online-banking' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
@@ -576,7 +576,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
         | Context | Value       |
         | reason  | openBanking |
 
-      When I submit a 'appTriage' event
+      When I submit an 'appTriage' event
           Then I get an 'identify-device' page response
           When I submit an 'appTriage' event
           Then I get a 'pyi-triage-select-device' page response

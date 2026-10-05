@@ -202,7 +202,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'select-photo-id' page response
-      When I submit an 'ukPassport' event
+      When I submit a 'ukPassport' event
       Then I get a 'prove-identity-online' page response and pageContext
         | Context | Value |
         | photoId | true  |
@@ -627,7 +627,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'select-photo-id' page response
-      When I submit an 'drivingLicence' event
+      When I submit a 'drivingLicence' event
       Then I get a 'prove-identity-online' page response and pageContext
         | Context | Value |
         | photoId | true  |
@@ -862,7 +862,7 @@ Feature: P2 V2 App Cross Browser Scenario
         When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
           | Attribute          | Values                   |
           | evidence_requested | {"identityFraudScore":2} |
-        Then I get an 'need-more-information-confirm-change-details' page response and pageContext
+        Then I get a 'need-more-information-confirm-change-details' page response and pageContext
           | Context     | Value            |
           | journeyType | repeatFraudCheck |
         When I submit an 'passport' event
@@ -914,9 +914,9 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'prove-identity-online-banking' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
@@ -936,7 +936,7 @@ Feature: P2 V2 App Cross Browser Scenario
       Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
         | Context | Value       |
         | reason  | openBanking |
-      When I submit a 'appTriage' event
+      When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response

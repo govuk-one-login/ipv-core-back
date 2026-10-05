@@ -41,7 +41,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'photo-id-banking-another-way' page response
       When I submit an 'answerSecurityQuestions' event
       Then I get a 'personal-independence-payment' page response
-      When I submit a 'end' event
+      When I submit an 'end' event
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'experianKbv' CRI response
@@ -105,7 +105,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-ipv-identity-document-start' page response
 
     Scenario: Same session F2F enhanced verification mitigation - user abandons DCMAW then mitigates with F2F
-      When I submit a 'appTriage' event
+      When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -225,7 +225,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-ipv-identity-document-start' page response
 
     Scenario: Same session F2F enhanced verification mitigation - user abandons DCMAW then mitigates with F2F
-      When I submit a 'appTriage' event
+      When I submit an 'appTriage' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
       Then I get a 'pyi-triage-select-device' page response
@@ -261,9 +261,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'prove-identity-online-banking' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
@@ -320,8 +320,8 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
 
       Examples:
         | doc             | valid-document               |
-        | passport        | kenneth-driving-permit-valid |
-        | driving licence | kenneth-passport-valid       |
+        | passport        | kenneth-passport-valid      |
+        | driving licence | kenneth-driving-permit-valid |
 
   Rule: Separate session journeys
     Background:
@@ -742,9 +742,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'prove-identity-online' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'prove-identity-online-banking' page response
-      When I submit an 'next' event
+      When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
         | Attribute | Values         |
