@@ -24,4 +24,9 @@ public class AuditExtensionsUserIdentity implements AuditExtensions {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     List<AuditEventReturnCode> returnCodes;
+
+    @JsonProperty("vot")
+    public Vot getVot() {
+        return levelOfConfidence;
+    }
 }

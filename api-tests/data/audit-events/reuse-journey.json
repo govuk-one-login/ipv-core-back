@@ -3,7 +3,8 @@
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "vtr": ["P2"]
+      "vtr": ["P2"],
+      "requested_vots": ["P2"]
     },
     "restricted": {
       "device_information": {}
@@ -13,7 +14,8 @@
     "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "previous_achieved_vot": "P2"
+      "previous_achieved_vot": "P2",
+      "previous_max_vot": "P2"
     },
     "restricted": {
       "device_information": {}
@@ -102,6 +104,7 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "levelOfConfidence": "P2",
+      "vot": "P2",
       "ciFail": false,
       "hasMitigations": false,
       "returnCodes": []
