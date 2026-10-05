@@ -341,7 +341,7 @@ public class ProcessCriCallbackHandler
                         accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
         var sessionVcs =
                 sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true);
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
 
         var vcs =
                 validateAndStoreResponse(

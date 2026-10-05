@@ -51,10 +51,12 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
@@ -133,7 +135,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
         when(sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
                 .thenReturn(sessionVcs);
         when(mockCriCheckingService.checkVcResponse(
                         any(),
@@ -166,6 +168,91 @@ class ProcessCriCallbackHandlerTest {
         verify(mockCriCheckingService).validateSessionIds(callbackRequest);
         verify(mockCriCheckingService)
                 .validateCallbackRequest(callbackRequest, criOAuthSessionItem);
+        verify(mockCriStoringService)
+                .storeVcs(
+                        callbackRequest.getCredentialIssuer(),
+                        callbackRequest.getIpAddress(),
+                        callbackRequest.getDeviceInformation(),
+                        vcs,
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        sessionVcs);
+    }
+
+    @Test
+    void shouldRetrieveAllSessionVcs() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem = buildValidCriOAuthSessionItem();
+        var bearerToken = new BearerAccessToken("value");
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId(clientOAuthSessionItem.getUserId())
+                        .verifiableCredentials(List.of(vcWebPassportSuccessful().getVcString()))
+                        .credentialStatus(VerifiableCredentialStatus.CREATED)
+                        .build();
+        var vcs = List.of(vcWebPassportSuccessful());
+        var sessionVcs = List.of(vcAddressM1a());
+
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
+                .thenReturn(bearerToken);
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
+                .thenReturn(vcResponse);
+        when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
+                .thenReturn(vcs);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                .thenReturn(sessionVcs);
+        when(mockCriCheckingService.checkVcResponse(
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem),
+                        eq(sessionVcs)))
+                .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
+        when(mockConfigService.getOauthCriConfig(any()))
+                .thenReturn(
+                        OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
+                                .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
+                                .build());
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+        verify(sessionCredentialsService)
+                .getCredentials(TEST_IPV_SESSION_ID, clientOAuthSessionItem.getUserId());
+        verify(sessionCredentialsService, never())
+                .getCredentials(anyString(), anyString(), anyBoolean());
+        verify(mockCriCheckingService)
+                .checkVcResponse(
+                        vcs,
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        sessionVcs);
         verify(mockCriStoringService)
                 .storeVcs(
                         callbackRequest.getCredentialIssuer(),
