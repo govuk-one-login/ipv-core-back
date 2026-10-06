@@ -99,8 +99,6 @@ Feature: P2 no photo id journey
         | Context | Value       |
         | reason  | openBanking |
       When I submit a 'f2f' event
-      Then I get a 'pyi-post-office' page response
-      When I submit a 'next' event
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                      |
@@ -121,6 +119,8 @@ Feature: P2 no photo id journey
         | Context | Value       |
         | reason  | openBanking |
       When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit an 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity

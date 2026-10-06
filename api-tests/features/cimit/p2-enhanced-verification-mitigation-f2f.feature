@@ -286,8 +286,6 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
 
     Scenario: Same session F2F enhanced verification mitigation - async queue error - dropout
       When I submit an 'f2f' event
-      Then I get a 'pyi-post-office' page response
-      When I submit a 'next' event
       Then I get an 'f2f' CRI response
       When I get an error from the async CRI stub
       Then I get a 'page-face-to-face-handoff' page response
@@ -302,8 +300,6 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
 
     Scenario Outline: Successful Open Banking mitigation - user mitigates CI with f2f using <doc>
       When I submit an 'f2f' event
-      Then I get a 'pyi-post-office' page response
-      When I submit a 'next' event
       Then I get an 'f2f' CRI response
       When I submit '<valid-document>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
         | Attribute          | Values                                      |
