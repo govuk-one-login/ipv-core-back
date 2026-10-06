@@ -272,8 +272,8 @@ public class CriCheckingService {
 
             // Get mitigations from old CIMIT VC to compare against the mitigations on the new CIs
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-            var oldMitigations =
-                    cimitUtilityService.getMitigationEventIfBreachingOrActive(
+            var oldMitigation =
+                    cimitUtilityService.getRelevantMitigationEvent(
                             ipvSessionItem.getSecurityCheckCredential(),
                             clientOAuthSessionItem.getUserId(),
                             targetVot);
@@ -285,13 +285,12 @@ public class CriCheckingService {
                             ipAddress,
                             ipvSessionItem);
             var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-            var newMitigations =
-                    cimitUtilityService.getMitigationEventIfBreachingOrActive(newCis, targetVot);
+            var newMitigation = cimitUtilityService.getRelevantMitigationEvent(newCis, targetVot);
 
             // If breaching and no available mitigations or a new mitigation is required, we
             // return fail-with-ci
             if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                    && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
+                    && (newMitigation.isEmpty() || !newMitigation.equals(oldMitigation))) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }

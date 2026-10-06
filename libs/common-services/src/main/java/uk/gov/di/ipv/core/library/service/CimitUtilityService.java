@@ -112,17 +112,21 @@ public class CimitUtilityService {
                                 .toString());
     }
 
-    public Optional<String> getMitigationEventIfBreachingOrActive(
+    public Optional<String> getRelevantMitigationEvent(
             String securityCheckCredential, String userID, Vot confidenceRequested)
             throws CiExtractionException, CredentialParseException {
         var cis = getContraIndicatorsFromVc(securityCheckCredential, userID);
-        return getMitigationEventIfBreachingOrActive(cis, confidenceRequested);
+        return getRelevantMitigationEvent(cis, confidenceRequested);
     }
 
-    public Optional<String> getMitigationEventIfBreachingOrActive(
+    // If we are currently breaching the CI threshold then return the mitigation event we should use
+    // to try to mitigate the CI.
+    // If we aren't currently breaching but we have mitigated a CI in the past then return the
+    // mitigation event for that CI so that we route consistently down the mitigation journey.
+    public Optional<String> getRelevantMitigationEvent(
             List<ContraIndicator> cis, Vot confidenceRequested) {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
-            return getCiMitigationEvent(cis, confidenceRequested);
+            return getCiMitigationEventIfNoOtherMitigations(cis, confidenceRequested);
         } else {
             // If the user has a mitigated CI, return the mitigation to prevent
             // them from going down routes to access CRIs they gained the CI from
@@ -139,26 +143,33 @@ public class CimitUtilityService {
         return Optional.empty();
     }
 
-    public Optional<String> getCiMitigationEvent(
+    public Optional<String> getCiMitigationEventIfNoOtherMitigations(
             List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
-        // Try to mitigate an unmitigated ci to resolve the threshold breach
+        // This check is a simplification for the implementation of core.
+        // We have historically not allowed more than one manual mitigation per identity as the
+        // routing would get unmanageable.
+        // Caveat: If the new CI is the same type as the old one then we won't notice the mitigation
+        // as CIMIT only keeps the most recent version of a CI, so the mitigated one will be
+        // overwritten and we won't see it here.
+        if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
+            return Optional.empty();
+        }
+
+        // Try to find an unmitigated ci that could be mitigated to resolve the threshold breach
+        // Note that this seems random based on the ordering of the CIs but in practice there will
+        // only be one mitigation to find.
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators) {
             if (isCiMitigatable(ci)
                     && !isBreachingCiThresholdIfMitigated(
                             ci, contraIndicators, confidenceRequested)) {
-                // Prevent new mitigation journey if there is already a mitigated CI that fixes the
-                // breach
-                if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
-                    return Optional.empty();
-                }
                 return getMitigationEvent(cimitConfig.get(ci.getCode()), ci.getDocument());
             }
         }
         return Optional.empty();
     }
 
-    public Optional<ContraIndicator> hasMitigatedContraIndicator(
+    private Optional<ContraIndicator> hasMitigatedContraIndicator(
             List<ContraIndicator> contraIndicators) {
         // If user has already mitigated CI this method will return empty string
         // This is because Core allows only one mitigation to happen per user
@@ -166,6 +177,8 @@ public class CimitUtilityService {
     }
 
     private Optional<String> getMitigationEvent(List<CiRoutingConfig> routes, String document) {
+        // A CI may have multiple different mitigations depending on the document type, find the one
+        // that matches the supplied document
         String documentType = document != null ? document.split("/")[0] : null;
         if (routes == null) return Optional.empty();
         return routes.stream()

@@ -271,10 +271,10 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             // The first time we call this, we get the mitigations for the old CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                     .thenReturn(Optional.empty());
             // The second time we call this, we get the mitigations for the new CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any()))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
             when(cimitUtilityService.getContraIndicatorsFromVc(any()))
@@ -1081,10 +1081,10 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
             // The first time we call this, we get the mitigations for the old CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                     .thenReturn(Optional.empty());
             // The second time we call this, we get the mitigations for the new CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any()))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
             when(evcsService.getUserVCs(
@@ -1131,10 +1131,10 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
             // The first time we call this, we get the mitigations for the old CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                     .thenReturn(Optional.empty());
             // The second time we call this, we get the mitigations for the new CIs
-            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+            when(cimitUtilityService.getRelevantMitigationEvent(any(), any()))
                     .thenReturn(Optional.of("a-new-mitigation"));
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
             when(evcsService.getUserVCs(

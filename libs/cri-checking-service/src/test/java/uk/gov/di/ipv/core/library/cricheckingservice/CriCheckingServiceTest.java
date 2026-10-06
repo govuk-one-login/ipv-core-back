@@ -566,10 +566,10 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
 
         // The first time we call this, we get the mitigations for the old CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.empty());
         // The second time we call this, we get the mitigations for the new CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any()))
                 .thenReturn(Optional.empty());
 
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -598,10 +598,10 @@ class CriCheckingServiceTest {
                 .thenReturn(List.of(new ContraIndicator()));
 
         // The first time we call this, we get the mitigations for the old CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.empty());
         // The second time we call this, we get the mitigations for the new CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any()))
                 .thenReturn(Optional.of("a-new-mitigation"));
 
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -630,10 +630,10 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
 
         // The first time we call this, we get the mitigations for the old CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.of("the-same-mitigation"));
         // The second time we call this, we get the mitigations for the new CIs
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any()))
                 .thenReturn(Optional.of("the-same-mitigation"));
 
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
@@ -672,8 +672,7 @@ class CriCheckingServiceTest {
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockCimitService, never()).fetchContraIndicatorsVc(any(), any(), any(), any());
-        verify(mockCimitUtilityService, never())
-                .getMitigationEventIfBreachingOrActive(any(), any());
+        verify(mockCimitUtilityService, never()).getRelevantMitigationEvent(any(), any());
         verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
     }
 
@@ -686,9 +685,9 @@ class CriCheckingServiceTest {
 
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any()))
                 .thenReturn(Optional.empty());
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
@@ -717,9 +716,9 @@ class CriCheckingServiceTest {
 
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any()))
                 .thenReturn(Optional.empty());
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);

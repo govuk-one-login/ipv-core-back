@@ -411,16 +411,16 @@ public class ProcessCandidateIdentityHandler
 
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Performing profile evaluation"));
-            var journey =
-                    getJourneyResponseForProfileMatching(
+            var failedMatchResponse =
+                    checkForProfileMatch(
                             ipvSessionItem,
                             sessionVcs,
                             areVcsCorrelated,
                             votMatchingResult,
                             auditEventParameters);
 
-            if (journey != null) {
-                return journey.toObjectMap();
+            if (failedMatchResponse != null) {
+                return failedMatchResponse.toObjectMap();
             }
         }
 
@@ -525,7 +525,7 @@ public class ProcessCandidateIdentityHandler
         return STORE_IDENTITY_TYPES.contains(identityType);
     }
 
-    private JourneyResponse getJourneyResponseForProfileMatching(
+    private JourneyResponse checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated,
@@ -582,11 +582,11 @@ public class ProcessCandidateIdentityHandler
             // This can happen when an error occurs prior to the first call to get the
             // security check credential e.g. in the check-existing-identity lambda.
             // If it is, we need to make a call to CIMIT prior to getting the TICF VC
-            // in order to get the mitigation information unaffected by this new VC.
-            String previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+            // in order to get the mitigation information unaffected by the new TICF VC.
+            String preTicfSecurityCheckVc = ipvSessionItem.getSecurityCheckCredential();
             if (!clientOAuthSessionItem.isReverification()
-                    && StringUtils.isBlank(previousSecurityCheckCredential)) {
-                previousSecurityCheckCredential =
+                    && StringUtils.isBlank(preTicfSecurityCheckVc)) {
+                preTicfSecurityCheckVc =
                         cimitService
                                 .fetchContraIndicatorsVc(
                                         clientOAuthSessionItem.getUserId(),
@@ -621,9 +621,9 @@ public class ProcessCandidateIdentityHandler
                 // Get mitigations from old CIMIT VC to compare against the mitigations on the new
                 // CIs
                 var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-                var oldMitigations =
-                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                previousSecurityCheckCredential,
+                var oldMitigation =
+                        cimitUtilityService.getRelevantMitigationEvent(
+                                preTicfSecurityCheckVc,
                                 clientOAuthSessionItem.getUserId(),
                                 targetVot);
 
@@ -634,14 +634,13 @@ public class ProcessCandidateIdentityHandler
                                 ipAddress,
                                 ipvSessionItem);
                 var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-                var newMitigations =
-                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                newCis, targetVot);
+                var newMitigation =
+                        cimitUtilityService.getRelevantMitigationEvent(newCis, targetVot);
 
                 // If breaching and no available mitigations or a new mitigation is required, we
                 // return fail-with-ci
                 if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                        && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
+                        && (newMitigation.isEmpty() || !newMitigation.equals(oldMitigation))) {
                     LOGGER.info(
                             LogHelper.buildLogMessage(
                                     "CI score is breaching threshold - setting VOT to P0"));

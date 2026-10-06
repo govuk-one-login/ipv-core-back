@@ -1248,7 +1248,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1270,7 +1270,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1299,7 +1299,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+        when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                 .thenThrow(exception);
 
         var processJourneyEventHandler =

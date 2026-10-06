@@ -282,7 +282,7 @@ class CimitUtilityServiceTest {
     @ParameterizedTest
     @MethodSource("ciScoresAndUnsurpassedThresholds")
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiScoreNotBreachingAndNoExistingMitigations(
+            getRelevantMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiScoreNotBreachingAndNoExistingMitigations(
                     int ciScore1, int ciScore2, int ciScoreThreshold) {
 
         stubThreshold(ciScoreThreshold);
@@ -295,7 +295,7 @@ class CimitUtilityServiceTest {
         var cis = List.of(createCi("ci_1"), createCi("ci_2"));
 
         // Act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // Assert
         assertTrue(
@@ -306,7 +306,8 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigated() {
+    void
+            getMitigationEventIfBreachingOrActive_ShouldReturnRelevantMitigation_WhenCiCanBeMitigated() {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation"; // expected last path segment
@@ -331,7 +332,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(journey), result);
@@ -339,7 +340,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenCiCanBeMitigatedWithNoDocInCi() {
+            getMitigationEventIfBreachingOrActive_ShouldReturnRelevantMitigation_WhenCiCanBeMitigatedWithNoDocInCi() {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -360,7 +361,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(journey), result);
@@ -368,7 +369,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured() {
+            getRelevantMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured() {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -393,8 +394,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // Act
-        Optional<String> result =
-                cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        Optional<String> result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // Assert
         assertEquals(Optional.empty(), result);
@@ -402,7 +402,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable() {
+            getRelevantMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -415,7 +415,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -423,7 +423,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnMitigation_WhenNotBreachingAndCiIsAlreadyMitigated() {
+            getMitigationEventIfBreachingOrActive_ShouldReturnRelevantMitigation_WhenNotBreachingAndCiIsAlreadyMitigated() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -444,7 +444,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of("some-event"), result);
@@ -452,7 +452,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenMitigationDoesNotResolveBreach() {
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenRelevantMitigationDoesNotResolveBreach() {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
@@ -472,7 +472,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -501,7 +501,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // Act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // Assert
         assertEquals(Optional.empty(), result);
@@ -509,7 +509,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator() {
+            getRelevantMitigationEvent_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator() {
         // arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -535,7 +535,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -609,7 +609,7 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationEventIfBreachingOrActive_ReturnsEmpty_IfNoCis() {
+    void getRelevantMitigationEventIfBreachingOrActive_ReturnsEmpty_IfNoCis() {
         // Arrange
         var code = "ci_code";
         Map<String, ContraIndicatorConfig> ciConfigMap =
@@ -619,7 +619,7 @@ class CimitUtilityServiceTest {
         stubThreshold(5);
 
         // act
-        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(List.of(), TEST_VOT);
+        var result = cimitUtilityService.getRelevantMitigationEvent(List.of(), TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
