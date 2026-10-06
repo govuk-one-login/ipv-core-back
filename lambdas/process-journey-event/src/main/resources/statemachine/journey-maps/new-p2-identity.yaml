@@ -529,6 +529,10 @@ states:
         checkMitigation:
           enhanced-verification:
             targetState: OPEN_BANKING_PHOTO_ID_WEB_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
       error:
         targetState: OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
 
@@ -589,6 +593,10 @@ states:
         checkMitigation:
           enhanced-verification:
             targetState: OPEN_BANKING_NO_PHOTO_ID_WEB_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
       error:
         targetState: OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR
 
