@@ -561,8 +561,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
+        targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR
@@ -634,8 +633,7 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START_MEDIUM_CONFIDENCE
+        targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: TECHNICAL_ERROR

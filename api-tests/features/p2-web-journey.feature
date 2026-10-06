@@ -757,6 +757,8 @@ Feature: P2 Web document journey
         | Context | Value       |
         | reason  | openBanking |
       When I submit a 'f2f' event
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
         | Attribute          | Values                                          |
