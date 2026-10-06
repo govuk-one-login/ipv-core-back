@@ -70,6 +70,9 @@ public class SessionCredentialsService {
         }
     }
 
+    // fromSessionCredentialItem throws a checked exception, which does not compose cleanly with
+    // streams
+    @SuppressWarnings("java:S9391")
     private List<VerifiableCredential> mapSessionCredentialsToVcs(
             List<SessionCredentialItem> sessionCredentialItems, String userId)
             throws VerifiableCredentialException {
