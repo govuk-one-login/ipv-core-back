@@ -556,9 +556,17 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       f2f:
-        targetState: PYI_POST_OFFICE
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   OPEN_BANKING_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR:
     response:
@@ -621,11 +629,20 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        checkIfDisabled:
+          dcmawAsync:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       f2f:
-        targetState: PYI_POST_OFFICE
+        targetJourney: F2F_HAND_OFF
+        targetState: START_MEDIUM_CONFIDENCE
+        checkIfDisabled:
+          f2f:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       end:
-        targetState: PROCESS_INCOMPLETE_IDENTITY
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
 
   OPEN_BANKING_NO_PHOTO_ID_SORRY_CRI_TECHNICAL_ERROR:
     response:
