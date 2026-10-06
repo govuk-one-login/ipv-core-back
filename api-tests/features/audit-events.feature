@@ -994,3 +994,62 @@ Feature: Audit Events
       And my address 'addressLocality' is 'Bristol'
       And I have a stored identity record with a 'P3' max vot
       And audit events for 'reuse-journey-fraud-mitigation' are recorded [local only]
+
+  Rule: Open Banking
+    Scenario: New P2 CI enhanced-verification mitigation via app using passport
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+      And audit events for 'open-banking-mitigation-successful' are recorded [local only]
