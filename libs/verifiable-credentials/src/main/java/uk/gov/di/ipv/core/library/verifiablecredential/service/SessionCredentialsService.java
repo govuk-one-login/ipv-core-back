@@ -52,33 +52,64 @@ public class SessionCredentialsService {
     public List<VerifiableCredential> getCredentials(
             String ipvSessionId, String userId, Boolean receivedThisSession)
             throws VerifiableCredentialException {
+        var sessionCredentialItems = getCredentialItems(ipvSessionId, receivedThisSession);
+        return mapSessionCredentialsToVcs(sessionCredentialItems, userId);
+    }
+
+    private List<SessionCredentialItem> getCredentialItems(
+            String ipvSessionId, Boolean receivedThisSession) throws VerifiableCredentialException {
         try {
-            var verifiableCredentialList = new ArrayList<VerifiableCredential>();
-            var credentials =
-                    receivedThisSession != null
-                            ? dataStore.getItemsWithBooleanAttribute(
-                                    ipvSessionId, RECEIVED_THIS_SESSION, receivedThisSession)
-                            : dataStore.getItems(ipvSessionId);
-            for (var credential : credentials) {
-                verifiableCredentialList.add(
-                        VerifiableCredential.fromSessionCredentialItem(credential, userId));
-            }
-
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                                    "Successfully retrieved and parsed session credential items")
-                            .with("numberOfCredentialsRetrieved", credentials.size()));
-
-            return verifiableCredentialList;
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error parsing session credential item", e));
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+            return receivedThisSession != null
+                    ? dataStore.getItemsWithBooleanAttribute(
+                            ipvSessionId, RECEIVED_THIS_SESSION, receivedThisSession)
+                    : dataStore.getItems(ipvSessionId);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error getting session credentials", e));
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_CREDENTIAL);
         }
+    }
+
+    private List<VerifiableCredential> mapSessionCredentialsToVcs(
+            List<SessionCredentialItem> sessionCredentialItems, String userId)
+            throws VerifiableCredentialException {
+        try {
+            var verifiableCredentialList = new ArrayList<VerifiableCredential>();
+            for (var credential : sessionCredentialItems) {
+                verifiableCredentialList.add(
+                        VerifiableCredential.fromSessionCredentialItem(credential, userId));
+            }
+            return verifiableCredentialList;
+        } catch (CredentialParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error parsing session credential item", e));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        }
+    }
+
+    public record SessionCredentials(
+            List<VerifiableCredential> receivedThisSession,
+            List<VerifiableCredential> receivedOtherSession) {}
+
+    public SessionCredentials getAllCredentials(String ipvSessionId, String userId)
+            throws VerifiableCredentialException {
+        var credentials = getCredentialItems(ipvSessionId, null);
+        var receivedThisSession =
+                mapSessionCredentialsToVcs(
+                        credentials.stream()
+                                .filter(SessionCredentialItem::isReceivedThisSession)
+                                .toList(),
+                        userId);
+
+        var receivedOtherSession =
+                mapSessionCredentialsToVcs(
+                        credentials.stream()
+                                .filter(
+                                        sessionCredentialItem ->
+                                                !sessionCredentialItem.isReceivedThisSession())
+                                .toList(),
+                        userId);
+        return new SessionCredentials(receivedThisSession, receivedOtherSession);
     }
 
     public void persistCredentials(
