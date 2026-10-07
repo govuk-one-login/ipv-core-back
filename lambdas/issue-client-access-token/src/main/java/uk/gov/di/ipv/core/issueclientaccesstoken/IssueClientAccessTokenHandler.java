@@ -10,9 +10,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -24,7 +22,6 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -41,9 +38,7 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ACCESS_TOKEN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SHA256_ACCESS_TOKEN;
 
 public class IssueClientAccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -162,21 +157,6 @@ public class IssueClientAccessTokenHandler
 
             AccessTokenResponse accessTokenResponse =
                     accessTokenService.generateAccessToken().toSuccessResponse();
-
-            if ("integration"
-                    .equals(
-                            configService.getEnvironmentVariable(
-                                    EnvironmentVariable.ENVIRONMENT))) {
-                BearerAccessToken bearerAccessToken =
-                        accessTokenResponse.getTokens().getBearerAccessToken();
-                var message =
-                        new StringMapMessage()
-                                .with(LOG_ACCESS_TOKEN.getFieldName(), bearerAccessToken.getValue())
-                                .with(
-                                        LOG_SHA256_ACCESS_TOKEN.getFieldName(),
-                                        DigestUtils.sha256Hex(bearerAccessToken.getValue()));
-                LOGGER.info(message);
-            }
 
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
