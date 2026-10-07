@@ -24,7 +24,6 @@ public class LogHelper {
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = null;
 
     public enum LogField {
-        LOG_ACCESS_TOKEN("accessToken"),
         LOG_BATCH_ID("batchId"),
         LOG_BIRTH_DATE("birthDate"),
         LOG_CI_SCORE("ciScore"),
@@ -79,7 +78,6 @@ public class LogHelper {
         LOG_SCOPE("scope"),
         LOG_SCORE_TYPE("scoreType"),
         LOG_SECRET_ID("secretId"),
-        LOG_SHA256_ACCESS_TOKEN("sha256AccessToken"),
         LOG_SPAN_ID("dt.span_id"),
         LOG_STATUS_CODE("statusCode"),
         LOG_TRACE_ID("dt.trace_id"),
