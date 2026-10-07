@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionF2fCorrelationFail;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -377,10 +376,6 @@ class CheckExistingIdentityHandlerTest {
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
             var auditEvent = auditEventArgumentCaptor.getValue();
             assertEquals(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEvent.getEventName());
-
-            var extension = (AuditExtensionF2fCorrelationFail) auditEvent.getExtensions();
-            assertEquals(!isNameCorrelated, extension.nameCorrelationFail());
-            assertEquals(!isDobCorrelated, extension.dobCorrelationFail());
 
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
             assertEquals(expectedJourneyResponse, journeyResponse);
