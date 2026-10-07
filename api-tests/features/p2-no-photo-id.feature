@@ -121,6 +121,8 @@ Feature: P2 no photo id journey
         | Context | Value       |
         | reason  | openBanking |
       When I submit an 'end' event
+      Then I get a 'pyi-another-way' page response
+      When I submit an 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
@@ -128,6 +130,17 @@ Feature: P2 no photo id journey
 
     Scenario: User fails Open Banking with breaching CI
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+    Scenario: User fails Open Banking with breaching CI
+      When I submit 'kenneth-score-0-breaching' details to the CRI stub
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value       |
         | reason  | openBanking |

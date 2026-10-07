@@ -19,7 +19,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
     Then I get a 'select-photo-id' page response
-    When I submit an 'drivingLicence' event
+    When I submit a 'drivingLicence' event
     Then I get a 'prove-identity-online' page response and pageContext
       | Context | Value |
       | photoId | true  |
@@ -167,7 +167,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
     Then I get a 'select-photo-id' page response
-    When I submit an 'drivingLicence' event
+    When I submit a 'drivingLicence' event
     Then I get a 'prove-identity-online' page response and pageContext
       | Context | Value |
       | photoId | true  |
@@ -445,3 +445,149 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+  Rule: Successful open banking mitigation
+    Background: Navigate through P2 to OB CRI and apply NEEDS-ENHANCED-VERIFICATION-P2 CI
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+
+    Scenario: User mitigates CI with app using driving licence
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario Outline: User mitigates CI with app using <doc>
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | mam   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a '<valid-document>' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION-P2' CI
+    # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a '<attained-vot>' identity
+      And I have a stored identity record with a '<stored-identity-score>' max vot
+
+      Examples:
+        | doc             | valid-document               | attained-vot | stored-identity-score |
+        | BRC             | kenneth-brc-valid            | P2           | P2                    |
+        | BRP             | kenneth-brp-valid            | P2           | P3                    |
+        | passport        | kenneth-passport-valid       | P2           | P3                    |
+
+  Rule: Successful redirect to F2F
+    Scenario: User drops off the app and is redirected to F2F journey
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
+      Then I get a 'no-photo-id-web-find-another-way' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+
+      When I submit an 'appTriage' event
+          Then I get an 'identify-device' page response
+          When I submit an 'appTriage' event
+          Then I get a 'pyi-triage-select-device' page response
+          When I submit a 'computer-or-tablet' event
+          Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+            | Context    | Value |
+            | deviceType | dad   |
+          When I submit an 'android' event
+          Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+            | Context    | Value   |
+            | smartphone | android |
+            | isAppOnly  | false   |
+          When I submit an 'anotherWay' event
+          Then I get a 'pyi-post-office' page response

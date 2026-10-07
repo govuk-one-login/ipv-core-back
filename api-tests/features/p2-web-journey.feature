@@ -784,6 +784,17 @@ Feature: P2 Web document journey
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
+    Scenario: User fails Open Banking with breaching CI
+      When I submit 'kenneth-score-0-breaching' details to the CRI stub
+      Then I get a 'pyi-no-match' page response and pageContext
+        | Context | Value       |
+        | reason  | openBanking |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
     Scenario: Open Banking CRI returns an error - user tries again
       When I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
@@ -855,6 +866,63 @@ Feature: P2 Web document journey
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+    Rule: Open Banking - only one CI mitigation per journey
+      Scenario: Open Banking CI cannot be mitigated following successful CI documentation mitigation
+        Given I activate the 'openBanking' feature set
+        When I start a new 'high-medium-confidence' journey
+        Then I get a 'live-in-uk' page response
+        When I submit a 'uk' event
+        Then I get a 'page-ipv-identity-document-start' page response
+        When I submit an 'appTriage' event
+        Then I get an 'identify-device' page response
+        When I submit an 'appTriage' event
+        Then I get a 'pyi-triage-select-device' page response
+        When I submit a 'computer-or-tablet' event
+        Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+          | Context    | Value |
+          | deviceType | dad   |
+        When I submit a 'neither' event
+        Then I get a 'pyi-triage-buffer' page response
+        When I submit an 'anotherWay' event
+        Then I get a 'select-photo-id' page response
+        When I submit an 'drivingLicence' event
+        Then I get a 'prove-identity-online' page response and pageContext
+          | Context | Value |
+          | photoId | true  |
+        When I submit a 'next' event
+        Then I get a 'prove-identity-online-banking' page response and pageContext
+          | Context | Value |
+          | photoId | true  |
+        When I submit a 'next' event
+        Then I get a 'drivingLicence' CRI response
+
+        # First CI raised
+        When I submit 'kenneth-driving-permit-needs-alternate-doc' details to the CRI stub
+        Then I get a 'pyi-driving-licence-no-match-another-way' page response
+        When I submit a 'next' event
+        Then I get a 'ukPassport' CRI response
+
+        # First CI mitigated
+        When I submit 'kenneth-passport-valid' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
+        Then I get an 'address' CRI response
+        When I submit 'kenneth-current' details to the CRI stub
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-score-2' details with attributes to the CRI stub
+          | Attribute          | Values                   |
+          | evidence_requested | {"identityFraudScore":2} |
+        Then I get an 'openBanking' CRI response
+
+        # Second CI raised - unable to mitigate
+        When I submit 'kenneth-needs-enhanced-verification-p2' details to the CRI stub
+        Then I get a 'pyi-no-match' page response and pageContext
+          | Context | Value       |
+          | reason  | openBanking |
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I am issued a 'P0' identity
+        And I don't have a stored identity in EVCS
 
   Rule: P2 VTR only - User drops out of KBV CRI via thin file or failed checks - no Open Banking
     Background: Navigate to KBV CRI
