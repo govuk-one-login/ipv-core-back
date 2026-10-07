@@ -69,6 +69,7 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService.CorrelationResult;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -108,6 +109,7 @@ import static uk.gov.di.ipv.core.library.ais.TestData.createNoInterventionAisSta
 import static uk.gov.di.ipv.core.library.ais.TestData.createReproveIdentityAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createResetPasswordAisState;
 import static uk.gov.di.ipv.core.library.ais.TestData.createSuspendedIdentityAisState;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.F2F_RETRY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.SIS_VERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -116,6 +118,7 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcClaimedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaFailedChecks;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaExpired;
@@ -136,6 +139,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYN
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_RETRY_FRAUD_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_MEDIUM_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
@@ -180,6 +184,8 @@ class CheckExistingIdentityHandlerTest {
             new JourneyResponse(JOURNEY_F2F_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_F2F_RETRY_FRAUD =
+            new JourneyResponse(JOURNEY_F2F_RETRY_FRAUD_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -225,7 +231,7 @@ class CheckExistingIdentityHandlerTest {
     private MockedStatic<VcHelper> mockVcHelper;
 
     @BeforeEach
-    void setUpEach() {
+    void setUpEach() throws Exception {
         event =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_SESSION_ID)
@@ -244,6 +250,12 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(new VotMatchingResult(Optional.empty(), Optional.empty(), null));
 
         lenient().when(configService.enabled(SIS_VERIFICATION)).thenReturn(false);
+
+        lenient()
+                .when(userIdentityService.getVcCorrelationResult(any()))
+                .thenReturn(new CorrelationResult(true, true));
+
+        lenient().when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -321,14 +333,25 @@ class CheckExistingIdentityHandlerTest {
             verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
         }
 
-        @Test
-        void shouldReturnF2FFailForF2FCompleteAndVCsDoNotCorrelate() throws Exception {
+        @ParameterizedTest
+        @MethodSource("correlationResults")
+        void shouldRaiseAuditEventAndRouteCorrectlyForNonCorrelatedF2fVcs(
+                boolean isNameCorrelated,
+                boolean isDobCorrelated,
+                boolean isF2fRetryEnabled,
+                JourneyResponse expectedJourneyResponse)
+                throws Exception {
+            lenient().when(configService.enabled(F2F_RETRY)).thenReturn(isF2fRetryEnabled);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(
                             Map.of(
                                     PENDING_RETURN,
-                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
+                                    new ArrayList<>(
+                                            List.of(
+                                                    vcF2fPassportPhotoM1a(),
+                                                    vcExperianFraudM1a(),
+                                                    vcClaimedIdentity()))));
             when(criResponseService.getCriResponseItems(TEST_USER_ID))
                     .thenReturn(
                             List.of(
@@ -340,7 +363,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(
                             new AsyncCriStatus(
                                     F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(userIdentityService.getVcCorrelationResult(any()))
+                    .thenReturn(new CorrelationResult(isNameCorrelated, isDobCorrelated));
 
             clientOAuthSessionItem.setVtr(List.of(P2.name()));
 
@@ -349,15 +373,23 @@ class CheckExistingIdentityHandlerTest {
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
 
-            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
             verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(
-                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            var auditEvent = auditEventArgumentCaptor.getValue();
+            assertEquals(AuditEventTypes.IPV_F2F_CORRELATION_FAIL, auditEvent.getEventName());
 
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+            assertEquals(expectedJourneyResponse, journeyResponse);
             assertEquals(Vot.P0, ipvSessionItem.getVot());
+        }
+
+        static Stream<Arguments> correlationResults() {
+            return Stream.of(
+                    Arguments.of(true, false, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, true, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, false, false, JOURNEY_F2F_FAIL),
+                    Arguments.of(true, false, true, JOURNEY_F2F_FAIL),
+                    Arguments.of(false, true, true, JOURNEY_F2F_RETRY_FRAUD),
+                    Arguments.of(false, false, true, JOURNEY_F2F_FAIL));
         }
 
         @ParameterizedTest
@@ -404,7 +436,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             clientOAuthSessionItem.setVtr(vtr);
 
@@ -456,7 +487,6 @@ class CheckExistingIdentityHandlerTest {
                                             .build()));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             // Act
             JourneyResponse journeyResponse =
@@ -517,7 +547,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(PENDING_RETURN, vcs));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             clientOAuthSessionItem.setVtr(List.of(Vot.P2.name()));
             when(criCheckingService.checkVcResponse(
                             vcs,
@@ -554,7 +583,8 @@ class CheckExistingIdentityHandlerTest {
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(vcF2fPassportPhotoM1a())));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+            when(userIdentityService.getVcCorrelationResult(any()))
+                    .thenReturn(new CorrelationResult(false, false));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
 
@@ -602,7 +632,6 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             var journeyResponse =
                     toResponseClass(
@@ -620,7 +649,6 @@ class CheckExistingIdentityHandlerTest {
         void shouldNotSendAuditEventIfNewUser() throws Exception {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of());
@@ -729,7 +757,8 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(
                             new AsyncCriStatus(
                                     F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.getVcCorrelationResult(any()))
+                    .thenReturn(new CorrelationResult(true, true));
 
             var journeyResponse =
                     toResponseClass(
@@ -741,41 +770,6 @@ class CheckExistingIdentityHandlerTest {
                     AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                     auditEventArgumentCaptor.getAllValues().get(0).getEventName());
 
-            assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
-
-            assertEquals(Vot.P0, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(
-                            Map.of(
-                                    PENDING_RETURN,
-                                    new ArrayList<>(List.of(vcF2fPassportPhotoM1a()))));
-            when(criResponseService.getCriResponseItems(TEST_USER_ID))
-                    .thenReturn(
-                            List.of(
-                                    CriResponseItem.builder()
-                                            .credentialIssuer(F2F.getId())
-                                            .oauthState(TEST_CRI_OAUTH_SESSION_ID)
-                                            .build()));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                    .thenReturn(
-                            new AsyncCriStatus(
-                                    F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(auditService, times(1)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(
-                    AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
-                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
             assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
             assertEquals(Vot.P0, ipvSessionItem.getVot());
@@ -995,7 +989,6 @@ class CheckExistingIdentityHandlerTest {
         @EnumSource(names = {"M1A", "M1B", "M2B"})
         void shouldReturnJourneyReuseResponseIfScoresSatisfyGpg45Profile(
                 Gpg45Profile matchedProfile) throws Exception {
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
@@ -1041,7 +1034,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldEmitReuseCompleteWithNullPreviousAchievedVotWhenComputationFails()
                 throws Exception {
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc)));
@@ -1094,7 +1086,6 @@ class CheckExistingIdentityHandlerTest {
             when(mockVotMatcher.findStrongestMatches(
                             Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             var journeyResponse =
                     toResponseClass(
@@ -1109,7 +1100,6 @@ class CheckExistingIdentityHandlerTest {
                 throws Exception {
             when(mockVotMatcher.findStrongestMatches(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1A));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             doThrow(
                             new VerifiableCredentialException(
                                     HTTPResponse.SC_SERVER_ERROR,
@@ -1140,7 +1130,6 @@ class CheckExistingIdentityHandlerTest {
                     List.of(
                             vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
                             vcWebDrivingPermitDvaExpired());
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, testCredentialBundle));
@@ -1185,7 +1174,6 @@ class CheckExistingIdentityHandlerTest {
                     List.of(
                             vcDcmawDrivingPermitDvaExpired(), // VC issue date is 23/01/2024
                             vcWebDrivingPermitDvaExpired());
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, testCredentialBundle));
@@ -1212,7 +1200,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldIgnoreUnsuccessfulExpiredDrivingLicenceDcmawVc() throws Exception {
             var testCredentialBundle = List.of(vcDcmawDrivingPermitDvaExpiredFailNoCi());
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, testCredentialBundle));
@@ -1541,7 +1528,6 @@ class CheckExistingIdentityHandlerTest {
 
             when(mockVotMatcher.findStrongestMatches(List.of(P2), vcs, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(1);
 
             mockVcHelper
@@ -1577,7 +1563,6 @@ class CheckExistingIdentityHandlerTest {
 
             when(mockVotMatcher.findStrongestMatches(List.of(P2), VCS_FROM_STORE, List.of(), true))
                     .thenReturn(buildMatchResultFor(P2, M1B));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.getFraudCheckExpiryPeriodDays()).thenReturn(100000000);
 
             mockVcHelper

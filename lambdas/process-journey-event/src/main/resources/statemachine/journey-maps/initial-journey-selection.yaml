@@ -47,6 +47,9 @@ states:
       f2f-fail:
         targetJourney: F2F_FAILED
         targetState: FAILED
+      f2f-retry-fraud:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: F2F_CORRELATION_RETRY
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

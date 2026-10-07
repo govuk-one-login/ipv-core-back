@@ -208,14 +208,27 @@ public class EvcsService {
     public void markHistoricInEvcs(
             String userId, String govukSigninJourneyId, List<VerifiableCredential> vcs)
             throws EvcsServiceException {
+        updateVcStatusesInEvcs(userId, govukSigninJourneyId, vcs, EvcsVCState.HISTORIC);
+    }
+
+    public void markAbandonedInEvcs(
+            String userId, String govukSigninJourneyId, List<VerifiableCredential> vcs)
+            throws EvcsServiceException {
+        updateVcStatusesInEvcs(userId, govukSigninJourneyId, vcs, EvcsVCState.ABANDONED);
+    }
+
+    private void updateVcStatusesInEvcs(
+            String userId,
+            String govukSigninJourneyId,
+            List<VerifiableCredential> vcs,
+            EvcsVCState newState)
+            throws EvcsServiceException {
         var vcsToUpdate =
                 vcs.stream()
                         .map(
                                 vc ->
                                         new EvcsUpdateUserVCsDto(
-                                                getVcSignature(vc.getVcString()),
-                                                EvcsVCState.HISTORIC,
-                                                null))
+                                                getVcSignature(vc.getVcString()), newState, null))
                         .toList();
         if (!vcsToUpdate.isEmpty()) {
             evcsClient.updateUserVcs(
