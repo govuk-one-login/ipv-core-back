@@ -360,8 +360,7 @@ public class SisService {
                                 .with("cimitVcCount", cimitVcList.size()));
             } else {
                 contraIndicators =
-                        cimitUtilityService.getContraIndicatorsFromVc(
-                                cimitVcList.getFirst().getVcString(), userId);
+                        cimitUtilityService.getContraIndicatorsFromVc(cimitVcList.getFirst());
             }
 
             var vcsWithoutCimit =
