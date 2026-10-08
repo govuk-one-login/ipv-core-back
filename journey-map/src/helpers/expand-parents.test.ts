@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import yaml from "yaml";
 import { JourneyState } from "../types.js";
 import { expandParents } from "./expand-parents.js";
@@ -102,10 +102,21 @@ describe("expandParents", () => {
           type: page
           pageId: test-page
       `);
+    const warnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
-    // Act & Assert
-    expect(() => expandParents(original, {})).toThrow(
-      '"undefined" is not valid JSON',
-    );
+    try {
+      // Act & Assert
+      expect(() => expandParents(original, {})).toThrow(
+        '"undefined" is not valid JSON',
+      );
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Missing parent MISSING_PARENT of state FIRST_STATE",
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });
