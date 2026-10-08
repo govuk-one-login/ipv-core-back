@@ -251,7 +251,6 @@ public class CriCheckingService {
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     public JourneyResponse checkVcResponse(
             List<VerifiableCredential> newVcs,
             String ipAddress,
@@ -264,33 +263,30 @@ public class CriCheckingService {
                     CredentialParseException,
                     MissingSecurityCheckCredential {
         var isReverification = clientOAuthSessionItem.isReverification();
+
+        // If this is not an MFA reset journey
         if (!isReverification) {
-            var previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
-            if (StringUtils.isBlank(previousSecurityCheckCredential)) {
+            var previousSecurityCheckCredentialString = ipvSessionItem.getSecurityCheckCredential();
+            if (StringUtils.isBlank(previousSecurityCheckCredentialString)) {
                 throw new MissingSecurityCheckCredential("Missing security check credential");
             }
+            var previousSecurityCheckCredential =
+                    cimitUtilityService.getParsedSecurityCheckCredential(
+                            previousSecurityCheckCredentialString,
+                            clientOAuthSessionItem.getUserId());
 
-            // Get mitigations from old CIMIT VC to compare against the mitigations on the new CIs
-            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-            var oldMitigation =
-                    cimitUtilityService.getRelevantMitigationEvent(
-                            ipvSessionItem.getSecurityCheckCredential(),
-                            clientOAuthSessionItem.getUserId(),
-                            targetVot);
-
-            var contraIndicatorsVc =
+            var currentSecurityCheckCredential =
                     cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
                             ipvSessionItem);
-            var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-            var newMitigation = cimitUtilityService.getRelevantMitigationEvent(newCis, targetVot);
 
-            // If breaching and no available mitigations or a new mitigation is required, we
-            // return fail-with-ci
-            if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                    && (newMitigation.isEmpty() || !newMitigation.equals(oldMitigation))) {
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+
+            // Has this new VC caused a new breach?
+            if (cimitUtilityService.requiresNewMitigation(
+                    previousSecurityCheckCredential, currentSecurityCheckCredential, targetVot)) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }

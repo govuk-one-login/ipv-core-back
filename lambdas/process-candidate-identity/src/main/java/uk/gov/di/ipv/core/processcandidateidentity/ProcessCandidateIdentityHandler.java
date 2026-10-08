@@ -583,17 +583,23 @@ public class ProcessCandidateIdentityHandler
             // security check credential e.g. in the check-existing-identity lambda.
             // If it is, we need to make a call to CIMIT prior to getting the TICF VC
             // in order to get the mitigation information unaffected by the new TICF VC.
-            String preTicfSecurityCheckVc = ipvSessionItem.getSecurityCheckCredential();
-            if (!clientOAuthSessionItem.isReverification()
-                    && StringUtils.isBlank(preTicfSecurityCheckVc)) {
-                preTicfSecurityCheckVc =
-                        cimitService
-                                .fetchContraIndicatorsVc(
-                                        clientOAuthSessionItem.getUserId(),
-                                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                        ipAddress,
-                                        ipvSessionItem)
-                                .getVcString();
+            VerifiableCredential preTicfSecurityCheckVc = null;
+            if (!clientOAuthSessionItem.isReverification()) {
+                var preTicfSecurityCheckVcString = ipvSessionItem.getSecurityCheckCredential();
+
+                if (StringUtils.isBlank(preTicfSecurityCheckVcString)) {
+                    preTicfSecurityCheckVc =
+                            cimitService.fetchContraIndicatorsVc(
+                                    clientOAuthSessionItem.getUserId(),
+                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                    ipAddress,
+                                    ipvSessionItem);
+                } else {
+                    preTicfSecurityCheckVc =
+                            cimitUtilityService.getParsedSecurityCheckCredential(
+                                    preTicfSecurityCheckVcString,
+                                    clientOAuthSessionItem.getUserId());
+                }
             }
 
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
@@ -617,30 +623,20 @@ public class ProcessCandidateIdentityHandler
                 throw new AccountInterventionException();
             }
 
+            // If this is not an MFA reset journey
             if (!clientOAuthSessionItem.isReverification()) {
-                // Get mitigations from old CIMIT VC to compare against the mitigations on the new
-                // CIs
-                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-                var oldMitigation =
-                        cimitUtilityService.getRelevantMitigationEvent(
-                                preTicfSecurityCheckVc,
-                                clientOAuthSessionItem.getUserId(),
-                                targetVot);
-
                 var contraIndicatorsVc =
                         cimitService.fetchContraIndicatorsVc(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress,
                                 ipvSessionItem);
-                var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-                var newMitigation =
-                        cimitUtilityService.getRelevantMitigationEvent(newCis, targetVot);
 
-                // If breaching and no available mitigations or a new mitigation is required, we
-                // return fail-with-ci
-                if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                        && (newMitigation.isEmpty() || !newMitigation.equals(oldMitigation))) {
+                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+
+                // Has the TICF VC caused a breach?
+                if (cimitUtilityService.requiresNewMitigation(
+                        preTicfSecurityCheckVc, contraIndicatorsVc, targetVot)) {
                     LOGGER.info(
                             LogHelper.buildLogMessage(
                                     "CI score is breaching threshold - setting VOT to P0"));

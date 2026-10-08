@@ -20,7 +20,9 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.MitigatingCredential;
 import uk.gov.di.model.Mitigation;
 
 import java.sql.Date;
@@ -52,6 +54,10 @@ class CimitUtilityServiceTest {
     private static final String TEST_CI1 = "CI1";
     private static final String TEST_CI2 = "CI2";
     private static final String TEST_CI3 = "CI3";
+    private static final String TEST_MITIGATION_EVENT_1 = "MitigationEvent1";
+    private static final String TEST_MITIGATION_EVENT_2 = "MitigationEvent2";
+    private static final String TEST_MITIGATION_EVENT_3 = "MitigationEvent3";
+    private static final String TEST_MITIGATION_CODE_1 = "MitigationCode1";
     private static final Instant BASE_TIME = Instant.now();
     private static final Map<String, ContraIndicatorConfig> CONTRA_INDICATOR_CONFIG_MAP =
             Map.of(
@@ -61,6 +67,15 @@ class CimitUtilityServiceTest {
                     new ContraIndicatorConfig(TEST_CI2, 3, -3, "2"),
                     TEST_CI3,
                     new ContraIndicatorConfig(TEST_CI3, 2, -1, "3"));
+
+    private static final Map<String, List<CiRoutingConfig>> CI_ROUTING_CONFIG_MAP =
+            Map.of(
+                    TEST_CI1,
+                    List.of(CiRoutingConfig.builder().event(TEST_MITIGATION_EVENT_1).build()),
+                    TEST_CI2,
+                    List.of(CiRoutingConfig.builder().event(TEST_MITIGATION_EVENT_2).build()),
+                    TEST_CI3,
+                    List.of(CiRoutingConfig.builder().event(TEST_MITIGATION_EVENT_3).build()));
 
     @Mock private ConfigService mockConfigService;
     @Mock private Config mockConfig;
@@ -74,6 +89,7 @@ class CimitUtilityServiceTest {
         lenient()
                 .when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(CONTRA_INDICATOR_CONFIG_MAP);
+        lenient().when(mockConfigService.getCimitConfig()).thenReturn(CI_ROUTING_CONFIG_MAP);
     }
 
     private void stubThreshold(int val) {
@@ -512,9 +528,7 @@ class CimitUtilityServiceTest {
             getRelevantMitigationEvent_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator() {
         // arrange
         var code = "ci_code";
-        var journey = "some_mitigation";
         String document = "doc_type/213123";
-        String documentType = "doc_type";
         var ci = createCi(code);
         ci.setDocument(document);
         var mitCi = createCi("mit_ci_code");
@@ -522,9 +536,6 @@ class CimitUtilityServiceTest {
         ci.setMitigation(List.of(new Mitigation()));
         var cis = List.of(ci, mitCi);
 
-        var route = CiRoutingConfig.builder().event(journey).document(documentType).build();
-
-        when(mockConfigService.getCimitConfig()).thenReturn(Map.of(code, List.of(route)));
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
                         code,
@@ -624,6 +635,97 @@ class CimitUtilityServiceTest {
         // assert
         assertEquals(Optional.empty(), result);
     }
+
+    @ParameterizedTest
+    @MethodSource("contraIndicatorVcsAndVots")
+    void requiresNewMitigation_returnsCorrectValues_forGivenVcs(
+            VerifiableCredential oldVc,
+            VerifiableCredential newVc,
+            boolean expectedResult,
+            String testCaseDescription)
+            throws CiExtractionException {
+
+        // Arrange
+        stubThreshold(3);
+
+        // Act
+        boolean result = cimitUtilityService.requiresNewMitigation(oldVc, newVc, TEST_VOT);
+
+        // Assert
+        assertEquals(expectedResult, result, testCaseDescription);
+    }
+
+    static Stream<Arguments> contraIndicatorVcsAndVots() {
+        return Stream.of(
+                Arguments.of(VC_NO_CI, VC_NO_CI, false, "No CIs"),
+                Arguments.of(VC_NO_CI, VC_NON_BREACHING_CI, false, "New non-breaching CI"),
+                Arguments.of(VC_NO_CI, VC_BREACHING_CI, true, "New breaching CI"),
+                Arguments.of(VC_BREACHING_CI, VC_BREACHING_CI, false, "Same breaching CIs"),
+                Arguments.of(
+                        VC_NON_BREACHING_CI, VC_NON_BREACHING_CI, false, "Same non-breaching CIs"),
+                Arguments.of(
+                        VC_NON_BREACHING_CI,
+                        VC_BREACHING_TWO_CIS,
+                        true,
+                        "Old non-breaching CI with additional breaching new CI"),
+                Arguments.of(
+                        VC_BREACHING_CI,
+                        VC_BREACHING_TWO_CIS,
+                        true,
+                        "Old breaching CI with additional new CI"),
+                Arguments.of(
+                        VC_BREACHING_BUT_MITIGATED_CI,
+                        VC_BREACHING_BUT_MITIGATED_CI,
+                        false,
+                        "Same mitigated CI"),
+                Arguments.of(
+                        VC_BREACHING_BUT_MITIGATED_CI,
+                        VC_MITIGATED_PLUS_NON_BREACHING_CI,
+                        false,
+                        "Old mitigated CI, new non-breaching CI"),
+                Arguments.of(
+                        VC_BREACHING_BUT_MITIGATED_CI,
+                        VC_MITIGATED_PLUS_BREACHING_CI,
+                        true,
+                        "Old mitigated CI, different new breaching CI"),
+                Arguments.of(
+                        VC_BREACHING_BUT_MITIGATED_CI,
+                        VC_BREACHING_CI,
+                        true,
+                        "Old mitigated CI, same new breaching CI"));
+    }
+
+    private static final ContraIndicator CI1 = ContraIndicator.builder().withCode(TEST_CI1).build();
+    private static final ContraIndicator CI1_MITIGATED =
+            ContraIndicator.builder()
+                    .withCode(TEST_CI1)
+                    .withMitigation(
+                            List.of(
+                                    Mitigation.builder()
+                                            .withCode(TEST_MITIGATION_CODE_1)
+                                            .withMitigatingCredential(
+                                                    List.of(new MitigatingCredential()))
+                                            .build()))
+                    .build();
+    private static final ContraIndicator CI2 = ContraIndicator.builder().withCode(TEST_CI2).build();
+    private static final ContraIndicator CI3 = ContraIndicator.builder().withCode(TEST_CI3).build();
+
+    private static final VerifiableCredential VC_NO_CI = VcFixtures.vcSecurityCheckNoCis();
+    private static final VerifiableCredential VC_BREACHING_CI =
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI1));
+    private static final VerifiableCredential VC_NON_BREACHING_CI =
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI3));
+    private static final VerifiableCredential VC_BREACHING_TWO_CIS =
+            VcFixtures.vcSecurityCheckWithCis(
+                    List.of(
+                            CI1,
+                            CI2));
+    private static final VerifiableCredential VC_BREACHING_BUT_MITIGATED_CI =
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI1_MITIGATED));
+    private static final VerifiableCredential VC_MITIGATED_PLUS_NON_BREACHING_CI =
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI1_MITIGATED, CI3));
+    private static final VerifiableCredential VC_MITIGATED_PLUS_BREACHING_CI =
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI1_MITIGATED, CI2));
 
     private static ContraIndicator createCi(String code) {
         var ci = new ContraIndicator();
