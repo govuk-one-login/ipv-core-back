@@ -430,7 +430,9 @@ Feature: P1 Fraud mitigation
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
       When I submit a 'abandon' event
-      Then I get a 'need-biometric-passport' page response
+      Then I get a 'need-biometric-passport' page response and pageContext
+        | Context           | Value |
+        | appOnlyMitigation | true  |
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -489,7 +491,9 @@ Feature: P1 Fraud mitigation
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
       When I submit a 'abandon' event
-      Then I get a 'need-biometric-passport' page response
+      Then I get a 'need-biometric-passport' page response and pageContext
+        | Context           | Value |
+        | appOnlyMitigation | true  |
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -497,7 +501,9 @@ Feature: P1 Fraud mitigation
     Scenario: User navigates back on select device page
       Then I get a 'pyi-triage-select-device' page response
       When I submit an 'back' event
-      Then I get a 'need-biometric-passport' page response
+      Then I get a 'need-biometric-passport' page response and pageContext
+        | Context           | Value |
+        | appOnlyMitigation | true  |
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
 
