@@ -999,7 +999,9 @@ Feature: P2 Fraud mitigation
       When I submit a 'useApp' event
       Then I get a 'passport-biometric-chip' page response
       When I submit a 'abandon' event
-      Then I get a 'need-biometric-passport' page response
+      Then I get a 'need-biometric-passport' page response and pageContext
+        | Context           | Value |
+        | appOnlyMitigation | true  |
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -1007,7 +1009,9 @@ Feature: P2 Fraud mitigation
     Scenario Outline: DAD journeys - user goes back and drop off from download page
       Then I get a 'pyi-triage-select-device' page response
       When I submit an 'back' event
-      Then I get a 'need-biometric-passport' page response
+      Then I get a 'need-biometric-passport' page response and pageContext
+        | Context           | Value |
+        | appOnlyMitigation | true  |
       When I submit a 'useApp' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -1207,4 +1211,3 @@ Feature: P2 Fraud mitigation
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
-

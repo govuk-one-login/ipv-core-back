@@ -8,6 +8,7 @@ import java.util.Set;
 public abstract class AbstractPageContextValidator implements IPageContextValidator {
     abstract Map<String, Set<String>> getAllowedContextsByPage();
 
+    public static final String APP_ONLY_MITIGATION = "appOnlyMitigation";
     public static final String JOURNEY_TYPE = "journeyType";
     public static final String REASON = "reason";
     public static final String NO_ADDRESS = "noAddress";

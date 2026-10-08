@@ -1309,6 +1309,8 @@ states:
     response:
       type: page
       pageId: need-biometric-passport
+      pageContext:
+        appOnlyMitigation: true
     events:
       useApp:
         targetState: MITIGATION_STRATEGIC_APP_TRIAGE
@@ -1395,6 +1397,8 @@ states:
     response:
       type: page
       pageId: need-biometric-passport
+      pageContext:
+        appOnlyMitigation: true
     events:
       useApp:
         targetState: MITIGATION_STRATEGIC_APP_TRIAGE_SEPARATE_SESSION
