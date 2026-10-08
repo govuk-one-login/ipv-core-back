@@ -485,7 +485,7 @@ states:
         reason: updateDetails
     events:
       next:
-        targetState: RETURN_TO_RP
+        targetState: REINSTATE_EXISTING_IDENTITY
 
   RETURN_TO_RP:
     response:
