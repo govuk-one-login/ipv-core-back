@@ -92,4 +92,20 @@ describe("expandParents", () => {
     // Assert
     expect(original).toEqual(expected);
   });
+
+  it("throws when a state references a parent that does not exist", () => {
+    // Arrange
+    const original: Record<string, JourneyState> = yaml.parse(`
+      FIRST_STATE:
+        parent: MISSING_PARENT
+        response:
+          type: page
+          pageId: test-page
+      `);
+
+    // Act & Assert
+    expect(() => expandParents(original, {})).toThrow(
+      '"undefined" is not valid JSON',
+    );
+  });
 });
