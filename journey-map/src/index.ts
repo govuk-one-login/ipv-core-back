@@ -43,7 +43,7 @@ const NESTED_JOURNEY_TYPE_SEARCH_PARAM = "nestedJourneyType";
 const JOURNEY_TYPE_SEARCH_PARAM = "journeyType";
 
 mermaid.initialize({
-  maxTextSize: 5000000,
+  maxTextSize: 1000000,
   maxEdges: 5000,
   startOnLoad: false,
   // Required to enable links and callbacks
