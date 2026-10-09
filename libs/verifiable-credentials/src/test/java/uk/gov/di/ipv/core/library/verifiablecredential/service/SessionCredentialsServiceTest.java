@@ -203,6 +203,132 @@ class SessionCredentialsServiceTest {
 
             assertEquals(FAILED_TO_GET_CREDENTIAL, caughtException.getErrorResponse());
         }
+
+        @Test
+        void getAllCredentialsShouldPartitionVcsByReceivedThisSession() throws Exception {
+            // Arrange
+            // This session
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_1.getCri(),
+                            CREDENTIAL_1.getSignedJwt(),
+                            true,
+                            null);
+            var item2 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_2.getCri(),
+                            CREDENTIAL_2.getSignedJwt(),
+                            true,
+                            null);
+
+            // Previous session
+            var item3 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_3.getCri(),
+                            CREDENTIAL_3.getSignedJwt(),
+                            false,
+                            null);
+
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2, item3));
+
+            // Act
+            var result = sessionCredentialService.getAllCredentials(SESSION_ID, USER_ID);
+
+            // Assert
+            assertEquals(
+                    List.of(
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
+                    result.receivedThisSession());
+            assertEquals(
+                    List.of(VerifiableCredential.fromSessionCredentialItem(item3, USER_ID)),
+                    result.receivedOtherSession());
+        }
+
+        @Test
+        void getAllCredentialsShouldReturnEmptyListsWhenNoCredentials() throws Exception {
+            // Arrange
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of());
+
+            // Act
+            var result = sessionCredentialService.getAllCredentials(SESSION_ID, USER_ID);
+
+            // Assert
+            assertEquals(List.of(), result.receivedThisSession());
+            assertEquals(List.of(), result.receivedOtherSession());
+        }
+
+        @Test
+        void getAllCredentialsShouldReturnEmptyOtherSessionWhenAllReceivedThisSession()
+                throws Exception {
+            // Arrange
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_1.getCri(),
+                            CREDENTIAL_1.getSignedJwt(),
+                            true,
+                            null);
+            var item2 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_2.getCri(),
+                            CREDENTIAL_2.getSignedJwt(),
+                            true,
+                            null);
+
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2));
+
+            // Act
+            var result = sessionCredentialService.getAllCredentials(SESSION_ID, USER_ID);
+
+            // Assert
+            assertEquals(
+                    List.of(
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
+                    result.receivedThisSession());
+            assertEquals(List.of(), result.receivedOtherSession());
+        }
+
+        @Test
+        void getAllCredentialsShouldThrowVerifiableCredentialExceptionIfFetchingThrows() {
+            // Arrange
+            when(mockDataStore.getItems(SESSION_ID)).thenThrow(new IllegalStateException());
+
+            // Act
+            var caughtException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> sessionCredentialService.getAllCredentials(SESSION_ID, USER_ID));
+
+            // Assert
+            assertEquals(FAILED_TO_GET_CREDENTIAL, caughtException.getErrorResponse());
+        }
+
+        @Test
+        void getAllCredentialsShouldThrowVerifiableCredentialExceptionIfItemCanNotBeParsed() {
+            // Arrange
+            var mockSignedJwt = mock(SignedJWT.class);
+            when(mockSignedJwt.serialize()).thenReturn("");
+
+            // Act
+            var sessionCredentialItem =
+                    new SessionCredentialItem(
+                            SESSION_ID, CREDENTIAL_1.getCri(), mockSignedJwt, true, null);
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(sessionCredentialItem));
+
+            // Assert
+            var caughtException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> sessionCredentialService.getAllCredentials(SESSION_ID, USER_ID));
+
+            assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS, caughtException.getErrorResponse());
+        }
     }
 
     @Nested
