@@ -83,6 +83,49 @@ Feature: P2 Fraud mitigation
         | iphone  |
         | android |
 
+    Scenario: Breaching fraud CI - no Open Banking - second breach on 6MFC goes to mitigation
+      # We can use expired details here because core won't notice until the user comes back on a new journey
+      When I submit expired 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'retry-prove-identity-app' page response
+      When I submit a 'useApp' event
+      Then I get a 'passport-biometric-chip' page response
+      When I submit a 'next' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value    |
+        | smartphone | iphone   |
+        | isAppOnly  | true     |
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-LIVENESS-LIKENESS' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
+      # Return
+      When I start a new 'medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":1} |
+      Then I get a 'need-more-information-confirm-change-details' page response and pageContext
+        | Context     | Value              |
+        | journeyType | repeatFraudCheck   |
+
     Scenario Outline: Breaching fraud CI - no Open Banking - Happy path MAM journey - <device>
       When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
         | Attribute          | Values                   |

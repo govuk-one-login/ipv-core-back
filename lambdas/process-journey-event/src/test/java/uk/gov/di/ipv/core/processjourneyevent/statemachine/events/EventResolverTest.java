@@ -216,8 +216,7 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                any(), any(), any()))
+                when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                         .thenReturn(Optional.of("first-mitigation"));
 
                 // Act
@@ -246,8 +245,7 @@ public class EventResolverTest {
                 checkMitigation.put("first-mitigation", new BasicEvent());
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                any(), any(), any()))
+                when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                         .thenReturn(Optional.of("mitigation-not-in-check-mitigation"));
 
                 // Act
@@ -277,8 +275,7 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                any(), any(), any()))
+                when(mockCimitUtilityService.getRelevantMitigationEvent(any(), any(), any()))
                         .thenReturn(Optional.empty());
 
                 // Act
