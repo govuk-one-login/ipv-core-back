@@ -716,10 +716,7 @@ class CimitUtilityServiceTest {
     private static final VerifiableCredential VC_NON_BREACHING_CI =
             VcFixtures.vcSecurityCheckWithCis(List.of(CI3));
     private static final VerifiableCredential VC_BREACHING_TWO_CIS =
-            VcFixtures.vcSecurityCheckWithCis(
-                    List.of(
-                            CI1,
-                            CI2));
+            VcFixtures.vcSecurityCheckWithCis(List.of(CI1, CI2));
     private static final VerifiableCredential VC_BREACHING_BUT_MITIGATED_CI =
             VcFixtures.vcSecurityCheckWithCis(List.of(CI1_MITIGATED));
     private static final VerifiableCredential VC_MITIGATED_PLUS_NON_BREACHING_CI =
