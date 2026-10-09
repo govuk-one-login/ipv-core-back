@@ -10,26 +10,25 @@ export const expandParents = (
   const parentStates: string[] = [];
   Object.entries(journeyStates).forEach(([state, definition]) => {
     if (definition.parent) {
-      // Clone so each state gets an independent copy of the parent targets
-      const parent = deepCloneJson(
-        journeyStates[definition.parent] ?? otherStates[definition.parent],
-      );
-      if (!parent) {
+      const parentDefinition =
+        journeyStates[definition.parent] ?? otherStates[definition.parent];
+      if (!parentDefinition) {
         console.warn(`Missing parent ${definition.parent} of state ${state}`);
-      } else {
-        // Merge parent into existing definition
-        const newDefinition = {
-          ...parent,
-          ...definition,
-          events: {
-            ...parent.events,
-            ...definition.events,
-          },
-        };
-        delete newDefinition.parent;
-        journeyStates[state] = newDefinition;
-        parentStates.push(definition.parent);
       }
+      // Clone so each state gets an independent copy of the parent targets
+      const parent = deepCloneJson(parentDefinition);
+      // Merge parent into existing definition
+      const newDefinition = {
+        ...parent,
+        ...definition,
+        events: {
+          ...parent.events,
+          ...definition.events,
+        },
+      };
+      delete newDefinition.parent;
+      journeyStates[state] = newDefinition;
+      parentStates.push(definition.parent);
     }
   });
   // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
