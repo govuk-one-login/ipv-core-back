@@ -96,7 +96,7 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getConfiguration()).thenReturn(mockConfig);
         when(mockConfig.getSelf()).thenReturn(mockSelf);
         when(mockSelf.getCiScoringThresholdByVot()).thenReturn(mockThresholds);
-        when(mockThresholds.getThreshold(TEST_VOT.name())).thenReturn(val);
+        when(mockThresholds.getThreshold(TEST_VOT)).thenReturn(val);
     }
 
     private void stubCiConfigMap(Map<String, ContraIndicatorConfig> map) {

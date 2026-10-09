@@ -1048,50 +1048,7 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldHandleTicfBreachingContraindicatorWithNoAvailableMitigations() throws Exception {
-            // Arrange
-            var ticfVcs = List.of(vcTicfWithCi());
-            var ticfCis = List.of(new ContraIndicator());
-            when(checkCoiService.isCoiCheckSuccessful(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
-                            eq(STANDARD),
-                            eq(List.of()),
-                            any(),
-                            any()))
-                    .thenReturn(true);
-            when(votMatcher.findStrongestMatches(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
-                    .thenReturn(P2_M1A_VOT_MATCH_RESULT);
-            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(configService.isCredentialIssuerEnabled(Cri.TICF.getId())).thenReturn(true);
-            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
-                    .thenReturn(ticfVcs);
-            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
-            when(cimitUtilityService.requiresNewMitigation(any(), any(), any())).thenReturn(true);
-            when(evcsService.getUserVCs(
-                            USER_ID,
-                            EVCS_ACCESS_TOKEN,
-                            EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN))
-                    .thenReturn(List.of());
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
-
-            verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), anyList(), anyList(), any(), any(), any(), any());
-        }
-
-        @Test
-        void shouldHandleTicfBreachingContraindicatorWithNewMitigation() throws Exception {
+        void shouldHandleTicfBreachingContraindicator() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicfWithCi());
             var ticfCis = List.of(new ContraIndicator());

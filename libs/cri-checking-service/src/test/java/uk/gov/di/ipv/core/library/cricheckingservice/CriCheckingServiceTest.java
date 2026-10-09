@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 
@@ -80,7 +79,6 @@ class CriCheckingServiceTest {
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test_govuk_signin_journey_id";
-    private static final List<ContraIndicator> TEST_CONTRA_INDICATORS = List.of();
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;

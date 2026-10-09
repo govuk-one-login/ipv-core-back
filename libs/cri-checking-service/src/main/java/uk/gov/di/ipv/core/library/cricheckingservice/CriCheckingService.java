@@ -251,6 +251,7 @@ public class CriCheckingService {
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     public JourneyResponse checkVcResponse(
             List<VerifiableCredential> newVcs,
             String ipAddress,

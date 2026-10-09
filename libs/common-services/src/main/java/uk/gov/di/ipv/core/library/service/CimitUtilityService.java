@@ -89,7 +89,7 @@ public class CimitUtilityService {
                         .getConfiguration()
                         .getSelf()
                         .getCiScoringThresholdByVot()
-                        .getThreshold(confidenceRequested.name());
+                        .getThreshold(confidenceRequested);
         return score > threshold;
     }
 
@@ -106,13 +106,11 @@ public class CimitUtilityService {
 
     private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(
-                        configService
-                                .getConfiguration()
-                                .getSelf()
-                                .getCiScoringThresholdByVot()
-                                .getThreshold(vot.name())
-                                .toString());
+                > configService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getThreshold(vot);
     }
 
     public Optional<String> getRelevantMitigationEvent(
