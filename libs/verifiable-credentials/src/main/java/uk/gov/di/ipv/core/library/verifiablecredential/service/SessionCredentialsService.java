@@ -53,7 +53,47 @@ public class SessionCredentialsService {
             String ipvSessionId, String userId, Boolean receivedThisSession)
             throws VerifiableCredentialException {
         var sessionCredentialItems = getCredentialItems(ipvSessionId, receivedThisSession);
-        return mapSessionCredentialsToVcs(sessionCredentialItems, userId);
+        var vcs = mapSessionCredentialsToVcs(sessionCredentialItems, userId);
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                                "Successfully retrieved and parsed session credential items")
+                        .with("numberOfCredentialsRetrieved", vcs.size()));
+        return vcs;
+    }
+
+    public record SessionCredentials(
+            List<VerifiableCredential> receivedThisSession,
+            List<VerifiableCredential> receivedOtherSession) {}
+
+    // We may need to disginguish which VCs was received same session and other session
+    // In ProcessCriCallback lambda we use all valid VCs to submit mitigation to CIMIT
+    // Where in other checks in same lambda we just need VCs from the same session
+    public SessionCredentials getAllCredentials(String ipvSessionId, String userId)
+            throws VerifiableCredentialException {
+        var credentials = getCredentialItems(ipvSessionId, null);
+        var receivedThisSession =
+                mapSessionCredentialsToVcs(
+                        credentials.stream()
+                                .filter(SessionCredentialItem::isReceivedThisSession)
+                                .toList(),
+                        userId);
+
+        var receivedOtherSession =
+                mapSessionCredentialsToVcs(
+                        credentials.stream()
+                                .filter(
+                                        sessionCredentialItem ->
+                                                !sessionCredentialItem.isReceivedThisSession())
+                                .toList(),
+                        userId);
+
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Successfully retrieved and parsed session credential items: From this session - %s, From other session: %s",
+                                receivedThisSession.size(), receivedOtherSession.size())));
+
+        return new SessionCredentials(receivedThisSession, receivedOtherSession);
     }
 
     private List<SessionCredentialItem> getCredentialItems(
@@ -88,31 +128,6 @@ public class SessionCredentialsService {
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         }
-    }
-
-    public record SessionCredentials(
-            List<VerifiableCredential> receivedThisSession,
-            List<VerifiableCredential> receivedOtherSession) {}
-
-    public SessionCredentials getAllCredentials(String ipvSessionId, String userId)
-            throws VerifiableCredentialException {
-        var credentials = getCredentialItems(ipvSessionId, null);
-        var receivedThisSession =
-                mapSessionCredentialsToVcs(
-                        credentials.stream()
-                                .filter(SessionCredentialItem::isReceivedThisSession)
-                                .toList(),
-                        userId);
-
-        var receivedOtherSession =
-                mapSessionCredentialsToVcs(
-                        credentials.stream()
-                                .filter(
-                                        sessionCredentialItem ->
-                                                !sessionCredentialItem.isReceivedThisSession())
-                                .toList(),
-                        userId);
-        return new SessionCredentials(receivedThisSession, receivedOtherSession);
     }
 
     public void persistCredentials(
