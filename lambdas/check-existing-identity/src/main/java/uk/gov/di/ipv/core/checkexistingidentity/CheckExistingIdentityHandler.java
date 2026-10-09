@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredDcmawDlVcFound;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionExpiredFraudVcFound;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionF2fCorrelationFail;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousAchievedVot;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
@@ -588,10 +589,13 @@ public class CheckExistingIdentityHandler
             throws EvcsServiceException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         if (!correlationResult.isCorrelated()) {
-            sendAuditEvent(
+            sendAuditEventWithExtension(
                     AuditEventTypes.IPV_F2F_CORRELATION_FAIL,
                     auditInformation.getAuditEventUser(),
-                    auditInformation.getDeviceInformation());
+                    auditInformation.getDeviceInformation(),
+                    new AuditExtensionF2fCorrelationFail(
+                            !correlationResult.isNameCorrelated(),
+                            !correlationResult.isDobCorrelated()));
         } else {
             sendAuditEvent(
                     AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
@@ -766,7 +770,8 @@ public class CheckExistingIdentityHandler
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditInformation.getAuditEventUser(),
                 auditInformation.getDeviceInformation(),
-                new AuditExtensionPreviousAchievedVot(previousMaxVot, previousMaxVot));
+                new AuditExtensionPreviousAchievedVot(
+                        previousMaxVot, previousMaxVot));
         EmbeddedMetricHelper.identityReuse();
 
         ipvSessionItem.setVot(attainedVot);
