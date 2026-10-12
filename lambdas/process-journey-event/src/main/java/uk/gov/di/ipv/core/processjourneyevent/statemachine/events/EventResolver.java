@@ -160,7 +160,7 @@ public class EventResolver {
         // If user has already mitigated CI this method will return empty string
         // This is because Core allows only one mitigation to happen per user
         var validMitigation =
-                cimitUtilityService.getRelevantMitigationEvent(
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(
                         securityCheckCredential,
                         clientOAuthSessionItem.getUserId(),
                         VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));

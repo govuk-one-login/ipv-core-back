@@ -147,7 +147,8 @@ public class SisService {
                                     evcsCredentials, configService);
 
             var evcsVotMatches =
-                    calculateVotMatches(evcsCredentials, clientOAuthSessionItem.getVtrAsVots());
+                    calculateVotMatches(
+                            evcsCredentials, userId, clientOAuthSessionItem.getVtrAsVots());
             var evcsMaxVotOptional = evcsVotMatches.strongestMatch();
             evcsMaxVot = evcsMaxVotOptional.isPresent() ? evcsMaxVotOptional.get().vot() : null;
             var evcsRequestedVotOptional = evcsVotMatches.strongestRequestedMatch();
@@ -344,7 +345,7 @@ public class SisService {
     }
 
     private VotMatchingResult calculateVotMatches(
-            List<VerifiableCredential> evcsCredentials, List<Vot> requestedVots)
+            List<VerifiableCredential> evcsCredentials, String userId, List<Vot> requestedVots)
             throws SisMatchException {
         try {
             // Remove CIMIT VC from list of VCs, use it as security check credential
@@ -359,7 +360,8 @@ public class SisService {
                                 .with("cimitVcCount", cimitVcList.size()));
             } else {
                 contraIndicators =
-                        cimitUtilityService.getContraIndicatorsFromVc(cimitVcList.getFirst());
+                        cimitUtilityService.getContraIndicatorsFromVc(
+                                cimitVcList.getFirst().getVcString(), userId);
             }
 
             var vcsWithoutCimit =

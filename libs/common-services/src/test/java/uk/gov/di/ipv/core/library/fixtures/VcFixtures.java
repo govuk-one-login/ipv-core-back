@@ -8,7 +8,6 @@ import uk.gov.di.model.AddressAssertion;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.CheckDetails;
-import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityAssertionCredential;
 import uk.gov.di.model.IdentityCheck;
@@ -678,7 +677,7 @@ public interface VcFixtures {
         return vcClaim;
     }
 
-    private static SecurityCheckCredential vcClaimSecurityCheckNoCis(List<ContraIndicator> cis) {
+    private static SecurityCheckCredential vcClaimSecurityCheckNoCis() {
         return SecurityCheckCredential.builder()
                 .withType(
                         List.of(
@@ -687,7 +686,7 @@ public interface VcFixtures {
                 .withEvidence(
                         List.of(
                                 SecurityCheck.builder()
-                                        .withContraIndicator(cis)
+                                        .withContraIndicator(List.of())
                                         .withType("SecurityCheck")
                                         .build()))
                 .build();
@@ -1571,18 +1570,7 @@ public interface VcFixtures {
         return generateVerifiableCredential(
                 "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
                 Cri.CIMIT,
-                vcClaimSecurityCheckNoCis(List.of()),
-                CIMIT_ISSUER,
-                null,
-                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
-                "https://hmrc.gov.uk/trustmark");
-    }
-
-    static VerifiableCredential vcSecurityCheckWithCis(List<ContraIndicator> cis) {
-        return generateVerifiableCredential(
-                "urn:uuid:811cefe0-7db6-48ad-ad89-0b93d2259980",
-                Cri.CIMIT,
-                vcClaimSecurityCheckNoCis(cis),
+                vcClaimSecurityCheckNoCis(),
                 CIMIT_ISSUER,
                 null,
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",

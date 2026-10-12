@@ -369,7 +369,7 @@ public class CheckExistingIdentityHandler
             // though.
             if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
                     && cimitUtilityService
-                            .getCiMitigationEventIfNoOtherMitigations(contraIndicators, targetVot)
+                            .getCiMitigationEvent(contraIndicators, targetVot)
                             .isEmpty()) {
                 return JOURNEY_FAIL_WITH_CI;
             }
