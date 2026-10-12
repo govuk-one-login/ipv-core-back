@@ -80,7 +80,6 @@ states:
     response:
       type: cri
       criId: fraud
-    parent: CRI_STATE
     events:
       next:
         targetState: PROCESS_NEW_IDENTITY

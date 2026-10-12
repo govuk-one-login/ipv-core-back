@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -40,21 +41,25 @@ import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService.SessionCredentials;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
@@ -117,7 +122,11 @@ class ProcessCriCallbackHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
         var vcs = List.of(vcWebPassportSuccessful());
-        var sessionVcs = List.of(vcAddressM1a());
+        var receivedThisSessionVcs = List.of(vcAddressM1a());
+        var receivedOtherSessionVcs = List.of(vcWebPassportSuccessful());
+        var allSessionVcs =
+                Stream.concat(receivedThisSessionVcs.stream(), receivedOtherSessionVcs.stream())
+                        .toList();
 
         when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
@@ -132,15 +141,16 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(vcResponse);
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
-        when(sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
-                .thenReturn(sessionVcs);
+        when(sessionCredentialsService.getAllCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                .thenReturn(
+                        new SessionCredentials(receivedThisSessionVcs, receivedOtherSessionVcs));
         when(mockCriCheckingService.checkVcResponse(
                         any(),
                         eq(callbackRequest.getIpAddress()),
                         eq(clientOAuthSessionItem),
                         eq(ipvSessionItem),
-                        eq(sessionVcs)))
+                        eq(receivedThisSessionVcs)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -174,7 +184,105 @@ class ProcessCriCallbackHandlerTest {
                         vcs,
                         clientOAuthSessionItem,
                         ipvSessionItem,
-                        sessionVcs);
+                        allSessionVcs);
+    }
+
+    @Test
+    void shouldRetrieveAllSessionVcs() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var criOAuthSessionItem = buildValidCriOAuthSessionItem();
+        var bearerToken = new BearerAccessToken("value");
+        var vcResponse =
+                VerifiableCredentialResponse.builder()
+                        .userId(clientOAuthSessionItem.getUserId())
+                        .verifiableCredentials(List.of(vcWebPassportSuccessful().getVcString()))
+                        .credentialStatus(VerifiableCredentialStatus.CREATED)
+                        .build();
+        var vcs = List.of(vcWebPassportSuccessful());
+        var receivedThisSessionVcs = List.of(vcAddressM1a());
+        var receivedOtherSessionVcs = List.of(vcWebPassportSuccessful());
+        var allSessionVcs =
+                Stream.concat(receivedThisSessionVcs.stream(), receivedOtherSessionVcs.stream())
+                        .toList();
+
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
+                        ipvSessionItem.getClientOAuthSessionId()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(
+                        ipvSessionItem.getCriOAuthSessionId()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
+                .thenReturn(bearerToken);
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
+                .thenReturn(vcResponse);
+        when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
+                .thenReturn(vcs);
+        when(sessionCredentialsService.getAllCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                .thenReturn(
+                        new SessionCredentials(receivedThisSessionVcs, receivedOtherSessionVcs));
+        when(mockCriCheckingService.checkVcResponse(
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem),
+                        eq(receivedThisSessionVcs)))
+                .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
+        when(mockConfigService.getOauthCriConfig(any()))
+                .thenReturn(
+                        OauthCriConfig.builder()
+                                .tokenUrl(new URI(""))
+                                .credentialUrl(new URI(""))
+                                .authorizeUrl(new URI(""))
+                                .clientId("ipv-core")
+                                .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
+                                .componentId("")
+                                .clientCallbackUrl(new URI(""))
+                                .requiresApiKey(false)
+                                .requiresAdditionalEvidence(false)
+                                .build());
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+
+        verify(sessionCredentialsService)
+                .getAllCredentials(TEST_IPV_SESSION_ID, clientOAuthSessionItem.getUserId());
+        verify(sessionCredentialsService, never()).getCredentials(anyString(), anyString());
+        verify(sessionCredentialsService, never())
+                .getCredentials(anyString(), anyString(), anyBoolean());
+
+        var checkVcSessionVcsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(mockCriCheckingService)
+                .checkVcResponse(
+                        eq(vcs),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem),
+                        checkVcSessionVcsCaptor.capture());
+        assertEquals(receivedThisSessionVcs, checkVcSessionVcsCaptor.getValue());
+
+        var storeVcsSessionVcsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(mockCriStoringService)
+                .storeVcs(
+                        eq(callbackRequest.getCredentialIssuer()),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(callbackRequest.getDeviceInformation()),
+                        eq(vcs),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem),
+                        storeVcsSessionVcsCaptor.capture());
+        assertEquals(allSessionVcs, storeVcsSessionVcsCaptor.getValue());
     }
 
     @Test
@@ -205,6 +313,9 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
+        when(sessionCredentialsService.getAllCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                .thenReturn(new SessionCredentials(List.of(), List.of()));
         when(mockCriCheckingService.checkVcResponse(
                         List.of(),
                         callbackRequest.getIpAddress(),
@@ -275,6 +386,9 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(bearerToken);
         when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
+        when(sessionCredentialsService.getAllCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                .thenReturn(new SessionCredentials(List.of(), List.of()));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
                         OauthCriConfig.builder()

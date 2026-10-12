@@ -59,6 +59,7 @@ import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestEx
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -340,8 +341,13 @@ public class ProcessCriCallbackHandler
                 criApiService.fetchVerifiableCredential(
                         accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
         var sessionVcs =
-                sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true);
+                sessionCredentialsService.getAllCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
+        var receivedThisSessionVcs = sessionVcs.receivedThisSession();
+        var receivedOtherSessionVcs = sessionVcs.receivedOtherSession();
+        var allSessionVcs =
+                Stream.concat(receivedThisSessionVcs.stream(), receivedOtherSessionVcs.stream())
+                        .toList();
 
         var vcs =
                 validateAndStoreResponse(
@@ -350,7 +356,7 @@ public class ProcessCriCallbackHandler
                         clientOAuthSessionItem,
                         criOAuthSessionItem,
                         ipvSessionItem,
-                        sessionVcs);
+                        allSessionVcs);
 
         var forcedJourney =
                 criCheckingService.checkVcResponse(
@@ -358,7 +364,7 @@ public class ProcessCriCallbackHandler
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
                         ipvSessionItem,
-                        sessionVcs);
+                        receivedThisSessionVcs);
         if (forcedJourney != null) {
             return forcedJourney;
         }
@@ -371,7 +377,7 @@ public class ProcessCriCallbackHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
-            List<VerifiableCredential> sessionVcs)
+            List<VerifiableCredential> allSessionVcs)
             throws VerifiableCredentialException,
                     JsonProcessingException,
                     InvalidCriCallbackRequestException,
@@ -407,7 +413,7 @@ public class ProcessCriCallbackHandler
                     vcs,
                     clientOAuthSessionItem,
                     ipvSessionItem,
-                    sessionVcs);
+                    allSessionVcs);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 

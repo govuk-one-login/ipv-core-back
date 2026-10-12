@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
+import uk.gov.di.ipv.core.library.enums.Vot;
 
 @Data
 @Builder
@@ -22,12 +23,12 @@ public class VotCiThresholdsConfig {
     @JsonProperty("P3")
     Integer p3;
 
-    public Integer getThreshold(String vot) {
-        return switch (vot.toUpperCase()) {
-            case "P1" -> p1;
-            case "P2" -> p2;
-            case "P3" -> p3;
-            default -> null;
+    public int getThreshold(Vot vot) {
+        return switch (vot) {
+            case Vot.P1 -> p1;
+            case Vot.P2 -> p2;
+            case Vot.P3 -> p3;
+            default -> throw new IllegalArgumentException("Invalid vot type");
         };
     }
 }

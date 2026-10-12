@@ -16,13 +16,13 @@ repos:
         args: ["--baseline", ".secrets.baseline"]
 
   - repo: https://github.com/awslabs/cfn-python-lint
-    rev: v1.57.1 # The version of cfn-lint to use
+    rev: v1.57.2 # The version of cfn-lint to use
     hooks:
       - id: cfn-python-lint
         files: .\/template\.yaml$
 
   - repo: https://github.com/bridgecrewio/checkov.git
-    rev: '3.3.20'
+    rev: '3.3.26'
     hooks:
       - id: checkov
         verbose: true

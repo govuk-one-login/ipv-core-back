@@ -411,16 +411,16 @@ public class ProcessCandidateIdentityHandler
 
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
             LOGGER.info(LogHelper.buildLogMessage("Performing profile evaluation"));
-            var journey =
-                    getJourneyResponseForProfileMatching(
+            var failedMatchResponse =
+                    checkForProfileMatch(
                             ipvSessionItem,
                             sessionVcs,
                             areVcsCorrelated,
                             votMatchingResult,
                             auditEventParameters);
 
-            if (journey != null) {
-                return journey.toObjectMap();
+            if (failedMatchResponse != null) {
+                return failedMatchResponse.toObjectMap();
             }
         }
 
@@ -525,7 +525,7 @@ public class ProcessCandidateIdentityHandler
         return STORE_IDENTITY_TYPES.contains(identityType);
     }
 
-    private JourneyResponse getJourneyResponseForProfileMatching(
+    private JourneyResponse checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs,
             boolean areVcsCorrelated,
@@ -582,18 +582,24 @@ public class ProcessCandidateIdentityHandler
             // This can happen when an error occurs prior to the first call to get the
             // security check credential e.g. in the check-existing-identity lambda.
             // If it is, we need to make a call to CIMIT prior to getting the TICF VC
-            // in order to get the mitigation information unaffected by this new VC.
-            String previousSecurityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
-            if (!clientOAuthSessionItem.isReverification()
-                    && StringUtils.isBlank(previousSecurityCheckCredential)) {
-                previousSecurityCheckCredential =
-                        cimitService
-                                .fetchContraIndicatorsVc(
-                                        clientOAuthSessionItem.getUserId(),
-                                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                        ipAddress,
-                                        ipvSessionItem)
-                                .getVcString();
+            // in order to get the mitigation information unaffected by the new TICF VC.
+            VerifiableCredential preTicfSecurityCheckVc = null;
+            if (!clientOAuthSessionItem.isReverification()) {
+                var preTicfSecurityCheckVcString = ipvSessionItem.getSecurityCheckCredential();
+
+                if (StringUtils.isBlank(preTicfSecurityCheckVcString)) {
+                    preTicfSecurityCheckVc =
+                            cimitService.fetchContraIndicatorsVc(
+                                    clientOAuthSessionItem.getUserId(),
+                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                    ipAddress,
+                                    ipvSessionItem);
+                } else {
+                    preTicfSecurityCheckVc =
+                            cimitUtilityService.getParsedSecurityCheckCredential(
+                                    preTicfSecurityCheckVcString,
+                                    clientOAuthSessionItem.getUserId());
+                }
             }
 
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
@@ -617,31 +623,20 @@ public class ProcessCandidateIdentityHandler
                 throw new AccountInterventionException();
             }
 
+            // If this is not an MFA reset journey
             if (!clientOAuthSessionItem.isReverification()) {
-                // Get mitigations from old CIMIT VC to compare against the mitigations on the new
-                // CIs
-                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-                var oldMitigations =
-                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                previousSecurityCheckCredential,
-                                clientOAuthSessionItem.getUserId(),
-                                targetVot);
-
                 var contraIndicatorsVc =
                         cimitService.fetchContraIndicatorsVc(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress,
                                 ipvSessionItem);
-                var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-                var newMitigations =
-                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                newCis, targetVot);
 
-                // If breaching and no available mitigations or a new mitigation is required, we
-                // return fail-with-ci
-                if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                        && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
+                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+
+                // Has the TICF VC caused a breach?
+                if (cimitUtilityService.requiresNewMitigation(
+                        preTicfSecurityCheckVc, contraIndicatorsVc, targetVot)) {
                     LOGGER.info(
                             LogHelper.buildLogMessage(
                                     "CI score is breaching threshold - setting VOT to P0"));
