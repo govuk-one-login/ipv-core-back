@@ -690,7 +690,7 @@ class CheckExistingIdentityHandlerTest {
                             new AsyncCriStatus(
                                     F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+            when(cimitUtilityService.getCiMitigationEventIfNoOtherMitigations(any(), any()))
                     .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
 
             var journeyResponse =
@@ -808,7 +808,7 @@ class CheckExistingIdentityHandlerTest {
                 throws Exception {
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+            when(cimitUtilityService.getCiMitigationEventIfNoOtherMitigations(any(), any()))
                     .thenReturn(Optional.empty());
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
@@ -826,7 +826,7 @@ class CheckExistingIdentityHandlerTest {
                 throws Exception {
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+            when(cimitUtilityService.getCiMitigationEventIfNoOtherMitigations(any(), any()))
                     .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
@@ -852,7 +852,7 @@ class CheckExistingIdentityHandlerTest {
                 String asyncCriStatus, String expectedJourney) throws Exception {
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
             when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-            when(cimitUtilityService.getCiMitigationEvent(any(), any()))
+            when(cimitUtilityService.getCiMitigationEventIfNoOtherMitigations(any(), any()))
                     .thenReturn(Optional.of(ENHANCED_VERIFICATION_EVENT));
             when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(new AsyncCriStatus(F2F, asyncCriStatus, true, true, false));

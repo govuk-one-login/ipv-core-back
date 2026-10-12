@@ -1748,8 +1748,8 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
         setP2Threshold(10); // if code uses getP2()
-        when(mockThresholds.getThreshold("P2")).thenReturn(10);
-        when(mockThresholds.getThreshold("P0")).thenReturn(10);
+        when(mockThresholds.getThreshold(Vot.P2)).thenReturn(10);
+        when(mockThresholds.getThreshold(Vot.P0)).thenReturn(10);
 
         setReturnCodes(
                 Map.of(

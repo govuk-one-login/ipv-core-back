@@ -18,12 +18,15 @@ import uk.gov.di.model.SecurityCheckCredential;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
 
 public class CimitUtilityService {
+    private record MitigationDetails(String mitigationEvent, boolean isMitigated) {}
+
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
 
@@ -86,7 +89,7 @@ public class CimitUtilityService {
                         .getConfiguration()
                         .getSelf()
                         .getCiScoringThresholdByVot()
-                        .getThreshold(confidenceRequested.name());
+                        .getThreshold(confidenceRequested);
         return score > threshold;
     }
 
@@ -103,76 +106,112 @@ public class CimitUtilityService {
 
     private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(
-                        configService
-                                .getConfiguration()
-                                .getSelf()
-                                .getCiScoringThresholdByVot()
-                                .getThreshold(vot.name())
-                                .toString());
+                > configService
+                        .getConfiguration()
+                        .getSelf()
+                        .getCiScoringThresholdByVot()
+                        .getThreshold(vot);
     }
 
-    public Optional<String> getMitigationEventIfBreachingOrActive(
+    public Optional<String> getRelevantMitigationEvent(
             String securityCheckCredential, String userID, Vot confidenceRequested)
             throws CiExtractionException, CredentialParseException {
         var cis = getContraIndicatorsFromVc(securityCheckCredential, userID);
-        return getMitigationEventIfBreachingOrActive(cis, confidenceRequested);
+        return getRelevantMitigationEvent(cis, confidenceRequested);
     }
 
-    public Optional<String> getMitigationEventIfBreachingOrActive(
+    public Optional<String> getRelevantMitigationEvent(
+            List<ContraIndicator> cis, Vot confidenceRequested) {
+        var details = getRelevantMitigationDetails(cis, confidenceRequested);
+        return details.isPresent() ? Optional.of(details.get().mitigationEvent) : Optional.empty();
+    }
+
+    // If we are currently breaching the CI threshold then return the mitigation event we should use
+    // to try to mitigate the CI.
+    // If we aren't currently breaching but we have mitigated a CI in the past then return the
+    // mitigation event for that CI so that we route consistently down the mitigation journey.
+    private Optional<MitigationDetails> getRelevantMitigationDetails(
             List<ContraIndicator> cis, Vot confidenceRequested) {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
-            return getCiMitigationEvent(cis, confidenceRequested);
+            return getCiMitigationDetailsIfNoOtherMitigations(cis, confidenceRequested);
         } else {
             // If the user has a mitigated CI, return the mitigation to prevent
             // them from going down routes to access CRIs they gained the CI from
             var mitigatedCi = hasMitigatedContraIndicator(cis);
             if (mitigatedCi.isPresent()) {
-                var cimitConfig = configService.getCimitConfig();
-
-                return getMitigationEvent(
-                        cimitConfig.get(mitigatedCi.get().getCode()),
-                        mitigatedCi.get().getDocument());
+                return getMitigationEvent(mitigatedCi.get());
             }
         }
 
         return Optional.empty();
     }
 
-    public Optional<String> getCiMitigationEvent(
+    public Optional<String> getCiMitigationEventIfNoOtherMitigations(
             List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
-        // Try to mitigate an unmitigated ci to resolve the threshold breach
-        var cimitConfig = configService.getCimitConfig();
+        var details =
+                getCiMitigationDetailsIfNoOtherMitigations(contraIndicators, confidenceRequested);
+        return details.isPresent() ? Optional.of(details.get().mitigationEvent) : Optional.empty();
+    }
+
+    private Optional<MitigationDetails> getCiMitigationDetailsIfNoOtherMitigations(
+            List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
+        // This check is a simplification for the implementation of core.
+        // We have historically not allowed more than one manual mitigation per identity as the
+        // routing would get unmanageable.
+        // Caveat: If the new CI is the same type as the old one then we won't notice the mitigation
+        // as CIMIT only keeps the most recent version of a CI, so the mitigated one will be
+        // overwritten and we won't see it here.
+        if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
+            return Optional.empty();
+        }
+
+        // Try to find an unmitigated ci that could be mitigated to resolve the threshold breach
+        // Note that this seems random based on the ordering of the CIs but in practice there will
+        // only be one mitigation to find.
         for (var ci : contraIndicators) {
             if (isCiMitigatable(ci)
                     && !isBreachingCiThresholdIfMitigated(
                             ci, contraIndicators, confidenceRequested)) {
-                // Prevent new mitigation journey if there is already a mitigated CI that fixes the
-                // breach
-                if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
-                    return Optional.empty();
-                }
-                return getMitigationEvent(cimitConfig.get(ci.getCode()), ci.getDocument());
+                return getMitigationEvent(ci);
             }
         }
         return Optional.empty();
     }
 
-    public Optional<ContraIndicator> hasMitigatedContraIndicator(
+    private Optional<ContraIndicator> hasMitigatedContraIndicator(
             List<ContraIndicator> contraIndicators) {
         // If user has already mitigated CI this method will return empty string
         // This is because Core allows only one mitigation to happen per user
         return contraIndicators.stream().filter(this::isMitigated).findFirst();
     }
 
-    private Optional<String> getMitigationEvent(List<CiRoutingConfig> routes, String document) {
+    private Optional<MitigationDetails> getMitigationEvent(ContraIndicator ci) {
+        var document = ci.getDocument();
+        var cimitConfig = configService.getCimitConfig();
+
+        var mitigationEvents = cimitConfig.get(ci.getCode());
+        if (mitigationEvents == null) {
+            return Optional.empty();
+        }
+
+        // A CI may have multiple different mitigations depending on the document type, find the one
+        // that matches the supplied document
         String documentType = document != null ? document.split("/")[0] : null;
-        if (routes == null) return Optional.empty();
-        return routes.stream()
-                .filter(r -> r.getDocument() == null || r.getDocument().equals(documentType))
-                .map(CiRoutingConfig::getEvent)
-                .findFirst()
-                .map(event -> event.substring(event.lastIndexOf('/') + 1));
+        var mitigationEvent =
+                mitigationEvents.stream()
+                        .filter(
+                                r ->
+                                        r.getDocument() == null
+                                                || r.getDocument().equals(documentType))
+                        .map(CiRoutingConfig::getEvent)
+                        .findFirst()
+                        .map(event -> event.substring(event.lastIndexOf('/') + 1));
+
+        if (mitigationEvent.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new MitigationDetails(mitigationEvent.get(), isMitigated(ci)));
     }
 
     private boolean isMitigated(ContraIndicator ci) {
@@ -227,5 +266,33 @@ public class CimitUtilityService {
                                     vc.getCredential().getClass())));
             throw new CiExtractionException(message);
         }
+    }
+
+    // Return true if the latest CIs are breaching and there is no mitigation, or the new mitigation
+    // doesn't match the mitigation route we are already on.
+    public boolean requiresNewMitigation(
+            VerifiableCredential previousSecurityCheckCredential,
+            VerifiableCredential newSecurityCheckCredential,
+            Vot targetVot)
+            throws CiExtractionException {
+        // Get mitigations from the old CIMIT VC to compare against the mitigations on the new CIs
+        var oldCis = getContraIndicatorsFromVc(previousSecurityCheckCredential);
+        var oldMitigationDetails = getRelevantMitigationDetails(oldCis, targetVot);
+
+        var newCis = getContraIndicatorsFromVc(newSecurityCheckCredential);
+        var newMitigationDetails = getRelevantMitigationDetails(newCis, targetVot);
+
+        var existingAndNewMitigationsMatch =
+                newMitigationDetails.isPresent()
+                        && oldMitigationDetails.isPresent()
+                        && Objects.equals(
+                                newMitigationDetails.get().mitigationEvent(),
+                                oldMitigationDetails.get().mitigationEvent())
+                        && newMitigationDetails.get().isMitigated()
+                                == oldMitigationDetails.get().isMitigated();
+
+        // If breaching and no available mitigations or a new mitigation is required
+        return isBreachingCiThreshold(newCis, targetVot)
+                && (newMitigationDetails.isEmpty() || !existingAndNewMitigationsMatch);
     }
 }
