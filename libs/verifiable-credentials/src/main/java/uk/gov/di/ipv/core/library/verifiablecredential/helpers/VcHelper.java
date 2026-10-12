@@ -250,6 +250,11 @@ public class VcHelper {
                 .anyMatch(VcHelper::hasNonFatalFraudCheckFailure);
     }
 
+    // Checks for non-fatal Fraud check failures (e.g., unavailable/inapplicable sources or certain
+    // zero-score checks).
+    // These emit 'fail-with-no-ci' in state machine journeys, making the Fraud score optional so
+    // the identity remains
+    // eligible for the M1C profile without treating the issue as a user fraud breach.
     public static boolean hasNonFatalFraudCheckFailure(VerifiableCredential vc) {
         return VcHelper.hasFailedFraudCheck(
                         vc, Set.of(APPLICABLE_AUTHORITATIVE_SOURCE, AVAILABLE_AUTHORITATIVE_SOURCE))
