@@ -124,9 +124,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
-        checkMitigation:
-          liveness-likeness:
-            targetState: PROCESS_UPDATE_IDENTITY
 
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -138,11 +135,9 @@ states:
       fraud-fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          liveness-likeness:
-            targetState: PROCESS_UPDATE_IDENTITY
       fraud-fail-with-no-ci-fatal:
-        targetState: PROCESS_UPDATE_IDENTITY
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   PROCESS_UPDATE_IDENTITY:
     response:
@@ -169,13 +164,6 @@ states:
       profile-unmet:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-        checkMitigation:
-          liveness-likeness:
-            targetState: IPV_SUCCESS_PAGE
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: true
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
