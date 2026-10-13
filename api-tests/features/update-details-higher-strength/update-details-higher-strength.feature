@@ -132,7 +132,7 @@ Feature: Update details higher strength
        When I use the OAuth response to get my identity
        Then I am issued a 'P2' identity
        And I have a stored identity record with a 'P3' max vot
-
+    @here
     Scenario: User abandons 6MFC App recovery
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response and pageContext
@@ -180,6 +180,11 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value            |
         | reason  | repeatFraudCheck |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: 6MFC identity recovery via App for Name change only profile unmet
       When I submit a 'given-names-only' event
@@ -441,7 +446,7 @@ Feature: Update details higher strength
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P3' max vot
-
+    @here
     Scenario: User chooses not to use the app after initial failure
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
@@ -481,3 +486,8 @@ Feature: Update details higher strength
         | isAppOnly  | true    |
       When I submit a 'preferNoApp' event
       Then I get an 'update-details-failed' page response
+      When I submit a 'continue' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
