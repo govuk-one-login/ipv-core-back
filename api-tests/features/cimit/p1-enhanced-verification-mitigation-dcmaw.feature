@@ -183,3 +183,63 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
+
+  Rule: User goes through the app twice in same session
+    Scenario: User failed app with no CI and was redirected to web journey then mitigated enhanced verification from KBV via app
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context    | Value |
+        | deviceType | dad   |
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'failed' VC
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get an 'page-multiple-doc-check' page response and pageContext
+        | Context   | Value |
+        | allowNino | true  |
+      When I submit a 'drivingLicence' event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'personal-independence-payment' page response
+      When I submit a 'end' event
+      Then I get a 'page-pre-experian-kbv-transition' page response
+      When I submit a 'next' event
+      Then I get a 'experianKbv' CRI response
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+      Then I get a 'photo-id-web-find-another-way' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-desktop-download-app' page response and pageContext
+        | Context    | Value  |
+        | smartphone | iphone |
+        | isAppOnly  | false  |
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '404'
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'NEEDS-ENHANCED-VERIFICATION' CI
+      And I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P1' identity
+      And I have a stored identity record with a 'P3' max vot

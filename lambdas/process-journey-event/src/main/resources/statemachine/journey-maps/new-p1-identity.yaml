@@ -715,6 +715,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
