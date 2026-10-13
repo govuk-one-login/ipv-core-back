@@ -67,6 +67,11 @@ Feature: Update details higher strength
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: Successful 6MFC identity recovery via App for Name change only
       When I submit a 'given-names-only' event
@@ -122,6 +127,11 @@ Feature: Update details higher strength
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+       When I submit a 'next' event
+       Then I get an OAuth response
+       When I use the OAuth response to get my identity
+       Then I am issued a 'P2' identity
+       And I have a stored identity record with a 'P3' max vot
 
     Scenario: User abandons 6MFC App recovery
       When I submit a 'given-names-only' event
@@ -170,6 +180,11 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value            |
         | reason  | repeatFraudCheck |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I have a stored identity record with a 'P3' max vot that is 'invalid'
 
     Scenario: 6MFC identity recovery via App for Name change only profile unmet
       When I submit a 'given-names-only' event
@@ -235,7 +250,11 @@ Feature: Update details higher strength
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
-
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
   Rule: Update details
     Background:
@@ -302,6 +321,11 @@ Feature: Update details higher strength
       Then I get a 'page-ipv-success' page response and pageContext
         | Context     | Value |
         | journeyType | coi   |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: COI recovery fails at final Fraud check - given name only
       When I submit a 'given-names-only' event
@@ -355,6 +379,11 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value         |
         | reason  | updateDetails |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: COI recovery when failing initial fraud check - address only
       When I submit a 'address-only' event
@@ -412,6 +441,11 @@ Feature: Update details higher strength
       Then I get a 'pyi-no-match' page response and pageContext
         | Context | Value         |
         | reason  | updateDetails |
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
 
     Scenario: User chooses not to use the app after initial failure
       When I submit a 'given-names-only' event
@@ -452,3 +486,8 @@ Feature: Update details higher strength
         | isAppOnly  | true    |
       When I submit a 'preferNoApp' event
       Then I get an 'update-details-failed' page response
+      When I submit a 'continue' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P3' max vot
