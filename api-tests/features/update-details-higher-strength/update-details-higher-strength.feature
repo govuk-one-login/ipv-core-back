@@ -132,7 +132,7 @@ Feature: Update details higher strength
        When I use the OAuth response to get my identity
        Then I am issued a 'P2' identity
        And I have a stored identity record with a 'P3' max vot
-    @here
+
     Scenario: User abandons 6MFC App recovery
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response and pageContext
@@ -446,7 +446,7 @@ Feature: Update details higher strength
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P3' max vot
-    @here
+
     Scenario: User chooses not to use the app after initial failure
       When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
