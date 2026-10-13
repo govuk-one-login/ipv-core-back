@@ -556,6 +556,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -576,7 +577,7 @@ states:
         targetState: OPEN_BANKING_CRI_PHOTO_ID
       app:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        targetEntryEvent: appTriageWithReset
       postOffice:
         targetState: PYI_POST_OFFICE
       returnToRp:
@@ -628,6 +629,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -651,7 +653,7 @@ states:
         targetState: OPEN_BANKING_CRI_NO_PHOTO_ID
       app:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        targetEntryEvent: appTriageWithReset
       postOffice:
         targetState: PYI_POST_OFFICE
       returnToRp:
@@ -677,6 +679,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -980,6 +983,7 @@ states:
             targetState: ERROR
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -1065,6 +1069,7 @@ states:
             targetState: ERROR
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -1150,7 +1155,7 @@ states:
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        targetEntryEvent: appTriageWithReset
       postOffice:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -1167,6 +1172,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR

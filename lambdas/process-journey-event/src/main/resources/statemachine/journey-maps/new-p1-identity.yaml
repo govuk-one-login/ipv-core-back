@@ -347,6 +347,7 @@ states:
     events:
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -580,6 +581,7 @@ states:
             targetState: ERROR
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -627,6 +629,7 @@ states:
             targetState: ERROR
       appTriage:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        targetEntryEvent: appTriageWithReset
         checkIfDisabled:
           dcmawAsync:
             targetJourney: TECHNICAL_ERROR
@@ -695,7 +698,7 @@ states:
     events:
       anotherTypePhotoId:
         targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        targetEntryEvent: appTriage
+        targetEntryEvent: appTriageWithReset
       postOffice:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
