@@ -191,6 +191,15 @@ jobs:
           role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.GH_ACTIONS_ROLE_ARN || secrets.GH_ACTIONS_ROLE_ARN_DEV }}
           aws-region: eu-west-2
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef # v1.6.41
+        with:
+          identity: ${{ vars.CHAINGUARD_IDENTITY }}
+
+      - name: Get Chainguard Maven token
+        run: |
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: SAM validate
         working-directory: ./deploy
         run: sam validate --region "${{ env.AWS_REGION }}"
@@ -200,6 +209,7 @@ jobs:
         run: sam build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
 
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
