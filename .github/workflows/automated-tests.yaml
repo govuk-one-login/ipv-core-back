@@ -170,6 +170,7 @@ jobs:
         uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
+          audience: libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
@@ -244,6 +245,7 @@ jobs:
         uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
+          audience: libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
