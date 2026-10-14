@@ -10,6 +10,24 @@ states:
     events:
       next:
         targetState: LIVE_IN_UK_PAGE
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            targetState: LIVE_IN_UK_PAGE
+            checkMitigation:
+              alternate-doc-invalid-dl:
+                targetState: WEB_DL_OR_PASSPORT
+                targetEntryEvent: alternate-doc-invalid-dl
+              alternate-doc-invalid-passport:
+                targetState: WEB_DL_OR_PASSPORT
+                targetEntryEvent: alternate-doc-invalid-passport
+              enhanced-verification:
+                targetState: MITIGATION_01_IDENTITY_START_PAGE
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: enhanced-verification
+              liveness-likeness:
+                targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
         checkMitigation:
           alternate-doc-invalid-dl:
             targetState: WEB_DL_OR_PASSPORT
@@ -23,8 +41,6 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
-          liveness-likeness:
-            targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
 
   KBV_MITIGATION_VIA_APP_SKIP_ADDRESS_FRAUD:
     events:
