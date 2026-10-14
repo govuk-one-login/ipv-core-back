@@ -76,7 +76,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Authenticate to Chainguard
-        uses: chainguard-dev/setup-chainctl@v0.2.2
+        uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
 
@@ -167,7 +167,7 @@ jobs:
           sed -i s/DCMAW_ASYNC_SECRET/"$DCMAW_ASYNC_SECRET"/ ../local-running/core.local.secrets.yaml
 
       - name: Authenticate to Chainguard
-        uses: chainguard-dev/setup-chainctl@v0.2.2
+        uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
 
