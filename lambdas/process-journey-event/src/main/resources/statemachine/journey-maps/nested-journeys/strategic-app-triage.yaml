@@ -16,6 +16,8 @@ entryEvents:
     targetState: STRATEGIC_APP_IDENTIFY_DEVICE
     targetEntryEvent: identify-device
     journeyContextToUnset: mamIphone,mamAndroid,dadIphone,dadAndroid
+  appTriageWithReset:
+    targetState: RESET_PENDING_DCMAW_ASYNC_VC
   dl-auth-source-check:
     targetState: STRATEGIC_APP_HANDLE_RESULT
     targetEntryEvent: dl-auth-source-check
@@ -530,11 +532,11 @@ nestedJourneyStates:
       pageId: app-passport-prove-identity
     events:
       useApp:
-        targetState: MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY
+        targetState: RESET_PENDING_DCMAW_ASYNC_VC
       returnToRp:
         exitEventToEmit: returnToRp
 
-  MITIGATION_RESET_DCMAW_ASYNC_VC_BEFORE_RETRY:
+  RESET_PENDING_DCMAW_ASYNC_VC:
     response:
       type: process
       lambda: reset-identity
