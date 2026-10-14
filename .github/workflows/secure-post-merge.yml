@@ -192,10 +192,9 @@ jobs:
           aws-region: eu-west-2
 
       - name: Authenticate to Chainguard
-        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef # v1.6.41
+        uses: chainguard-dev/setup-chainctl@v0.2.2
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
-          audience: libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
