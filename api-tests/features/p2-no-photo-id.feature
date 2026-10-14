@@ -1,6 +1,6 @@
 @Build @QualityGateIntegrationTest @QualityGateRegressionTest
 Feature: P2 no photo id journey
-  Rule: Open Banking CRI results
+  Rule: Open Banking CRI results - fraud check with activity history score
     Background: Start P2 no photo id journey
       Given I activate the 'openBanking' feature set
       When I start a new 'medium-confidence' journey
@@ -139,17 +139,6 @@ Feature: P2 no photo id journey
       Then I am issued a 'P0' identity
       And I don't have a stored identity in EVCS
 
-    Scenario: User fails Open Banking with breaching CI
-      When I submit 'kenneth-score-0-breaching' details to the CRI stub
-      Then I get a 'pyi-no-match' page response and pageContext
-        | Context | Value       |
-        | reason  | openBanking |
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I am issued a 'P0' identity
-      And I don't have a stored identity in EVCS
-
     Scenario: Open Banking CRI returns an error - user tries again
       When I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
@@ -217,6 +206,41 @@ Feature: P2 no photo id journey
       When I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response
       When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS
+
+  Rule: Open Banking CRI results - fraud check with no activity history score
+    Scenario: User fails Open Banking with no CI
+      Given I activate the 'openBanking' feature set
+      When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'prove-identity-online' page response
+      When I submit an 'next' event
+      Then I get a 'prove-identity-online-banking' page response
+      When I submit an 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details with attributes to the CRI stub
+        | Attribute | Values         |
+        | context   | "bank_account" |
+      Then I get a 'nino' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2-history-0' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'pyi-no-match' page response
+      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I am issued a 'P0' identity
