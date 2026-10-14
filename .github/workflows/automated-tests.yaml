@@ -75,10 +75,20 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
+        with:
+          identity: ${{ vars.CHAINGUARD_IDENTITY }}
+
+      - name: Get Chainguard Maven token
+        run: |
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: Build and unit tests
         run: ./gradlew clean build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
           POWERTOOLS_METRICS_DISABLED: true
 
       - name: Perform Static Analysis
@@ -156,6 +166,15 @@ jobs:
           sed -i s/TICF_API_KEY/"$TICF_API_KEY"/ ../local-running/core.local.secrets.yaml && \
           sed -i s/DCMAW_ASYNC_SECRET/"$DCMAW_ASYNC_SECRET"/ ../local-running/core.local.secrets.yaml
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
+        with:
+          identity: ${{ vars.CHAINGUARD_IDENTITY }}
+
+      - name: Get Chainguard Maven token
+        run: |
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: Local API tests
         env:
           ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
@@ -168,6 +187,7 @@ jobs:
           JAR_SIGNING_KEY: ${{ secrets.JAR_SIGNING_KEY }}
           EVCS_STUB_VERIFY_KEY: ${{ secrets.EVCS_STUB_VERIFY_KEY }}
           POWERTOOLS_METRICS_DISABLED: true
+          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
         run: npm run test:ci
 
       - name: Upload API test report
@@ -219,7 +239,17 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
+      
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
+        with:
+          identity: ${{ vars.CHAINGUARD_IDENTITY }}
+
+      - name: Get Chainguard Maven token
+        run: |
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
 
       - run: sam build -t deploy/template.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
