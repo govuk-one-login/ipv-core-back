@@ -117,14 +117,14 @@ states:
       next:
         targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
+        targetState: PROCESS_UPDATE_IDENTITY
       fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END_INVALID
+
   ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -136,7 +136,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fraud-fail-with-no-ci-fatal:
-        targetState: PROCESS_UPDATE_IDENTITY
+        targetJourney: FAILED
+        targetState: FAILED_HIGHER_STRENGTH_DEAD_END
 
   PROCESS_UPDATE_IDENTITY:
     response:
