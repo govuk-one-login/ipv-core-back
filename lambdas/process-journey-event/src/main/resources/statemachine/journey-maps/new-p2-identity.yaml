@@ -28,6 +28,10 @@ states:
                   mitigationType: enhanced-verification
               liveness-likeness:
                 targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
         checkMitigation:
           alternate-doc-invalid-dl:
             targetState: WEB_DL_OR_PASSPORT
