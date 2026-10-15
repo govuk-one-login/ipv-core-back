@@ -241,10 +241,9 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       
       - name: Authenticate to Chainguard
-        uses: chainguard-dev/actions/setup-chainctl@3403a578b543fd3f0debdaef9dd989ae54e3fcef
+        uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
-          audience: libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
