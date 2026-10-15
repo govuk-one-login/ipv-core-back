@@ -11,6 +11,8 @@ import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
 
+import java.text.ParseException;
+
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
 
 public class JwtHelper {
@@ -59,5 +61,9 @@ public class JwtHelper {
     public static boolean signatureIsDerFormat(SignedJWT signedJWT) throws JOSEException {
         return signedJWT.getSignature().decode().length
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
+    }
+
+    public static SignedJWT parse(final String s) throws ParseException {
+        return SignedJWT.parse(s);
     }
 }

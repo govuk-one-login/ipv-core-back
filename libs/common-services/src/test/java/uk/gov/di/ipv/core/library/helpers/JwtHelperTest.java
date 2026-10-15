@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 
@@ -106,6 +107,13 @@ class JwtHelperTest {
                 OBJECT_MAPPER.readTree(signatureJwt.getJWTClaimsSet().toString());
         assertEquals(sub, expectedClaimsSet.get("sub").asText());
         assertEquals(aud, expectedClaimsSet.get("aud").asText());
+    }
+
+    @Test
+    void shouldParseAJWT() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.SIGNED_JWT);
+        SignedJWT signedJwt = JwtHelper.parse(TestFixtures.SIGNED_JWT);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
     }
 
     private ECKey getPrivateKey() throws ParseException {
