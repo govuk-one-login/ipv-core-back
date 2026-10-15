@@ -28,6 +28,10 @@ states:
                   mitigationType: enhanced-verification
               liveness-likeness:
                 targetState: MITIGATE_CI_VIA_APP_SEPARATE_SESSION
+                auditEvents:
+                  - IPV_MITIGATION_START
+                auditContext:
+                  mitigationType: higher-strength
         checkMitigation:
           alternate-doc-invalid-dl:
             targetState: WEB_DL_OR_PASSPORT
@@ -94,9 +98,11 @@ states:
     events:
       next:
         targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
-        checkMitigation:
-          liveness-likeness:
-            targetState: MITIGATION_ADDRESS_AND_FRAUD_SEPARATE_SESSION
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATION_ADDRESS_AND_FRAUD_SEPARATE_SESSION
 
   IDENTITY_DOCUMENT_START:
     events:
