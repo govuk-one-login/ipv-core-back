@@ -94,9 +94,11 @@ states:
     events:
       next:
         targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
-        checkMitigation:
-          liveness-likeness:
-            targetState: MITIGATION_ADDRESS_AND_FRAUD_SEPARATE_SESSION
+        checkFeatureFlag:
+          mitigations9020Enabled:
+            checkMitigation:
+              liveness-likeness:
+                targetState: MITIGATION_ADDRESS_AND_FRAUD_SEPARATE_SESSION
 
   IDENTITY_DOCUMENT_START:
     events:
