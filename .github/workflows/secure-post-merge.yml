@@ -195,6 +195,7 @@ jobs:
         uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
+          audience: libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
