@@ -81,10 +81,15 @@ jobs:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
 
       - name: Authenticate to Chainguard registry
-        run: chainctl auth login --audience libraries.cgr.dev
+        run: |
+          set +e
+          chainctl auth login --audience libraries.cgr.dev
+          echo "Registry auth exit code: $?"
+          set -e
 
       - name: Get Chainguard Maven token
         run: |
+          chainctl auth token --audience libraries.cgr.dev -v=2
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
 
       - name: Build and unit tests
@@ -175,10 +180,15 @@ jobs:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
 
       - name: Authenticate to Chainguard registry
-        run: chainctl auth login --audience libraries.cgr.dev
+        run: |
+          set +e
+          chainctl auth login --audience libraries.cgr.dev
+          echo "Registry auth exit code: $?"
+          set -e
 
       - name: Get Chainguard Maven token
         run: |
+          chainctl auth token --audience libraries.cgr.dev -v=2
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
 
       - name: Local API tests
@@ -252,10 +262,15 @@ jobs:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
 
       - name: Authenticate to Chainguard registry
-        run: chainctl auth login --audience libraries.cgr.dev
+        run: |
+          set +e
+          chainctl auth login --audience libraries.cgr.dev
+          echo "Registry auth exit code: $?"
+          set -e
 
       - name: Get Chainguard Maven token
         run: |
+          chainctl auth token --audience libraries.cgr.dev -v=2
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
 
       - run: sam build -t deploy/template.yaml
