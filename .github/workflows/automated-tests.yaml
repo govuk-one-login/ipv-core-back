@@ -79,12 +79,13 @@ jobs:
         uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
-          audience: libraries.cgr.dev
+
+      - name: Authenticate to Chainguard registry
+        run: chainctl auth login --audience libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
-          echo "Token length: ${#TOKEN}"
 
       - name: Build and unit tests
         run: ./gradlew clean build
@@ -172,12 +173,13 @@ jobs:
         uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
-          audience: libraries.cgr.dev
+
+      - name: Authenticate to Chainguard registry
+        run: chainctl auth login --audience libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
-          echo "Token length: ${#TOKEN}"
 
       - name: Local API tests
         env:
@@ -248,12 +250,13 @@ jobs:
         uses: chainguard-dev/setup-chainctl@v0.5.1
         with:
           identity: ${{ vars.CHAINGUARD_IDENTITY }}
-          audience: libraries.cgr.dev
+
+      - name: Authenticate to Chainguard registry
+        run: chainctl auth login --audience libraries.cgr.dev
 
       - name: Get Chainguard Maven token
         run: |
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
-          echo "Token length: ${#TOKEN}"
 
       - run: sam build -t deploy/template.yaml
         env:
