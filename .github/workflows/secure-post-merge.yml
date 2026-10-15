@@ -217,7 +217,6 @@ jobs:
         run: sam build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
 
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9

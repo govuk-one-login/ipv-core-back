@@ -96,7 +96,6 @@ jobs:
         run: ./gradlew clean build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
           POWERTOOLS_METRICS_DISABLED: true
 
       - name: Perform Static Analysis
@@ -203,7 +202,6 @@ jobs:
           JAR_SIGNING_KEY: ${{ secrets.JAR_SIGNING_KEY }}
           EVCS_STUB_VERIFY_KEY: ${{ secrets.EVCS_STUB_VERIFY_KEY }}
           POWERTOOLS_METRICS_DISABLED: true
-          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
         run: npm run test:ci
 
       - name: Upload API test report
@@ -276,4 +274,3 @@ jobs:
       - run: sam build -t deploy/template.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHAINGUARD_TOKEN: ${{ env.CHAINGUARD_TOKEN }}
