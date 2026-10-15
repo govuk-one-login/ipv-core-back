@@ -92,6 +92,10 @@ jobs:
           chainctl auth token --audience libraries.cgr.dev -v=2
           echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
 
+      - name: Debug token
+        run: |
+          echo "Token length: ${#CHAINGUARD_TOKEN}"
+
       - name: Build and unit tests
         run: ./gradlew clean build
         env:
