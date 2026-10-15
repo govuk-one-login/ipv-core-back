@@ -96,6 +96,10 @@ jobs:
         run: |
           echo "Token length: ${#CHAINGUARD_TOKEN}"
 
+      - name: Debug registry access
+        run: |
+          wget --user=user --password=$CHAINGUARD_TOKEN https://libraries.cgr.dev/java/org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.pom -O -
+
       - name: Build and unit tests
         run: ./gradlew clean build
         env:
