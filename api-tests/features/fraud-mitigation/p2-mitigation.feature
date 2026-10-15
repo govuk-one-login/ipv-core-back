@@ -390,7 +390,7 @@ Feature: P2 Fraud mitigation
         | Context    | Value  |
         | smartphone | iphone |
         | isAppOnly  | false  |
-      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
+      When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'BREACHING' CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
@@ -399,7 +399,6 @@ Feature: P2 Fraud mitigation
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I tell the CIMIT stub that the 'BREACHING' CI is already mitigated
       And  I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |

@@ -18,8 +18,10 @@ Feature: Mortality check failures
       | Context    | Value  |
       | smartphone | iphone |
       | isAppOnly  | false  |
-    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC
-          # And the user returns from the app to core-front
+
+  Scenario: Mitigated mortality check results in M1C
+    When the async DCMAW CRI produces a 'kenneth-passport-valid' VC that mitigates the 'BREACHING' CI
+    # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get a 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
@@ -30,9 +32,6 @@ Feature: Mortality check failures
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
-
-  Scenario: Mitigated mortality check results in M1C
-    When I tell the CIMIT stub that the 'BREACHING' CI is already mitigated
     And  I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
       | Attribute          | Values                   |
       | evidence_requested | {"identityFraudScore":1} |
@@ -44,9 +43,25 @@ Feature: Mortality check failures
     And I have a stored identity record with a 'P2' max vot
 
   Scenario: Unmitigated mortality check results in failure
+    When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
+    Then I get a 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
+    When I submit the returned journey event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
       | Attribute          | Values                   |
-      | evidence_requested | {"identityFraudScore":1} |
+      | evidence_requested | {"identityFraudScore":2} |
     Then I get a 'pyi-no-match' page response
     When I submit a 'next' event
     Then I get an OAuth response

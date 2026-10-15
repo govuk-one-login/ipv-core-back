@@ -425,7 +425,7 @@ Feature: Fraud mitigation - COI
         | Context    | Value   |
         | smartphone | android |
         | isAppOnly  | true    |
-      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC
+      When the async DCMAW CRI produces a 'kenneth-changed-given-name-passport-valid' VC that mitigates the 'BREACHING' CI
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
@@ -434,7 +434,6 @@ Feature: Fraud mitigation - COI
         | noAddress | true  |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I tell the CIMIT stub that the 'BREACHING' CI is already mitigated
       And  I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |

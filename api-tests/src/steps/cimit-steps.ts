@@ -23,13 +23,3 @@ When(
     await cimitStubClient.createUserCi(this.userId, ciRequests);
   },
 );
-
-When(
-  "I tell the CIMIT stub that the {string} CI is already mitigated",
-  async function (this: World, ciCode: string): Promise<void> {
-    this.userId = this.userId ?? getRandomString(16);
-    await cimitStubClient.createPreMitigation(this.userId, ciCode, [
-      "MITIGATION",
-    ]);
-  },
-);
