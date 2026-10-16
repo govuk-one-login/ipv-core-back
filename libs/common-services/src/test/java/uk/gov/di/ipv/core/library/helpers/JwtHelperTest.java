@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
@@ -110,10 +111,18 @@ class JwtHelperTest {
     }
 
     @Test
-    void shouldParseAJWT() throws ParseException {
+    void shouldParseABase64URLJWT() throws ParseException {
         SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.SIGNED_JWT);
-        SignedJWT signedJwt = JwtHelper.parse(TestFixtures.SIGNED_JWT);
+        SignedJWT signedJwt = JwtHelper.parseBase64URLJWT(TestFixtures.SIGNED_JWT);
         assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
+    }
+
+    @Test
+    void shouldNotParseABase64JWT() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.BASE64_SIGNED_JWT);
+        assertThrows(
+                ParseException.class,
+                () -> JwtHelper.parseBase64URLJWT(TestFixtures.BASE64_SIGNED_JWT));
     }
 
     private ECKey getPrivateKey() throws ParseException {

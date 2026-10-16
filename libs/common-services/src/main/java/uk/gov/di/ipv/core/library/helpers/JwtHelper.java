@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
 
 import java.text.ParseException;
+import java.util.Base64;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
 
@@ -63,7 +64,15 @@ public class JwtHelper {
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
     }
 
-    public static SignedJWT parse(final String s) throws ParseException {
-        return SignedJWT.parse(s);
+    public static SignedJWT parseBase64URLJWT(final String token) throws ParseException {
+        String[] chunks = token.split("\\.");
+        try {
+            for (String chunk : chunks) {
+                Base64.getUrlDecoder().decode(chunk);
+            }
+        } catch (Exception e) {
+            throw new ParseException("Token must be Base64URL encoded", 1);
+        }
+        return SignedJWT.parse(token);
     }
 }
