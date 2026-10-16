@@ -31,7 +31,7 @@ states:
                 auditEvents:
                   - IPV_MITIGATION_START
                 auditContext:
-                  mitigationType: higher-strength
+                  mitigationType: higher-validity-verification
         checkMitigation:
           alternate-doc-invalid-dl:
             targetState: WEB_DL_OR_PASSPORT
@@ -343,7 +343,7 @@ states:
                 auditEvents:
                   - IPV_MITIGATION_START
                 auditContext:
-                  mitigationType: higher-strength
+                  mitigationType: higher-validity-verification
 
   PYI_ESCAPE:
     response:
@@ -453,7 +453,7 @@ states:
                 auditEvents:
                   - IPV_MITIGATION_START
                 auditContext:
-                  mitigationType: higher-strength
+                  mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
 
@@ -492,7 +492,7 @@ states:
                 auditEvents:
                   - IPV_MITIGATION_START
                 auditContext:
-                  mitigationType: higher-strength
+                  mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
@@ -549,7 +549,7 @@ states:
                 auditEvents:
                   - IPV_MITIGATION_START
                 auditContext:
-                  mitigationType: higher-strength
+                  mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
