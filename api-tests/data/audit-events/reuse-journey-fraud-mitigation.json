@@ -487,7 +487,7 @@
       "govuk_signin_journey_id": "type[string]"
     },
     "extensions": {
-      "mitigation_type": "higher-strength"
+      "mitigation_type": "higher-validity-verification"
     },
     "restricted": {
       "device_information": {}
