@@ -48,7 +48,7 @@ public class JwtHelper {
     }
 
     public static SignedJWT transcodeSignature(SignedJWT signedJWT)
-            throws JOSEException, java.text.ParseException {
+            throws JOSEException, ParseException {
         Base64URL transcodedSignatureBase64 =
                 Base64URL.encode(
                         ECDSA.transcodeSignatureToConcat(
