@@ -19,7 +19,7 @@ states:
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
-              mitigationType: higher-strength
+              mitigationType: higher-validity-verification
 
   # Journey States
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
