@@ -64,6 +64,10 @@ public class JwtHelper {
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
     }
 
+    // EVCS will not parse VC JWT strings that are Base64, rather than Base64URL, encoded.
+    // The JWT specification (https://datatracker.ietf.org/doc/html/rfc7515) states that
+    // Base64URL encoded strings must use its URL- and filename-safe character set,
+    // with all trailing '=' characters omitted.
     public static SignedJWT parseBase64URLJWT(String token) throws ParseException {
         String[] jwtParts = token.split("\\.");
         try {
