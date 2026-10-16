@@ -101,7 +101,7 @@ jobs:
           wget --user=user --password=$CHAINGUARD_TOKEN https://libraries.cgr.dev/java/org/mockito/mockito-core/5.23.0/mockito-core-5.23.0.pom -O -
 
       - name: Build and unit tests
-        run: ./gradlew clean build
+        run: ./gradlew clean build --info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           POWERTOOLS_METRICS_DISABLED: true
