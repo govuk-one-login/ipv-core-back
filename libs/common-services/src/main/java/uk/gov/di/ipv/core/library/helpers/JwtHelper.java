@@ -11,6 +11,9 @@ import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
 
+import java.text.ParseException;
+import java.util.Base64;
+
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
 
 public class JwtHelper {
@@ -45,7 +48,7 @@ public class JwtHelper {
     }
 
     public static SignedJWT transcodeSignature(SignedJWT signedJWT)
-            throws JOSEException, java.text.ParseException {
+            throws JOSEException, ParseException {
         Base64URL transcodedSignatureBase64 =
                 Base64URL.encode(
                         ECDSA.transcodeSignatureToConcat(
@@ -59,5 +62,28 @@ public class JwtHelper {
     public static boolean signatureIsDerFormat(SignedJWT signedJWT) throws JOSEException {
         return signedJWT.getSignature().decode().length
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
+    }
+
+    // EVCS will not parse VC JWT strings that are Base64, rather than Base64URL, encoded.
+    // The JWT specification (https://datatracker.ietf.org/doc/html/rfc7515) states that
+    // Base64URL encoded strings must use its URL- and filename-safe character set,
+    // with all trailing '=' characters omitted.
+    public static SignedJWT parseBase64URLJWT(String token) throws ParseException {
+        String[] jwtParts = token.split("\\.");
+        try {
+            for (String jwtPart : jwtParts) {
+                if (isPadded(jwtPart)) {
+                    throw new ParseException("JWT is not valid Base64URL: contains padding", 0);
+                }
+                Base64.getUrlDecoder().decode(jwtPart);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ParseException("JWT is not valid Base64URL: invalid characters", 0);
+        }
+        return SignedJWT.parse(token);
+    }
+
+    private static boolean isPadded(String jwtPart) {
+        return jwtPart.endsWith("=");
     }
 }

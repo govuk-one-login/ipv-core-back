@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
@@ -106,6 +108,34 @@ class JwtHelperTest {
                 OBJECT_MAPPER.readTree(signatureJwt.getJWTClaimsSet().toString());
         assertEquals(sub, expectedClaimsSet.get("sub").asText());
         assertEquals(aud, expectedClaimsSet.get("aud").asText());
+    }
+
+    @Test
+    void shouldParseABase64URLJWT() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.SIGNED_JWT);
+        SignedJWT signedJwt = JwtHelper.parseBase64URLJWT(TestFixtures.SIGNED_JWT);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
+    }
+
+    @Test
+    void shouldNotParseABase64JWT() throws ParseException {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () -> JwtHelper.parseBase64URLJWT(TestFixtures.BASE64_SIGNED_JWT_UNPADDED));
+
+        assertEquals("JWT is not valid Base64URL: invalid characters", parseException.getMessage());
+    }
+
+    @Test
+    void shouldNotParseAPaddedBase64URLJWT() throws ParseException {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () ->
+                                JwtHelper.parseBase64URLJWT(
+                                        TestFixtures.BASE64URL_SIGNED_JWT_PADDED));
+        assertEquals("JWT is not valid Base64URL: contains padding", parseException.getMessage());
     }
 
     private ECKey getPrivateKey() throws ParseException {
