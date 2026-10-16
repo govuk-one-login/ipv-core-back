@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheck;
@@ -86,7 +87,7 @@ public class VerifiableCredentialValidator {
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
         try {
-            var vcJwt = SignedJWT.parse(vcString);
+            var vcJwt = JwtHelper.parseBase64URLJWT(vcString);
             validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
