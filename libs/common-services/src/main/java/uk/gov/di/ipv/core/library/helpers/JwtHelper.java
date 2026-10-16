@@ -64,15 +64,22 @@ public class JwtHelper {
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
     }
 
-    public static SignedJWT parseBase64URLJWT(final String token) throws ParseException {
-        String[] chunks = token.split("\\.");
+    public static SignedJWT parseBase64URLJWT(String token) throws ParseException {
+        String[] jwtParts = token.split("\\.");
         try {
-            for (String chunk : chunks) {
-                Base64.getUrlDecoder().decode(chunk);
+            for (String jwtPart : jwtParts) {
+                if (isPadded(jwtPart)) {
+                    throw new ParseException("JWT is not valid Base64URL: contains padding", 0);
+                }
+                Base64.getUrlDecoder().decode(jwtPart);
             }
-        } catch (Exception e) {
-            throw new ParseException("Token must be Base64URL encoded", 1);
+        } catch (IllegalArgumentException e) {
+            throw new ParseException("JWT is not valid Base64URL: invalid characters", 0);
         }
         return SignedJWT.parse(token);
+    }
+
+    private static boolean isPadded(String jwtPart) {
+        return jwtPart.endsWith("=");
     }
 }

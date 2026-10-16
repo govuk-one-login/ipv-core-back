@@ -119,10 +119,23 @@ class JwtHelperTest {
 
     @Test
     void shouldNotParseABase64JWT() throws ParseException {
-        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.BASE64_SIGNED_JWT);
-        assertThrows(
-                ParseException.class,
-                () -> JwtHelper.parseBase64URLJWT(TestFixtures.BASE64_SIGNED_JWT));
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () -> JwtHelper.parseBase64URLJWT(TestFixtures.BASE64_SIGNED_JWT_UNPADDED));
+
+        assertEquals("JWT is not valid Base64URL: invalid characters", parseException.getMessage());
+    }
+
+    @Test
+    void shouldNotParseAPaddedBase64URLJWT() throws ParseException {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () ->
+                                JwtHelper.parseBase64URLJWT(
+                                        TestFixtures.BASE64URL_SIGNED_JWT_PADDED));
+        assertEquals("JWT is not valid Base64URL: contains padding", parseException.getMessage());
     }
 
     private ECKey getPrivateKey() throws ParseException {
