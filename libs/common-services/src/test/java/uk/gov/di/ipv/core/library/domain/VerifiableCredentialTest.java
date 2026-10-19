@@ -196,6 +196,7 @@ class VerifiableCredentialTest {
         var now = Instant.now();
         var sessionCredentialItem =
                 new SessionCredentialItem(SESSION_ID, CRI, vcFixture.getSignedJwt(), true, now);
+        System.out.println(vcFixture.getSignedJwt());
         try (MockedStatic<VerifiableCredentialParser> mockVcParser =
                 mockStatic(VerifiableCredentialParser.class)) {
             mockVcParser
@@ -208,6 +209,29 @@ class VerifiableCredentialTest {
                             VerifiableCredential.fromSessionCredentialItem(
                                     sessionCredentialItem, USER_ID));
         }
+    }
+
+    @Test
+    void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfVCIsBase64Encoded()
+            throws JOSEException, ParseException, CredentialParseException {
+        var now = Instant.now();
+        var sessionCredentialItem =
+                new SessionCredentialItem(
+                        SESSION_ID,
+                        CRI,
+                        SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                        true,
+                        now);
+
+        CredentialParseException credentialParseException =
+                assertThrows(
+                        CredentialParseException.class,
+                        () ->
+                                VerifiableCredential.fromSessionCredentialItem(
+                                        sessionCredentialItem, USER_ID));
+        assertEquals(
+                "JWT is not valid Base64URL: invalid characters",
+                credentialParseException.getCause().getMessage());
     }
 
     @Test

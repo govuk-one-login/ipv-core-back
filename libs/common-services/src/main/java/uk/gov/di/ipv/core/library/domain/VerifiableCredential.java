@@ -94,7 +94,7 @@ public class VerifiableCredential {
             return new VerifiableCredential(
                     userId,
                     Cri.fromId(sessionCredentialItem.getCriId()),
-                    SignedJWT.parse(sessionCredentialItem.getCredential()),
+                    JwtHelper.parseBase64URLJWT(sessionCredentialItem.getCredential()),
                     sessionCredentialItem.getMigrated(),
                     null);
         } catch (ParseException e) {
