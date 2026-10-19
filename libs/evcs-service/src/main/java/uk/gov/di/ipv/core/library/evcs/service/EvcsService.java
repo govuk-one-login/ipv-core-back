@@ -103,7 +103,7 @@ public class EvcsService {
             var cimitComponentId = configService.getCimitComponentId();
 
             for (var vc : evcsUserVcs) {
-                var jwt = JwtHelper.parseBase64URLJWT(vc.vc());
+                var jwt = JwtHelper.parseBase64URLJWT(vc.vc(), true);
                 var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the

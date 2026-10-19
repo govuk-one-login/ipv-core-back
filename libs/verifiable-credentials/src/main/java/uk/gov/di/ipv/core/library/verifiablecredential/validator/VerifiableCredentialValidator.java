@@ -87,7 +87,7 @@ public class VerifiableCredentialValidator {
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
         try {
-            var vcJwt = JwtHelper.parseBase64URLJWT(vcString);
+            var vcJwt = JwtHelper.parseBase64URLJWT(vcString, true);
             validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 

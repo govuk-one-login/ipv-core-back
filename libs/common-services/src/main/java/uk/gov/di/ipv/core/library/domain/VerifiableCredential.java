@@ -57,7 +57,7 @@ public class VerifiableCredential {
         }
 
         try {
-            var jwt = JwtHelper.parseBase64URLJWT(vcStoreItem.getCredential());
+            var jwt = JwtHelper.parseBase64URLJWT(vcStoreItem.getCredential(), true);
             return new VerifiableCredential(
                     vcStoreItem.getUserId(),
                     Cri.fromId(vcStoreItem.getCredentialIssuer()),
@@ -94,7 +94,7 @@ public class VerifiableCredential {
             return new VerifiableCredential(
                     userId,
                     Cri.fromId(sessionCredentialItem.getCriId()),
-                    JwtHelper.parseBase64URLJWT(sessionCredentialItem.getCredential()),
+                    JwtHelper.parseBase64URLJWT(sessionCredentialItem.getCredential(), true),
                     sessionCredentialItem.getMigrated(),
                     null);
         } catch (ParseException e) {
