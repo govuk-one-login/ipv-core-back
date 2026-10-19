@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -18,6 +17,7 @@ import uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
@@ -103,7 +103,7 @@ public class EvcsService {
             var cimitComponentId = configService.getCimitComponentId();
 
             for (var vc : evcsUserVcs) {
-                var jwt = SignedJWT.parse(vc.vc());
+                var jwt = JwtHelper.parseBase64URLJWT(vc.vc());
                 var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the
