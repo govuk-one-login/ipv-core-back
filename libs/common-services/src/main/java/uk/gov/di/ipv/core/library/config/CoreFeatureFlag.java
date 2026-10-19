@@ -5,7 +5,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
     SIS_VERIFICATION("sisVerificationEnabled"),
     MITIGATIONS_9020("mitigations9020Enabled"),
-    F2F_RETRY("f2fRetryEnabled");
+    F2F_RETRY("f2fRetryEnabled"),
+    ENFORCE_BASE64URL_VC_ENCODING("enforceBase64UrlVcEncoding");
 
     private final String name;
 
