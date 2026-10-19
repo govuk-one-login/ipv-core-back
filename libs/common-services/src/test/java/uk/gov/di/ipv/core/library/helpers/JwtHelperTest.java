@@ -118,7 +118,7 @@ class JwtHelperTest {
     }
 
     @Test
-    void shouldNotParseABase64JWT() throws ParseException {
+    void shouldNotParseABase64JWT() {
         ParseException parseException =
                 assertThrows(
                         ParseException.class,
@@ -128,7 +128,7 @@ class JwtHelperTest {
     }
 
     @Test
-    void shouldNotParseAPaddedBase64URLJWT() throws ParseException {
+    void shouldNotParseAPaddedBase64URLJWT() {
         ParseException parseException =
                 assertThrows(
                         ParseException.class,

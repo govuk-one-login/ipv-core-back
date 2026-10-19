@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.domain;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,8 +133,7 @@ class VerifiableCredentialTest {
     }
 
     @Test
-    void fromVcStoreItemShouldThrowCredentialParseExceptionWhenCredentialIsNotBase64URLEncoded()
-            throws JOSEException, ParseException, CredentialParseException {
+    void fromVcStoreItemShouldThrowCredentialParseExceptionWhenCredentialIsNotBase64URLEncoded() {
         var now = Instant.now();
 
         var vcStoreItem =
@@ -196,7 +194,6 @@ class VerifiableCredentialTest {
         var now = Instant.now();
         var sessionCredentialItem =
                 new SessionCredentialItem(SESSION_ID, CRI, vcFixture.getSignedJwt(), true, now);
-        System.out.println(vcFixture.getSignedJwt());
         try (MockedStatic<VerifiableCredentialParser> mockVcParser =
                 mockStatic(VerifiableCredentialParser.class)) {
             mockVcParser
@@ -213,7 +210,7 @@ class VerifiableCredentialTest {
 
     @Test
     void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfVCIsBase64Encoded()
-            throws JOSEException, ParseException, CredentialParseException {
+            throws ParseException {
         var now = Instant.now();
         var sessionCredentialItem =
                 new SessionCredentialItem(

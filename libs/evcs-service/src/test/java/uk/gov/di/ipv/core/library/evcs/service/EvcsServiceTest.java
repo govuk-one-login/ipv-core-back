@@ -405,8 +405,7 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testGetVerifiableCredentialsShouldThrowIfAnyVCIsBase64Encoded()
-            throws CredentialParseException, EvcsServiceException {
+    void testGetVerifiableCredentialsShouldThrowIfAnyVCIsBase64Encoded() {
         // Arrange
         when(mockConfigService.getCimitComponentId())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
@@ -418,7 +417,7 @@ class EvcsServiceTest {
                                 vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                 Cri.DCMAW));
 
-        List<EvcsGetUserVCDto> BASE64_EVCS_GET_USER_VC_DTO =
+        List<EvcsGetUserVCDto> base64EvcsGetUserVcDtos =
                 List.of(
                         new EvcsGetUserVCDto(
                                 vcAddressTwo().getVcString(),
@@ -448,7 +447,7 @@ class EvcsServiceTest {
                         CredentialParseException.class,
                         () ->
                                 evcsService.getVerifiableCredentials(
-                                        TEST_USER_ID, BASE64_EVCS_GET_USER_VC_DTO, CURRENT));
+                                        TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT));
         assertEquals(
                 "JWT is not valid Base64URL: invalid characters",
                 credentialParseException.getCause().getMessage());

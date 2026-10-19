@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
@@ -372,15 +373,7 @@ class VerifiableCredentialValidatorTest {
     }
 
     @Test
-    void throwsVerifiableCredentialExceptionOnVcsWithoutBase64UrlEncoding()
-            throws ParseException, JOSEException, VerifiableCredentialException {
-        var vcJwt = SignedJWT.parse(vcWebPassportSuccessful().getVcString());
-        var jwtParts = vcJwt.getParsedParts();
-        byte[] derSignatureBytes = ECDSA.transcodeSignatureToDER(vcJwt.getSignature().decode());
-        // Encode the signature as STANDARD Base64 (not Base64URL) — which is what EVCS rejects.
-        String base64Signature = java.util.Base64.getEncoder().encodeToString(derSignatureBytes);
-        String base64EncodedJwt =
-                jwtParts[0].toString() + "." + jwtParts[1].toString() + "." + base64Signature;
+    void throwsVerifiableCredentialExceptionOnVcsWithoutBase64UrlEncoding() {
         var exception =
                 assertThrows(
                         VerifiableCredentialException.class,
@@ -388,7 +381,7 @@ class VerifiableCredentialValidatorTest {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
                                     PASSPORT,
-                                    base64EncodedJwt,
+                                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
