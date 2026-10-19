@@ -1,10 +1,12 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -129,6 +131,29 @@ class VerifiableCredentialTest {
         assertThrows(
                 CredentialParseException.class,
                 () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
+    }
+
+    @Test
+    void fromVcStoreItemShouldThrowCredentialParseExceptionWhenCredentialIsNotBase64URLEncoded()
+            throws JOSEException, ParseException, CredentialParseException {
+        var now = Instant.now();
+
+        var vcStoreItem =
+                VcStoreItem.builder()
+                        .userId(USER_ID)
+                        .credentialIssuer(CRI_ID)
+                        .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
+                        .dateCreated(now)
+                        .expirationTime(now.minusSeconds(1))
+                        .migrated(now.plusSeconds(1))
+                        .build();
+        CredentialParseException credentialParseException =
+                assertThrows(
+                        CredentialParseException.class,
+                        () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
+        assertEquals(
+                "JWT is not valid Base64URL: invalid characters",
+                credentialParseException.getCause().getMessage());
     }
 
     @Test

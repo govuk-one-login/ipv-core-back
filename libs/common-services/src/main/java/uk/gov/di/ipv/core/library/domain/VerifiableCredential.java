@@ -5,6 +5,7 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -56,7 +57,7 @@ public class VerifiableCredential {
         }
 
         try {
-            var jwt = SignedJWT.parse(vcStoreItem.getCredential());
+            var jwt = JwtHelper.parseBase64URLJWT(vcStoreItem.getCredential());
             return new VerifiableCredential(
                     vcStoreItem.getUserId(),
                     Cri.fromId(vcStoreItem.getCredentialIssuer()),
