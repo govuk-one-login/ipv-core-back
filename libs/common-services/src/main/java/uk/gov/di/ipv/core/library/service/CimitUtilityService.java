@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
@@ -11,6 +10,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.SecurityCheckCredential;
@@ -226,10 +226,10 @@ public class CimitUtilityService {
     public VerifiableCredential getParsedSecurityCheckCredential(
             String securityCheckCredential, String userId) throws CredentialParseException {
         try {
-            var jwt = SignedJWT.parse(securityCheckCredential);
+            var jwt = JwtHelper.parseBase64URLJWT(securityCheckCredential);
             return VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         } catch (ParseException e) {
-            throw new CredentialParseException("Unable to parse vc string");
+            throw new CredentialParseException("Unable to parse vc string", e);
         }
     }
 

@@ -19,7 +19,9 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.MitigatingCredential;
@@ -634,6 +636,20 @@ class CimitUtilityServiceTest {
 
         // assert
         assertEquals(Optional.empty(), result);
+    }
+
+    @Test
+    void getParsedSecurityCheckCredentialThrowsErrorIfCredentialIsBase64Encoded() {
+        CredentialParseException credentialParseException =
+                assertThrows(
+                        CredentialParseException.class,
+                        () ->
+                                cimitUtilityService.getParsedSecurityCheckCredential(
+                                        TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                        "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc"));
+        assertEquals(
+                "JWT is not valid Base64URL: invalid characters",
+                credentialParseException.getCause().getMessage());
     }
 
     @ParameterizedTest
