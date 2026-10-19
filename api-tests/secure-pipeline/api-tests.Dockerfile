@@ -12,8 +12,9 @@ COPY openAPI /openAPI
 WORKDIR /api-tests
 
 ARG GITHUB_PAT
+ARG CHAINGUARD_TOKEN
 
-RUN npm ci && \
+RUN CHAINGUARD_TOKEN="$CHAINGUARD_TOKEN" npm ci && \
     cp .env.template .env
 
 ENTRYPOINT ["/run-tests.sh"]

@@ -108,6 +108,15 @@ jobs:
           cache: npm
           cache-dependency-path: '**/package-lock.json'
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/setup-chainctl@v0.5.1
+        with:
+          identity: ed89a7282cc1658ba304b99fe3ef7abb35fed9e8/d5a5a1e354d1ced8
+
+      - name: Get Chainguard npm token
+        run: |
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm ci --ignore-scripts # the .npmrc should already stop scripts, but no harm in having this too
 
