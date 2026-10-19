@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
@@ -101,9 +102,10 @@ public class EvcsService {
         try {
             var issuerCris = configService.getIssuerCris();
             var cimitComponentId = configService.getCimitComponentId();
+            var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
 
             for (var vc : evcsUserVcs) {
-                var jwt = JwtHelper.parseBase64URLJWT(vc.vc(), true);
+                var jwt = JwtHelper.parseBase64URLJWT(vc.vc(), enforceBase64Url);
                 var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the

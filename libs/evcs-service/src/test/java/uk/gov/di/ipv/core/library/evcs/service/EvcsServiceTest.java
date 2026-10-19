@@ -42,6 +42,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
@@ -405,8 +406,10 @@ class EvcsServiceTest {
     }
 
     @Test
-    void testGetVerifiableCredentialsShouldThrowIfAnyVCIsBase64Encoded() {
+    void testGetVerifiableCredentialsShouldThrowIfAnyVCIsBase64EncodedAndFeatureFlagIsEnabled() {
         // Arrange
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+
         when(mockConfigService.getCimitComponentId())
                 .thenReturn("https://cimit.stubs.account.gov.uk");
         when(mockConfigService.getIssuerCris())
@@ -451,6 +454,63 @@ class EvcsServiceTest {
         assertEquals(
                 "JWT is not valid Base64URL: invalid characters",
                 credentialParseException.getCause().getMessage());
+    }
+
+    @Test
+    void testGetVerifiableCredentialsShouldParseBase64EncodedVCsWhenFeatureFlagIsDisabled()
+            throws CredentialParseException {
+        // Arrange
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+
+        when(mockConfigService.getCimitComponentId())
+                .thenReturn("https://cimit.stubs.account.gov.uk");
+        when(mockConfigService.getIssuerCris())
+                .thenReturn(
+                        Map.of(
+                                vcAddressM1a().getClaimsSet().getIssuer(),
+                                Cri.ADDRESS,
+                                vcWebDrivingPermitDvaValid().getClaimsSet().getIssuer(),
+                                Cri.DRIVING_LICENCE,
+                                vcWebPassportSuccessful().getClaimsSet().getIssuer(),
+                                Cri.DCMAW));
+
+        List<EvcsGetUserVCDto> base64EvcsGetUserVcDtos =
+                List.of(
+                        new EvcsGetUserVCDto(
+                                vcAddressTwo().getVcString(),
+                                EvcsVCState.CURRENT,
+                                Map.of(
+                                        "reason", "testing",
+                                        "txmaEventId", "txma-event-id-2",
+                                        "timestampMs", "1714478033959")),
+                        new EvcsGetUserVCDto(
+                                TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                EvcsVCState.CURRENT,
+                                Map.of(
+                                        "reason", "testing",
+                                        "txmaEventId", "txma-event-id-2",
+                                        "timestampMs", "1714478033959")),
+                        new EvcsGetUserVCDto(
+                                VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
+                                EvcsVCState.CURRENT,
+                                Map.of(
+                                        "reason", "testing",
+                                        "txmaEventId", "txma-event-id-2",
+                                        "timestampMs", "1714478033959")));
+        // Act
+        var vcs =
+                evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT);
+        // Assert
+        assertEquals(
+                3,
+                (vcs.stream()
+                        .filter(
+                                vc ->
+                                        vc.getCri().equals(Cri.ADDRESS)
+                                                || vc.getCri().equals(Cri.DRIVING_LICENCE)
+                                                || vc.getCri().equals(Cri.DCMAW))
+                        .count()));
     }
 
     @Test
