@@ -267,60 +267,55 @@ class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource
-    void checkFeatureFlagBranchesShouldHaveTargetState(IpvJourneyTypes journeyType)
-            throws IOException {
+    void checkBranchesShouldDefineTargetState(IpvJourneyTypes journeyType) throws IOException {
         var stateMachine = new StateMachineInitializer(journeyType).initialize();
 
-        recursiveCheckFeatureFlagBranchesHaveTargetState(stateMachine);
+        recursiveCheckBranchesHaveTarget(stateMachine);
     }
 
-    private void recursiveCheckFeatureFlagBranchesHaveTargetState(Map<String, State> stateMachine) {
-        for (var stateName : stateMachine.keySet()) {
-            var state = stateMachine.get(stateName);
+    private void recursiveCheckBranchesHaveTarget(Map<String, State> stateMachine) {
+        for (var state : stateMachine.values()) {
             if (state instanceof BasicState basicState) {
-                checkFeatureFlagBranchesHaveTargetState(basicState.getEvents(), stateName);
+                checkBranchesHaveTarget(basicState.getEvents());
             } else if (state instanceof NestedJourneyInvokeState nestedState) {
-                recursiveCheckFeatureFlagBranchesHaveTargetState(
+                recursiveCheckBranchesHaveTarget(
                         nestedState.getNestedJourneyDefinition().getNestedJourneyStates());
             }
         }
     }
 
-    private void checkFeatureFlagBranchesHaveTargetState(
-            Map<String, Event> events, String stateName) {
+    private void checkBranchesHaveTarget(Map<String, Event> events) {
         if (events == null) {
             return;
         }
         for (var event : events.values()) {
             if (event instanceof BasicEvent basicEvent) {
-                checkFeatureFlagEventHasTargetState(basicEvent, stateName);
+                assertBranchesHaveTarget("checkIfDisabled", basicEvent.getCheckIfDisabled());
+                assertBranchesHaveTarget("checkFeatureFlag", basicEvent.getCheckFeatureFlag());
+                assertBranchesHaveTarget(
+                        "checkJourneyContext", basicEvent.getCheckJourneyContext());
+                assertBranchesHaveTarget("checkMitigation", basicEvent.getCheckMitigation());
+
+                checkBranchesHaveTarget(basicEvent.getCheckIfDisabled());
+                checkBranchesHaveTarget(basicEvent.getCheckFeatureFlag());
+                checkBranchesHaveTarget(basicEvent.getCheckJourneyContext());
+                checkBranchesHaveTarget(basicEvent.getCheckMitigation());
             }
         }
     }
 
-    private void checkFeatureFlagEventHasTargetState(BasicEvent event, String stateName) {
-        var checkFeatureFlag = event.getCheckFeatureFlag();
-        if (checkFeatureFlag != null) {
-            checkFeatureFlag.forEach(
-                    (featureFlag, branch) -> {
-                        if (branch instanceof BasicEvent branchEvent) {
-                            assertTrue(
-                                    branchEvent.getTargetState() != null
-                                            || branchEvent.getTargetJourney() != null,
-                                    "The checkFeatureFlag branch '%s' on state '%s' must define a targetState or targetJourney."
-                                            .formatted(featureFlag, stateName));
-                        }
-                    });
+    private void assertBranchesHaveTarget(String checkType, Map<String, Event> branches) {
+        if (branches == null) {
+            return;
         }
-
-        recurseIntoNestedEvents(event, stateName);
-    }
-
-    private void recurseIntoNestedEvents(BasicEvent event, String stateName) {
-        checkFeatureFlagBranchesHaveTargetState(event.getCheckIfDisabled(), stateName);
-        checkFeatureFlagBranchesHaveTargetState(event.getCheckFeatureFlag(), stateName);
-        checkFeatureFlagBranchesHaveTargetState(event.getCheckJourneyContext(), stateName);
-        checkFeatureFlagBranchesHaveTargetState(event.getCheckMitigation(), stateName);
+        branches.forEach(
+                (key, branch) ->
+                        assertTrue(
+                                branch instanceof BasicEvent b
+                                        && (b.getTargetState() != null
+                                                || b.getTargetJourney() != null),
+                                "The %s branch '%s' must define a targetState or targetJourney."
+                                        .formatted(checkType, key)));
     }
 
     @ParameterizedTest
