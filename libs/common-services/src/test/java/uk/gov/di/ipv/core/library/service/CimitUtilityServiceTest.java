@@ -29,24 +29,14 @@ import uk.gov.di.model.Mitigation;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class CimitUtilityServiceTest {
@@ -639,7 +629,9 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getParsedSecurityCheckCredentialThrowsErrorIfCredentialIsBase64Encoded() {
+    void
+            getParsedSecurityCheckCredentialThrowsErrorIfCredentialIsBase64EncodedAndFeatureFlagIsEnabled() {
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
         CredentialParseException credentialParseException =
                 assertThrows(
                         CredentialParseException.class,
@@ -650,6 +642,18 @@ class CimitUtilityServiceTest {
         assertEquals(
                 "JWT is not valid Base64URL: invalid characters",
                 credentialParseException.getCause().getMessage());
+    }
+
+    @Test
+    void getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64EncodedAndFeatureFlagIsFalse()
+            throws CredentialParseException {
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+        VerifiableCredential verifiableCredential =
+                cimitUtilityService.getParsedSecurityCheckCredential(
+                        TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                        "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc");
+        assertEquals(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc", verifiableCredential.getUserId());
     }
 
     @ParameterizedTest
