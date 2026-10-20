@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: aws-actions/setup-sam@89ddb14d60e682855e3fea4be85b3c56485de310
+      - uses: aws-actions/setup-sam@341eee193f458fa5aae5d52c94b0c5cf3a1c5a52
         with:
           use-installer: true
       - run: sam validate -t deploy/template.yaml --region eu-west-2 --lint
