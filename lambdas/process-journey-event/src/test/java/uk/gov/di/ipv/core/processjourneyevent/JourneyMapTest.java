@@ -267,6 +267,64 @@ class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource
+    void checkFeatureFlagBranchesShouldHaveTargetState(IpvJourneyTypes journeyType)
+            throws IOException {
+        var stateMachine = new StateMachineInitializer(journeyType).initialize();
+
+        recursiveCheckFeatureFlagBranchesHaveTargetState(stateMachine);
+    }
+
+    private void recursiveCheckFeatureFlagBranchesHaveTargetState(Map<String, State> stateMachine) {
+        for (var stateName : stateMachine.keySet()) {
+            var state = stateMachine.get(stateName);
+            if (state instanceof BasicState basicState) {
+                checkFeatureFlagBranchesHaveTargetState(basicState.getEvents(), stateName);
+            } else if (state instanceof NestedJourneyInvokeState nestedState) {
+                recursiveCheckFeatureFlagBranchesHaveTargetState(
+                        nestedState.getNestedJourneyDefinition().getNestedJourneyStates());
+            }
+        }
+    }
+
+    private void checkFeatureFlagBranchesHaveTargetState(
+            Map<String, Event> events, String stateName) {
+        if (events == null) {
+            return;
+        }
+        for (var event : events.values()) {
+            if (event instanceof BasicEvent basicEvent) {
+                checkFeatureFlagEventHasTargetState(basicEvent, stateName);
+            }
+        }
+    }
+
+    private void checkFeatureFlagEventHasTargetState(BasicEvent event, String stateName) {
+        var checkFeatureFlag = event.getCheckFeatureFlag();
+        if (checkFeatureFlag != null) {
+            checkFeatureFlag.forEach(
+                    (featureFlag, branch) -> {
+                        if (branch instanceof BasicEvent branchEvent) {
+                            assertTrue(
+                                    branchEvent.getTargetState() != null
+                                            || branchEvent.getTargetJourney() != null,
+                                    "The checkFeatureFlag branch '%s' on state '%s' must define a targetState or targetJourney."
+                                            .formatted(featureFlag, stateName));
+                        }
+                    });
+        }
+
+        recurseIntoNestedEvents(event, stateName);
+    }
+
+    private void recurseIntoNestedEvents(BasicEvent event, String stateName) {
+        checkFeatureFlagBranchesHaveTargetState(event.getCheckIfDisabled(), stateName);
+        checkFeatureFlagBranchesHaveTargetState(event.getCheckFeatureFlag(), stateName);
+        checkFeatureFlagBranchesHaveTargetState(event.getCheckJourneyContext(), stateName);
+        checkFeatureFlagBranchesHaveTargetState(event.getCheckMitigation(), stateName);
+    }
+
+    @ParameterizedTest
+    @EnumSource
     void shouldMatchNestedJourneyExitEvents(IpvJourneyTypes journeyType) throws IOException {
         var stateMachineInitialiser = new StateMachineInitializer(journeyType);
 

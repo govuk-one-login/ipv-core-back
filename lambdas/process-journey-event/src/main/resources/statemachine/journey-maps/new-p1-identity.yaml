@@ -87,6 +87,7 @@ states:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
         checkFeatureFlag:
           mitigations9020Enabled:
+            targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
             checkMitigation:
               liveness-likeness:
                 targetState: MITIGATION_ADDRESS_AND_FRAUD_SEPARATE_SESSION
