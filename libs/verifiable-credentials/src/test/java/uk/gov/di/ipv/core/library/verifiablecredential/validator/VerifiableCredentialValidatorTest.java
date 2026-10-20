@@ -26,23 +26,17 @@ import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCI;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessfulWithRsaKeyType;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialValidatorTest {
@@ -373,7 +367,9 @@ class VerifiableCredentialValidatorTest {
     }
 
     @Test
-    void throwsVerifiableCredentialExceptionOnVcsWithoutBase64UrlEncoding() {
+    void
+            throwsVerifiableCredentialExceptionOnVcsWithoutBase64UrlEncodingWhenFeatureFlagIsEnabled() {
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
         var exception =
                 assertThrows(
                         VerifiableCredentialException.class,
@@ -381,7 +377,7 @@ class VerifiableCredentialValidatorTest {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
                                     PASSPORT,
-                                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                    TestFixtures.PASSPORT_BASE64_JWT,
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
                                     false);
@@ -389,6 +385,24 @@ class VerifiableCredentialValidatorTest {
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, exception.getErrorResponse());
+    }
+
+    @Test
+    void validatesValidBase64EncodedVcsWithDerSignatureSuccessfullyWhenFeatureFlagIsDisabled()
+            throws ParseException, JOSEException, VerifiableCredentialException {
+        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+        var vc =
+                vcJwtValidator.parseAndValidate(
+                        TEST_USER,
+                        PASSPORT,
+                        TestFixtures.PASSPORT_BASE64_JWT,
+                        VALID_EC_SIGNING_KEY,
+                        TEST_COMPONENT_ID,
+                        false);
+
+        assertEquals(TEST_USER, vc.getUserId());
+        assertEquals(PASSPORT, vc.getCri());
+        assertEquals(TestFixtures.PASSPORT_BASE64_JWT, vc.getVcString());
     }
 
     @Test
