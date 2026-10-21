@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -61,17 +60,21 @@ class SessionCredentialsServiceTest {
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
-    @InjectMocks private SessionCredentialsService sessionCredentialService;
     @Mock private ConfigService mockConfigService;
+    private SessionCredentialsService sessionCredentialService;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        sessionCredentialService = new SessionCredentialsService(mockDataStore);
+        var f = SessionCredentialsService.class.getDeclaredField("configService");
+        f.setAccessible(true);
+        f.set(sessionCredentialService, mockConfigService);
+    }
 
     @Nested
     class Writes {
         @BeforeEach
-        void setUpWrites() throws Exception {
-            var f = SessionCredentialsService.class.getDeclaredField("configService");
-            f.setAccessible(true);
-            f.set(sessionCredentialService, mockConfigService);
-
+        void setUpWrites() {
             when(mockConfigService.getSessionCredentialTtl()).thenReturn(900L);
         }
 
