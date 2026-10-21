@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -116,11 +117,13 @@ public class SessionCredentialsService {
     private List<VerifiableCredential> mapSessionCredentialsToVcs(
             List<SessionCredentialItem> sessionCredentialItems, String userId)
             throws VerifiableCredentialException {
+        boolean enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
             var verifiableCredentialList = new ArrayList<VerifiableCredential>();
             for (var credential : sessionCredentialItems) {
                 verifiableCredentialList.add(
-                        VerifiableCredential.fromSessionCredentialItem(credential, userId, true));
+                        VerifiableCredential.fromSessionCredentialItem(
+                                credential, userId, enforceBase64Url));
             }
             return verifiableCredentialList;
         } catch (CredentialParseException e) {

@@ -12,14 +12,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.IdentityResetType;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -35,6 +38,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -573,6 +577,83 @@ class SessionCredentialsServiceTest {
                     HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
             assertEquals(
                     FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
+        }
+    }
+
+    @Nested
+    class Base64URLEnforcement {
+        @Test
+        void
+                getCredentialShouldThrowVerifiableCredentialExceptionIfVCIsBase64EncodedAndBase64URLIsEnforced()
+                        throws ParseException {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+            var item =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            Cri.DRIVING_LICENCE,
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            false,
+                            null);
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item));
+
+            VerifiableCredentialException verifiableCredentialException =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> sessionCredentialService.getCredentials(SESSION_ID, USER_ID));
+
+            assertEquals(
+                    FAILED_TO_PARSE_ISSUED_CREDENTIALS,
+                    verifiableCredentialException.getErrorResponse());
+        }
+
+        @Test
+        void
+                getCredentialsShouldNotThrowVerifiableCredentialExceptionIfVCIsBase64EncodedAndBase64URLIsNotEnforced()
+                        throws Exception {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+
+            var item =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            Cri.DRIVING_LICENCE,
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            false,
+                            null);
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item));
+
+            var retrievedVcs = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
+
+            assertEquals(1, retrievedVcs.size());
+            assertEquals(
+                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                    retrievedVcs.getFirst().getVcString());
+        }
+
+        @Test
+        void
+                getCredentialsShouldReturnVerifiableCredentialsIfAllVCsAreBase64URLEncodedAndBase64URLIsEnforced()
+                        throws Exception {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+
+            var item1 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_1.getCri(),
+                            CREDENTIAL_1.getSignedJwt(),
+                            false,
+                            null);
+            var item2 =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            CREDENTIAL_2.getCri(),
+                            CREDENTIAL_2.getSignedJwt(),
+                            false,
+                            null);
+            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2));
+
+            var retrievedVcs = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
+
+            assertEquals(2, retrievedVcs.size());
         }
     }
 }
