@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -133,56 +134,6 @@ class VerifiableCredentialTest {
     }
 
     @Test
-    void fromVcStoreItemShouldThrowCredentialParseExceptionWhenCredentialIsNotBase64URLEncoded() {
-        var now = Instant.now();
-
-        var vcStoreItem =
-                VcStoreItem.builder()
-                        .userId(USER_ID)
-                        .credentialIssuer(CRI_ID)
-                        .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
-                        .dateCreated(now)
-                        .expirationTime(now.minusSeconds(1))
-                        .migrated(now.plusSeconds(1))
-                        .build();
-        CredentialParseException credentialParseException =
-                assertThrows(
-                        CredentialParseException.class,
-                        () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
-        assertEquals(
-                "JWT is not valid Base64URL: invalid characters",
-                credentialParseException.getCause().getMessage());
-    }
-
-    @Test
-    void
-            fromVcStoreItemDoesNotThrowCredentialParseExceptionIfVCIsBase64EncodedWhenTheFeatureFlagIsFalse()
-                    throws ParseException, CredentialParseException {
-        var now = Instant.now();
-        var vcStoreItem =
-                VcStoreItem.builder()
-                        .userId(USER_ID)
-                        .credentialIssuer(DRIVING_LICENCE.getId())
-                        .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
-                        .dateCreated(now)
-                        .expirationTime(now.minusSeconds(1))
-                        .migrated(now.plusSeconds(1))
-                        .build();
-        var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem, false);
-
-        assertEquals(USER_ID, verifiableCredential.getUserId());
-        assertEquals(DRIVING_LICENCE, verifiableCredential.getCri());
-        assertEquals(
-                TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                verifiableCredential.getVcString());
-        assertEquals(vcFixture.getClaimsSet(), verifiableCredential.getClaimsSet());
-        assertEquals(
-                TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                verifiableCredential.getSignedJwt().serialize());
-        assertEquals(now.plusSeconds(1), verifiableCredential.getMigrated());
-    }
-
-    @Test
     void toVcStoreItemShouldCreateOne() {
         var now = Instant.now();
         vcFixture.setMigrated(now);
@@ -238,57 +189,6 @@ class VerifiableCredentialTest {
     }
 
     @Test
-    void
-            fromSessionCredentialItemShouldThrowCredentialParseExceptionIfVCIsBase64EncodedWhenTheFeatureFlagIsTrue()
-                    throws ParseException {
-        var now = Instant.now();
-        var sessionCredentialItem =
-                new SessionCredentialItem(
-                        SESSION_ID,
-                        DRIVING_LICENCE,
-                        SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
-                        true,
-                        now);
-
-        CredentialParseException credentialParseException =
-                assertThrows(
-                        CredentialParseException.class,
-                        () ->
-                                VerifiableCredential.fromSessionCredentialItem(
-                                        sessionCredentialItem, USER_ID, true));
-        assertEquals(
-                "JWT is not valid Base64URL: invalid characters",
-                credentialParseException.getCause().getMessage());
-    }
-
-    @Test
-    void
-            fromSessionCredentialItemDoesNotThrowCredentialParseExceptionIfVCIsBase64EncodedWhenTheFeatureFlagIsFalse()
-                    throws ParseException, CredentialParseException {
-        var now = Instant.now();
-        var sessionCredentialItem =
-                new SessionCredentialItem(
-                        SESSION_ID,
-                        DRIVING_LICENCE,
-                        SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
-                        true,
-                        now);
-
-        var generatedVc =
-                VerifiableCredential.fromSessionCredentialItem(
-                        sessionCredentialItem, USER_ID, false);
-
-        assertEquals(USER_ID, generatedVc.getUserId());
-        assertEquals(DRIVING_LICENCE, generatedVc.getCri());
-        assertEquals(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED, generatedVc.getVcString());
-        assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
-        assertEquals(
-                TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                generatedVc.getSignedJwt().serialize());
-        assertEquals(now, generatedVc.getMigrated());
-    }
-
-    @Test
     void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfUnableToParse() {
         var mockSignedJwt = mock(SignedJWT.class);
         when(mockSignedJwt.serialize()).thenReturn("👽");
@@ -317,5 +217,110 @@ class VerifiableCredentialTest {
         assertEquals(expected.getCredential(), sessionCredentialItem.getCredential());
         assertEquals(
                 expected.isReceivedThisSession(), sessionCredentialItem.isReceivedThisSession());
+    }
+
+    @Nested
+    class Base64UrlEnforcement {
+        @Test
+        void
+                fromSessionCredentialItemShouldCreateAVerifiableCredentialFromBase64VCWhenBase64UrlIsNotEnforced()
+                        throws ParseException, CredentialParseException {
+            var now = Instant.now();
+            var sessionCredentialItem =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            DRIVING_LICENCE,
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            true,
+                            now);
+
+            var generatedVc =
+                    VerifiableCredential.fromSessionCredentialItem(
+                            sessionCredentialItem, USER_ID, false);
+
+            assertEquals(USER_ID, generatedVc.getUserId());
+            assertEquals(DRIVING_LICENCE, generatedVc.getCri());
+            assertEquals(
+                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED, generatedVc.getVcString());
+            assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
+            assertEquals(
+                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                    generatedVc.getSignedJwt().serialize());
+            assertEquals(now, generatedVc.getMigrated());
+        }
+
+        @Test
+        void
+                fromSessionCredentialItemThrowsVerifiableCredentialExceptionOnBase64VcWhenBase64UrlIsEnforced()
+                        throws ParseException {
+            var now = Instant.now();
+            var sessionCredentialItem =
+                    new SessionCredentialItem(
+                            SESSION_ID,
+                            DRIVING_LICENCE,
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            true,
+                            now);
+
+            CredentialParseException credentialParseException =
+                    assertThrows(
+                            CredentialParseException.class,
+                            () ->
+                                    VerifiableCredential.fromSessionCredentialItem(
+                                            sessionCredentialItem, USER_ID, true));
+            assertEquals(
+                    "JWT is not valid Base64URL: invalid characters",
+                    credentialParseException.getCause().getMessage());
+        }
+
+        @Test
+        void fromVcStoreThrowsVerifiableCredentialExceptionOnBase64VcWhenBase64UrlIsEnforced() {
+            var now = Instant.now();
+
+            var vcStoreItem =
+                    VcStoreItem.builder()
+                            .userId(USER_ID)
+                            .credentialIssuer(CRI_ID)
+                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
+                            .dateCreated(now)
+                            .expirationTime(now.minusSeconds(1))
+                            .migrated(now.plusSeconds(1))
+                            .build();
+            CredentialParseException credentialParseException =
+                    assertThrows(
+                            CredentialParseException.class,
+                            () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
+            assertEquals(
+                    "JWT is not valid Base64URL: invalid characters",
+                    credentialParseException.getCause().getMessage());
+        }
+
+        @Test
+        void
+                fromVcStoreItemShouldCreateAVerifiableCredentialFromBase64VCWhenBase64UrlIsNotEnforced()
+                        throws CredentialParseException {
+            var now = Instant.now();
+            var vcStoreItem =
+                    VcStoreItem.builder()
+                            .userId(USER_ID)
+                            .credentialIssuer(DRIVING_LICENCE.getId())
+                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
+                            .dateCreated(now)
+                            .expirationTime(now.minusSeconds(1))
+                            .migrated(now.plusSeconds(1))
+                            .build();
+            var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem, false);
+
+            assertEquals(USER_ID, verifiableCredential.getUserId());
+            assertEquals(DRIVING_LICENCE, verifiableCredential.getCri());
+            assertEquals(
+                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                    verifiableCredential.getVcString());
+            assertEquals(vcFixture.getClaimsSet(), verifiableCredential.getClaimsSet());
+            assertEquals(
+                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                    verifiableCredential.getSignedJwt().serialize());
+            assertEquals(now.plusSeconds(1), verifiableCredential.getMigrated());
+        }
     }
 }
