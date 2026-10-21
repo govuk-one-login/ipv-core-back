@@ -120,7 +120,7 @@ public class SessionCredentialsService {
             var verifiableCredentialList = new ArrayList<VerifiableCredential>();
             for (var credential : sessionCredentialItems) {
                 verifiableCredentialList.add(
-                        VerifiableCredential.fromSessionCredentialItem(credential, userId));
+                        VerifiableCredential.fromSessionCredentialItem(credential, userId, true));
             }
             return verifiableCredentialList;
         } catch (CredentialParseException e) {

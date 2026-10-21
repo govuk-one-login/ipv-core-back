@@ -145,13 +145,13 @@ class SessionCredentialsServiceTest {
             var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
 
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
                     retrievedVc.get(0));
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item2, USER_ID),
+                    VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true),
                     retrievedVc.get(1));
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item3, USER_ID),
+                    VerifiableCredential.fromSessionCredentialItem(item3, USER_ID, true),
                     retrievedVc.get(2));
         }
 
@@ -172,7 +172,7 @@ class SessionCredentialsServiceTest {
             var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID, true);
 
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
                     retrievedVc.get(0));
         }
 
@@ -243,11 +243,11 @@ class SessionCredentialsServiceTest {
             // Assert
             assertEquals(
                     List.of(
-                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
-                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true)),
                     result.receivedThisSession());
             assertEquals(
-                    List.of(VerifiableCredential.fromSessionCredentialItem(item3, USER_ID)),
+                    List.of(VerifiableCredential.fromSessionCredentialItem(item3, USER_ID, true)),
                     result.receivedOtherSession());
         }
 
@@ -291,8 +291,8 @@ class SessionCredentialsServiceTest {
             // Assert
             assertEquals(
                     List.of(
-                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
-                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true)),
                     result.receivedThisSession());
             assertEquals(List.of(), result.receivedOtherSession());
         }
