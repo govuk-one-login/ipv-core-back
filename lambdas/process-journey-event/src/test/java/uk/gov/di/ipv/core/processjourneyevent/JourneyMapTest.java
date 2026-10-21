@@ -267,6 +267,59 @@ class JourneyMapTest {
 
     @ParameterizedTest
     @EnumSource
+    void checkBranchesShouldDefineTargetState(IpvJourneyTypes journeyType) throws IOException {
+        var stateMachine = new StateMachineInitializer(journeyType).initialize();
+
+        recursiveCheckBranchesHaveTarget(stateMachine);
+    }
+
+    private void recursiveCheckBranchesHaveTarget(Map<String, State> stateMachine) {
+        for (var state : stateMachine.values()) {
+            if (state instanceof BasicState basicState) {
+                checkBranchesHaveTarget(basicState.getEvents());
+            } else if (state instanceof NestedJourneyInvokeState nestedState) {
+                recursiveCheckBranchesHaveTarget(
+                        nestedState.getNestedJourneyDefinition().getNestedJourneyStates());
+            }
+        }
+    }
+
+    private void checkBranchesHaveTarget(Map<String, Event> events) {
+        if (events == null) {
+            return;
+        }
+        for (var event : events.values()) {
+            if (event instanceof BasicEvent basicEvent) {
+                assertBranchesHaveTarget("checkIfDisabled", basicEvent.getCheckIfDisabled());
+                assertBranchesHaveTarget("checkFeatureFlag", basicEvent.getCheckFeatureFlag());
+                assertBranchesHaveTarget(
+                        "checkJourneyContext", basicEvent.getCheckJourneyContext());
+                assertBranchesHaveTarget("checkMitigation", basicEvent.getCheckMitigation());
+
+                checkBranchesHaveTarget(basicEvent.getCheckIfDisabled());
+                checkBranchesHaveTarget(basicEvent.getCheckFeatureFlag());
+                checkBranchesHaveTarget(basicEvent.getCheckJourneyContext());
+                checkBranchesHaveTarget(basicEvent.getCheckMitigation());
+            }
+        }
+    }
+
+    private void assertBranchesHaveTarget(String checkType, Map<String, Event> branches) {
+        if (branches == null) {
+            return;
+        }
+        branches.forEach(
+                (key, branch) ->
+                        assertTrue(
+                                branch instanceof BasicEvent b
+                                        && (b.getTargetState() != null
+                                                || b.getTargetJourney() != null),
+                                "The %s branch '%s' must define a targetState or targetJourney."
+                                        .formatted(checkType, key)));
+    }
+
+    @ParameterizedTest
+    @EnumSource
     void shouldMatchNestedJourneyExitEvents(IpvJourneyTypes journeyType) throws IOException {
         var stateMachineInitialiser = new StateMachineInitializer(journeyType);
 
