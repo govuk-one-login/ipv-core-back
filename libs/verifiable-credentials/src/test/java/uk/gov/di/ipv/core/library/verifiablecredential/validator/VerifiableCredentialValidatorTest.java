@@ -9,6 +9,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.message.Message;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -367,45 +368,6 @@ class VerifiableCredentialValidatorTest {
     }
 
     @Test
-    void
-            throwsVerifiableCredentialExceptionOnVcsWithoutBase64UrlEncodingWhenFeatureFlagIsEnabled() {
-        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
-        var exception =
-                assertThrows(
-                        VerifiableCredentialException.class,
-                        () -> {
-                            vcJwtValidator.parseAndValidate(
-                                    TEST_USER,
-                                    PASSPORT,
-                                    TestFixtures.PASSPORT_BASE64_JWT,
-                                    VALID_EC_SIGNING_KEY,
-                                    TEST_COMPONENT_ID,
-                                    false);
-                        });
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, exception.getErrorResponse());
-    }
-
-    @Test
-    void validatesValidBase64EncodedVcsWithDerSignatureSuccessfullyWhenFeatureFlagIsDisabled()
-            throws VerifiableCredentialException {
-        when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-        var vc =
-                vcJwtValidator.parseAndValidate(
-                        TEST_USER,
-                        PASSPORT,
-                        TestFixtures.PASSPORT_BASE64_JWT,
-                        VALID_EC_SIGNING_KEY,
-                        TEST_COMPONENT_ID,
-                        false);
-
-        assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT, vc.getCri());
-        assertEquals(TestFixtures.PASSPORT_BASE64_JWT, vc.getVcString());
-    }
-
-    @Test
     void validateDoesNotLogUserIdWhenFailingValidation() {
         var logCollector = LogCollector.getLogCollectorFor(VerifiableCredentialValidator.class);
 
@@ -423,6 +385,67 @@ class VerifiableCredentialValidatorTest {
         assertEquals(
                 "description=\"Verifiable credential claims set not valid\" errorDescription=\"com.nimbusds.jwt.proc.BadJWTException: JWT sub claim value rejected\"",
                 logCollector.getLogMessages().get(0));
+    }
+
+    @Nested
+    class Base64URLEnforcement {
+        @Test
+        void
+                parseAndValidateThrowsVerifiableCredentialExceptionOnBase64VcsWhenBase64URLIsEnforced() {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+            var exception =
+                    assertThrows(
+                            VerifiableCredentialException.class,
+                            () -> {
+                                vcJwtValidator.parseAndValidate(
+                                        TEST_USER,
+                                        PASSPORT,
+                                        TestFixtures.PASSPORT_BASE64_JWT,
+                                        VALID_EC_SIGNING_KEY,
+                                        TEST_COMPONENT_ID,
+                                        false);
+                            });
+            assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, exception.getErrorResponse());
+        }
+
+        @Test
+        void parseAndValidateValidatesValidBase64EncodedVcsWhenBase64URLIsNotEnforced()
+                throws VerifiableCredentialException {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+            var vc =
+                    vcJwtValidator.parseAndValidate(
+                            TEST_USER,
+                            PASSPORT,
+                            TestFixtures.PASSPORT_BASE64_JWT,
+                            VALID_EC_SIGNING_KEY,
+                            TEST_COMPONENT_ID,
+                            false);
+
+            assertEquals(TEST_USER, vc.getUserId());
+            assertEquals(PASSPORT, vc.getCri());
+            assertEquals(TestFixtures.PASSPORT_BASE64_JWT, vc.getVcString());
+        }
+
+        @Test
+        void parseAndValidateValidatesValidBase64URLEncodedVcsWhenBase64URLIsEnforced()
+                throws VerifiableCredentialException {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+            var vcString = vcWebPassportSuccessful().getVcString();
+            var vc =
+                    vcJwtValidator.parseAndValidate(
+                            TEST_USER,
+                            PASSPORT,
+                            vcString,
+                            VALID_EC_SIGNING_KEY,
+                            TEST_COMPONENT_ID,
+                            false);
+
+            assertEquals(TEST_USER, vc.getUserId());
+            assertEquals(PASSPORT, vc.getCri());
+            assertEquals(vcString, vc.getVcString());
+        }
     }
 
     private static class TestAppender extends AbstractAppender {
