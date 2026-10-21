@@ -389,7 +389,7 @@ class VerifiableCredentialValidatorTest {
 
     @Test
     void validatesValidBase64EncodedVcsWithDerSignatureSuccessfullyWhenFeatureFlagIsDisabled()
-            throws ParseException, JOSEException, VerifiableCredentialException {
+            throws VerifiableCredentialException {
         when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
         var vc =
                 vcJwtValidator.parseAndValidate(
