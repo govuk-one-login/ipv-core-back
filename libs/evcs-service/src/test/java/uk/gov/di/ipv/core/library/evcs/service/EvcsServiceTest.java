@@ -753,7 +753,7 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                                     EvcsVCState.CURRENT,
                                     Map.of(
                                             "reason", "testing",
@@ -808,7 +808,7 @@ class EvcsServiceTest {
                                             "txmaEventId", "txma-event-id-2",
                                             "timestampMs", "1714478033959")),
                             new EvcsGetUserVCDto(
-                                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                                     EvcsVCState.CURRENT,
                                     Map.of(
                                             "reason", "testing",

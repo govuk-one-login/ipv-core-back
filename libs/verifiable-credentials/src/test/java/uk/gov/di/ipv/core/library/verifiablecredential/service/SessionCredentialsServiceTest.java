@@ -581,7 +581,7 @@ class SessionCredentialsServiceTest {
     }
 
     @Nested
-    class Base64URLEnforcement {
+    class Base64UrlEnforcement {
         @Test
         void
                 getCredentialShouldThrowVerifiableCredentialExceptionIfVCIsBase64EncodedAndBase64URLIsEnforced()
@@ -591,7 +591,7 @@ class SessionCredentialsServiceTest {
                     new SessionCredentialItem(
                             SESSION_ID,
                             Cri.DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
                             false,
                             null);
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item));
@@ -616,7 +616,7 @@ class SessionCredentialsServiceTest {
                     new SessionCredentialItem(
                             SESSION_ID,
                             Cri.DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
                             false,
                             null);
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item));
@@ -625,8 +625,7 @@ class SessionCredentialsServiceTest {
 
             assertEquals(1, retrievedVcs.size());
             assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                    retrievedVcs.getFirst().getVcString());
+                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, retrievedVcs.getFirst().getVcString());
         }
 
         @Test

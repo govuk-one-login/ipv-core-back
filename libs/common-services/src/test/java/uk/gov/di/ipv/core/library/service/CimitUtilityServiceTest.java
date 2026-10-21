@@ -683,7 +683,7 @@ class CimitUtilityServiceTest {
 
             VerifiableCredential verifiableCredential =
                     cimitUtilityService.getParsedSecurityCheckCredential(
-                            TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                             "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc");
             assertEquals(
                     "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -700,7 +700,7 @@ class CimitUtilityServiceTest {
                             CredentialParseException.class,
                             () ->
                                     cimitUtilityService.getParsedSecurityCheckCredential(
-                                            TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                                             "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc"));
             assertEquals(
                     "JWT is not valid Base64URL: invalid characters",

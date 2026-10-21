@@ -230,7 +230,7 @@ class VerifiableCredentialTest {
                     new SessionCredentialItem(
                             SESSION_ID,
                             DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
                             true,
                             now);
 
@@ -240,12 +240,10 @@ class VerifiableCredentialTest {
 
             assertEquals(USER_ID, generatedVc.getUserId());
             assertEquals(DRIVING_LICENCE, generatedVc.getCri());
-            assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED, generatedVc.getVcString());
+            assertEquals(TestFixtures.DRIVING_PERMIT_BASE64_JWT, generatedVc.getVcString());
             assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
             assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                    generatedVc.getSignedJwt().serialize());
+                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, generatedVc.getSignedJwt().serialize());
             assertEquals(now, generatedVc.getMigrated());
         }
 
@@ -258,7 +256,7 @@ class VerifiableCredentialTest {
                     new SessionCredentialItem(
                             SESSION_ID,
                             DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED),
+                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
                             true,
                             now);
 
@@ -281,7 +279,7 @@ class VerifiableCredentialTest {
                     VcStoreItem.builder()
                             .userId(USER_ID)
                             .credentialIssuer(CRI_ID)
-                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
+                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_JWT)
                             .dateCreated(now)
                             .expirationTime(now.minusSeconds(1))
                             .migrated(now.plusSeconds(1))
@@ -304,7 +302,7 @@ class VerifiableCredentialTest {
                     VcStoreItem.builder()
                             .userId(USER_ID)
                             .credentialIssuer(DRIVING_LICENCE.getId())
-                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED)
+                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_JWT)
                             .dateCreated(now)
                             .expirationTime(now.minusSeconds(1))
                             .migrated(now.plusSeconds(1))
@@ -314,11 +312,10 @@ class VerifiableCredentialTest {
             assertEquals(USER_ID, verifiableCredential.getUserId());
             assertEquals(DRIVING_LICENCE, verifiableCredential.getCri());
             assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
-                    verifiableCredential.getVcString());
+                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, verifiableCredential.getVcString());
             assertEquals(vcFixture.getClaimsSet(), verifiableCredential.getClaimsSet());
             assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_SIGNED_UNPADDED,
+                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                     verifiableCredential.getSignedJwt().serialize());
             assertEquals(now.plusSeconds(1), verifiableCredential.getMigrated());
         }

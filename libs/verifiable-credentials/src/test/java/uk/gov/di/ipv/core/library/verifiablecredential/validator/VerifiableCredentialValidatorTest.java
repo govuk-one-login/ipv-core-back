@@ -388,7 +388,7 @@ class VerifiableCredentialValidatorTest {
     }
 
     @Nested
-    class Base64URLEnforcement {
+    class Base64UrlEnforcement {
         @Test
         void
                 parseAndValidateThrowsVerifiableCredentialExceptionOnBase64VcsWhenBase64URLIsEnforced() {
