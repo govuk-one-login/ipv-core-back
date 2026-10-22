@@ -27,7 +27,11 @@ import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,7 +41,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportM1aWithCI;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessful;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcWebPassportSuccessfulWithRsaKeyType;
 
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialValidatorTest {
