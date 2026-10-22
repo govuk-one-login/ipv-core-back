@@ -64,9 +64,12 @@ public class JwtHelper {
                 != ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256);
     }
 
-    // Only enforces strict Base64URL encoding when enforceBase64Url is true, gated behind
-    // CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING at call sites. See validateBase64UrlEncoding
-    // for the encoding rule being enforced.
+    // EVCS will not parse VC JWT strings that are Base64, rather than Base64URL, encoded.
+    // Nimbus.SignedJWT.parse(), however, will accept both Base64 and Base64URL encoding.
+    // This wrapper enforces strict Base64URL encoding to ensure alignment with EVCS
+    // when enforceBase64Url is true, gated behind CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING at
+    // call sites.
+    // See validateBase64UrlEncoding for the encoding rule being enforced.
     public static SignedJWT parseBase64URLJWT(String token, boolean enforceBase64Url)
             throws ParseException {
         if (enforceBase64Url) {
@@ -75,7 +78,6 @@ public class JwtHelper {
         return SignedJWT.parse(token);
     }
 
-    // EVCS will not parse VC JWT strings that are Base64, rather than Base64URL, encoded.
     // The JWT specification (https://datatracker.ietf.org/doc/html/rfc7515) states that
     // Base64URL encoded strings must use its URL- and filename-safe character set,
     // with all trailing '=' characters omitted.
