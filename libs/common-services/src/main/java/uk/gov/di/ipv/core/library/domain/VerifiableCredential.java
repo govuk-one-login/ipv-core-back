@@ -52,7 +52,7 @@ public class VerifiableCredential {
     public static VerifiableCredential fromVcStoreItem(
             VcStoreItem vcStoreItem, boolean enforceBase64Url) throws CredentialParseException {
         // Vcs from the store are assumed to be valid but must be Base64URL encoded to ensure
-        // compatability with EVCS
+        // compatibility with EVCS
         if (vcStoreItem == null) {
             return null;
         }
