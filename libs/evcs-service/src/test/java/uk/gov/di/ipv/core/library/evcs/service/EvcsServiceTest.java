@@ -830,7 +830,7 @@ class EvcsServiceTest {
                                     evcsService.getVerifiableCredentials(
                                             TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT));
             assertEquals(
-                    "JWT is not valid Base64URL: invalid characters",
+                    "JWT is not valid Base64URL: Illegal base64 character 2b",
                     credentialParseException.getCause().getMessage());
         }
     }

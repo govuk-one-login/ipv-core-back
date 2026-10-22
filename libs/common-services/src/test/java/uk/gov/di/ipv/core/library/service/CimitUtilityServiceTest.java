@@ -703,7 +703,7 @@ class CimitUtilityServiceTest {
                                             TestFixtures.DRIVING_PERMIT_BASE64_JWT,
                                             "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc"));
             assertEquals(
-                    "JWT is not valid Base64URL: invalid characters",
+                    "JWT is not valid Base64URL: Illegal base64 character 2b",
                     credentialParseException.getCause().getMessage());
         }
     }

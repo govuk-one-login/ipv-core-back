@@ -267,7 +267,7 @@ class VerifiableCredentialTest {
                                     VerifiableCredential.fromSessionCredentialItem(
                                             sessionCredentialItem, USER_ID, true));
             assertEquals(
-                    "JWT is not valid Base64URL: invalid characters",
+                    "JWT is not valid Base64URL: Illegal base64 character 2b",
                     credentialParseException.getCause().getMessage());
         }
 
@@ -289,7 +289,7 @@ class VerifiableCredentialTest {
                             CredentialParseException.class,
                             () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
             assertEquals(
-                    "JWT is not valid Base64URL: invalid characters",
+                    "JWT is not valid Base64URL: Illegal base64 character 2b",
                     credentialParseException.getCause().getMessage());
         }
 

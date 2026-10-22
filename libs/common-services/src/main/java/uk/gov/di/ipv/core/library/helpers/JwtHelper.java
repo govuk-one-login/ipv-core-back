@@ -83,15 +83,17 @@ public class JwtHelper {
     // with all trailing '=' characters omitted.
     private static void validateBase64UrlEncoding(String token) throws ParseException {
         String[] jwtParts = token.split("\\.");
-        try {
-            for (String jwtPart : jwtParts) {
-                if (isPadded(jwtPart)) {
-                    throw new ParseException("JWT is not valid Base64URL: contains padding", 0);
-                }
-                Base64.getUrlDecoder().decode(jwtPart);
+        for (String jwtPart : jwtParts) {
+            if (isPadded(jwtPart)) {
+                throw new ParseException("JWT is not valid Base64URL: contains padding", 0);
             }
-        } catch (IllegalArgumentException e) {
-            throw new ParseException("JWT is not valid Base64URL: invalid characters", 0);
+            try {
+                // Decode for validation only: the decoder throws IllegalArgumentException if
+                // jwtPart is not valid Base64URL, so the decoded bytes are deliberately discarded.
+                Base64.getUrlDecoder().decode(jwtPart);
+            } catch (IllegalArgumentException e) {
+                throw new ParseException("JWT is not valid Base64URL: " + e.getMessage(), 0);
+            }
         }
     }
 

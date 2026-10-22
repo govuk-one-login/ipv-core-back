@@ -126,7 +126,9 @@ class JwtHelperTest {
                                 JwtHelper.parseBase64UrlJwt(
                                         TestFixtures.BASE64_SIGNED_JWT_UNPADDED, true));
 
-        assertEquals("JWT is not valid Base64URL: invalid characters", parseException.getMessage());
+        assertEquals(
+                "JWT is not valid Base64URL: Illegal base64 character 2b",
+                parseException.getMessage());
     }
 
     @Test
