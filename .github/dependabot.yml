@@ -7,6 +7,11 @@ registries:
     url: https://maven.pkg.github.com
     username: ${{ secrets.DEPENDABOT_GITHUB_USERNAME }}
     password: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
+  chainguard-javascript:
+    type: npm-registry
+    url: https://libraries.cgr.dev/javascript/
+    username: ${{ secrets.chainguard_username }}
+    password: ${{ secrets.chainguard_password }}
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
