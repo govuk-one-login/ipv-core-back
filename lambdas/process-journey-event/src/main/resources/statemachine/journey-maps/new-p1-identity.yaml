@@ -257,6 +257,10 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetState: PYI_ESCAPE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   F2F_PYI_POST_OFFICE:
     response:
@@ -267,6 +271,10 @@ states:
         targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetState: PYI_ESCAPE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   NINO_START_PAGE:
     response:
@@ -284,6 +292,10 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -305,6 +317,10 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
@@ -667,6 +683,10 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   MITIGATION_01_PYI_POST_OFFICE:
     response:
@@ -678,6 +698,10 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   # Mitigation journey (02)
 
@@ -757,6 +781,10 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      # Temporary routing
+      appTriageBanner:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   # Fraud mitigation journey
   MITIGATE_CI_VIA_APP:
