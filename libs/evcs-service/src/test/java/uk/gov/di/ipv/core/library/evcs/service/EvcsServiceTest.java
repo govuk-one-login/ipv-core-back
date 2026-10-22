@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -668,12 +670,10 @@ class EvcsServiceTest {
 
     @Nested
     class Base64UrlEnforcement {
+        List<EvcsGetUserVCDto> evcsGetUserVcDtos;
 
-        @Test
-        void testGetVerifiableCredentialsParsesBase64UrlEncodedVCsWhenBase64UrlIsEnforced()
-                throws CredentialParseException {
-            // Arrange
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+        @BeforeEach
+        void setupBase64UrlEnforcement() {
 
             when(mockConfigService.getCimitComponentId())
                     .thenReturn("https://cimit.stubs.account.gov.uk");
@@ -686,34 +686,42 @@ class EvcsServiceTest {
                                     Cri.DRIVING_LICENCE,
                                     vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                     Cri.DCMAW));
+            evcsGetUserVcDtos =
+                    new ArrayList<>(
+                            List.of(
+                                    new EvcsGetUserVCDto(
+                                            vcAddressTwo().getVcString(),
+                                            EvcsVCState.CURRENT,
+                                            Map.of(
+                                                    "reason", "testing",
+                                                    "txmaEventId", "txma-event-id-2",
+                                                    "timestampMs", "1714478033959")),
+                                    new EvcsGetUserVCDto(
+                                            VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
+                                            EvcsVCState.CURRENT,
+                                            Map.of(
+                                                    "reason", "testing",
+                                                    "txmaEventId", "txma-event-id-2",
+                                                    "timestampMs", "1714478033959"))));
+        }
 
-            List<EvcsGetUserVCDto> base64UrlEvcsGetUserVcDtos =
-                    List.of(
-                            new EvcsGetUserVCDto(
-                                    vcAddressTwo().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    vcWebDrivingPermitDvaValid().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")));
+        @Test
+        void testGetVerifiableCredentialsParsesBase64UrlEncodedVCsWhenBase64UrlIsEnforced()
+                throws CredentialParseException {
+            // Arrange
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+
+            evcsGetUserVcDtos.add(
+                    new EvcsGetUserVCDto(
+                            vcWebDrivingPermitDvaValid().getVcString(),
+                            EvcsVCState.CURRENT,
+                            Map.of(
+                                    "reason", "testing",
+                                    "txmaEventId", "txma-event-id-2",
+                                    "timestampMs", "1714478033959")));
             // Act
             var vcs =
-                    evcsService.getVerifiableCredentials(
-                            TEST_USER_ID, base64UrlEvcsGetUserVcDtos, CURRENT);
+                    evcsService.getVerifiableCredentials(TEST_USER_ID, evcsGetUserVcDtos, CURRENT);
             // Assert
             assertEquals(
                     3,
@@ -731,46 +739,17 @@ class EvcsServiceTest {
                 throws CredentialParseException {
             // Arrange
             when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-
-            when(mockConfigService.getCimitComponentId())
-                    .thenReturn("https://cimit.stubs.account.gov.uk");
-            when(mockConfigService.getIssuerCris())
-                    .thenReturn(
+            evcsGetUserVcDtos.add(
+                    new EvcsGetUserVCDto(
+                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
+                            EvcsVCState.CURRENT,
                             Map.of(
-                                    vcAddressM1a().getClaimsSet().getIssuer(),
-                                    Cri.ADDRESS,
-                                    vcWebDrivingPermitDvaValid().getClaimsSet().getIssuer(),
-                                    Cri.DRIVING_LICENCE,
-                                    vcWebPassportSuccessful().getClaimsSet().getIssuer(),
-                                    Cri.DCMAW));
-
-            List<EvcsGetUserVCDto> base64EvcsGetUserVcDtos =
-                    List.of(
-                            new EvcsGetUserVCDto(
-                                    vcAddressTwo().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")));
+                                    "reason", "testing",
+                                    "txmaEventId", "txma-event-id-2",
+                                    "timestampMs", "1714478033959")));
             // Act
             var vcs =
-                    evcsService.getVerifiableCredentials(
-                            TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT);
+                    evcsService.getVerifiableCredentials(TEST_USER_ID, evcsGetUserVcDtos, CURRENT);
             // Assert
             assertEquals(
                     3,
@@ -788,40 +767,14 @@ class EvcsServiceTest {
                 getVerifiableCredentialsThrowsCredentialParseExceptionIfVCIsBase64EncodedWhenBase64UrlIsEnforced() {
             // Arrange
             when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
-
-            when(mockConfigService.getCimitComponentId())
-                    .thenReturn("https://cimit.stubs.account.gov.uk");
-            when(mockConfigService.getIssuerCris())
-                    .thenReturn(
+            evcsGetUserVcDtos.add(
+                    new EvcsGetUserVCDto(
+                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
+                            EvcsVCState.CURRENT,
                             Map.of(
-                                    vcAddressM1a().getClaimsSet().getIssuer(),
-                                    Cri.ADDRESS,
-                                    vcWebPassportSuccessful().getClaimsSet().getIssuer(),
-                                    Cri.DCMAW));
-
-            List<EvcsGetUserVCDto> base64EvcsGetUserVcDtos =
-                    List.of(
-                            new EvcsGetUserVCDto(
-                                    vcAddressTwo().getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")),
-                            new EvcsGetUserVCDto(
-                                    VC_PASSPORT_NON_DCMAW_SUCCESSFUL_TEST.getVcString(),
-                                    EvcsVCState.CURRENT,
-                                    Map.of(
-                                            "reason", "testing",
-                                            "txmaEventId", "txma-event-id-2",
-                                            "timestampMs", "1714478033959")));
+                                    "reason", "testing",
+                                    "txmaEventId", "txma-event-id-2",
+                                    "timestampMs", "1714478033959")));
             // Assert
 
             CredentialParseException credentialParseException =
@@ -829,7 +782,7 @@ class EvcsServiceTest {
                             CredentialParseException.class,
                             () ->
                                     evcsService.getVerifiableCredentials(
-                                            TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT));
+                                            TEST_USER_ID, evcsGetUserVcDtos, CURRENT));
             assertTrue(
                     credentialParseException
                             .getCause()
