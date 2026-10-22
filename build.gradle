@@ -21,12 +21,12 @@ spotless {
 		endWithNewline()
 		toggleOffOn()
 	}
-	groovyGradle {
-		target '**/*.gradle'
-		greclipse('4.35')
-		trimTrailingWhitespace()
-		endWithNewline()
-	}
+//	groovyGradle {
+//		target '**/*.gradle'
+//		greclipse('4.35')
+//		trimTrailingWhitespace()
+//		endWithNewline()
+//	}
 }
 
 subprojects {
