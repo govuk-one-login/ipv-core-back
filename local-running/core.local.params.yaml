@@ -391,7 +391,7 @@ core:
   featureFlags:
     drivingLicenceAuthCheck: true
     sisVerificationEnabled: true
-    mitigations9020Enabled: false
+    mitigations9020Enabled: true
     f2fRetryEnabled: false
 
   features:
