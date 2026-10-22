@@ -105,7 +105,7 @@ public class EvcsService {
             var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
 
             for (var vc : evcsUserVcs) {
-                var jwt = JwtHelper.parseBase64URLJWT(vc.vc(), enforceBase64Url);
+                var jwt = JwtHelper.parseBase64UrlJwt(vc.vc(), enforceBase64Url);
                 var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the

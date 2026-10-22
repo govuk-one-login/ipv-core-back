@@ -70,7 +70,7 @@ public class JwtHelper {
     // when enforceBase64Url is true, gated behind CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING at
     // call sites.
     // See validateBase64UrlEncoding for the encoding rule being enforced.
-    public static SignedJWT parseBase64URLJWT(String token, boolean enforceBase64Url)
+    public static SignedJWT parseBase64UrlJwt(String token, boolean enforceBase64Url)
             throws ParseException {
         if (enforceBase64Url) {
             validateBase64UrlEncoding(token);

@@ -228,7 +228,7 @@ public class CimitUtilityService {
             String securityCheckCredential, String userId) throws CredentialParseException {
         try {
             var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
-            var jwt = JwtHelper.parseBase64URLJWT(securityCheckCredential, enforceBase64Url);
+            var jwt = JwtHelper.parseBase64UrlJwt(securityCheckCredential, enforceBase64Url);
             return VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         } catch (ParseException e) {
             throw new CredentialParseException("Unable to parse vc string", e);
