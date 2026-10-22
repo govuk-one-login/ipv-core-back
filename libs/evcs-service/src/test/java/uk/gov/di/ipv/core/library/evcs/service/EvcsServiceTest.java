@@ -686,7 +686,7 @@ class EvcsServiceTest {
                                     vcWebPassportSuccessful().getClaimsSet().getIssuer(),
                                     Cri.DCMAW));
 
-            List<EvcsGetUserVCDto> base64EvcsGetUserVcDtos =
+            List<EvcsGetUserVCDto> base64UrlEvcsGetUserVcDtos =
                     List.of(
                             new EvcsGetUserVCDto(
                                     vcAddressTwo().getVcString(),
@@ -712,7 +712,7 @@ class EvcsServiceTest {
             // Act
             var vcs =
                     evcsService.getVerifiableCredentials(
-                            TEST_USER_ID, base64EvcsGetUserVcDtos, CURRENT);
+                            TEST_USER_ID, base64UrlEvcsGetUserVcDtos, CURRENT);
             // Assert
             assertEquals(
                     3,

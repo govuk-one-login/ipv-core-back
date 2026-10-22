@@ -249,7 +249,7 @@ class VerifiableCredentialTest {
 
         @Test
         void
-                fromSessionCredentialItemThrowsVerifiableCredentialExceptionOnBase64VcWhenBase64UrlIsEnforced()
+                fromSessionCredentialItemThrowsCredentialParseExceptionOnBase64VcWhenBase64UrlIsEnforced()
                         throws ParseException {
             var now = Instant.now();
             var sessionCredentialItem =
@@ -272,7 +272,7 @@ class VerifiableCredentialTest {
         }
 
         @Test
-        void fromVcStoreThrowsVerifiableCredentialExceptionOnBase64VcWhenBase64UrlIsEnforced() {
+        void fromVcStoreItemThrowsCredentialParseExceptionOnBase64VcWhenBase64UrlIsEnforced() {
             var now = Instant.now();
 
             var vcStoreItem =
