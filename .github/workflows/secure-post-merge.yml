@@ -191,6 +191,16 @@ jobs:
           role-to-assume: ${{ env.ENVIRONMENT == 'build' && secrets.GH_ACTIONS_ROLE_ARN || secrets.GH_ACTIONS_ROLE_ARN_DEV }}
           aws-region: eu-west-2
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/setup-chainctl@v0.5.1
+        with:
+          identity: ${{ vars.CHAINGUARD_IDENTITY }}
+
+      - name: Get Chainguard Maven token
+        run: |
+          chainctl auth login --audience libraries.cgr.dev
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: SAM validate
         working-directory: ./deploy
         run: sam validate --region "${{ env.AWS_REGION }}"
