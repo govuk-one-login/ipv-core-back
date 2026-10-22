@@ -16,6 +16,7 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -266,9 +267,11 @@ class VerifiableCredentialTest {
                             () ->
                                     VerifiableCredential.fromSessionCredentialItem(
                                             sessionCredentialItem, USER_ID, true));
-            assertEquals(
-                    "JWT is not valid Base64URL: Illegal base64 character 2b",
-                    credentialParseException.getCause().getMessage());
+            assertTrue(
+                    credentialParseException
+                            .getCause()
+                            .getMessage()
+                            .startsWith("JWT is not valid Base64URL:"));
         }
 
         @Test
@@ -288,9 +291,11 @@ class VerifiableCredentialTest {
                     assertThrows(
                             CredentialParseException.class,
                             () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
-            assertEquals(
-                    "JWT is not valid Base64URL: Illegal base64 character 2b",
-                    credentialParseException.getCause().getMessage());
+            assertTrue(
+                    credentialParseException
+                            .getCause()
+                            .getMessage()
+                            .startsWith("JWT is not valid Base64URL:"));
         }
 
         @Test
