@@ -87,8 +87,8 @@ public class VerifiableCredentialValidator {
             String componentId,
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
+        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
-            var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
             var vcJwt = JwtHelper.parseBase64UrlJwt(vcString, enforceBase64Url);
             validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);

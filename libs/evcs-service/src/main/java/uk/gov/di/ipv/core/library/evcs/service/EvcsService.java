@@ -99,10 +99,10 @@ public class EvcsService {
                     throws CredentialParseException {
         var credentials = new EnumMap<EvcsVCState, List<VerifiableCredential>>(EvcsVCState.class);
 
+        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
             var issuerCris = configService.getIssuerCris();
             var cimitComponentId = configService.getCimitComponentId();
-            var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
 
             for (var vc : evcsUserVcs) {
                 var jwt = JwtHelper.parseBase64UrlJwt(vc.vc(), enforceBase64Url);
