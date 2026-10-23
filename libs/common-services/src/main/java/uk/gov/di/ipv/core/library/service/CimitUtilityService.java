@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.config.domain.CiRoutingConfig;
@@ -11,6 +10,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.SecurityCheckCredential;
@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 
 public class CimitUtilityService {
     private record MitigationDetails(String mitigationEvent, boolean isMitigated) {}
@@ -225,11 +226,12 @@ public class CimitUtilityService {
 
     public VerifiableCredential getParsedSecurityCheckCredential(
             String securityCheckCredential, String userId) throws CredentialParseException {
+        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
-            var jwt = SignedJWT.parse(securityCheckCredential);
+            var jwt = JwtHelper.parseBase64UrlJwt(securityCheckCredential, enforceBase64Url);
             return VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         } catch (ParseException e) {
-            throw new CredentialParseException("Unable to parse vc string");
+            throw new CredentialParseException("Unable to parse vc string", e);
         }
     }
 

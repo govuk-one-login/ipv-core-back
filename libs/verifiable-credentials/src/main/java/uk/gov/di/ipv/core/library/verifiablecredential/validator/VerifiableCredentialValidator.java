@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheck;
@@ -42,6 +43,7 @@ import java.util.Objects;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
 import static com.nimbusds.jose.jwk.KeyType.RSA;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
 public class VerifiableCredentialValidator {
@@ -85,8 +87,9 @@ public class VerifiableCredentialValidator {
             String componentId,
             boolean skipSubjectCheck)
             throws VerifiableCredentialException {
+        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
-            var vcJwt = SignedJWT.parse(vcString);
+            var vcJwt = JwtHelper.parseBase64UrlJwt(vcString, enforceBase64Url);
             validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 

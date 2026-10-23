@@ -393,6 +393,7 @@ core:
     sisVerificationEnabled: true
     mitigations9020Enabled: true
     f2fRetryEnabled: false
+    enforceBase64UrlVcEncoding: true
 
   features:
     f2fRetry:

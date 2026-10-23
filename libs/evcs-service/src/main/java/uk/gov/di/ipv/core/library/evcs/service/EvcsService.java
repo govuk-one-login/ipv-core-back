@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.evcs.service;
 
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -18,6 +17,7 @@ import uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.exception.FailedToCreateStoredIdentityForEvcsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
@@ -98,12 +99,13 @@ public class EvcsService {
                     throws CredentialParseException {
         var credentials = new EnumMap<EvcsVCState, List<VerifiableCredential>>(EvcsVCState.class);
 
+        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
             var issuerCris = configService.getIssuerCris();
             var cimitComponentId = configService.getCimitComponentId();
 
             for (var vc : evcsUserVcs) {
-                var jwt = SignedJWT.parse(vc.vc());
+                var jwt = JwtHelper.parseBase64UrlJwt(vc.vc(), enforceBase64Url);
                 var issuer = jwt.getJWTClaimsSet().getIssuer();
 
                 // With SIS, we now store the CIMIT VC. We don't want to add this to the

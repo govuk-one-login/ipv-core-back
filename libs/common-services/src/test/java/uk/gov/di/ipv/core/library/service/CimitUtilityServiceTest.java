@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +20,9 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.MitigatingCredential;
@@ -40,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
@@ -653,6 +657,57 @@ class CimitUtilityServiceTest {
 
         // Assert
         assertEquals(expectedResult, result, testCaseDescription);
+    }
+
+    @Nested
+    class Base64UrlEnforcement {
+        @Test
+        void
+                getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64UrlEncodedWhenBase64UrlIsEnforced()
+                        throws CredentialParseException {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+
+            VerifiableCredential verifiableCredential =
+                    cimitUtilityService.getParsedSecurityCheckCredential(
+                            SIGNED_CIMIT_VC_NO_CI, "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc");
+            assertEquals(
+                    "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                    verifiableCredential.getUserId());
+        }
+
+        @Test
+        void
+                getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64EncodedWhenBase64UrlIsNotEnforced()
+                        throws CredentialParseException {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
+
+            VerifiableCredential verifiableCredential =
+                    cimitUtilityService.getParsedSecurityCheckCredential(
+                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
+                            "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc");
+            assertEquals(
+                    "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                    verifiableCredential.getUserId());
+        }
+
+        @Test
+        void
+                getParsedSecurityCheckCredentialThrowsCredentialParseExceptionIfVCIsBase64EncodedWhenBase64UrlIsEnforced() {
+            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+
+            CredentialParseException credentialParseException =
+                    assertThrows(
+                            CredentialParseException.class,
+                            () ->
+                                    cimitUtilityService.getParsedSecurityCheckCredential(
+                                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
+                                            "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc"));
+            assertTrue(
+                    credentialParseException
+                            .getCause()
+                            .getMessage()
+                            .startsWith("JWT is not valid Base64URL:"));
+        }
     }
 
     static Stream<Arguments> contraIndicatorVcsAndVots() {
