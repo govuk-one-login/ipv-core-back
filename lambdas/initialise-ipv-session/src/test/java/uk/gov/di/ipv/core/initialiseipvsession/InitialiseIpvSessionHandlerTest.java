@@ -93,6 +93,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test-journey-id";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String CLIENT_OAUTH_SESSION_ID =
@@ -109,6 +110,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String INVALID_EVCS_ACCESS_TOKEN = "invalid_evcs_access_token";
     private static final APIGatewayProxyRequestEvent validEvent = new APIGatewayProxyRequestEvent();
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
+    private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
     private static @Spy IpvSessionItem ipvSessionItem;
@@ -157,7 +159,6 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setRedirectUri("https://example.com");
         clientOAuthSessionItem.setState("test-state");
         clientOAuthSessionItem.setUserId(TEST_USER_ID);
-        clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2"));
         clientOAuthSessionItem.setEvcsAccessToken(TEST_EVCS_ACCESS_TOKEN);
         clientOAuthSessionItem.setReproveIdentity(false);
@@ -177,7 +178,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSessionIdGivenValidReverificationRequest() throws Exception {
+    void shouldReturnIpvSessionIdAndJourneyIdGivenValidReverificationRequest() throws Exception {
         // Arrange
         signedJWT = getSignedJWT(getValidClaimsBuilder("reverification"));
         signedEncryptedJwt = getJwe(signedJWT);
@@ -208,6 +209,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -223,7 +226,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
+    void shouldReturnIpvSessionIdAndJourneyIdAndSendAuditEventWhenProvidedValidReproveRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
         clientOAuthSessionItem.setReproveIdentity(true);
@@ -244,6 +247,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -263,7 +268,13 @@ class InitialiseIpvSessionHandlerTest {
                 .thenReturn(ipvSessionItem);
         var evcsAccessTokenClaims = Map.of(USER_INFO, Map.of());
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
+                .thenReturn(
+                        getValidClaimsBuilder()
+                                .claim(CLAIMS, evcsAccessTokenClaims)
+                                .claim(
+                                        REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY,
+                                        TEST_GOVUK_SIGNIN_JOURNEY_ID)
+                                .build());
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -274,6 +285,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
         verify(mockClientOAuthSessionDetailsService)
                 .generateErrorClientSessionDetails(
@@ -281,7 +294,7 @@ class InitialiseIpvSessionHandlerTest {
                         eq("https://example.com"),
                         eq("test-client"),
                         eq("test-state"),
-                        eq(null));
+                        eq(TEST_GOVUK_SIGNIN_JOURNEY_ID));
 
         verify(mockIpvSessionService)
                 .generateIpvSession(
@@ -293,7 +306,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
+    void shouldReturnIpvSessionIdAndJourneyIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
@@ -313,6 +326,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -345,6 +360,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
         verify(mockClientOAuthSessionDetailsService)
                 .generateErrorClientSessionDetails(
@@ -352,7 +369,7 @@ class InitialiseIpvSessionHandlerTest {
                         eq("https://example.com"),
                         eq("test-client"),
                         eq("test-state"),
-                        eq(null));
+                        eq(TEST_GOVUK_SIGNIN_JOURNEY_ID));
 
         verify(mockIpvSessionService)
                 .generateIpvSession(
@@ -444,7 +461,8 @@ class InitialiseIpvSessionHandlerTest {
 
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
-    void shouldIpvSessionIdIfMissingVtrAndReverificationJourney(List<String> vtrList)
+    void shouldReturnIpvSessionIdAndJourneyIdIfMissingVtrOnReverificationJourney(
+            List<String> vtrList)
             throws JsonProcessingException,
                     InvalidKeySpecException,
                     NoSuchAlgorithmException,
@@ -476,6 +494,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
@@ -620,7 +640,7 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
+    void shouldReturnIpvSessionIdAndJourneyIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
@@ -635,7 +655,7 @@ class InitialiseIpvSessionHandlerTest {
                                 "https://example.com",
                                 "test-client",
                                 "test-state",
-                                "test-journey-id"));
+                                TEST_GOVUK_SIGNIN_JOURNEY_ID));
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -646,6 +666,8 @@ class InitialiseIpvSessionHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
@@ -711,6 +733,7 @@ class InitialiseIpvSessionHandlerTest {
                 .claim(CLIENT_ID, "test-client")
                 .claim(VTR, List.of("P2"))
                 .claim(SCOPE, scope)
+                .claim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY, TEST_GOVUK_SIGNIN_JOURNEY_ID)
                 .claim(
                         CLAIMS,
                         Map.of(
