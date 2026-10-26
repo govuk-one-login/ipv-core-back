@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 
@@ -23,9 +24,12 @@ import java.time.Instant;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.DID_STORED_IDENTITY_ID;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.BASE64_SIGNED_JWT_WITH_PLUS;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.BASE64_SIGNED_JWT_WITH_SLASH;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -106,6 +110,71 @@ class JwtHelperTest {
                 OBJECT_MAPPER.readTree(signatureJwt.getJWTClaimsSet().toString());
         assertEquals(sub, expectedClaimsSet.get("sub").asText());
         assertEquals(aud, expectedClaimsSet.get("aud").asText());
+    }
+
+    @Test
+    void shouldParseABase64UrlJwt() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.SIGNED_JWT);
+        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(TestFixtures.SIGNED_JWT, true);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
+    }
+
+    @Test
+    void shouldNotParseABase64JwtWithPlusCharacterWhenEnforceBase64UrlIsTrue() {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_PLUS, true));
+
+        assertEquals(
+                "JWT is not valid Base64URL: Illegal base64 character 2b",
+                parseException.getMessage());
+    }
+
+    @Test
+    void shouldNotParseABase64JwtWithSlashCharacterWhenEnforceBase64UrlIsTrue() {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_SLASH, true));
+
+        assertEquals(
+                "JWT is not valid Base64URL: Illegal base64 character 2f",
+                parseException.getMessage());
+    }
+
+    @Test
+    void shouldNotParseAPaddedBase64UrlJwtWhenEnforceBase64UrlIsTrue() {
+        ParseException parseException =
+                assertThrows(
+                        ParseException.class,
+                        () ->
+                                JwtHelper.parseBase64UrlJwt(
+                                        TestFixtures.BASE64URL_SIGNED_JWT_PADDED, true));
+        assertEquals("JWT is not valid Base64URL: contains padding", parseException.getMessage());
+    }
+
+    @Test
+    void shouldParseABase64JwtWithPlusCharacterWhenEnforceBase64UrlIsFalse() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(BASE64_SIGNED_JWT_WITH_PLUS);
+        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_PLUS, false);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
+    }
+
+    @Test
+    void shouldParseABase64JwtWithSlashCharacterWhenEnforceBase64UrlIsFalse()
+            throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(BASE64_SIGNED_JWT_WITH_SLASH);
+        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_SLASH, false);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
+    }
+
+    @Test
+    void shouldParseAPaddedBase64UrlJwtWhenEnforceBase64UrlIsFalse() throws ParseException {
+        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.BASE64URL_SIGNED_JWT_PADDED);
+        SignedJWT signedJwt =
+                JwtHelper.parseBase64UrlJwt(TestFixtures.BASE64URL_SIGNED_JWT_PADDED, false);
+        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
     }
 
     private ECKey getPrivateKey() throws ParseException {

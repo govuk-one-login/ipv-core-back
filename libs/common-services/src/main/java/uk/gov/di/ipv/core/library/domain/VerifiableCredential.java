@@ -5,6 +5,7 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -48,15 +49,16 @@ public class VerifiableCredential {
         return new VerifiableCredential(userId, cri, jwt, null, null);
     }
 
-    public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
-            throws CredentialParseException {
-        // Vcs from the store are assumed to be valid
+    public static VerifiableCredential fromVcStoreItem(
+            VcStoreItem vcStoreItem, boolean enforceBase64Url) throws CredentialParseException {
+        // Vcs from the store are assumed to be valid but must be Base64URL encoded to ensure
+        // compatibility with EVCS
         if (vcStoreItem == null) {
             return null;
         }
 
         try {
-            var jwt = SignedJWT.parse(vcStoreItem.getCredential());
+            var jwt = JwtHelper.parseBase64UrlJwt(vcStoreItem.getCredential(), enforceBase64Url);
             return new VerifiableCredential(
                     vcStoreItem.getUserId(),
                     Cri.fromId(vcStoreItem.getCredentialIssuer()),
@@ -87,13 +89,14 @@ public class VerifiableCredential {
     }
 
     public static VerifiableCredential fromSessionCredentialItem(
-            SessionCredentialItem sessionCredentialItem, String userId)
+            SessionCredentialItem sessionCredentialItem, String userId, boolean enforceBase64Url)
             throws CredentialParseException {
         try {
             return new VerifiableCredential(
                     userId,
                     Cri.fromId(sessionCredentialItem.getCriId()),
-                    SignedJWT.parse(sessionCredentialItem.getCredential()),
+                    JwtHelper.parseBase64UrlJwt(
+                            sessionCredentialItem.getCredential(), enforceBase64Url),
                     sessionCredentialItem.getMigrated(),
                     null);
         } catch (ParseException e) {
