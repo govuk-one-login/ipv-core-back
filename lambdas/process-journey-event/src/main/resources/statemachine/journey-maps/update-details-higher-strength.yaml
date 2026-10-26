@@ -108,6 +108,15 @@ states:
         targetEntryEvent: internationalUser
         journeyContextToUnset: nameAndAddress
 
+  POST_APP_DOC_CHECK_ADDRESS_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: FRAUD_CHECK_NAMES_ONLY
+        journeyContextToUnset: addressOnly
+
   FRAUD_CHECK_NAMES_ONLY:
     response:
       type: cri
@@ -309,6 +318,8 @@ states:
         checkJourneyContext:
           nameAndAddress:
             targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+          addressOnly:
+            targetState: POST_APP_DOC_CHECK_ADDRESS_ONLY
       abandon:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -369,6 +380,8 @@ states:
         checkJourneyContext:
           nameAndAddress:
             targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+          addressOnly:
+            targetState: POST_APP_DOC_CHECK_ADDRESS_ONLY
       abandon:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -411,6 +424,8 @@ states:
         checkJourneyContext:
           nameAndAddress:
             targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+          addressOnly:
+            targetState: POST_APP_DOC_CHECK_ADDRESS_ONLY
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
