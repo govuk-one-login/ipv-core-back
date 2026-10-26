@@ -35,8 +35,8 @@ Feature: Identity reuse update details
         Then the poll returns a '201'
         When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response and pageContext
-            | Context   | Value |
-            | noAddress | true  |
+            | Context     | Value     |
+            | journeyType | noAddress |
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
         When I submit '<fraud-details>' details with attributes to the CRI stub
@@ -107,8 +107,8 @@ Feature: Identity reuse update details
         Then the poll returns a '201'
         When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response and pageContext
-            | Context   | Value |
-            | noAddress | true  |
+            | Context     | Value     |
+            | journeyType | noAddress |
         When I submit a 'next' event
         Then I get a 'address' CRI response
         When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -154,8 +154,8 @@ Feature: Identity reuse update details
         Then the poll returns a '201'
         When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response and pageContext
-            | Context   | Value |
-            | noAddress | true  |
+            | Context     | Value     |
+            | journeyType | noAddress |
         When I submit a 'next' event
         Then I get a 'address' CRI response
         When I submit 'kenneth-changed' details to the CRI stub
@@ -277,8 +277,8 @@ Feature: Identity reuse update details
         Then the poll returns a '201'
         When I submit the returned journey event
         Then I get a 'page-dcmaw-success' page response and pageContext
-            | Context   | Value |
-            | noAddress | true  |
+            | Context     | Value     |
+            | journeyType | noAddress |
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -334,8 +334,8 @@ Feature: Identity reuse update details
           | Attribute | Values          |
           | context   | "check_details" |
         Then I get a 'page-dcmaw-success' page response and pageContext
-          | Context   | Value |
-          | noAddress | true  |
+          | Context     | Value     |
+          | journeyType | noAddress |
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub

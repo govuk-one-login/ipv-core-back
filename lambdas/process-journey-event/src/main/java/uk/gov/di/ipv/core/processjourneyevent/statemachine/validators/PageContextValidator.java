@@ -15,7 +15,7 @@ public class PageContextValidator extends AbstractPageContextValidator {
                             Set.of(IS_IDENTITY_VALID)),
                     Map.entry("no-photo-id-web-find-another-way", Set.of(REASON)),
                     Map.entry("no-photo-id-abandon-find-another-way", Set.of(IS_OPEN_BANKING)),
-                    Map.entry("page-dcmaw-success", Set.of(NO_ADDRESS)),
+                    Map.entry("page-dcmaw-success", Set.of(JOURNEY_TYPE)),
                     Map.entry("page-ipv-success", Set.of(JOURNEY_TYPE)),
                     Map.entry("page-multiple-doc-check", Set.of(ALLOW_NINO)),
                     Map.entry("page-pre-experian-kbv-transition", Set.of(IS_DWP_DROPOUT)),

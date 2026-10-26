@@ -596,8 +596,8 @@ Feature: Audit Events
       | Attribute | Values          |
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response and pageContext
-      | Context   | Value |
-      | noAddress | true  |
+      | Context     | Value     |
+      | journeyType | noAddress |
     When I submit a 'next' event
     Then I get a 'address' CRI response
     When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -945,8 +945,8 @@ Feature: Audit Events
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub

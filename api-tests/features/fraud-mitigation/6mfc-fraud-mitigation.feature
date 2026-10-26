@@ -38,8 +38,8 @@ Feature: Fraud mitigation - 6mfc
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
 
@@ -68,8 +68,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -153,8 +153,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
@@ -213,8 +213,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value       |
+        | journeyType | addressOnly |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -256,8 +256,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value       |
+        | journeyType | addressOnly |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -343,8 +343,8 @@ Feature: Fraud mitigation - 6mfc
         | Attribute | Values          |
         | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details with attributes to the CRI stub
@@ -451,8 +451,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
 
@@ -520,8 +520,8 @@ Feature: Fraud mitigation - 6mfc
       Then the poll returns a '201'
       When I submit the returned journey event
       Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       And  I submit 'kenneth-score-0-mortality-breaching' details with attributes to the CRI stub

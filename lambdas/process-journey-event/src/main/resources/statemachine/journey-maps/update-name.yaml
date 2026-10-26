@@ -135,7 +135,7 @@ states:
       type: page
       pageId: page-dcmaw-success
       pageContext:
-        noAddress: true
+        journeyType: noAddress
     events:
       next:
         targetState: FRAUD_CHECK_NAMES_ONLY
@@ -307,7 +307,7 @@ states:
       type: page
       pageId: page-dcmaw-success
       pageContext:
-        noAddress: true
+        journeyType: noAddress
     events:
       next:
         targetState: ADDRESS_AND_FRAUD

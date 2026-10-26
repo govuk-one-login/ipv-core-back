@@ -11,7 +11,6 @@ public abstract class AbstractPageContextValidator implements IPageContextValida
     public static final String APP_ONLY_MITIGATION = "appOnlyMitigation";
     public static final String JOURNEY_TYPE = "journeyType";
     public static final String REASON = "reason";
-    public static final String NO_ADDRESS = "noAddress";
     public static final String ALLOW_NINO = "allowNino";
     public static final String INVALID_DOC = "invalidDoc";
     public static final String REMOVE_F2F = "removeF2f";
