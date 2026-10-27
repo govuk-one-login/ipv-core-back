@@ -1453,3 +1453,66 @@ Feature: Handling unexpected CRI errors
       When I use the OAuth response to get my identity
       Then I am issued a 'P2' identity
       And I have a stored identity record with a 'P2' max vot
+
+    @TechnicalErrorFraud
+    Rule: Fraud
+    Background: Route to sorry-technical-problem Fraud CRI error page
+      Given I activate the 'openBanking' feature set
+      And I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'computer-or-tablet' event
+      Then I get a 'pyi-triage-select-smartphone' page response and pageContext
+        | Context     | Value |
+        | deviceType  | dad   |
+      When I submit a 'neither' event
+      Then I get a 'pyi-triage-buffer' page response
+      When I submit an 'anotherWay' event
+      Then I get a 'select-photo-id' page response
+      When I submit an 'ukPassport' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'ukPassport' CRI response
+      When I submit 'kenneth-passport-valid' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I call the CRI stub with attributes and get a 'server_error' OAuth error
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get a 'sorry-technical-problem' page response and pageContext
+        | Context | Value       |
+        | reason  | fraudCriError |
+
+      Scenario: Unexpected error from Fraud CRI - try CRI again
+      When I submit a 'tryAgain' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details with attributes to the CRI stub
+        | Attribute          | Values                   |
+        | evidence_requested | {"identityFraudScore":2} |
+      Then I get an 'openBanking' CRI response
+      When I submit 'kenneth' details to the CRI stub
+      Then I get a 'page-ipv-success' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P2' identity
+      And I have a stored identity record with a 'P2' max vot
+
+    Scenario: Unexpected error from Fraud CRI - return to RP
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I am issued a 'P0' identity
+      And I don't have a stored identity in EVCS

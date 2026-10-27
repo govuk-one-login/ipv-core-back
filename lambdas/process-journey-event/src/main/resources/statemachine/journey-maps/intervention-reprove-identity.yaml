@@ -312,6 +312,9 @@ states:
         targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: COULD_NOT_CONFIRM_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   PROCESS_NEW_IDENTITY:
     response:
