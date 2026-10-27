@@ -36,9 +36,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | repeatFraudCheck  |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -96,9 +96,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | repeatFraudCheck  |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -156,9 +156,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value            |
-        | journeyType          | repeatFraudCheck |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -219,9 +219,9 @@ Feature: Update details higher strength
       When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore": 2} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value            |
-        | journeyType          | repeatFraudCheck |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -290,9 +290,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value         |
-        | journeyType          | updateDetails |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | true  |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -348,9 +348,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value         |
-        | journeyType          | updateDetails |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | true  |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -393,9 +393,9 @@ Feature: Update details higher strength
       When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":1} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value         |
-        | journeyType          | updateDetails |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | true  |
 
     Scenario: User fails twice with app
       When I submit a 'given-names-only' event
@@ -418,9 +418,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value         |
-        | journeyType          | updateDetails |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | true  |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
@@ -468,9 +468,9 @@ Feature: Update details higher strength
       When I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value         |
-        | journeyType          | updateDetails |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | true  |
       When I submit an 'passport' event
       Then I get an 'identify-device' page response
       When I submit an 'appTriage' event
