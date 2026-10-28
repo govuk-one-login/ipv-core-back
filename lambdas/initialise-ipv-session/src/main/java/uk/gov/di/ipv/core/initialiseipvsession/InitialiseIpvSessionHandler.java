@@ -63,6 +63,7 @@ public class InitialiseIpvSessionHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
+    public static final String GOVUK_SIGNIN_JOURNEY_ID_KEY = "govukSigninJourneyId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
@@ -214,8 +215,12 @@ public class InitialiseIpvSessionHandler
                 EmbeddedMetricHelper.reverifyJourneyStart();
             }
 
-            Map<String, String> response =
-                    Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
+            var response =
+                    Map.of(
+                            IPV_SESSION_ID_KEY,
+                            ipvSessionItem.getIpvSessionId(),
+                            GOVUK_SIGNIN_JOURNEY_ID_KEY,
+                            govukSigninJourneyId);
 
             var message =
                     new StringMapMessage()
@@ -248,8 +253,12 @@ public class InitialiseIpvSessionHandler
                     e.getState(),
                     e.getGovukSigninJourneyId());
 
-            Map<String, String> response =
-                    Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
+            var response =
+                    Map.of(
+                            IPV_SESSION_ID_KEY,
+                            ipvSessionItem.getIpvSessionId(),
+                            GOVUK_SIGNIN_JOURNEY_ID_KEY,
+                            e.getGovukSigninJourneyId());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, response);
         } catch (ParseException e) {
