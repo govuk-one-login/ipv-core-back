@@ -37,7 +37,7 @@ public class SessionCredentialsService {
 
     @ExcludeFromGeneratedCoverageReport
     public SessionCredentialsService(ConfigService configService) {
-        this.configService = ConfigService.create();
+        this.configService = configService;
         this.dataStore =
                 DataStore.create(
                         EnvironmentVariable.SESSION_CREDENTIALS_TABLE_NAME,
