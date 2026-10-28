@@ -457,6 +457,9 @@ states:
                   mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -497,6 +500,9 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # No photo id journey
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -554,6 +560,9 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS
@@ -929,6 +938,9 @@ states:
         targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # End of journey steps
 

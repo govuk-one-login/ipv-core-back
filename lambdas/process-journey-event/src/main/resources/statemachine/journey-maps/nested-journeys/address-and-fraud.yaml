@@ -8,6 +8,8 @@ entryEvents:
     targetState: CRI_ADDRESS
   internationalUser:
     targetState: CRI_ADDRESS_ASK_INTERNATIONAL
+  tryAgain:
+    targetState: CRI_FRAUD
 nestedJourneyStates:
   CRI_ADDRESS:
     response:
@@ -46,3 +48,5 @@ nestedJourneyStates:
         exitEventToEmit: fraud-fail-with-no-ci-fatal
       fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      error:
+        exitEventToEmit: error
