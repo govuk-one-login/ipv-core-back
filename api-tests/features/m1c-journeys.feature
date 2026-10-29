@@ -473,9 +473,9 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | updateDetails     |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context              | Value |
+        | isIdentityValid      | true  |
       When I submit a 'continueToService' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

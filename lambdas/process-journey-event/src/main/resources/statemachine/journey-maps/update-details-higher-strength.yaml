@@ -9,19 +9,50 @@ states:
   START_HIGHER_STRENGTH:
     events:
       next:
-        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS
+        targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_VALID_IDENTITY
         checkJourneyContext:
           rfc:
-            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_INVALID_IDENTITY
         checkMitigation:
           liveness-likeness:
-            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_REPEAT_FRAUD_CHECK
+            targetState: NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_INVALID_IDENTITY
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: higher-validity-verification
 
   # Journey States
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_VALID_IDENTITY:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details-v2
+      pageContext:
+        isIdentityValid: true
+    events:
+      passport:
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_ONLY
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_WITH_ADDRESS
+      continueToService:
+        targetState: REINSTATE_EXISTING_IDENTITY
+
+  NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_INVALID_IDENTITY:
+    response:
+      type: page
+      pageId: need-more-information-confirm-change-details-v2
+      pageContext:
+        isIdentityValid: false
+    events:
+      passport:
+        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_ONLY
+        checkJourneyContext:
+          nameAndAddress:
+            targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY_NAMES_WITH_ADDRESS
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
   NEED_MORE_INFORMATION_CONFIRM_CHANGE_DETAILS_UPDATE_DETAILS:
     response:
       type: page
