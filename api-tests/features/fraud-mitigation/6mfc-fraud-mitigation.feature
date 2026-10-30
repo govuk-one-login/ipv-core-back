@@ -212,9 +212,7 @@ Feature: Fraud mitigation - 6mfc
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub
@@ -255,9 +253,7 @@ Feature: Fraud mitigation - 6mfc
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details with attributes to the CRI stub

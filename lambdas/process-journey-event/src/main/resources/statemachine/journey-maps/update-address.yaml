@@ -77,9 +77,11 @@ states:
               liveness-likeness:
                 targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
                 targetState: START_HIGHER_STRENGTH
+                journeyContextToSet: addressOnly
       fraud-fail-with-no-ci-fatal:
         targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
         targetState: START_HIGHER_STRENGTH
+        journeyContextToSet: addressOnly
 
   PROCESS_UPDATE_IDENTITY:
     response:
