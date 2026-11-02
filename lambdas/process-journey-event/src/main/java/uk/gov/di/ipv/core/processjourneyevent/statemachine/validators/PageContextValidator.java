@@ -9,9 +9,8 @@ public class PageContextValidator extends AbstractPageContextValidator {
             Map.ofEntries(
                     Map.entry("delete-handover", Set.of(JOURNEY_TYPE)),
                     Map.entry("need-biometric-passport", Set.of(APP_ONLY_MITIGATION)),
-                    Map.entry("need-more-information-confirm-change-details", Set.of(JOURNEY_TYPE)),
                     Map.entry(
-                            "need-more-information-confirm-change-details-v2",
+                            "need-more-information-confirm-change-details",
                             Set.of(IS_IDENTITY_VALID)),
                     Map.entry("no-photo-id-web-find-another-way", Set.of(REASON)),
                     Map.entry("no-photo-id-abandon-find-another-way", Set.of(IS_OPEN_BANKING)),
