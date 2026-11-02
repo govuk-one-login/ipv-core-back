@@ -70,9 +70,9 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-no-applicable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | repeatFraudCheck     |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -109,9 +109,9 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-unavailable' details with attributes to the CRI stub
         | Attribute          | Values                   |
         | evidence_requested | {"identityFraudScore":2} |
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | repeatFraudCheck     |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
@@ -250,9 +250,9 @@ Feature: Repeat fraud check failures
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'need-more-information-confirm-change-details' page response and pageContext
-        | Context              | Value             |
-        | journeyType          | repeatFraudCheck  |
+      Then I get an 'need-more-information-confirm-change-details-v2' page response and pageContext
+        | Context         | Value |
+        | isIdentityValid | false |
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity

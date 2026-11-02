@@ -23,6 +23,7 @@ public abstract class AbstractPageContextValidator implements IPageContextValida
     public static final String DEVICE_TYPE = "deviceType";
     public static final String IS_EXISTING_IDENTITY_VALID = "isExistingIdentityValid";
     public static final String IS_EXISTING_IDENTITY_INVALID = "isExistingIdentityInvalid";
+    public static final String IS_IDENTITY_VALID = "isIdentityValid";
     public static final String IS_FROM_STRATEGIC_APP = "isFromStrategicApp";
     public static final String IS_OPEN_BANKING = "isOpenBanking";
     public static final String PHOTO_ID = "photoId";
