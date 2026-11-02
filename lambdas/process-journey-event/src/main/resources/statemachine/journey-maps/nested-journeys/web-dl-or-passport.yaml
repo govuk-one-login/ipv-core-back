@@ -79,7 +79,11 @@ nestedJourneyStates:
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
       error:
-        targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_PASSPORT
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+        checkFeatureFlag:
+          fraudCriErrorResilienceEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_PASSPORT
   PROVE_ANOTHER_WAY_AFTER_PASSPORT:
     response:
       type: page
@@ -159,7 +163,11 @@ nestedJourneyStates:
         targetJourney: FAILED
         targetState: FAILED
       error:
-        targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_DL
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+        checkFeatureFlag:
+          fraudCriErrorResilienceEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_DL
   PROVE_ANOTHER_WAY_AFTER_DL:
     response:
       type: page

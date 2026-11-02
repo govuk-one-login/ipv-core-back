@@ -394,6 +394,7 @@ core:
     mitigations9020Enabled: true
     f2fRetryEnabled: false
     enforceBase64UrlVcEncoding: true
+    fraudCriErrorResilienceEnabled: false
 
   features:
     f2fRetry:
@@ -416,6 +417,12 @@ core:
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
+    fraudCriErrorResilience:
+      featureFlags:
+        fraudCriErrorResilienceEnabled: true
+    fraudCriErrorResilienceDisabled:
+      featureFlags:
+        fraudCriErrorResilienceEnabled: false
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:

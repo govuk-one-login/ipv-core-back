@@ -6,7 +6,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     SIS_VERIFICATION("sisVerificationEnabled"),
     MITIGATIONS_9020("mitigations9020Enabled"),
     F2F_RETRY("f2fRetryEnabled"),
-    ENFORCE_BASE64URL_VC_ENCODING("enforceBase64UrlVcEncoding");
+    ENFORCE_BASE64URL_VC_ENCODING("enforceBase64UrlVcEncoding"),
+    FRAUD_CRI_ERROR_RESILIENCE("fraudCriErrorResilienceEnabled");
 
     private final String name;
 
