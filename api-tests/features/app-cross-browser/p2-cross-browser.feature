@@ -864,7 +864,7 @@ Feature: P2 V2 App Cross Browser Scenario
         When I submit 'kenneth-breaching-liveness-likeness-ci' details with attributes to the CRI stub
           | Attribute          | Values                   |
           | evidence_requested | {"identityFraudScore":2} |
-        Then I get a 'need-more-information-confirm-change-details-v2' page response and pageContext
+        Then I get a 'need-more-information-confirm-change-details' page response and pageContext
           | Context         | Value |
           | isIdentityValid | false |
         When I submit an 'passport' event
