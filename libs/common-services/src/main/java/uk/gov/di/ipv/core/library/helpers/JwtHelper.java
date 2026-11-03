@@ -67,14 +67,9 @@ public class JwtHelper {
     // EVCS will not parse VC JWT strings that are Base64, rather than Base64URL, encoded.
     // Nimbus.SignedJWT.parse(), however, will accept both Base64 and Base64URL encoding.
     // This wrapper enforces strict Base64URL encoding to ensure alignment with EVCS
-    // when enforceBase64Url is true, gated behind CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING at
-    // call sites.
     // See validateBase64UrlEncoding for the encoding rule being enforced.
-    public static SignedJWT parseBase64UrlJwt(String token, boolean enforceBase64Url)
-            throws ParseException {
-        if (enforceBase64Url) {
-            validateBase64UrlEncoding(token);
-        }
+    public static SignedJWT parseBase64UrlJwt(String token) throws ParseException {
+        validateBase64UrlEncoding(token);
         return SignedJWT.parse(token);
     }
 

@@ -43,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
@@ -662,10 +661,8 @@ class CimitUtilityServiceTest {
     @Nested
     class Base64UrlEnforcement {
         @Test
-        void
-                getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64UrlEncodedWhenBase64UrlIsEnforced()
-                        throws CredentialParseException {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+        void getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64UrlEncoded()
+                throws CredentialParseException {
 
             VerifiableCredential verifiableCredential =
                     cimitUtilityService.getParsedSecurityCheckCredential(
@@ -676,25 +673,7 @@ class CimitUtilityServiceTest {
         }
 
         @Test
-        void
-                getParsedSecurityCheckCredentialReturnsVCIfCredentialIsBase64EncodedWhenBase64UrlIsNotEnforced()
-                        throws CredentialParseException {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-
-            VerifiableCredential verifiableCredential =
-                    cimitUtilityService.getParsedSecurityCheckCredential(
-                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
-                            "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc");
-            assertEquals(
-                    "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                    verifiableCredential.getUserId());
-        }
-
-        @Test
-        void
-                getParsedSecurityCheckCredentialThrowsCredentialParseExceptionIfVCIsBase64EncodedWhenBase64UrlIsEnforced() {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
-
+        void getParsedSecurityCheckCredentialThrowsCredentialParseExceptionIfVCIsBase64Encoded() {
             CredentialParseException credentialParseException =
                     assertThrows(
                             CredentialParseException.class,

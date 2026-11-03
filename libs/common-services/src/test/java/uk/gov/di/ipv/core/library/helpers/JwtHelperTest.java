@@ -115,16 +115,16 @@ class JwtHelperTest {
     @Test
     void shouldParseABase64UrlJwt() throws ParseException {
         SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.SIGNED_JWT);
-        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(TestFixtures.SIGNED_JWT, true);
+        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(TestFixtures.SIGNED_JWT);
         assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
     }
 
     @Test
-    void shouldNotParseABase64JwtWithPlusCharacterWhenEnforceBase64UrlIsTrue() {
+    void shouldNotParseABase64JwtWithPlusCharacter() {
         ParseException parseException =
                 assertThrows(
                         ParseException.class,
-                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_PLUS, true));
+                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_PLUS));
 
         assertEquals(
                 "JWT is not valid Base64URL: Illegal base64 character 2b",
@@ -132,11 +132,11 @@ class JwtHelperTest {
     }
 
     @Test
-    void shouldNotParseABase64JwtWithSlashCharacterWhenEnforceBase64UrlIsTrue() {
+    void shouldNotParseABase64JwtWithSlashCharacter() {
         ParseException parseException =
                 assertThrows(
                         ParseException.class,
-                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_SLASH, true));
+                        () -> JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_SLASH));
 
         assertEquals(
                 "JWT is not valid Base64URL: Illegal base64 character 2f",
@@ -144,37 +144,14 @@ class JwtHelperTest {
     }
 
     @Test
-    void shouldNotParseAPaddedBase64UrlJwtWhenEnforceBase64UrlIsTrue() {
+    void shouldNotParseAPaddedBase64UrlJwt() {
         ParseException parseException =
                 assertThrows(
                         ParseException.class,
                         () ->
                                 JwtHelper.parseBase64UrlJwt(
-                                        TestFixtures.BASE64URL_SIGNED_JWT_PADDED, true));
+                                        TestFixtures.BASE64URL_SIGNED_JWT_PADDED));
         assertEquals("JWT is not valid Base64URL: contains padding", parseException.getMessage());
-    }
-
-    @Test
-    void shouldParseABase64JwtWithPlusCharacterWhenEnforceBase64UrlIsFalse() throws ParseException {
-        SignedJWT nimbusSignedJWT = SignedJWT.parse(BASE64_SIGNED_JWT_WITH_PLUS);
-        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_PLUS, false);
-        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
-    }
-
-    @Test
-    void shouldParseABase64JwtWithSlashCharacterWhenEnforceBase64UrlIsFalse()
-            throws ParseException {
-        SignedJWT nimbusSignedJWT = SignedJWT.parse(BASE64_SIGNED_JWT_WITH_SLASH);
-        SignedJWT signedJwt = JwtHelper.parseBase64UrlJwt(BASE64_SIGNED_JWT_WITH_SLASH, false);
-        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
-    }
-
-    @Test
-    void shouldParseAPaddedBase64UrlJwtWhenEnforceBase64UrlIsFalse() throws ParseException {
-        SignedJWT nimbusSignedJWT = SignedJWT.parse(TestFixtures.BASE64URL_SIGNED_JWT_PADDED);
-        SignedJWT signedJwt =
-                JwtHelper.parseBase64UrlJwt(TestFixtures.BASE64URL_SIGNED_JWT_PADDED, false);
-        assertEquals(nimbusSignedJWT.serialize(), signedJwt.serialize());
     }
 
     private ECKey getPrivateKey() throws ParseException {
