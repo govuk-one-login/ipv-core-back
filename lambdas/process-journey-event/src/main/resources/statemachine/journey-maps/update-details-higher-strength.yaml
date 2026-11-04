@@ -138,7 +138,7 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED_HIGHER_STRENGTH_DEAD_END
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 

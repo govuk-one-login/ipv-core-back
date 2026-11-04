@@ -793,7 +793,7 @@ states:
                   mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
@@ -835,7 +835,7 @@ states:
                   mitigationType: higher-validity-verification
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
@@ -895,7 +895,7 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
@@ -969,7 +969,7 @@ states:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
@@ -1483,7 +1483,7 @@ states:
         targetState: FAILED
       fraud-fail-with-no-ci-fatal:
         targetState: PROCESS_NEW_IDENTITY
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 

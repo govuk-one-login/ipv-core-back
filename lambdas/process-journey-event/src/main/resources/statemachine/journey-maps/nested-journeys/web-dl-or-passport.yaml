@@ -78,7 +78,7 @@ nestedJourneyStates:
         targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
         checkFeatureFlag:
@@ -173,7 +173,7 @@ nestedJourneyStates:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
-      error:
+      fraud-cri-technical-error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
         checkFeatureFlag:

@@ -49,4 +49,4 @@ nestedJourneyStates:
       fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
       error:
-        exitEventToEmit: error
+        exitEventToEmit: fraud-cri-technical-error
