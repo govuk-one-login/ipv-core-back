@@ -38,7 +38,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -149,13 +148,13 @@ class SessionCredentialsServiceTest {
             var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
 
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
                     retrievedVc.get(0));
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true),
+                    VerifiableCredential.fromSessionCredentialItem(item2, USER_ID),
                     retrievedVc.get(1));
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item3, USER_ID, true),
+                    VerifiableCredential.fromSessionCredentialItem(item3, USER_ID),
                     retrievedVc.get(2));
         }
 
@@ -176,7 +175,7 @@ class SessionCredentialsServiceTest {
             var retrievedVc = sessionCredentialService.getCredentials(SESSION_ID, USER_ID, true);
 
             assertEquals(
-                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
+                    VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
                     retrievedVc.get(0));
         }
 
@@ -247,11 +246,11 @@ class SessionCredentialsServiceTest {
             // Assert
             assertEquals(
                     List.of(
-                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
-                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true)),
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
                     result.receivedThisSession());
             assertEquals(
-                    List.of(VerifiableCredential.fromSessionCredentialItem(item3, USER_ID, true)),
+                    List.of(VerifiableCredential.fromSessionCredentialItem(item3, USER_ID)),
                     result.receivedOtherSession());
         }
 
@@ -295,8 +294,8 @@ class SessionCredentialsServiceTest {
             // Assert
             assertEquals(
                     List.of(
-                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID, true),
-                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID, true)),
+                            VerifiableCredential.fromSessionCredentialItem(item1, USER_ID),
+                            VerifiableCredential.fromSessionCredentialItem(item2, USER_ID)),
                     result.receivedThisSession());
             assertEquals(List.of(), result.receivedOtherSession());
         }
@@ -583,10 +582,8 @@ class SessionCredentialsServiceTest {
     @Nested
     class Base64UrlEnforcement {
         @Test
-        void
-                getCredentialShouldThrowVerifiableCredentialExceptionIfVCIsBase64EncodedAndBase64URLIsEnforced()
-                        throws ParseException {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+        void getCredentialShouldThrowVerifiableCredentialExceptionIfVCIsBase64Encoded()
+                throws ParseException {
             var item =
                     new SessionCredentialItem(
                             SESSION_ID,
@@ -607,33 +604,8 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void
-                getCredentialsShouldNotThrowVerifiableCredentialExceptionIfVCIsBase64EncodedAndBase64URLIsNotEnforced()
-                        throws Exception {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-
-            var item =
-                    new SessionCredentialItem(
-                            SESSION_ID,
-                            Cri.DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
-                            false,
-                            null);
-            when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item));
-
-            var retrievedVcs = sessionCredentialService.getCredentials(SESSION_ID, USER_ID);
-
-            assertEquals(1, retrievedVcs.size());
-            assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, retrievedVcs.getFirst().getVcString());
-        }
-
-        @Test
-        void
-                getCredentialsShouldReturnVerifiableCredentialsIfAllVCsAreBase64URLEncodedAndBase64URLIsEnforced()
-                        throws Exception {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
-
+        void getCredentialsShouldReturnVerifiableCredentialsIfAllVCsAreBase64URLEncoded()
+                throws Exception {
             var item1 =
                     new SessionCredentialItem(
                             SESSION_ID,

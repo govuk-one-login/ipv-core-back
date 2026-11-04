@@ -393,9 +393,7 @@ core:
     sisVerificationEnabled: true
     mitigations9020Enabled: true
     f2fRetryEnabled: false
-    enforceBase64UrlVcEncoding: true
     fraudCriErrorResilienceEnabled: false
-
   features:
     f2fRetry:
       featureFlags:

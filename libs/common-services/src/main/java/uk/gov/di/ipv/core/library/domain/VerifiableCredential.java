@@ -49,8 +49,8 @@ public class VerifiableCredential {
         return new VerifiableCredential(userId, cri, jwt, null, null);
     }
 
-    public static VerifiableCredential fromVcStoreItem(
-            VcStoreItem vcStoreItem, boolean enforceBase64Url) throws CredentialParseException {
+    public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
+            throws CredentialParseException {
         // Vcs from the store are assumed to be valid but must be Base64URL encoded to ensure
         // compatibility with EVCS
         if (vcStoreItem == null) {
@@ -58,7 +58,7 @@ public class VerifiableCredential {
         }
 
         try {
-            var jwt = JwtHelper.parseBase64UrlJwt(vcStoreItem.getCredential(), enforceBase64Url);
+            var jwt = JwtHelper.parseBase64UrlJwt(vcStoreItem.getCredential());
             return new VerifiableCredential(
                     vcStoreItem.getUserId(),
                     Cri.fromId(vcStoreItem.getCredentialIssuer()),
@@ -89,14 +89,13 @@ public class VerifiableCredential {
     }
 
     public static VerifiableCredential fromSessionCredentialItem(
-            SessionCredentialItem sessionCredentialItem, String userId, boolean enforceBase64Url)
+            SessionCredentialItem sessionCredentialItem, String userId)
             throws CredentialParseException {
         try {
             return new VerifiableCredential(
                     userId,
                     Cri.fromId(sessionCredentialItem.getCriId()),
-                    JwtHelper.parseBase64UrlJwt(
-                            sessionCredentialItem.getCredential(), enforceBase64Url),
+                    JwtHelper.parseBase64UrlJwt(sessionCredentialItem.getCredential()),
                     sessionCredentialItem.getMigrated(),
                     null);
         } catch (ParseException e) {

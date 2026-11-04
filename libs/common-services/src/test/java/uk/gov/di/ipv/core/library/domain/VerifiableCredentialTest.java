@@ -84,7 +84,7 @@ class VerifiableCredentialTest {
                         .expirationTime(now.minusSeconds(1))
                         .migrated(now.plusSeconds(1))
                         .build();
-        var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem, true);
+        var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem);
 
         assertEquals(USER_ID, verifiableCredential.getUserId());
         assertEquals(CRI, verifiableCredential.getCri());
@@ -114,7 +114,7 @@ class VerifiableCredentialTest {
 
             assertThrows(
                     CredentialParseException.class,
-                    () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
+                    () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
         }
     }
 
@@ -131,7 +131,7 @@ class VerifiableCredentialTest {
 
         assertThrows(
                 CredentialParseException.class,
-                () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
+                () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
     }
 
     @Test
@@ -159,8 +159,7 @@ class VerifiableCredentialTest {
         var sessionCredentialItem =
                 new SessionCredentialItem(SESSION_ID, CRI, vcFixture.getSignedJwt(), true, now);
         var generatedVc =
-                VerifiableCredential.fromSessionCredentialItem(
-                        sessionCredentialItem, USER_ID, true);
+                VerifiableCredential.fromSessionCredentialItem(sessionCredentialItem, USER_ID);
 
         assertEquals(USER_ID, generatedVc.getUserId());
         assertEquals(Cri.ADDRESS, generatedVc.getCri());
@@ -185,7 +184,7 @@ class VerifiableCredentialTest {
                     CredentialParseException.class,
                     () ->
                             VerifiableCredential.fromSessionCredentialItem(
-                                    sessionCredentialItem, USER_ID, true));
+                                    sessionCredentialItem, USER_ID));
         }
     }
 
@@ -200,7 +199,7 @@ class VerifiableCredentialTest {
                 CredentialParseException.class,
                 () ->
                         VerifiableCredential.fromSessionCredentialItem(
-                                sessionCredentialItem, USER_ID, true));
+                                sessionCredentialItem, USER_ID));
     }
 
     @Test
@@ -223,35 +222,8 @@ class VerifiableCredentialTest {
     @Nested
     class Base64UrlEnforcement {
         @Test
-        void
-                fromSessionCredentialItemShouldCreateAVerifiableCredentialFromBase64VCWhenBase64UrlIsNotEnforced()
-                        throws ParseException, CredentialParseException {
-            var now = Instant.now();
-            var sessionCredentialItem =
-                    new SessionCredentialItem(
-                            SESSION_ID,
-                            DRIVING_LICENCE,
-                            SignedJWT.parse(TestFixtures.DRIVING_PERMIT_BASE64_JWT),
-                            true,
-                            now);
-
-            var generatedVc =
-                    VerifiableCredential.fromSessionCredentialItem(
-                            sessionCredentialItem, USER_ID, false);
-
-            assertEquals(USER_ID, generatedVc.getUserId());
-            assertEquals(DRIVING_LICENCE, generatedVc.getCri());
-            assertEquals(TestFixtures.DRIVING_PERMIT_BASE64_JWT, generatedVc.getVcString());
-            assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
-            assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, generatedVc.getSignedJwt().serialize());
-            assertEquals(now, generatedVc.getMigrated());
-        }
-
-        @Test
-        void
-                fromSessionCredentialItemThrowsCredentialParseExceptionOnBase64VcWhenBase64UrlIsEnforced()
-                        throws ParseException {
+        void fromSessionCredentialItemThrowsCredentialParseExceptionOnBase64()
+                throws ParseException {
             var now = Instant.now();
             var sessionCredentialItem =
                     new SessionCredentialItem(
@@ -266,7 +238,7 @@ class VerifiableCredentialTest {
                             CredentialParseException.class,
                             () ->
                                     VerifiableCredential.fromSessionCredentialItem(
-                                            sessionCredentialItem, USER_ID, true));
+                                            sessionCredentialItem, USER_ID));
             assertTrue(
                     credentialParseException
                             .getCause()
@@ -275,7 +247,7 @@ class VerifiableCredentialTest {
         }
 
         @Test
-        void fromVcStoreItemThrowsCredentialParseExceptionOnBase64VcWhenBase64UrlIsEnforced() {
+        void fromVcStoreItemThrowsCredentialParseExceptionOnBase64Vc() {
             var now = Instant.now();
 
             var vcStoreItem =
@@ -290,39 +262,12 @@ class VerifiableCredentialTest {
             CredentialParseException credentialParseException =
                     assertThrows(
                             CredentialParseException.class,
-                            () -> VerifiableCredential.fromVcStoreItem(vcStoreItem, true));
+                            () -> VerifiableCredential.fromVcStoreItem(vcStoreItem));
             assertTrue(
                     credentialParseException
                             .getCause()
                             .getMessage()
                             .startsWith("JWT is not valid Base64URL:"));
-        }
-
-        @Test
-        void
-                fromVcStoreItemShouldCreateAVerifiableCredentialFromBase64VCWhenBase64UrlIsNotEnforced()
-                        throws CredentialParseException {
-            var now = Instant.now();
-            var vcStoreItem =
-                    VcStoreItem.builder()
-                            .userId(USER_ID)
-                            .credentialIssuer(DRIVING_LICENCE.getId())
-                            .credential(TestFixtures.DRIVING_PERMIT_BASE64_JWT)
-                            .dateCreated(now)
-                            .expirationTime(now.minusSeconds(1))
-                            .migrated(now.plusSeconds(1))
-                            .build();
-            var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem, false);
-
-            assertEquals(USER_ID, verifiableCredential.getUserId());
-            assertEquals(DRIVING_LICENCE, verifiableCredential.getCri());
-            assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_JWT, verifiableCredential.getVcString());
-            assertEquals(vcFixture.getClaimsSet(), verifiableCredential.getClaimsSet());
-            assertEquals(
-                    TestFixtures.DRIVING_PERMIT_BASE64_JWT,
-                    verifiableCredential.getSignedJwt().serialize());
-            assertEquals(now.plusSeconds(1), verifiableCredential.getMigrated());
         }
     }
 }

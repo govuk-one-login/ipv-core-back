@@ -45,7 +45,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
@@ -706,10 +705,9 @@ class EvcsServiceTest {
         }
 
         @Test
-        void testGetVerifiableCredentialsParsesBase64UrlEncodedVCsWhenBase64UrlIsEnforced()
+        void testGetVerifiableCredentialsParsesBase64UrlEncodedVCs()
                 throws CredentialParseException {
             // Arrange
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
 
             evcsGetUserVcDtos.add(
                     new EvcsGetUserVCDto(
@@ -735,38 +733,8 @@ class EvcsServiceTest {
         }
 
         @Test
-        void testGetVerifiableCredentialsParsesBase64EncodedVCWhenBase64UrlIsNotEnforced()
-                throws CredentialParseException {
+        void getVerifiableCredentialsThrowsCredentialParseExceptionIfVCIsBase64Encoded() {
             // Arrange
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-            evcsGetUserVcDtos.add(
-                    new EvcsGetUserVCDto(
-                            TestFixtures.DRIVING_PERMIT_BASE64_JWT,
-                            EvcsVCState.CURRENT,
-                            Map.of(
-                                    "reason", "testing",
-                                    "txmaEventId", "txma-event-id-2",
-                                    "timestampMs", "1714478033959")));
-            // Act
-            var vcs =
-                    evcsService.getVerifiableCredentials(TEST_USER_ID, evcsGetUserVcDtos, CURRENT);
-            // Assert
-            assertEquals(
-                    3,
-                    (vcs.stream()
-                            .filter(
-                                    vc ->
-                                            vc.getCri().equals(Cri.ADDRESS)
-                                                    || vc.getCri().equals(Cri.DRIVING_LICENCE)
-                                                    || vc.getCri().equals(Cri.DCMAW))
-                            .count()));
-        }
-
-        @Test
-        void
-                getVerifiableCredentialsThrowsCredentialParseExceptionIfVCIsBase64EncodedWhenBase64UrlIsEnforced() {
-            // Arrange
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
             evcsGetUserVcDtos.add(
                     new EvcsGetUserVCDto(
                             TestFixtures.DRIVING_PERMIT_BASE64_JWT,
