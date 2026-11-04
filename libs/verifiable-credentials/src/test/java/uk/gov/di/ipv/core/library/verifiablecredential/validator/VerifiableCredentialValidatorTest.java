@@ -36,7 +36,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
@@ -397,9 +396,7 @@ class VerifiableCredentialValidatorTest {
     @Nested
     class Base64UrlEnforcement {
         @Test
-        void
-                parseAndValidateThrowsVerifiableCredentialExceptionOnBase64VcsWhenBase64URLIsEnforced() {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
+        void parseAndValidateThrowsVerifiableCredentialExceptionOnBase64Vcs() {
             var exception =
                     assertThrows(
                             VerifiableCredentialException.class,
@@ -418,27 +415,8 @@ class VerifiableCredentialValidatorTest {
         }
 
         @Test
-        void parseAndValidateValidatesValidBase64EncodedVcsWhenBase64URLIsNotEnforced()
+        void parseAndValidateValidatesValidBase64URLEncodedVcs()
                 throws VerifiableCredentialException {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(false);
-            var vc =
-                    vcJwtValidator.parseAndValidate(
-                            TEST_USER,
-                            PASSPORT,
-                            TestFixtures.PASSPORT_BASE64_JWT,
-                            VALID_EC_SIGNING_KEY,
-                            TEST_COMPONENT_ID,
-                            false);
-
-            assertEquals(TEST_USER, vc.getUserId());
-            assertEquals(PASSPORT, vc.getCri());
-            assertEquals(TestFixtures.PASSPORT_BASE64_JWT, vc.getVcString());
-        }
-
-        @Test
-        void parseAndValidateValidatesValidBase64URLEncodedVcsWhenBase64URLIsEnforced()
-                throws VerifiableCredentialException {
-            when(mockConfigService.enabled(ENFORCE_BASE64URL_VC_ENCODING)).thenReturn(true);
             var vcString = vcWebPassportSuccessful().getVcString();
             var vc =
                     vcJwtValidator.parseAndValidate(

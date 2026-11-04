@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.ENFORCE_BASE64URL_VC_ENCODING;
 
 public class CimitUtilityService {
     private record MitigationDetails(String mitigationEvent, boolean isMitigated) {}
@@ -226,9 +225,8 @@ public class CimitUtilityService {
 
     public VerifiableCredential getParsedSecurityCheckCredential(
             String securityCheckCredential, String userId) throws CredentialParseException {
-        var enforceBase64Url = configService.enabled(ENFORCE_BASE64URL_VC_ENCODING);
         try {
-            var jwt = JwtHelper.parseBase64UrlJwt(securityCheckCredential, enforceBase64Url);
+            var jwt = JwtHelper.parseBase64UrlJwt(securityCheckCredential);
             return VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         } catch (ParseException e) {
             throw new CredentialParseException("Unable to parse vc string", e);
