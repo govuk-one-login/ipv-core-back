@@ -1456,8 +1456,7 @@ Feature: Handling unexpected CRI errors
 
   Rule: Fraud CRI technical error on web journey - resilience enabled
     Background: Route to select photo id
-      Given I activate the 'openBanking' feature set
-      And I activate the 'fraudCriErrorResilience' feature set
+      Given I activate the 'openBanking,fraudCriErrorResilience' feature sets
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
@@ -1549,7 +1548,7 @@ Feature: Handling unexpected CRI errors
         | drivingLicence | kenneth-driving-permit-valid |
 
   Rule: Fraud CRI technical error on web journey - resilience disabled
-    Background: Route to select photo id
+    Scenario Outline: Unexpected error from Fraud CRI via <cri>
       Given I activate the 'openBanking' feature set
       And I activate the 'fraudCriErrorResilienceDisabled' feature set
       And I start a new 'medium-confidence' journey
@@ -1568,8 +1567,6 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'select-photo-id' page response
-
-    Scenario Outline: Unexpected error from Fraud CRI via <cri>
       When I submit a '<cri>' event
       Then I get a 'prove-identity-online' page response and pageContext
         | Context | Value |
@@ -1678,7 +1675,7 @@ Feature: Handling unexpected CRI errors
         | drivingLicence | kenneth-driving-permit-valid |
 
   Rule: Fraud CRI technical error on web journey - resilience disabled - no Open Banking
-    Background: Route to select photo id
+    Scenario Outline: Unexpected error from Fraud CRI via <cri>
       Given I activate the 'openBankingDisabled,fraudCriErrorResilienceDisabled' feature set
       And I start a new 'medium-confidence' journey
       Then I get a 'live-in-uk' page response
@@ -1696,8 +1693,6 @@ Feature: Handling unexpected CRI errors
       Then I get a 'pyi-triage-buffer' page response
       When I submit an 'anotherWay' event
       Then I get a 'page-multiple-doc-check' page response
-
-    Scenario Outline: Unexpected error from Fraud CRI via <cri>
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit '<details>' details to the CRI stub
