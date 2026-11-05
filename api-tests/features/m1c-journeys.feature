@@ -257,9 +257,9 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit <fraudResponse> details with attributes to the CRI stub
@@ -324,9 +324,9 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -374,9 +374,9 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-family-name-score-2' details with attributes to the CRI stub
@@ -424,9 +424,9 @@ Feature: M1C Unavailable Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
@@ -465,9 +465,9 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-family-name-unavailable' details with attributes to the CRI stub
