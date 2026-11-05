@@ -116,9 +116,9 @@ Feature: Update details higher strength
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -211,9 +211,9 @@ Feature: Update details higher strength
       When I submit the returned journey event
       Then I get a 'drivingLicence' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-1-history-0' details with attributes to the CRI stub
@@ -239,9 +239,9 @@ Feature: Update details higher strength
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -310,9 +310,9 @@ Feature: Update details higher strength
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -368,9 +368,9 @@ Feature: Update details higher strength
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success' page response and pageContext
-        | Context   | Value |
-        | noAddress | true  |
+      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+        | Context     | Value     |
+        | journeyType | noAddress |
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
