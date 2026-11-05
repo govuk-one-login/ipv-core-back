@@ -172,7 +172,7 @@ Feature: Stored Identity - M1C Outcomes
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context     | Value     |
         | journeyType | noAddress |
       When I submit a 'next' event
