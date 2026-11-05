@@ -467,8 +467,10 @@ states:
     events:
       ukPassport:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -1045,6 +1047,7 @@ states:
         targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       postOffice:
         targetState: CRI_CLAIMED_IDENTITY_J4
       relyingParty:
@@ -1070,6 +1073,7 @@ states:
         targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       postOffice:
         targetState: CRI_CLAIMED_IDENTITY_J4
       relyingParty:
