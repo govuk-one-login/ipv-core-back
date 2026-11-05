@@ -480,8 +480,11 @@ states:
       pageId: pyi-continue-with-passport
     events:
       next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: ukPassport
+        targetState: PROVE_IDENTITY_ONLINE_PASSPORT
+        checkIfDisabled:
+          openBanking:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: ukPassport
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
@@ -495,8 +498,11 @@ states:
       pageId: pyi-continue-with-driving-licence
     events:
       next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: drivingLicence
+        targetState: PROVE_IDENTITY_ONLINE_DRIVING_LICENCE
+        checkIfDisabled:
+          openBanking:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: drivingLicence
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:

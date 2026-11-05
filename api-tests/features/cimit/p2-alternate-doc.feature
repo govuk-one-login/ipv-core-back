@@ -76,6 +76,14 @@ Feature: P2 CIMIT - Alternate doc
       Given I start a new 'medium-confidence' journey
       Then I get a '<mitigationStart>' page response
       When I submit a 'next' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
       Then I get a '<mitigatingCri>' CRI response
       When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
       Then I get an 'address' CRI response

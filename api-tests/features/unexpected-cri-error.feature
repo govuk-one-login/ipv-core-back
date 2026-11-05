@@ -510,6 +510,14 @@ Feature: Handling unexpected CRI errors
       Given I start a new 'medium-confidence' journey
       Then I get a '<mitigationStart>' page response
       When I submit a 'next' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
       Then I get a 'sorry-technical-problem' page response and pageContext
