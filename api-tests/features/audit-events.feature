@@ -595,7 +595,7 @@ Feature: Audit Events
     When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success-v2' page response and pageContext
+    Then I get a 'page-dcmaw-success' page response and pageContext
       | Context     | Value     |
       | journeyType | noAddress |
     When I submit a 'next' event
@@ -944,7 +944,7 @@ Feature: Audit Events
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'page-dcmaw-success-v2' page response and pageContext
+      Then I get a 'page-dcmaw-success' page response and pageContext
         | Context     | Value     |
         | journeyType | noAddress |
       When I submit a 'next' event
