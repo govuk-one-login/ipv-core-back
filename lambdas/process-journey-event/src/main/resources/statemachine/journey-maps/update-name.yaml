@@ -357,6 +357,9 @@ states:
                 targetJourney: UPDATE_DETAILS_HIGHER_STRENGTH
                 targetState: START_HIGHER_STRENGTH
                 journeyContextToSet: nameAndAddress
+      fraud-cri-technical-error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
 
   # SHARED STATES

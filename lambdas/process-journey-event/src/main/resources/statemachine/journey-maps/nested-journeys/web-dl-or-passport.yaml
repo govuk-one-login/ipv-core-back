@@ -78,6 +78,23 @@ nestedJourneyStates:
         targetState: FAILED
       fraud-fail-with-ci:
         exitEventToEmit: fraud-fail-with-ci
+      fraud-cri-technical-error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+        checkFeatureFlag:
+          fraudCriErrorResilienceEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_PASSPORT
+  SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_PASSPORT:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      pageContext:
+        reason: fraudCriError
+    events:
+      tryAgain:
+        targetState: ADDRESS_AND_FRAUD_AFTER_PASSPORT
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
   PROVE_ANOTHER_WAY_AFTER_PASSPORT:
     response:
       type: page
@@ -156,6 +173,23 @@ nestedJourneyStates:
       fraud-fail-with-no-ci-fatal:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-cri-technical-error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+        checkFeatureFlag:
+          fraudCriErrorResilienceEnabled:
+            targetState: SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_DL
+  SORRY_CRI_TECHNICAL_PROBLEM_FRAUD_AFTER_DL:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+      pageContext:
+        reason: fraudCriError
+    events:
+      tryAgain:
+        targetState: ADDRESS_AND_FRAUD_AFTER_DL
+      returnToRp:
+        exitEventToEmit: return-to-rp-cri-error
   PROVE_ANOTHER_WAY_AFTER_DL:
     response:
       type: page

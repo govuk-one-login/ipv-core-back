@@ -393,7 +393,7 @@ core:
     sisVerificationEnabled: true
     mitigations9020Enabled: true
     f2fRetryEnabled: false
-
+    fraudCriErrorResilienceEnabled: false
   features:
     f2fRetry:
       featureFlags:
@@ -415,6 +415,12 @@ core:
     zeroHourFraudVcExpiry:
       self:
         fraudCheckExpiryPeriodDays: 0
+    fraudCriErrorResilience:
+      featureFlags:
+        fraudCriErrorResilienceEnabled: true
+    fraudCriErrorResilienceDisabled:
+      featureFlags:
+        fraudCriErrorResilienceEnabled: false
     # Disabling CRIs
     f2fDisabled:
       credentialIssuers:
