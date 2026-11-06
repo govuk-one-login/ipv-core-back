@@ -94,7 +94,7 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_NAMES_ONLY
+        targetState: POST_APP_DOC_CHECK_NAMES_ONLY_V2
         journeyContextToUnset: appOnly
       anotherWay:
         targetJourney: FAILED
@@ -136,6 +136,16 @@ states:
       pageId: page-dcmaw-success
       pageContext:
         noAddress: true
+    events:
+      next:
+        targetState: FRAUD_CHECK_NAMES_ONLY
+
+  POST_APP_DOC_CHECK_NAMES_ONLY_V2:
+    response:
+      type: page
+      pageId: page-dcmaw-success-v2
+      pageContext:
+        journeyType: noAddress
     events:
       next:
         targetState: FRAUD_CHECK_NAMES_ONLY
@@ -236,7 +246,7 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS_V2
         journeyContextToUnset: appOnly
       anotherWay:
         targetJourney: FAILED
@@ -279,7 +289,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS_V2
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -308,6 +318,17 @@ states:
       pageId: page-dcmaw-success
       pageContext:
         noAddress: true
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD
+        targetEntryEvent: internationalUser
+
+  POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS_V2:
+    response:
+      type: page
+      pageId: page-dcmaw-success-v2
+      pageContext:
+        journeyType: noAddress
     events:
       next:
         targetState: ADDRESS_AND_FRAUD

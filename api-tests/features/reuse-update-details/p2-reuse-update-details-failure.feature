@@ -248,9 +248,9 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response and pageContext
-                | Context   | Value |
-                | noAddress | true  |
+            Then I get a 'page-dcmaw-success-v2' page response and pageContext
+                | Context     | Value     |
+                | journeyType | noAddress |
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
             When I submit 'kenneth-changed-given-name-score-0' details with attributes to the CRI stub
@@ -289,9 +289,9 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response and pageContext
-                | Context   | Value |
-                | noAddress | true  |
+            Then I get a 'page-dcmaw-success-v2' page response and pageContext
+                | Context     | Value     |
+                | journeyType | noAddress |
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
             When I submit 'kenneth-breaching-ci' details with attributes to the CRI stub
@@ -328,9 +328,9 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'page-dcmaw-success' page response and pageContext
-                | Context   | Value |
-                | noAddress | true  |
+            Then I get a 'page-dcmaw-success-v2' page response and pageContext
+                | Context     | Value     |
+                | journeyType | noAddress |
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
             When I submit 'kenneth-changed-given-name-score-2' details with attributes to the CRI stub
@@ -364,9 +364,9 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get a 'page-dcmaw-success' page response and pageContext
-                | Context   | Value |
-                | noAddress | true  |
+            Then I get a 'page-dcmaw-success-v2' page response and pageContext
+                | Context     | Value     |
+                | journeyType | noAddress |
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
             When I submit 'alice-score-2' details with attributes to the CRI stub
@@ -405,9 +405,9 @@ Feature: Identity reuse update details failures
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
                 | Attribute | Values          |
                 | context   | "check_details" |
-            Then I get a 'page-dcmaw-success' page response and pageContext
-                | Context   | Value |
-                | noAddress | true  |
+            Then I get a 'page-dcmaw-success-v2' page response and pageContext
+                | Context     | Value     |
+                | journeyType | noAddress |
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
             When I call the CRI stub with attributes and get an 'access_denied' OAuth error
@@ -442,9 +442,9 @@ Feature: Identity reuse update details failures
             And I poll for async DCMAW credential receipt
             Then the poll returns a '201'
             When I submit the returned journey event
-            Then I get an 'page-dcmaw-success' page response and pageContext
-              | Context   | Value |
-              | noAddress | true  |
+            Then I get an 'page-dcmaw-success-v2' page response and pageContext
+              | Context     | Value     |
+              | journeyType | noAddress |
 
             # User stops here and abandons journey
             And I have a stored identity record with a 'P3' max vot that is 'invalid'
