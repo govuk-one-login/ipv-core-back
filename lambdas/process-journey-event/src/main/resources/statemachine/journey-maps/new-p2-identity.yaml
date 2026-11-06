@@ -15,11 +15,9 @@ states:
             targetState: LIVE_IN_UK_PAGE
             checkMitigation:
               alternate-doc-invalid-dl:
-                targetState: WEB_DL_OR_PASSPORT
-                targetEntryEvent: alternate-doc-invalid-dl
+                targetState: MITIGATION_PP_START
               alternate-doc-invalid-passport:
-                targetState: WEB_DL_OR_PASSPORT
-                targetEntryEvent: alternate-doc-invalid-passport
+                targetState: MITIGATION_DL_START
               enhanced-verification:
                 targetState: MITIGATION_01_IDENTITY_START_PAGE
                 auditEvents:
@@ -34,11 +32,9 @@ states:
                   mitigationType: higher-validity-verification
         checkMitigation:
           alternate-doc-invalid-dl:
-            targetState: WEB_DL_OR_PASSPORT
-            targetEntryEvent: alternate-doc-invalid-dl
+            targetState: MITIGATION_PP_START
           alternate-doc-invalid-passport:
-            targetState: WEB_DL_OR_PASSPORT
-            targetEntryEvent: alternate-doc-invalid-passport
+            targetState: MITIGATION_DL_START
           enhanced-verification:
             targetState: MITIGATION_01_IDENTITY_START_PAGE
             auditEvents:
@@ -467,13 +463,53 @@ states:
     events:
       ukPassport:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
+
+  # Invalid PP and DL mitigation routes
+  MITIGATION_PP_START:
+    response:
+      type: page
+      pageId: pyi-continue-with-passport
+    events:
+      next:
+        targetState: PROVE_IDENTITY_ONLINE_PASSPORT
+        checkIfDisabled:
+          openBanking:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: ukPassport
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+  MITIGATION_DL_START:
+    response:
+      type: page
+      pageId: pyi-continue-with-driving-licence
+    events:
+      next:
+        targetState: PROVE_IDENTITY_ONLINE_DRIVING_LICENCE
+        checkIfDisabled:
+          openBanking:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: drivingLicence
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
@@ -1057,6 +1093,7 @@ states:
         targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       postOffice:
         targetState: CRI_CLAIMED_IDENTITY_J4
       relyingParty:
@@ -1082,6 +1119,7 @@ states:
         targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: drivingLicence
       postOffice:
         targetState: CRI_CLAIMED_IDENTITY_J4
       relyingParty:
