@@ -34,6 +34,7 @@ public class ClientOAuthSessionItem implements PersistenceItem {
     private long ttl;
     private String evcsAccessToken;
     private boolean isErrorClientSession;
+    private boolean updateIdentity;
 
     @DynamoDbPartitionKey
     public String getClientOAuthSessionId() {

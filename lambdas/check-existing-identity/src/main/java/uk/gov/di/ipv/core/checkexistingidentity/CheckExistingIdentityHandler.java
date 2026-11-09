@@ -111,6 +111,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_ID
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UPDATE_DETAILS_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -120,6 +121,8 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
+    private static final JourneyResponse JOURNEY_UPDATE_DETAILS =
+            new JourneyResponse(JOURNEY_UPDATE_DETAILS_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -275,6 +278,11 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             var auditInformation = new AuditEventInformation(auditEventUser, deviceInformation);
+
+            // Redirect immediately there's a request to update the user's identity
+            if (clientOAuthSessionItem.isUpdateIdentity()) {
+                return JOURNEY_UPDATE_DETAILS.toObjectMap();
+            }
 
             // Check whether there is a blocking account intervention
             var fetchedAisState = aisService.fetchAisState(userId);
@@ -721,6 +729,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             AuditEventInformation auditInformation)
             throws VerifiableCredentialException {
+
         // check the result of 6MFC and return the appropriate journey
         var fraudVcs =
                 credentialBundle.credentials.stream()
