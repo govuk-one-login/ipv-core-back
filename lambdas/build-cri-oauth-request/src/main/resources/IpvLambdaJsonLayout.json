@@ -82,6 +82,10 @@
       "field": "lineNumber"
     }
   },
+  "function_name": {
+    "$resolver": "powertools",
+    "field": "function_name"
+  },
   "": {
     "$resolver": "powertools"
   }
