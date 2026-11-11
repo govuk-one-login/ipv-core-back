@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.persistence;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
@@ -109,6 +110,28 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
             }
         }
         return null;
+    }
+
+    @Override
+    public T updateItemIfAttributeNotExists(T item, String attributeName)
+            throws ConditionalCheckFailedException {
+        var stored = records.get(getKey(item));
+        if (stored != null && getAttributeValue(stored, attributeName) != null) {
+            throw new ConditionalCheckFailedException();
+        }
+        records.put(getKey(item), item);
+        return item;
+    }
+
+    private Object getAttributeValue(T item, String attributeName) {
+        String getterName =
+                "get" + Character.toUpperCase(attributeName.charAt(0)) + attributeName.substring(1);
+        try {
+            Method getter = klass.getMethod(getterName);
+            return getter.invoke(item);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalArgumentException("Could not access attribute " + attributeName, e);
+        }
     }
 
     @Override
