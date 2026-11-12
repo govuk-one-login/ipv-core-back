@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidato
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -200,6 +201,16 @@ public class IssueClientAccessTokenHandler
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Error finding Ipv session for authorisation code", error));
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    error.getHTTPStatusCode(), error.toJSONObject());
+        } catch (ConditionalCheckFailedException e) {
+            ErrorObject error =
+                    OAuth2Error.INVALID_GRANT.setDescription(
+                            "Authorization code used too many times");
+
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Authorization code used too many times", error));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
