@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.config.domain.Config;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -320,6 +321,36 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         verify(mockSessionService).revokeAccessToken(sessionItem);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals("Authorization code used too many times", errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400WhenAccessTokenConditionalWriteFails() throws Exception {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        String tokenRequestBody =
+                "code="
+                        + TEST_AUTHORIZATION_CODE
+                        + "&redirect_uri="
+                        + TEST_REDIRECT_URL
+                        + "&grant_type=authorization_code&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
+
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
+                .thenReturn(ValidationResult.createValidResult());
+        when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
+                .thenReturn(sessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+        doThrow(new ConditionalCheckFailedException())
+                .when(mockSessionService)
+                .setAccessToken(any(), any());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
