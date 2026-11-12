@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
-import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
@@ -90,8 +89,8 @@ class VcHelperTest {
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
 
-    private final Clock fixedLondonClock =
-            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), DateAndTimeHelper.LONDON_TIMEZONE);
+    private final Clock fixedUTCClock =
+            Clock.fixed(Instant.parse("2026-01-26T12:00:00Z"), ZoneOffset.UTC);
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
@@ -243,7 +242,7 @@ class VcHelperTest {
         // Act & Assert
         assertTrue(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        List.of(vc, vc), configService, fixedLondonClock));
+                        List.of(vc, vc), configService, fixedUTCClock));
     }
 
     @Test
@@ -257,7 +256,7 @@ class VcHelperTest {
         // Act & Assert
         assertFalse(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        List.of(vcExpired, vcNotExpired), configService, fixedLondonClock));
+                        List.of(vcExpired, vcNotExpired), configService, fixedUTCClock));
     }
 
     @Test
@@ -271,59 +270,22 @@ class VcHelperTest {
         // Act & Assert
         assertTrue(
                 VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                        List.of(vcExpired, vcNotAvailable), configService, fixedLondonClock));
+                        List.of(vcExpired, vcNotAvailable), configService, fixedUTCClock));
     }
 
     private static Stream<Arguments> FraudVcExpiryCases() {
-        // In 2025 BST started at 01:00 on 30th March and ended at 01:00 26th October
         return Stream.of(
                 Arguments.of(
-                        "GMT -> GMT valid",
+                        "UTC valid",
                         3,
                         "2025-01-29 10:30:00+0000",
                         "2025-01-31 23:59:59+0000",
                         false),
                 Arguments.of(
-                        "GMT -> GMT expired",
+                        "UTC expired",
                         3,
                         "2025-01-29 10:30:00+0000",
                         "2025-02-01 00:00:00+0000",
-                        true),
-                Arguments.of(
-                        "GMT -> BST valid",
-                        3,
-                        "2025-03-29 10:30:00+0000",
-                        "2025-03-31 23:59:59+0100",
-                        false),
-                Arguments.of(
-                        "GMT -> BST expired",
-                        3,
-                        "2025-03-29 10:30:00+0000",
-                        "2025-04-01 00:00:00+0100",
-                        true),
-                Arguments.of(
-                        "BST -> BST valid",
-                        3,
-                        "2025-07-29 10:30:00+0100",
-                        "2025-07-31 23:59:59+0100",
-                        false),
-                Arguments.of(
-                        "BST -> BST expired",
-                        3,
-                        "2025-07-29 10:30:00+0100",
-                        "2025-08-01 00:00:00+0100",
-                        true),
-                Arguments.of(
-                        "BST -> GMT valid",
-                        3,
-                        "2025-10-25 10:30:00+0100",
-                        "2025-10-27 23:59:59+0000",
-                        false),
-                Arguments.of(
-                        "BST -> GMT expired",
-                        3,
-                        "2025-10-25 10:30:00+0100",
-                        "2025-10-28 00:00:00+0000",
                         true));
     }
 
@@ -560,98 +522,30 @@ class VcHelperTest {
     private static Stream<Arguments> provideTestArgumentsForIsExpiredDrivingPermitVc() {
         return Stream.of(
                 Arguments.of(
-                        "DL expired before VC issued, VC has passed VC validity period (GMT)",
+                        "DL expired before VC issued, VC has passed VC validity period",
                         vcDcmawDrivingPermitDvaExpired(), // DL expiry: "2020-10-01", nbf:
                         // 2024-01-23T05:08:41
                         5,
                         "2024-01-28 00:00:00+0000",
                         true),
                 Arguments.of(
-                        "DL expired before VC issued, VC is within VC validity period (GMT)",
+                        "DL expired before VC issued, VC is within VC validity period",
                         vcDcmawDrivingPermitDvaExpired(), // DL expiry: "2020-10-01", nbf:
                         // 2024-01-23T05:08:41
                         5,
                         "2024-01-27 23:59:59+0000",
                         false),
                 Arguments.of(
-                        "DL expired before VC issued, VC has passed VC validity period (BST)",
-                        // DL expiry: 2020-10-01, nbf: 2024-07-23T23:59:59+01:00
+                        "DL expires day before VC issued so VC expires",
                         vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1721775599L)),
-                        5,
-                        "2024-07-28 00:00:00+0100",
-                        true),
-                Arguments.of(
-                        "DL expired before VC issued, VC is within VC validity period (BST)",
-                        // DL expiry: 2020-10-01, nbf: 2024-07-23T23:59:59+01:00
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1721775599L)),
-                        5,
-                        "2024-07-27 23:59:59+0100",
-                        false),
-
-                // In 2025 BST started at 01:00 on 30th March and ended at 01:00 26th October
-                Arguments.of(
-                        "DL expired before VC issued, VC has passed VC validity period (going from GMT to BST)",
-                        // DL expiry: 2020-10-01, nbf: 2025-03-28T23:59:59+00:00
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1743206399L)),
-                        5,
-                        "2025-04-02 00:00:00+0100",
-                        true),
-                Arguments.of(
-                        "DL expired before VC issued, VC is within VC validity period (going from GMT to BST)",
-                        // DL expiry: 2020-10-01, nbf: 2025-03-28T23:59:59+00:00
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1743206399L)),
-                        5,
-                        "2025-04-01 23:59:59+0100",
-                        false),
-                Arguments.of(
-                        "DL expired before VC issued, VC has passed VC validity period (going from BST to GMT)",
-                        // DL expiry: 2020-10-01, nbf: 2025-10-23T23:59:59+01:00
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1761260399L)),
-                        5,
-                        "2025-10-28 00:00:00+0000",
-                        true),
-                Arguments.of(
-                        "DL expired before VC issued, VC is within VC validity period (going from BST to GMT)",
-                        // DL expiry: 2020-10-01, nbf: 2025-10-23T23:59:59+01:00
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1761260399L)),
-                        5,
-                        "2025-10-27 23:59:59+0000",
-                        false),
-                Arguments.of(
-                        "DL expires day before VC issued so VC expires (DL expiry during BST)",
-                        // DL expiry: 2020-10-01, nbf: 2020-10-02T00:00:00+0100
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1601593200L)),
+                                "2020-10-01", Instant.parse("2020-10-02T00:00:00.000Z")),
                         180,
                         "2024-01-24 00:10:00+0000",
                         true),
                 Arguments.of(
-                        "DL expires on same day as VC issued so VC never expires (DL expiry during BST)",
-                        // DL expiry: 2020-10-01, nbf: 2020-10-01T23:59:59+0100
+                        "DL expires on same day as VC issued so VC never expires",
                         vcDcmawDrivingPermitDvaWithDates(
-                                "2020-10-01", Instant.ofEpochSecond(1601593199L)),
-                        180,
-                        "2024-01-24 00:10:00+0000",
-                        false),
-                Arguments.of(
-                        "DL expires day before VC issued so VC expires (DL expiry during GMT)",
-                        // DL expiry: 2020-02-01, nbf: 2020-02-02T00:00:00+0000
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-02-01", Instant.ofEpochSecond(1580601600L)),
-                        180,
-                        "2024-01-24 00:10:00+0000",
-                        true),
-                Arguments.of(
-                        "DL expires on same day as VC issued so VC never expires (DL expiry during GMT)",
-                        // DL expiry: 2020-02-01, nbf: 2020-02-01T23:59:59+0000
-                        vcDcmawDrivingPermitDvaWithDates(
-                                "2020-02-01", Instant.ofEpochSecond(1580601599L)),
+                                "2020-10-01", Instant.parse("2020-10-01T23:59:59.000Z")),
                         180,
                         "2024-01-24 00:10:00+0000",
                         false));

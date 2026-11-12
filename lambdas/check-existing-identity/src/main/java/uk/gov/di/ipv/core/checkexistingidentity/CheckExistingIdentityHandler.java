@@ -46,7 +46,6 @@ import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -71,6 +70,7 @@ import uk.gov.di.model.IdentityCheckCredential;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -726,7 +726,7 @@ public class CheckExistingIdentityHandler
                 credentialBundle.credentials.stream()
                         .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
                         .toList();
-        var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
+        var fixedClock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
 
         if (VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
                 fraudVcs, configService, fixedClock)) {
