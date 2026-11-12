@@ -279,11 +279,6 @@ public class CheckExistingIdentityHandler
 
             var auditInformation = new AuditEventInformation(auditEventUser, deviceInformation);
 
-            // Redirect immediately there's a request to update the user's identity
-            if (clientOAuthSessionItem.isUpdateIdentity()) {
-                return JOURNEY_UPDATE_DETAILS.toObjectMap();
-            }
-
             // Check whether there is a blocking account intervention
             var fetchedAisState = aisService.fetchAisState(userId);
             if (AccountInterventionEvaluator.hasStartOfJourneyIntervention(fetchedAisState)) {
@@ -586,7 +581,8 @@ public class CheckExistingIdentityHandler
                         previousMaxVot,
                         ipvSessionItem,
                         credentialBundle,
-                        auditInformation));
+                        auditInformation,
+                        clientOAuthSessionItem.isUpdateIdentity()));
     }
 
     private JourneyResponse handleF2fUserReturn(
@@ -727,7 +723,8 @@ public class CheckExistingIdentityHandler
             Vot previousMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
-            AuditEventInformation auditInformation)
+            AuditEventInformation auditInformation,
+            boolean isUpdateIdentity)
             throws VerifiableCredentialException {
 
         // check the result of 6MFC and return the appropriate journey
@@ -790,7 +787,11 @@ public class CheckExistingIdentityHandler
                 auditInformation.getAuditEventUser().getSessionId(),
                 false);
 
-        return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+        if (credentialBundle.isPendingReturn()) {
+            return JOURNEY_REUSE_WITH_STORE;
+        }
+
+        return isUpdateIdentity ? JOURNEY_UPDATE_DETAILS : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(

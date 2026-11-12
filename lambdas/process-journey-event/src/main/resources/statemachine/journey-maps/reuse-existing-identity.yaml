@@ -21,6 +21,11 @@ states:
       next:
         targetState: F2F_RETRY_FRAUD
 
+  UPDATE_DETAILS:
+    events:
+      next:
+        targetState: PROCESS_UPDATE_DETAILS
+
   # Journey states
 
   PROCESS_NEW_IDENTITY:
@@ -111,6 +116,31 @@ states:
         targetJourney: F2F_FAILED
         targetState: FAILED
       dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  PROCESS_UPDATE_DETAILS:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: EXISTING
+    events:
+      next:
+        targetState: UPDATE_DETAILS_PAGE
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 

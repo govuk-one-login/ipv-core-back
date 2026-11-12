@@ -58,3 +58,14 @@ Feature: Stored Identity
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       And I have a stored identity record with a 'P2' max vot that is 'invalid'
+
+  Rule: Update identity request
+    Scenario: Request invalidates stored identity
+      Given the subject already has the following credentials
+        | CRI     | scenario                     |
+        | dcmaw   | kenneth-driving-permit-valid |
+        | address | kenneth-current              |
+        | fraud   | kenneth-score-2              |
+      And I have an existing stored identity record with a 'P2' vot
+      When I start a new 'medium-confidence-update-identity' journey
+      Then I get an 'update-details' page response

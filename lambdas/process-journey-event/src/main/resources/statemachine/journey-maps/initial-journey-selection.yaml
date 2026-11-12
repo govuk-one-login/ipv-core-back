@@ -63,6 +63,9 @@ states:
         targetState: REPROVE_IDENTITY_START_P2
       reprove-identity-gpg45-low:
         targetState: REPROVE_IDENTITY_START_P1
+      update-details:
+        targetJourney: REUSE_EXISTING_IDENTITY
+        targetState: UPDATE_DETAILS
 
       # Routing for check of DCMAW Async VC cross-browser scenario (fail-with-ci already covered).
       # Should have the same routing as same-session scenario, except fail-with-no-ci must know vtr for choosing another way.
