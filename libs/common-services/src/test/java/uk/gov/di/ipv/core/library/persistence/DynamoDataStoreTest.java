@@ -15,19 +15,14 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.internal.conditional.BeginsWithConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -228,5 +223,35 @@ class DynamoDataStoreTest {
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
         assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
         assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().sortKeyValue().get().s());
+    }
+
+    @Test
+    void updateItemIfAttributeNotExistsShouldThrowWhenConditionFails() {
+        when(mockDynamoDbTable.updateItem(any(UpdateItemEnhancedRequest.class)))
+                .thenThrow(
+                        ConditionalCheckFailedException.builder()
+                                .message("Test conditional check failed")
+                                .build());
+
+        assertThrows(
+                uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException.class,
+                () -> dataStore.updateItemIfAttributeNotExists(authorizationCodeItem, "authCode"));
+    }
+
+    @Test
+    void updateItemIfAttributeNotExistsShouldUpdateWithAttributeNotExistsCondition()
+            throws Exception {
+        dataStore.updateItemIfAttributeNotExists(authorizationCodeItem, "authCode");
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<UpdateItemEnhancedRequest<AuthorizationCodeItem>> requestCaptor =
+                ArgumentCaptor.forClass(UpdateItemEnhancedRequest.class);
+
+        verify(mockDynamoDbTable).updateItem(requestCaptor.capture());
+        assertEquals(
+                "attribute_not_exists(authCode)",
+                requestCaptor.getValue().conditionExpression().expression());
+        assertEquals(
+                authorizationCodeItem.getAuthCode(), requestCaptor.getValue().item().getAuthCode());
     }
 }
