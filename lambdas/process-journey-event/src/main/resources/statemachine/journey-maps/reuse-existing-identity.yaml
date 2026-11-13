@@ -128,6 +128,8 @@ states:
     events:
       next:
         targetState: UPDATE_DETAILS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_START
       account-intervention:
         targetJourney: FAILED
         targetState: FAILED_ACCOUNT_INTERVENTION
