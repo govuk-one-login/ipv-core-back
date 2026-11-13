@@ -143,7 +143,7 @@ Feature: Identity reuse update details failures
 #            Then I am issued a 'P0' identity
 #            And I don't have a stored identity in EVCS
 #            When I start a new 'medium-confidence' journey
-#            Then I get a 'pyi-driving-licence-no-match' page response
+#            Then I get a 'pyi-continue-with-passport' page response
 
         Scenario: User is able to delete account from sorry-could-not-confirm-details page - MAM
             And I submit an 'update-name' event
