@@ -111,6 +111,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_ID
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UPDATE_DETAILS_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -120,6 +121,8 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
+    private static final JourneyResponse JOURNEY_UPDATE_DETAILS =
+            new JourneyResponse(JOURNEY_UPDATE_DETAILS_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -578,7 +581,8 @@ public class CheckExistingIdentityHandler
                         previousMaxVot,
                         ipvSessionItem,
                         credentialBundle,
-                        auditInformation));
+                        auditInformation,
+                        clientOAuthSessionItem.isUpdateIdentity()));
     }
 
     private JourneyResponse handleF2fUserReturn(
@@ -719,8 +723,10 @@ public class CheckExistingIdentityHandler
             Vot previousMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
-            AuditEventInformation auditInformation)
+            AuditEventInformation auditInformation,
+            boolean isUpdateIdentity)
             throws VerifiableCredentialException {
+
         // check the result of 6MFC and return the appropriate journey
         var fraudVcs =
                 credentialBundle.credentials.stream()
@@ -781,7 +787,11 @@ public class CheckExistingIdentityHandler
                 auditInformation.getAuditEventUser().getSessionId(),
                 false);
 
-        return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+        if (credentialBundle.isPendingReturn()) {
+            return JOURNEY_REUSE_WITH_STORE;
+        }
+
+        return isUpdateIdentity ? JOURNEY_UPDATE_DETAILS : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(
