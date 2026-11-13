@@ -53,7 +53,13 @@ include "lambdas",
 dependencyResolutionManagement {
 	repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
 	repositories {
-		mavenCentral()
+		maven {
+			url = uri("https://libraries.cgr.dev/java/")
+			credentials {
+				username = "user"
+				password = System.getenv("CHAINGUARD_TOKEN")
+			}
+		}
 		maven {
 			url = uri("https://maven.pkg.github.com/govuk-one-login/data-vocab")
 			credentials {
