@@ -9,12 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -167,6 +162,26 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public T update(T item) {
         return table.updateItem(item);
+    }
+
+    @Override
+    public T updateItemIfAttributeNotExists(T item, String attributeName)
+            throws uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException {
+        try {
+            UpdateItemEnhancedRequest<T> enhancedRequest =
+                    UpdateItemEnhancedRequest.builder(typeParameterClass)
+                            .item(item)
+                            .conditionExpression(
+                                    Expression.builder()
+                                            .expression(
+                                                    "attribute_not_exists(" + attributeName + ")")
+                                            .build())
+                            .build();
+
+            return table.updateItem(enhancedRequest);
+        } catch (ConditionalCheckFailedException e) {
+            throw new uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException(e);
+        }
     }
 
     @Override

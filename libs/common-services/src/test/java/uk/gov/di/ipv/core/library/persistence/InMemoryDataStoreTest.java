@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -246,6 +247,55 @@ class InMemoryDataStoreTest {
         store.update(updatedItem);
 
         assertEquals(updatedItem, store.getItem(id));
+    }
+
+    @Test
+    void updateItemIfAttributeNotExistsWritesWhenNoItemExists() throws Exception {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        item.setAccessToken("new-token");
+
+        store.updateItemIfAttributeNotExists(item, "accessToken");
+
+        assertEquals(item, store.getItem(id));
+    }
+
+    @Test
+    void updateItemIfAttributeNotExistsWritesWhenAttributeNotSet() throws Exception {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var existing = new IpvSessionItem();
+        existing.setIpvSessionId(id);
+        store.create(existing);
+
+        var update = new IpvSessionItem();
+        update.setIpvSessionId(id);
+        update.setAccessToken("new-token");
+
+        store.updateItemIfAttributeNotExists(update, "accessToken");
+
+        assertEquals(update, store.getItem(id));
+    }
+
+    @Test
+    void updateItemIfAttributeNotExistsThrowsWhenAttributeAlreadySet() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var existing = new IpvSessionItem();
+        existing.setIpvSessionId(id);
+        existing.setAccessToken("existing-token");
+        store.create(existing);
+
+        var update = new IpvSessionItem();
+        update.setIpvSessionId(id);
+        update.setAccessToken("new-token");
+
+        assertThrows(
+                ConditionalCheckFailedException.class,
+                () -> store.updateItemIfAttributeNotExists(update, "accessToken"));
     }
 
     @Test

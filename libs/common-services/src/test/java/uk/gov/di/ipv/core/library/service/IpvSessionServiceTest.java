@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -26,9 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -314,7 +313,7 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldSetAccessTokenAndMetadataOnSessionItem() {
+    void shouldSetAccessTokenAndMetadataOnSessionItem() throws ConditionalCheckFailedException {
         BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
@@ -322,9 +321,27 @@ class IpvSessionServiceTest {
 
         ipvSessionService.setAccessToken(ipvSessionItem, accessToken);
 
-        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        verify(mockDataStore)
+                .updateItemIfAttributeNotExists(
+                        ipvSessionItemArgumentCaptor.capture(), eq("accessToken"));
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessToken());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessTokenMetadata());
+    }
+
+    @Test
+    void shouldThrowWhenSettingAccessTokenThatAlreadyExists()
+            throws ConditionalCheckFailedException {
+        BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        when(mockDataStore.updateItemIfAttributeNotExists(any(), eq("accessToken")))
+                .thenThrow(new ConditionalCheckFailedException());
+
+        assertThrows(
+                ConditionalCheckFailedException.class,
+                () -> ipvSessionService.setAccessToken(ipvSessionItem, accessToken));
     }
 
     @Test

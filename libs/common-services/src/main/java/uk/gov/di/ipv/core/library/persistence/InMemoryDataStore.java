@@ -1,8 +1,10 @@
 package uk.gov.di.ipv.core.library.persistence;
 
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
@@ -23,6 +25,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     private final Class<T> klass;
     private final Method partitionKeyMethod;
     private final Method sortKeyMethod;
+    private final TableSchema<T> tableSchema;
 
     @SuppressWarnings("unchecked") // Rely on callers to use consistent types per table
     public InMemoryDataStore(String tableName, Class<T> klass) {
@@ -30,6 +33,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
                 (ConcurrentMap<String, T>)
                         TABLES.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
         this.klass = klass;
+        this.tableSchema = TableSchema.fromBean(klass);
         this.partitionKeyMethod = findMethodWithAnnotation(klass, DynamoDbPartitionKey.class);
         this.sortKeyMethod = findMethodWithAnnotation(klass, DynamoDbSortKey.class);
 
@@ -56,13 +60,13 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
 
     @Override
     public void create(T item) {
-        records.put(getKey(item), item);
+        records.put(getKey(item), copy(item));
     }
 
     @Override
     public void createIfNotExists(T item) throws ItemAlreadyExistsException {
         var key = getKey(item);
-        if (records.putIfAbsent(key, item) != null) {
+        if (records.putIfAbsent(key, copy(item)) != null) {
             throw new ItemAlreadyExistsException();
         }
     }
@@ -70,18 +74,20 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     @Override
     public void createOrUpdate(List<T> items) {
         for (T item : items) {
-            records.put(getKey(item), item);
+            records.put(getKey(item), copy(item));
         }
     }
 
     @Override
     public T getItem(String partitionValue, String sortValue) {
-        return records.get(getKey(partitionValue, sortValue));
+        var item = records.get(getKey(partitionValue, sortValue));
+        return item == null ? null : copy(item);
     }
 
     @Override
     public T getItem(String partitionValue) {
-        return records.get(getKey(partitionValue, null));
+        var item = records.get(getKey(partitionValue, null));
+        return item == null ? null : copy(item);
     }
 
     @Override
@@ -102,13 +108,40 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
         for (var item : records.values()) {
             try {
                 if (value.equals(indexMethod.invoke(item))) {
-                    return item;
+                    return copy(item);
                 }
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalArgumentException("Could not access index " + indexName);
             }
         }
         return null;
+    }
+
+    @Override
+    public T updateItemIfAttributeNotExists(T item, String attributeName)
+            throws ConditionalCheckFailedException {
+        var stored = records.get(getKey(item));
+        if (stored != null && getAttributeValue(stored, attributeName) != null) {
+            throw new ConditionalCheckFailedException();
+        }
+        var copy = copy(item);
+        records.put(getKey(item), copy);
+        return copy;
+    }
+
+    private Object getAttributeValue(T item, String attributeName) {
+        String getterName =
+                "get" + Character.toUpperCase(attributeName.charAt(0)) + attributeName.substring(1);
+        try {
+            Method getter = klass.getMethod(getterName);
+            return getter.invoke(item);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalArgumentException("Could not access attribute " + attributeName, e);
+        }
+    }
+
+    private T copy(T item) {
+        return tableSchema.mapToItem(tableSchema.itemToMap(item, true));
     }
 
     @Override
@@ -158,8 +191,9 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
 
     @Override
     public T update(T item) {
-        records.put(getKey(item), item);
-        return item;
+        var copy = copy(item);
+        records.put(getKey(item), copy);
+        return copy;
     }
 
     @Override
