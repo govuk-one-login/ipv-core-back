@@ -118,7 +118,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     @Override
-    public T updateItemIfAttributeNotExists(T item, String attributeName)
+    public synchronized T updateItemIfAttributeNotExists(T item, String attributeName)
             throws ConditionalCheckFailedException {
         var stored = records.get(getKey(item));
         if (stored != null && getAttributeValue(stored, attributeName) != null) {
