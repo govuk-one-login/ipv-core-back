@@ -51,7 +51,7 @@ public class TokenRequestValidator {
             validateMaxAllowedAuthClientTtl(claimsSet);
             validateJwtId(claimsSet);
         } catch (ParseException | InvalidClientException | JOSEException e) {
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildErrorMessage("Validation of client_assertion jwt failed", e));
             throw new ClientAuthenticationException(e);
         }
@@ -78,7 +78,7 @@ public class TokenRequestValidator {
         }
         var clientAuthJwtIdItem = clientAuthJwtIdService.getClientAuthJwtIdItem(jwtId.getValue());
         if (clientAuthJwtIdItem != null) {
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildLogMessage("The client auth JWT id (jti) has already been used")
                             .with(LOG_JTI.getFieldName(), clientAuthJwtIdItem.getJwtId())
                             .with(
