@@ -299,6 +299,48 @@ class InMemoryDataStoreTest {
     }
 
     @Test
+    void getItemReturnsCopySoChangesDoNotAffectStore() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        store.create(item);
+
+        var retrieved = store.getItem(id);
+        retrieved.setAccessToken("changed-without-saving");
+
+        assertNull(store.getItem(id).getAccessToken());
+    }
+
+    @Test
+    void getItemByIndexReturnsCopySoChangesDoNotAffectStore() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        item.setAuthorizationCode("test-auth-code");
+        store.create(item);
+
+        var retrieved = store.getItemByIndex("authorizationCode", "test-auth-code");
+        retrieved.setAccessToken("changed-without-saving");
+
+        assertNull(store.getItem(id).getAccessToken());
+    }
+
+    @Test
+    void createStoresCopySoLaterChangesDoNotAffectStore() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        store.create(item);
+
+        item.setAccessToken("changed-without-saving");
+
+        assertNull(store.getItem(id).getAccessToken());
+    }
+
+    @Test
     void deleteAndGetReturnsNoItem() {
         var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), VcStoreItem.class);
         var partitionKey = "test-id";
