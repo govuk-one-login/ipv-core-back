@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.security.InvalidParameterException;
@@ -89,6 +90,9 @@ public class CriCheckingService {
                     OAuth2Error.INVALID_SCOPE_CODE,
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
+    // If a DCMAW VC has a validity score equal to or higher than this then an authoritative source
+    // check is not needed.
+    private static final int AUTHORITATIVE_SOURCE_CHECK_VALIDITY_THRESHOLD = 3;
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
     private final CimitService cimitService;
@@ -338,18 +342,34 @@ public class CriCheckingService {
         }
 
         var newVc = dcmawVc.isPresent() ? dcmawVc : dcmawAsyncVc;
+        if (newVc.isEmpty()) {
+            return false;
+        }
 
-        return newVc.map(this::getDrivingPermitIdentifier)
-                .map(
-                        dcmawDpId ->
-                                findSuccessfulVcFromCri(DRIVING_LICENCE, sessionVcs)
-                                        .map(
-                                                dlVc ->
-                                                        !Objects.equals(
-                                                                dcmawDpId,
-                                                                getDrivingPermitIdentifier(dlVc)))
-                                        .orElse(true))
-                .orElse(false);
+        var dcmawDrivingPermitId = getDrivingPermitIdentifier(newVc.get());
+        // If the DCMAW VC isn't a driving permit VC we shouldn't do an auth source check
+        if (dcmawDrivingPermitId == null || dcmawDrivingPermitId.isBlank()) {
+            return false;
+        }
+
+        // Check whether the DCMAW VC is good enough that we don't need an auth source check
+        var validityScore = getValidityScore(newVc.get());
+        if (validityScore != null
+                && validityScore >= AUTHORITATIVE_SOURCE_CHECK_VALIDITY_THRESHOLD) {
+            return false;
+        }
+
+        // If there's no existing driving licence VC then we haven't already done an auth source
+        // check
+        var drivingLicenceVc = findSuccessfulVcFromCri(DRIVING_LICENCE, sessionVcs);
+        if (drivingLicenceVc.isEmpty()) {
+            return true;
+        }
+
+        // If we already have a driving licence VC for the same driving permit ID then we don't want
+        // to try to get another one.
+        return !Objects.equals(
+                dcmawDrivingPermitId, getDrivingPermitIdentifier(drivingLicenceVc.get()));
     }
 
     private Optional<VerifiableCredential> findSuccessfulVcFromCri(
@@ -377,6 +397,14 @@ public class CriCheckingService {
         LOGGER.warn(
                 LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")
                         .with(LOG_CRI_ID.getFieldName(), vc.getCri()));
+        return null;
+    }
+
+    private Integer getValidityScore(VerifiableCredential vc) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            return identityCheckCredential.getEvidence().getFirst().getValidityScore();
+        }
+
         return null;
     }
 }
