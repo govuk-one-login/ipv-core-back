@@ -616,10 +616,6 @@ public class CheckExistingIdentityHandler
 
             // For safety only continue if we find both VCs as expected
             if (fraudAndCicVcs.size() == 2) {
-                evcsService.markAbandonedInEvcs(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        fraudAndCicVcs);
                 credentialBundle.credentials.removeAll(fraudAndCicVcs);
 
                 sessionCredentialsService.persistCredentials(
