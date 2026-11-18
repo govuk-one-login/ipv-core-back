@@ -353,9 +353,21 @@ public class CheckExistingIdentityHandler
 
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
+            // fetchContraIndicatorsVc() also sets ipvSessionItem.securityCheckCredential, which is
+            // required by downstream lambdas (e.g. ProcessCandidateIdentityHandler).
+            // This call must stay before the isUpdateIdentity bypass below even though
+            // `contraIndicatorsVc` and `contraIndicators` are otherwise unused on that path.
             var contraIndicatorsVc =
                     cimitService.fetchContraIndicatorsVc(
                             userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
+
+            if (clientOAuthSessionItem.isUpdateIdentity()) {
+                sessionCredentialsService.persistCredentials(
+                        credentialBundle.credentials,
+                        auditInformation.getAuditEventUser().getSessionId(),
+                        false);
+                return JOURNEY_UPDATE_DETAILS;
+            }
 
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
@@ -581,8 +593,7 @@ public class CheckExistingIdentityHandler
                         previousMaxVot,
                         ipvSessionItem,
                         credentialBundle,
-                        auditInformation,
-                        clientOAuthSessionItem.isUpdateIdentity()));
+                        auditInformation));
     }
 
     private JourneyResponse handleF2fUserReturn(
@@ -723,8 +734,7 @@ public class CheckExistingIdentityHandler
             Vot previousMaxVot,
             IpvSessionItem ipvSessionItem,
             VerifiableCredentialBundle credentialBundle,
-            AuditEventInformation auditInformation,
-            boolean isUpdateIdentity)
+            AuditEventInformation auditInformation)
             throws VerifiableCredentialException {
 
         // check the result of 6MFC and return the appropriate journey
@@ -787,11 +797,7 @@ public class CheckExistingIdentityHandler
                 auditInformation.getAuditEventUser().getSessionId(),
                 false);
 
-        if (credentialBundle.isPendingReturn()) {
-            return JOURNEY_REUSE_WITH_STORE;
-        }
-
-        return isUpdateIdentity ? JOURNEY_UPDATE_DETAILS : JOURNEY_REUSE;
+        return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(

@@ -15,21 +15,6 @@
     }
   },
   {
-    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
-    "component_id": "https://identity.local.account.gov.uk",
-    "user": {
-      "user_id": "type[string]",
-      "govuk_signin_journey_id": "type[string]"
-    },
-    "extensions": {
-      "previous_achieved_vot": "P2",
-      "previous_max_vot": "P2"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_SUBJOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "user": {
