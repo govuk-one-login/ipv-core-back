@@ -11,9 +11,18 @@ states:
   FAILED:
     events:
       next:
-        targetState: F2F_FAILED_PAGE
+        targetState: RESET_IDENTITY
 
   # Journey states
+  RESET_IDENTITY:
+    response:
+      type: process
+      lambda: reset-identity
+      lambdaInput:
+        resetType: PENDING_F2F_ALL
+    events:
+      next:
+        targetState: F2F_FAILED_PAGE
 
   F2F_FAILED_PAGE:
     response:
@@ -21,29 +30,9 @@ states:
       pageId: pyi-f2f-technical
     events:
       next:
-        targetState: RESET_IDENTITY_BEFORE_NEW_IDENTITY
-      end:
-        targetState: RESET_IDENTITY_BEFORE_RETURN_TO_RP
-
-  RESET_IDENTITY_BEFORE_NEW_IDENTITY:
-    response:
-      type: process
-      lambda: reset-identity
-      lambdaInput:
-        resetType: PENDING_F2F_ALL
-    events:
-      next:
         targetJourney: INITIAL_JOURNEY_SELECTION
         targetState: START
-
-  RESET_IDENTITY_BEFORE_RETURN_TO_RP:
-    response:
-      type: process
-      lambda: reset-identity
-      lambdaInput:
-        resetType: PENDING_F2F_ALL
-    events:
-      next:
+      end:
         targetState: RETURN_TO_RP
 
   RETURN_TO_RP:
