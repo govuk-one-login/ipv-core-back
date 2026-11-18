@@ -27,6 +27,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,7 +40,6 @@ import java.util.stream.Stream;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
-import static uk.gov.di.ipv.core.library.helpers.DateAndTimeHelper.LONDON_TIMEZONE;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.model.CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE;
@@ -188,12 +188,13 @@ public class VcHelper {
 
     public static boolean isExpiredFraudVc(
             VerifiableCredential vc, ConfigService configService, Clock clock) {
-        var jwtClaimsSet = vc.getClaimsSet();
-        var nbfDate = jwtClaimsSet.getNotBeforeTime();
-        var nbf = nbfDate.toInstant();
+        var nbf = extractNbf(vc);
 
-        var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
-        return hasExpired(nbf, expiryPeriodInDays, clock);
+        if (nbf.isPresent()) {
+            var expiryPeriodInDays = configService.getFraudCheckExpiryPeriodDays();
+            return hasExpired(nbf.get(), expiryPeriodInDays, clock);
+        }
+        return false;
     }
 
     // A driving permit VC expires if
@@ -201,25 +202,25 @@ public class VcHelper {
     // AND
     // - The VC was issued more than DcmawExpiredDlValidityPeriodDays days ago
     public static boolean isExpiredDrivingPermitVc(
-            VerifiableCredential drivingPermitVc, ConfigService configService, Clock clock) {
+            VerifiableCredential vc, ConfigService configService, Clock clock) {
+        var nbf = extractNbf(vc);
         var validityDurationInDays = configService.getDcmawExpiredDlValidityPeriodDays();
-        var nbf = drivingPermitVc.getClaimsSet().getNotBeforeTime();
 
-        if (validityDurationInDays != null && nbf != null) {
+        if (validityDurationInDays != null && nbf.isPresent()) {
             // We pin both the VC issue time and DL expiry to the start of the day, for consistency
             // with the hasExpired check and to ensure a licence is treated as valid until the very
             // end of its expiry day.
-            var vcIssueTime = nbf.toInstant();
-            var startOfIssueDay = getLocalStartOfDay(vcIssueTime);
+            var vcIssueTime = nbf.get();
+            var startOfIssueDay = getUTCStartOfDay(vcIssueTime);
 
             var dlExpiryDateString =
-                    ((IdentityCheckCredential) drivingPermitVc.getCredential())
+                    ((IdentityCheckCredential) vc.getCredential())
                             .getCredentialSubject()
                             .getDrivingPermit()
                             .getFirst()
                             .getExpiryDate();
             var startOfDlExpiryDay =
-                    LocalDate.parse(dlExpiryDateString).atStartOfDay(LONDON_TIMEZONE).toInstant();
+                    LocalDate.parse(dlExpiryDateString).atStartOfDay(ZoneOffset.UTC).toInstant();
 
             return startOfDlExpiryDay.isBefore(startOfIssueDay) // still valid on day of DL expiry
                     && hasExpired(vcIssueTime, validityDurationInDays, clock);
@@ -233,15 +234,15 @@ public class VcHelper {
         // on the same calendar day (e.g. Fraud and DCMAW-DL VCs) share the exact same 6-month
         // expiry point.
         var endOfValidity =
-                getLocalStartOfDay(vcIssueTime)
-                        .atZone(LONDON_TIMEZONE)
+                getUTCStartOfDay(vcIssueTime)
+                        .atZone(ZoneOffset.UTC)
                         .plusDays(validityDurationInDays);
         var now = ZonedDateTime.now(clock);
         return endOfValidity.isBefore(now) || endOfValidity.isEqual(now);
     }
 
-    private static Instant getLocalStartOfDay(Instant time) {
-        return time.atZone(LONDON_TIMEZONE).toLocalDate().atStartOfDay(LONDON_TIMEZONE).toInstant();
+    private static Instant getUTCStartOfDay(Instant time) {
+        return time.atZone(ZoneOffset.UTC).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant();
     }
 
     public static boolean isFraudScoreOptionalForGpg45Evaluation(List<VerifiableCredential> vcs) {
