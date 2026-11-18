@@ -737,47 +737,9 @@ public class CheckExistingIdentityHandler
             AuditEventInformation auditInformation)
             throws VerifiableCredentialException {
 
-        // check the result of 6MFC and return the appropriate journey
-        var fraudVcs =
-                credentialBundle.credentials.stream()
-                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
-                        .toList();
-        var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
-
-        if (VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                fraudVcs, configService, fixedClock)) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "All Fraud VCs are expired or from unavailable source"));
-            sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(credentialBundle.credentials),
-                    auditInformation.getAuditEventUser().getSessionId(),
-                    false);
-
-            EmbeddedMetricHelper.identityProving();
-
-            fraudVcs.stream()
-                    .findFirst()
-                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
-                    .flatMap(VcHelper::extractNbf)
-                    .ifPresent(
-                            nbfInstant -> {
-                                var vcExpiryPeriodMs =
-                                        Duration.ofDays(
-                                                        configService
-                                                                .getFraudCheckExpiryPeriodDays())
-                                                .toMillis();
-                                var nbfMs = nbfInstant.toEpochMilli();
-
-                                sendAuditEventWithExtension(
-                                        AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
-                                        auditInformation.getAuditEventUser(),
-                                        auditInformation.getDeviceInformation(),
-                                        new AuditExtensionExpiredFraudVcFound(
-                                                vcExpiryPeriodMs, nbfMs));
-                            });
-
-            return JOURNEY_REPEAT_FRAUD_CHECK;
+        var expiredFraudResponse = checkForExpiredFraudVcs(credentialBundle, auditInformation);
+        if (expiredFraudResponse.isPresent()) {
+            return expiredFraudResponse.get();
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
@@ -886,6 +848,53 @@ public class CheckExistingIdentityHandler
             LOGGER.warn(LogHelper.buildLogMessage("Failed to compute previous_achieved_vot"), e);
             return null;
         }
+    }
+
+    private Optional<JourneyResponse> checkForExpiredFraudVcs(
+            VerifiableCredentialBundle credentialBundle, AuditEventInformation auditInformation)
+            throws VerifiableCredentialException {
+
+        // check the result of 6MFC and return the appropriate journey
+
+        var fraudVcs =
+                credentialBundle.credentials.stream()
+                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
+                        .toList();
+        var fixedClock = Clock.fixed(Instant.now(), DateAndTimeHelper.LONDON_TIMEZONE);
+
+        if (!VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                fraudVcs, configService, fixedClock)) {
+            return Optional.empty();
+        }
+
+        LOGGER.info(
+                LogHelper.buildLogMessage("All Fraud VCs are expired or from unavailable source"));
+        sessionCredentialsService.persistCredentials(
+                allVcsExceptFraud(credentialBundle.credentials),
+                auditInformation.getAuditEventUser().getSessionId(),
+                false);
+
+        EmbeddedMetricHelper.identityProving();
+
+        fraudVcs.stream()
+                .findFirst()
+                .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
+                .flatMap(VcHelper::extractNbf)
+                .ifPresent(
+                        nbfInstant -> {
+                            var vcExpiryPeriodMs =
+                                    Duration.ofDays(configService.getFraudCheckExpiryPeriodDays())
+                                            .toMillis();
+                            var nbfMs = nbfInstant.toEpochMilli();
+
+                            sendAuditEventWithExtension(
+                                    AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
+                                    auditInformation.getAuditEventUser(),
+                                    auditInformation.getDeviceInformation(),
+                                    new AuditExtensionExpiredFraudVcFound(vcExpiryPeriodMs, nbfMs));
+                        });
+
+        return Optional.of(JOURNEY_REPEAT_FRAUD_CHECK);
     }
 
     @AllArgsConstructor
