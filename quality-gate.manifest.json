@@ -39,6 +39,17 @@
           "provider": "GitHub",
           "checks": [
             {
+              "name": "vulnerability detection"
+            }
+          ],
+          "file": ".github/workflows/automated-tests.yaml",
+          "path": "$.jobs.test-java[?@.name=='Perform Static Analysis']"
+        },
+        {
+          "phase": "pre-merge",
+          "provider": "GitHub",
+          "checks": [
+            {
               "name": "code style and linting"
             },
             {
@@ -61,6 +72,20 @@
             }
           ],
           "file": ".github/workflows/contract-tests.yaml"
+        },
+        {
+          "phase": "pre-upload",
+          "provider": "GitHub",
+          "checks": [
+            {
+              "name": "unit test coverage"
+            },
+            {
+              "name": "unit"
+            }
+          ],
+          "file": ".github/workflows/automated-tests.yaml",
+          "path": "$.jobs.test-java"
         }
       ]
     }
