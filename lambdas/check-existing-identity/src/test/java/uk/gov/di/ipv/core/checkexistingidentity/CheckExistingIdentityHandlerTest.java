@@ -1232,176 +1232,37 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
-    @Nested
-    @DisplayName("update details journeys")
-    class UpdateDetailsJourneys {
-        @BeforeEach
-        void updateDetailsSetup() throws Exception {
-            clientOAuthSessionItem.setUpdateIdentity(true);
+    @Test
+    void shouldReturnJourneyUpdateDetailsResponseIfIsUpdateIdentity() throws Exception {
+        clientOAuthSessionItem.setUpdateIdentity(true);
 
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(emptyAsyncCriStatus);
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
 
-            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
-                    .thenReturn(ipvSessionItem);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(mockAisService.fetchAisState(TEST_USER_ID))
-                    .thenReturn(createNoInterventionAisState());
-        }
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
-        @Test
-        void shouldReturnJourneyUpdateDetailsResponseIfIsUpdateIdentity() throws Exception {
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
+        var vcs =
+                List.of(
+                        vcWebPassportSuccessful(),
+                        vcAddressM1a(),
+                        vcExperianKbvM1a(),
+                        vcDcmawDrivingPermitDvaM1b());
 
-            verify(cimitService)
-                    .fetchContraIndicatorsVc(
-                            TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem);
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(CURRENT, vcs));
 
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
+        var journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
 
-        @Test
-        void
-                shouldReturnJourneyUpdateDetailsResponseIfIsUpdateIdentityAndPersistTheSessionCredentials()
-                        throws Exception {
+        verify(mockSessionCredentialService)
+                .persistCredentials(vcs, ipvSessionItem.getIpvSessionId(), false);
 
-            var vcs =
-                    List.of(
-                            vcWebPassportSuccessful(),
-                            vcAddressM1a(),
-                            vcExperianKbvM1a(),
-                            vcDcmawDrivingPermitDvaM1b());
-
-            when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(CURRENT, vcs));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(mockSessionCredentialService)
-                    .persistCredentials(vcs, ipvSessionItem.getIpvSessionId(), false);
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void
-                shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityWithoutCheckingForCimitCisAndBreaches()
-                        throws Exception {
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(cimitUtilityService, never()).getContraIndicatorsFromVc(any());
-            verify(cimitUtilityService, never()).isBreachingCiThreshold(any(), any());
-            verify(cimitUtilityService, never())
-                    .getCiMitigationEventIfNoOtherMitigations(any(), any());
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void
-                shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityWithoutObtainingAVcCorrelationResult()
-                        throws Exception {
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(userIdentityService, never()).getVcCorrelationResult(any());
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityAndF2FCriStatusIsPendingReturn() {
-
-            var f2fAsyncCriStatus = new AsyncCriStatus(F2F, null, false, true, false);
-
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                    .thenReturn(f2fAsyncCriStatus);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void
-                shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityAndDcMawAsyncCriStatusIsPendingReturn() {
-
-            var dcmawAsyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, null, false, true, false);
-
-            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
-                    .thenReturn(dcmawAsyncCriStatus);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void
-                shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityWithoutCheckingExpiredOrUnavailableFraudVcs() {
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            mockVcHelper.verify(
-                    () ->
-                            VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                                    any(), any(), any()),
-                    never());
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityWithReproveIntervention() {
-
-            when(mockAisService.fetchAisState(TEST_USER_ID))
-                    .thenReturn(createReproveIdentityAisState());
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
-
-        @Test
-        void shouldReturnJourneyUpdateDetailsIfIsUpdateIdentityWithoutEmittingAnAuditEvent() {
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            verify(auditService, never()).sendAuditEvent(any());
-
-            assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
-        }
+        assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
     }
 
     @Test

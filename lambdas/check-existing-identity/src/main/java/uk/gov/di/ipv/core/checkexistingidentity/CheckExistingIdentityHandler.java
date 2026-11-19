@@ -361,6 +361,9 @@ public class CheckExistingIdentityHandler
                     cimitService.fetchContraIndicatorsVc(
                             userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
 
+            // The request to update identity originates with SIS.
+            // It should route directly to the update-details page,
+            // bypassing the other checks and audit events in getJourneyResponse
             if (clientOAuthSessionItem.isUpdateIdentity()) {
                 sessionCredentialsService.persistCredentials(
                         credentialBundle.credentials,
