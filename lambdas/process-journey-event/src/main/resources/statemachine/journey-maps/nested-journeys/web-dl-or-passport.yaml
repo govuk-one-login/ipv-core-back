@@ -205,6 +205,7 @@ nestedJourneyStates:
         exitEventToEmit: return-to-rp
 
   # Invalid passport mitigation routes
+  # PYIC-9361: Remove MITIGATION_PP_NO_MATCH and MITIGATION_DL_START once no-one can be in these states anymore
   MITIGATION_PP_NO_MATCH:
     response:
       type: page
@@ -247,6 +248,7 @@ nestedJourneyStates:
         exitEventToEmit: return-to-rp
 
   # Invalid DL mitigation routes
+  # PYIC-9361: Remove MITIGATION_DL_NO_MATCH and MITIGATION_PP_START once no-one can be in these states anymore
   MITIGATION_DL_NO_MATCH:
     response:
       type: page

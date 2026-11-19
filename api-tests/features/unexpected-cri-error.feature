@@ -204,8 +204,6 @@ Feature: Handling unexpected CRI errors
 
       # User drops out of previous CRI without mitigating and starts a new journey
       Given I start a new 'medium-confidence' journey
-      Then I get a '<separateSessionNoMatch>' page response
-      When I submit a 'next' event
       Then I get a '<mitigationStart>' page response
       When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
@@ -244,9 +242,9 @@ Feature: Handling unexpected CRI errors
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | ci_cri            | ci_details                                 | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigating_cri | mitigating_details           |
-        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
-        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
+        | ci_cri            | ci_details                                 | noMatchPage                              | mitigationStart                   | mitigating_cri | mitigating_details           |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
 
     Scenario Outline: CI from <ci_cri> then unexpected error from <mitigating_cri> and return to RP
       When I submit a '<ci_cri>' event
@@ -510,9 +508,15 @@ Feature: Handling unexpected CRI errors
 
       # User drops out of previous CRI without mitigating and starts a new journey
       Given I start a new 'medium-confidence' journey
-      Then I get a '<separateSessionNoMatch>' page response
-      When I submit a 'next' event
       Then I get a '<mitigationStart>' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<mitigating_cri>' CRI response
       When I call the CRI stub and get a 'server_error' OAuth error
@@ -544,9 +548,9 @@ Feature: Handling unexpected CRI errors
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | ci_cri            | ci_details                                 | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   | mitigating_cri | mitigating_details           |
-        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
-        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
+        | ci_cri            | ci_details                                 | noMatchPage                              | mitigationStart                   | mitigating_cri | mitigating_details           |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
 
     Scenario Outline: CI from <ci_cri> then unexpected error from <mitigating_cri> and return to RP
       When I submit a '<ci_cri>' event

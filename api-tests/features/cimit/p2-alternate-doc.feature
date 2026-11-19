@@ -74,9 +74,15 @@ Feature: P2 CIMIT - Alternate doc
 
       # User drops out of previous CRI without mitigating and starts a new journey
       Given I start a new 'medium-confidence' journey
-      Then I get a '<separateSessionNoMatch>' page response
-      When I submit a 'next' event
       Then I get a '<mitigationStart>' page response
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
+      When I submit a 'next' event
+      Then I get a 'prove-identity-online-banking' page response and pageContext
+        | Context | Value |
+        | photoId | true  |
       When I submit a 'next' event
       Then I get a '<mitigatingCri>' CRI response
       When I submit '<mitigatingDoc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
@@ -96,9 +102,9 @@ Feature: P2 CIMIT - Alternate doc
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | initialCri        | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   |mitigatingCri   | mitigatingDoc                |
-        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
-        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigationStart                   |mitigatingCri   | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
 
     Scenario Outline: Mitigation of alternate-doc CI via <mitigating-cri> when user initially drops out of <mitigating-cri>
       When I submit a '<initial-cri>' event
@@ -231,8 +237,6 @@ Feature: P2 CIMIT - Alternate doc
 
       # User drops out of previous CRI without mitigating and starts a new journey
       Given I start a new 'medium-confidence' journey
-      Then I get a '<separateSessionNoMatch>' page response
-      When I submit a 'next' event
       Then I get a '<mitigationStart>' page response
       When I submit a 'next' event
       Then I get a '<mitigatingCri>' CRI response
@@ -259,9 +263,9 @@ Feature: P2 CIMIT - Alternate doc
       And I have a stored identity record with a 'P2' max vot
 
       Examples:
-        | initialCri        | initialInvalidDoc                          | noMatchPage                              | separateSessionNoMatch       | mitigationStart                   |mitigatingCri   | mitigatingDoc                |
-        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-driving-licence-no-match | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
-        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-passport-no-match        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
+        | initialCri        | initialInvalidDoc                          | noMatchPage                              | mitigationStart                   |mitigatingCri   | mitigatingDoc                |
+        | drivingLicence    | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | pyi-continue-with-passport        | ukPassport     | kenneth-passport-valid       |
+        | ukPassport        | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | pyi-continue-with-driving-licence | drivingLicence | kenneth-driving-permit-valid |
 
     Scenario Outline: Mitigation of alternate-doc CI via <mitigating-cri> when user initially drops out of <mitigating-cri>
       When I submit a '<initial-cri>' event
@@ -349,8 +353,6 @@ Feature: P2 CIMIT - Alternate doc
 #
 #      # Seconds return journey to mitigate CI
 #      Given I start a new 'medium-confidence' journey
-#      Then I get a 'pyi-driving-licence-no-match' page response
-#      When I submit a 'next' event
 #      Then I get a 'pyi-continue-with-passport' page response
 #      When I submit a 'next' event
 #      Then I get a 'ukPassport' CRI response

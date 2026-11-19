@@ -39,4 +39,3 @@ nestedJourneyStates:
         exitEventToEmit: exitEventFromDoublyNestedInvokeState
       exitEventFromDoublyNestedStateTwoWithAuditLog:
         exitEventToEmit: exitEventFromDoublyNestedInvokeStateWithAuditLog
-

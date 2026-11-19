@@ -4,7 +4,7 @@ This is a way of running core-back (and optionally core-front and orch-stub) loc
 
 ## Overview
 
-The local-running setup spins up a local web server that emulates AWS components (API Gateway and Step Functions) to execute Lambda code directly on your workstation. 
+The local-running setup spins up a local web server that emulates AWS components (API Gateway and Step Functions) to execute Lambda code directly on your workstation.
 
 > **Limitations:** Local running is **not a replacement for deploying to AWS**. Any changes involving real AWS infrastructure (such as IAM policies, DynamoDB tables, or KMS keys) must still be deployed and verified in an AWS environment.
 
@@ -46,7 +46,7 @@ Core-back will listen on `http://localhost:4502` (for both internal and external
 To spin up minimal resources to run through a journey:
 
 1. Copy the Docker Compose template `compose.yaml.template` file and name it `compose.yaml`.
-2. Modify container build paths in `compose.yaml` if your machine's directory layout differs from `dev-deploy`. 
+2. Modify container build paths in `compose.yaml` if your machine's directory layout differs from `dev-deploy`.
 3. Start the containers:
    ```bash
    docker-compose up
@@ -69,7 +69,7 @@ To spin up minimal resources to run through a journey:
 
 ## Using Local Stubs
 
-By default, local running uses deployed CRI stubs. 
+By default, local running uses deployed CRI stubs.
 
 To point to stubs in a specific developer environment, update `core.local.params.yaml` and `core.local.secrets.yaml` with the target dev environment URLs and API keys.
 
