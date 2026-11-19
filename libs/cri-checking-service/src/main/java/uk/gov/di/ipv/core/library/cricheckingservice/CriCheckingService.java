@@ -48,6 +48,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK_SKIP;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
@@ -355,7 +356,8 @@ public class CriCheckingService {
         // Check whether the DCMAW VC is good enough that we don't need an auth source check
         var validityScore = getValidityScore(newVc.get());
         if (validityScore != null
-                && validityScore >= AUTHORITATIVE_SOURCE_CHECK_VALIDITY_THRESHOLD) {
+                && validityScore >= AUTHORITATIVE_SOURCE_CHECK_VALIDITY_THRESHOLD
+                && configService.enabled(DL_AUTH_SOURCE_CHECK_SKIP)) {
             return false;
         }
 
