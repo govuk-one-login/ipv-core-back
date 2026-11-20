@@ -67,6 +67,20 @@ export const exchangeCodeForToken = async (
   return body;
 };
 
+export const exchangeCodeForTokenRaw = async (
+  tokenExchangeBody: string,
+): Promise<{ status: number; body: { error?: string } }> => {
+  const response = await fetch(`${config.core.externalApiUrl}/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: tokenExchangeBody,
+  });
+
+  return { status: response.status, body: await response.json() };
+};
+
 export const getIdentity = async (
   tokenResponse: TokenResponse,
 ): Promise<UserIdentity> => {

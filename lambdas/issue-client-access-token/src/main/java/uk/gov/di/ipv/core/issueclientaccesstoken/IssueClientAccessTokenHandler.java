@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidato
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -49,6 +50,8 @@ public class IssueClientAccessTokenHandler
     private final ConfigService configService;
     private final TokenRequestValidator tokenRequestValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
+    private static final String AUTH_CODE_USED_TOO_MANY_TIMES =
+            "Authorization code used too many times";
 
     public IssueClientAccessTokenHandler(
             AccessTokenService accessTokenService,
@@ -203,6 +206,14 @@ public class IssueClientAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
+        } catch (ConditionalCheckFailedException e) {
+            ErrorObject error =
+                    OAuth2Error.INVALID_GRANT.setDescription(AUTH_CODE_USED_TOO_MANY_TIMES);
+
+            LOGGER.error(LogHelper.buildErrorMessage(AUTH_CODE_USED_TOO_MANY_TIMES, error));
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    error.getHTTPStatusCode(), error.toJSONObject());
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -238,8 +249,7 @@ public class IssueClientAccessTokenHandler
     private ErrorObject revokeAccessToken(IpvSessionItem ipvSessionItem) {
         try {
             sessionService.revokeAccessToken(ipvSessionItem);
-            return OAuth2Error.INVALID_GRANT.setDescription(
-                    "Authorization code used too many times");
+            return OAuth2Error.INVALID_GRANT.setDescription(AUTH_CODE_USED_TOO_MANY_TIMES);
         } catch (IllegalArgumentException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to revoke access token.", e));
             return OAuth2Error.INVALID_GRANT.setDescription("Failed to revoke access token");

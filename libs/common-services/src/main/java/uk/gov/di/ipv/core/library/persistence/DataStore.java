@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -41,6 +42,9 @@ public interface DataStore<T extends PersistenceItem> {
     List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix);
 
     T update(T item);
+
+    T updateItemIfAttributeNotExists(T item, String attributeName)
+            throws ConditionalCheckFailedException;
 
     T delete(String partitionValue, String sortValue);
 
