@@ -69,4 +69,5 @@ public class JourneyUris {
             "/journey/process-candidate-identity";
     public static final String JOURNEY_CROSS_BROWSER_PATH =
             "/journey/" + Events.PROBLEM_DIFFERENT_BROWSER_PAGE_EVENT;
+    public static final String JOURNEY_UPDATE_DETAILS_PATH = "/journey/update-details";
 }

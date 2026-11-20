@@ -169,13 +169,10 @@ public class InitialiseIpvSessionHandler
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
             ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.generateClientSessionDetails(
+                    buildClientOAuthSessionItem(
                             clientOAuthSessionId,
                             claimsSet,
-                            sessionParams.get(CLIENT_ID_PARAM_KEY),
-                            validateEvcsAccessToken(
-                                    getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
-                                    claimsSet));
+                            sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
@@ -284,13 +281,29 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    private Optional<JarUserInfo> getJarUserInfo(JWTClaimsSet claimsSet)
+    private ClientOAuthSessionItem buildClientOAuthSessionItem(
+            String clientOAuthSessionId, JWTClaimsSet claimsSet, String clientId)
+            throws RecoverableJarValidationException, ParseException {
+
+        Optional<JarClaims> jarClaims = getJarClaims(claimsSet);
+        var userInfo = jarClaims.map(JarClaims::userinfo);
+
+        boolean updateIdentity = jarClaims.map(JarClaims::updateIdentity).orElse(false);
+
+        return clientOAuthSessionService.generateClientSessionDetails(
+                clientOAuthSessionId,
+                claimsSet,
+                clientId,
+                validateEvcsAccessToken(userInfo.map(JarUserInfo::evcsAccessToken), claimsSet),
+                updateIdentity);
+    }
+
+    private Optional<JarClaims> getJarClaims(JWTClaimsSet claimsSet)
             throws ParseException, RecoverableJarValidationException {
         try {
             return Optional.ofNullable(
-                            OBJECT_MAPPER.convertValue(
-                                    claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class))
-                    .map(JarClaims::userinfo);
+                    OBJECT_MAPPER.convertValue(
+                            claimsSet.getJSONObjectClaim(CLAIMS_CLAIM), JarClaims.class));
         } catch (IllegalArgumentException | ParseException e) {
             throw new RecoverableJarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(

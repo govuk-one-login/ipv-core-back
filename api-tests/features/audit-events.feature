@@ -180,6 +180,19 @@ Feature: Audit Events
     And audit events for 'reuse-journey-identity-compared' are recorded [local only]
 
   @QualityGateRegressionTest
+  Scenario: Reuse journey - update_identity request
+    Given the subject already has the following credentials with overridden document expiry date
+      | CRI       | scenario                       | documentType  |
+      | dcmaw     | kenneth-driving-permit-valid   | drivingPermit |
+    And the subject already has the following credentials
+      | CRI     | scenario               |
+      | address | kenneth-current        |
+      | fraud   | kenneth-score-2        |
+    When I start a new 'medium-confidence-update-identity' journey
+    Then I get a 'update-details' page response
+    And audit events for 'update-details-journey' are recorded [local only]
+
+  @QualityGateRegressionTest
   Scenario: New identity - via F2F journey - no Open Banking
     Given I activate the 'openBankingDisabled' feature set
     When I start a new 'medium-confidence' journey
