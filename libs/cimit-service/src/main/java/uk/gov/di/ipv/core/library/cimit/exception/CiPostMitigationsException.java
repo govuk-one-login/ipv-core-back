@@ -4,7 +4,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class CiPostMitigationsException extends Exception {
-    public CiPostMitigationsException(String message) {
-        super(message);
+    public CiPostMitigationsException(String message, Exception e) {
+        super(message, e);
     }
 }

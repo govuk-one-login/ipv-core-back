@@ -227,7 +227,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
 
-        doThrow(new CiPutException("Lambda execution failed"))
+        doThrow(new CiPutException("Lambda execution failed", new Exception("dummy")))
                 .when(cimitService)
                 .submitVC(any(VerifiableCredential.class), any(), eq(null));
 
@@ -258,7 +258,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
 
-        doThrow(new CiPostMitigationsException("Lambda execution failed"))
+        doThrow(new CiPostMitigationsException("Lambda execution failed", new Exception("dummy")))
                 .when(cimitService)
                 .submitMitigatingVcList(anyList(), any(), eq(null));
 

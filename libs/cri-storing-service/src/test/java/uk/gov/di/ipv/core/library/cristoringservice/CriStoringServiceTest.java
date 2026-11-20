@@ -320,7 +320,7 @@ class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        doThrow(new CiPutException(""))
+        doThrow(new CiPutException("", new Exception("dummy")))
                 .when(mockCimitService)
                 .submitVC(any(VerifiableCredential.class), any(), any());
 
@@ -344,7 +344,7 @@ class CriStoringServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        doThrow(new CiPostMitigationsException(""))
+        doThrow(new CiPostMitigationsException("", new Exception("dummy")))
                 .when(mockCimitService)
                 .submitMitigatingVcList(any(), any(), any());
 

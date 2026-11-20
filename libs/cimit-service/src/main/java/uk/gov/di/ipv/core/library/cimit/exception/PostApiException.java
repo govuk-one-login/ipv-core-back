@@ -7,4 +7,8 @@ public class PostApiException extends Exception {
     public PostApiException(String message) {
         super(message);
     }
+
+    public PostApiException(String message, Exception e) {
+        super(message, e);
+    }
 }

@@ -4,7 +4,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class CiPutException extends Exception {
-    public CiPutException(String message) {
-        super(message);
+    public CiPutException(String message, Exception e) {
+        super(message, e);
     }
 }

@@ -657,7 +657,25 @@ public class ProcessCandidateIdentityHandler
                 | CiExtractionException
                 | CredentialParseException
                 | UnrecognisedVotException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
+            if (e instanceof CiRetrievalException) {
+                LOGGER.error(LogHelper.buildErrorMessage("Error getting CIs from CIMIT", e));
+            } else if (e instanceof CredentialParseException) {
+                LOGGER.error(LogHelper.buildErrorMessage("Error parsing CIMIT VC", e));
+            } else if (e instanceof TicfCriServiceException) {
+                LOGGER.error(LogHelper.buildErrorMessage("Error getting TICF VC", e));
+            } else if (e instanceof CiPostMitigationsException
+                    || e instanceof CiPutException
+                    || e instanceof VerifiableCredentialException
+                    || e instanceof UnrecognisedVotException) {
+                LOGGER.error(LogHelper.buildErrorMessage("Error storing TICF VC", e));
+            } else if (e instanceof CiExtractionException) {
+                LOGGER.error(LogHelper.buildErrorMessage("Error getting TICF VC", e));
+            } else {
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Unexpected error - add to list of exceptions", e));
+            }
+
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
