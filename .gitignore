@@ -37,6 +37,9 @@ build
 # Ignore AWS SAM folder
 */**/.aws-sam
 
+# Ignore IDEA sonar plugin files
+*/**/.sonar
+
 # Ignore node/TS output
 node_modules
 
