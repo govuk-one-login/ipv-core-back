@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+    <Loggers>
+        <Logger name="uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService" level="info" />
+        <Root level="error" />
+    </Loggers>
+</Configuration>

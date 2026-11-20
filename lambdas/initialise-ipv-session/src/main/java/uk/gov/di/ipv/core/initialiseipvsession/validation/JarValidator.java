@@ -259,7 +259,7 @@ public class JarValidator {
 
             return claimsSet;
         } catch (BadJWTException | ParseException e) {
-            LOGGER.error(LogHelper.buildLogMessage("Claim set validation failed"));
+            LOGGER.warn(LogHelper.buildLogMessage("Claim set validation failed"));
             throw new JarValidationException(
                     OAuth2Error.INVALID_GRANT.setDescription("Claim set validation failed"), e);
         }

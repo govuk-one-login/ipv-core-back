@@ -236,7 +236,7 @@ public class InitialiseIpvSessionHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, response);
         } catch (RecoverableJarValidationException e) {
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "Recoverable Jar validation failed.",
                             e.getErrorObject().getDescription()));
@@ -267,7 +267,7 @@ public class InitialiseIpvSessionHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "Jar validation failed.", e.getErrorObject().getDescription()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
