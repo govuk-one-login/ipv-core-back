@@ -200,7 +200,7 @@ public class ProcessAsyncCriCredentialHandler
 
         var criResponseItem = criResponseService.getCriResponseItemWithState(userId, state);
         if (criResponseItem.isEmpty()) {
-            LOGGER.info(
+            LOGGER.warn(
                     LogHelper.buildLogMessage(
                             "No pending CRI response item found for given user id and state; discarding message"));
             return;
