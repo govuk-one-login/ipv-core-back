@@ -47,5 +47,6 @@ export interface World extends CucumberWorld {
   oauthState?: string;
   strategicAppPollResult?: JourneyResponse;
 
+  // Token exchange results
   tokenExchangeResults?: { status: number; body: { error?: string } }[];
 }
