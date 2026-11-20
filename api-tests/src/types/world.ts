@@ -46,4 +46,6 @@ export interface World extends CucumberWorld {
   // Strategic app latent variables
   oauthState?: string;
   strategicAppPollResult?: JourneyResponse;
+
+  tokenExchangeResults?: { status: number; body: { error?: string } }[];
 }
