@@ -15,16 +15,15 @@ public class DidDocument {
     @JsonProperty
     private String id = "did:web:api.identity.build.account.gov.uk:.well-known/stored-identity";
 
-    @JsonProperty(value = "verificationMethod")
-    private List<DidVerificationMethod> didVerificationMethod;
+    @JsonProperty(value = "assertionMethod")
+    private List<DidAssertionMethod> didAssertionMethod;
 
     public DidDocument(JWK publicKeyJwk) {
-        this.didVerificationMethod =
-                List.of(new DidVerificationMethod(publicKeyJwk.toJSONObject()));
+        this.didAssertionMethod = List.of(new DidAssertionMethod(publicKeyJwk.toJSONObject()));
     }
 
     @Getter
-    public static class DidVerificationMethod {
+    public static class DidAssertionMethod {
         @JsonProperty
         private String id =
                 "did:web:api.identity.build.account.gov.uk:.well-known/stored-identity#key-id";
@@ -37,7 +36,7 @@ public class DidDocument {
 
         @JsonProperty private Map<String, Object> publicKeyJwk;
 
-        public DidVerificationMethod(Map<String, Object> publicKeyJwk) {
+        public DidAssertionMethod(Map<String, Object> publicKeyJwk) {
             this.publicKeyJwk = publicKeyJwk;
         }
     }

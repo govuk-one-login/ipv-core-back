@@ -403,7 +403,7 @@ components:
             type: string
         id:
           type: string
-        verificationMethod:
+        assertionMethod:
           type: array
           items:
             type: object

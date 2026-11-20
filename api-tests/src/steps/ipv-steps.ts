@@ -746,21 +746,21 @@ Then("I get a valid JWKS response", async function (this: World) {
 When("I call the DID endpoint", async function (this: World) {
   const res = await externalClient.did();
 
-  this.didResult = res.verificationMethod;
+  this.didResult = res.assertionMethod;
 });
 
 Then("I get a valid DID response", async function (this: World) {
-  const verificationMethods = this.didResult ?? [];
+  const assertionMethods = this.didResult ?? [];
 
   // Keys must parse correctly
-  for (const verificationMethod of verificationMethods) {
-    const parsedKey = await jose.importJWK(verificationMethod.publicKeyJwk);
+  for (const assertionMethod of assertionMethods) {
+    const parsedKey = await jose.importJWK(assertionMethod.publicKeyJwk);
     assert.ok(parsedKey);
   }
 
   // Must be at least one signing key
   assert.ok(
-    verificationMethods.find((m) => m.publicKeyJwk.use === "sig"),
+    assertionMethods.find((m) => m.publicKeyJwk.use === "sig"),
     "No signing key",
   );
 });

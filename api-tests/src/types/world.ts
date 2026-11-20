@@ -4,7 +4,7 @@ import { World as CucumberWorld } from "@cucumber/cucumber";
 import { JSONWebKeySet, JWK } from "jose";
 import { CriStubRequest } from "./cri-stub.js";
 
-interface DidVerificationMethod {
+interface DidAssertionMethod {
   id: string;
   type: string;
   controller: string;
@@ -38,7 +38,7 @@ export interface World extends CucumberWorld {
   jwksResult?: JSONWebKeySet;
 
   // DID result
-  didResult?: DidVerificationMethod[];
+  didResult?: DidAssertionMethod[];
 
   // Latest error to assert against
   error?: Error;
