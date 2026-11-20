@@ -578,28 +578,12 @@ public class ProcessCandidateIdentityHandler
                 return null;
             }
 
-            // We must check if the security check credential on the session is empty.
-            // This can happen when an error occurs prior to the first call to get the
-            // security check credential e.g. in the check-existing-identity lambda.
-            // If it is, we need to make a call to CIMIT prior to getting the TICF VC
-            // in order to get the mitigation information unaffected by the new TICF VC.
             VerifiableCredential preTicfSecurityCheckVc = null;
+            // If this is not an MFA reset journey
             if (!clientOAuthSessionItem.isReverification()) {
-                var preTicfSecurityCheckVcString = ipvSessionItem.getSecurityCheckCredential();
-
-                if (StringUtils.isBlank(preTicfSecurityCheckVcString)) {
-                    preTicfSecurityCheckVc =
-                            cimitService.fetchContraIndicatorsVc(
-                                    clientOAuthSessionItem.getUserId(),
-                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                    ipAddress,
-                                    ipvSessionItem);
-                } else {
-                    preTicfSecurityCheckVc =
-                            cimitUtilityService.getParsedSecurityCheckCredential(
-                                    preTicfSecurityCheckVcString,
-                                    clientOAuthSessionItem.getUserId());
-                }
+                preTicfSecurityCheckVc =
+                        getPreTicfSecurityCheckVc(
+                                ipvSessionItem, clientOAuthSessionItem, ipAddress);
             }
 
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
@@ -625,18 +609,11 @@ public class ProcessCandidateIdentityHandler
 
             // If this is not an MFA reset journey
             if (!clientOAuthSessionItem.isReverification()) {
-                var contraIndicatorsVc =
-                        cimitService.fetchContraIndicatorsVc(
-                                clientOAuthSessionItem.getUserId(),
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress,
-                                ipvSessionItem);
-
-                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-
-                // Has the TICF VC caused a breach?
-                if (cimitUtilityService.requiresNewMitigation(
-                        preTicfSecurityCheckVc, contraIndicatorsVc, targetVot)) {
+                if (newMitigationRequired(
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        ipAddress,
+                        preTicfSecurityCheckVc)) {
                     LOGGER.info(
                             LogHelper.buildLogMessage(
                                     "CI score is breaching threshold - setting VOT to P0"));
@@ -649,37 +626,71 @@ public class ProcessCandidateIdentityHandler
             }
 
             return null;
-        } catch (TicfCriServiceException
-                | VerifiableCredentialException
-                | CiPostMitigationsException
+        } catch (CiRetrievalException e) {
+            return buildTicfErrorResponse("Error getting CIs from CIMIT", e);
+        } catch (CredentialParseException e) {
+            return buildTicfErrorResponse("Error parsing CIMIT VC", e);
+        } catch (TicfCriServiceException e) {
+            return buildTicfErrorResponse("Error getting TICF VC", e);
+        } catch (CiExtractionException e) {
+            return buildTicfErrorResponse("Error extracting CIs", e);
+        } catch (CiPostMitigationsException
                 | CiPutException
-                | CiRetrievalException
-                | CiExtractionException
-                | CredentialParseException
+                | VerifiableCredentialException
                 | UnrecognisedVotException e) {
-            if (e instanceof CiRetrievalException) {
-                LOGGER.error(LogHelper.buildErrorMessage("Error getting CIs from CIMIT", e));
-            } else if (e instanceof CredentialParseException) {
-                LOGGER.error(LogHelper.buildErrorMessage("Error parsing CIMIT VC", e));
-            } else if (e instanceof TicfCriServiceException) {
-                LOGGER.error(LogHelper.buildErrorMessage("Error getting TICF VC", e));
-            } else if (e instanceof CiPostMitigationsException
-                    || e instanceof CiPutException
-                    || e instanceof VerifiableCredentialException
-                    || e instanceof UnrecognisedVotException) {
-                LOGGER.error(LogHelper.buildErrorMessage("Error storing TICF VC", e));
-            } else if (e instanceof CiExtractionException) {
-                LOGGER.error(LogHelper.buildErrorMessage("Error getting TICF VC", e));
-            } else {
-                LOGGER.error(
-                        LogHelper.buildErrorMessage(
-                                "Unexpected error - add to list of exceptions", e));
-            }
+            return buildTicfErrorResponse("Error storing TICF VC", e);
+        }
+    }
 
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ERROR_PROCESSING_TICF_CRI_RESPONSE);
+    private JourneyErrorResponse buildTicfErrorResponse(String description, Exception e) {
+        LOGGER.error(LogHelper.buildErrorMessage(description, e));
+        return new JourneyErrorResponse(
+                JOURNEY_ERROR_PATH,
+                HttpStatusCode.INTERNAL_SERVER_ERROR,
+                ERROR_PROCESSING_TICF_CRI_RESPONSE);
+    }
+
+    private boolean newMitigationRequired(
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem,
+            String ipAddress,
+            VerifiableCredential preTicfSecurityCheckVc)
+            throws CiExtractionException, CiRetrievalException {
+        var contraIndicatorsVc =
+                cimitService.fetchContraIndicatorsVc(
+                        clientOAuthSessionItem.getUserId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        ipAddress,
+                        ipvSessionItem);
+
+        var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+
+        // Has the TICF VC caused a breach?
+        return cimitUtilityService.requiresNewMitigation(
+                preTicfSecurityCheckVc, contraIndicatorsVc, targetVot);
+    }
+
+    private VerifiableCredential getPreTicfSecurityCheckVc(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String ipAddress)
+            throws CiRetrievalException, CredentialParseException {
+        // We must check if the security check credential on the session is empty.
+        // This can happen when an error occurs prior to the first call to get the
+        // security check credential e.g. in the check-existing-identity lambda.
+        // If it is, we need to make a call to CIMIT prior to getting the TICF VC
+        // in order to get the mitigation information unaffected by the new TICF VC.
+        var preTicfSecurityCheckVcString = ipvSessionItem.getSecurityCheckCredential();
+
+        if (StringUtils.isBlank(preTicfSecurityCheckVcString)) {
+            return cimitService.fetchContraIndicatorsVc(
+                    clientOAuthSessionItem.getUserId(),
+                    clientOAuthSessionItem.getGovukSigninJourneyId(),
+                    ipAddress,
+                    ipvSessionItem);
+        } else {
+            return cimitUtilityService.getParsedSecurityCheckCredential(
+                    preTicfSecurityCheckVcString, clientOAuthSessionItem.getUserId());
         }
     }
 
