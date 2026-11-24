@@ -4620,6 +4620,19 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
+  IdentityJourneyCompleteAnomalyDetector:
+    Type: AWS::CloudWatch::AnomalyDetector
+    Properties:
+      SingleMetricAnomalyDetector:
+        Namespace: !Sub "CoreBackEmbeddedMetrics-${Environment}"
+        MetricName: identityJourneyComplete
+        Stat: Sum
+        Dimensions:
+          - Name: Service
+            Value: !Sub "build-client-oauth-response-${Environment}"
+      Configuration:
+        MetricTimeZone: Europe/London
+
 Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
