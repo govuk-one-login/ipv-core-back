@@ -6,12 +6,8 @@ entryEvents:
     targetState: CRI_UK_PASSPORT
   drivingLicence:
     targetState: CRI_DRIVING_LICENCE
-  alternate-doc-invalid-dl:
-    targetState: MITIGATION_DL_NO_MATCH
   alternate-doc-invalid-dl-another-way:
     targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
-  alternate-doc-invalid-passport:
-    targetState: MITIGATION_PP_NO_MATCH
 nestedJourneyStates:
   CRI_UK_PASSPORT:
     response:
