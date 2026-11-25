@@ -170,10 +170,13 @@ public class EmbeddedMetricHelper {
         }
         try {
             ThreadContext.getContext().forEach(METRICS_LOGGER::addMetadata);
-            dimensions.forEach(
-                    (dimension, value) ->
-                            METRICS_LOGGER.addDimension(
-                                    DimensionSet.of(dimension.getName(), value)));
+            if (!dimensions.isEmpty()) {
+                var dimensionSet = new DimensionSet();
+                dimensions.forEach(
+                        (dimension, value) ->
+                                dimensionSet.addDimension(dimension.getName(), value));
+                METRICS_LOGGER.addDimension(dimensionSet);
+            }
             metrics.forEach(
                     (metric, value) ->
                             METRICS_LOGGER.addMetric(
