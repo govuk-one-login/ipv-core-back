@@ -26,6 +26,7 @@ public class JourneyUris {
             "/journey/dl-auth-source-check-low";
     public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH =
             "/journey/dl-auth-source-check-medium";
+    public static final String JOURNEY_DYNAMIC_ROUTING_PATH = "/journey/dynamic-routing";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_F2F_RETRY_FRAUD_PATH = "/journey/f2f-retry-fraud";

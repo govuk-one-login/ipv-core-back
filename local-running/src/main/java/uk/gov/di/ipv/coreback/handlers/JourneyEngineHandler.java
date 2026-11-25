@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentityHandler;
+import uk.gov.di.ipv.core.dynamicrouting.DynamicRoutingHandler;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -30,6 +31,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_DCMAW
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXISTING_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DYNAMIC_ROUTING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
 
@@ -56,6 +58,7 @@ public class JourneyEngineHandler {
     private final CallDcmawAsyncCriHandler callDcmawAsyncHandler;
     private final CheckReverificationIdentityHandler checkReverificationIdentityHandler;
     private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
+    private final DynamicRoutingHandler dynamicRoutingHandler;
 
     public JourneyEngineHandler() throws IOException {
         this.configService = new LocalConfigService();
@@ -69,6 +72,7 @@ public class JourneyEngineHandler {
         this.checkReverificationIdentityHandler =
                 new CheckReverificationIdentityHandler(configService);
         this.processCandidateIdentityHandler = new ProcessCandidateIdentityHandler(configService);
+        this.dynamicRoutingHandler = new DynamicRoutingHandler(configService);
     }
 
     public void journeyEngine(Context ctx) throws JsonProcessingException {
@@ -143,6 +147,9 @@ public class JourneyEngineHandler {
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_PROCESS_CANDIDATE_IDENTITY ->
                     processCandidateIdentityHandler.handleRequest(
+                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case JOURNEY_DYNAMIC_ROUTING_PATH ->
+                    dynamicRoutingHandler.handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {

@@ -2109,6 +2109,7 @@ Resources:
         ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Version
         CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
         ProcessCandidateIdentityFunctionArn: !Ref ProcessCandidateIdentityFunction.Version
+        DynamicRoutingFunctionArn: !Ref DynamicRoutingFunction.Version
       AutoPublishAlias: live
       DeploymentPreference:
         Type: !Ref StepFunctionDeploymentPreference
@@ -2127,6 +2128,7 @@ Resources:
             - !Ref ResetIdentityFunctionErrorCanaryAlarm
             - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
             - !Ref ProcessCandidateIdentityFunctionErrorCanaryAlarm
+            - !Ref DynamicRoutingFunctionErrorCanaryAlarm
           - !Ref AWS::NoValue
         StateMachineVersionArn: !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction}:live"
       Events:
@@ -2168,6 +2170,8 @@ Resources:
             FunctionName: !Ref CheckReverificationIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ProcessCandidateIdentityFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DynamicRoutingFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -2851,6 +2855,92 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
+
+  DynamicRoutingFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - DynamicRoutingFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "dynamic-routing-${Environment}"
+      Handler: uk.gov.di.ipv.core.dynamicrouting.DynamicRoutingHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/dynamic-routing
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub dynamic-routing-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
+          AWS_LAMBDA_EXEC_WRAPPER: !If
+            - UseDynatrace
+            - /opt/otel-handler
+            - !Ref AWS::NoValue
+      Layers:
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
+          - !Ref AWS::NoValue
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+          - Sid: AppConfigAccess
+            Effect: Allow
+            Action:
+              - appconfig:StartConfigurationSession
+              - appconfig:GetLatestConfiguration
+            Resource:
+              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+      AutoPublishAlias: live
+
+  DynamicRoutingFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 180
+      LogGroupName: !Sub "/aws/lambda/dynamic-routing-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  DynamicRoutingFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref DynamicRoutingFunctionLogGroup
 
   ValidateAppConfigFunction:
     Type: AWS::Serverless::Function
@@ -4507,6 +4597,32 @@ Resources:
           Value: !Ref CheckGpg45ScoreFunction
         - Name: ExecutedVersion
           Value: !GetAtt CheckGpg45ScoreFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  DynamicRoutingFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+      AlarmDescription: !Sub "Error returned from the DynamicRoutingFunction."
+      AlarmName: !Sub ${AWS::StackName}-DynamicRoutingFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "dynamic-routing-${Environment}:live"
+        - Name: FunctionName
+          Value: !Ref DynamicRoutingFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt DynamicRoutingFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count
