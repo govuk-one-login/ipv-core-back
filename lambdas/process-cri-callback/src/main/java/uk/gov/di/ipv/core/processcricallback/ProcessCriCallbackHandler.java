@@ -365,6 +365,9 @@ public class ProcessCriCallbackHandler
                         clientOAuthSessionItem,
                         ipvSessionItem,
                         receivedThisSessionVcs);
+
+        EmbeddedMetricHelper.credentialProcessed(callbackRequest.getCredentialIssuerId());
+
         if (forcedJourney != null) {
             return forcedJourney;
         }

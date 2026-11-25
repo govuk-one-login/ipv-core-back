@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
@@ -161,6 +162,7 @@ public class CriCheckingService {
         LOGGER.info(
                 LogHelper.buildErrorMessage(
                         "OAuth error received from CRI", errorDescription, errorCode));
+        EmbeddedMetricHelper.criReturnWithError(callbackRequest.getCredentialIssuerId(), errorCode);
 
         return (switch (errorCode) {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;

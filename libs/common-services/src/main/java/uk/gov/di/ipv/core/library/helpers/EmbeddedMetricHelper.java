@@ -21,13 +21,16 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.ACHIEVED_VOT;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.QUEUE_NAME;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.REQUESTED_VTR;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.ASYNC_CRI_ERROR_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.ASYNC_CRI_RESPONSE_MESSAGE_UNEXPECTED;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CREDENTIAL_PROCESSED;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI_REDIRECT;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI_RETURN;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI_RETURN_WITH_ERROR;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_ISSUED;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_JOURNEY_COMPLETE;
 import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.IDENTITY_JOURNEY_START;
@@ -51,8 +54,10 @@ public class EmbeddedMetricHelper {
     public enum Metric {
         CRI_REDIRECT("criRedirect"),
         CRI_RETURN("criReturn"),
+        CRI_RETURN_WITH_ERROR("criReturnWithError"),
         ASYNC_CRI_RESPONSE_MESSAGE_UNEXPECTED("asyncCriResponseMessageUnexpected"),
         ASYNC_CRI_ERROR_RESPONSE("asyncCriErrorResponse"),
+        CREDENTIAL_PROCESSED("credentialProcessed"),
         IDENTITY_ISSUED("identityIssued"),
         IDENTITY_JOURNEY_START("identityJourneyStart"),
         IDENTITY_JOURNEY_COMPLETE("identityJourneyComplete"),
@@ -72,6 +77,7 @@ public class EmbeddedMetricHelper {
         CRI("cri"),
         QUEUE_NAME("queueName"),
         CRI_ERROR_CODE("cri_errorCode"),
+        ERROR_CODE("errorCode"),
         ERROR_MESSAGE("errorMessage"),
         ACHIEVED_VOT("achievedVot"),
         REQUESTED_VTR("requestedVtr"),
@@ -88,6 +94,10 @@ public class EmbeddedMetricHelper {
         recordMetric(Map.of(CRI, criId), Map.of(CRI_RETURN, 1.0));
     }
 
+    public static void criReturnWithError(String criId, String errorCode) {
+        recordMetric(Map.of(ERROR_CODE, errorCode, CRI, criId), Map.of(CRI_RETURN_WITH_ERROR, 1.0));
+    }
+
     public static void asyncCriResponseUnexpected(String queueName) {
         recordMetric(
                 Map.of(QUEUE_NAME, queueName), Map.of(ASYNC_CRI_RESPONSE_MESSAGE_UNEXPECTED, 1.0));
@@ -97,6 +107,10 @@ public class EmbeddedMetricHelper {
         recordMetric(
                 Map.of(CRI_ERROR_CODE, String.format("%s_%s", criId, errorCode)),
                 Map.of(ASYNC_CRI_ERROR_RESPONSE, 1.0));
+    }
+
+    public static void credentialProcessed(String criId) {
+        recordMetric(Map.of(CRI, criId), Map.of(CREDENTIAL_PROCESSED, 1.0));
     }
 
     public static void identityIssued(Vot achievedVot) {
