@@ -390,11 +390,18 @@ core:
       apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     drivingLicenceAuthCheck: true
+    drivingLicenceAuthCheckSkipEnabled: false
     sisVerificationEnabled: true
     mitigations9020Enabled: true
     f2fRetryEnabled: false
     fraudCriErrorResilienceEnabled: false
   features:
+    drivingLicenceAuthCheckSkip:
+      featureFlags:
+        drivingLicenceAuthCheckSkipEnabled: true
+    drivingLicenceAuthCheckSkipDisabled:
+      featureFlags:
+        drivingLicenceAuthCheckSkipEnabled: false
     f2fRetry:
       featureFlags:
         f2fRetryEnabled: true

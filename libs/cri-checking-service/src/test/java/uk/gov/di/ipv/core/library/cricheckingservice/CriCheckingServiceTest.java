@@ -49,11 +49,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK_SKIP;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDva;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDrivingPermitDvaWithAuthSourceCheck;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawDrivingPermitDvaM1b;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawPassport;
@@ -821,6 +823,25 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(vcDcmawPassport()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of());
+
+            assertNull(result);
+        }
+
+        @Test
+        void checkVcResponseShouldNotReturnDlAuthSourceCheckForExistingValidity3DcmawVc()
+                throws Exception {
+            when(mockConfigService.enabled(DL_AUTH_SOURCE_CHECK_SKIP)).thenReturn(true);
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDrivingPermitDvaWithAuthSourceCheck()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,

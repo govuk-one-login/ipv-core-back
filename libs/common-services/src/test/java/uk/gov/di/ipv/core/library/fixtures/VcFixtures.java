@@ -491,6 +491,12 @@ public interface VcFixtures {
                 .build();
     }
 
+    private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaWithAtuhSourceCheck() {
+        var vc = vcClaimDcmawDrivingPermitDva();
+        vc.getEvidence().getFirst().setValidityScore(3);
+        return vc;
+    }
+
     private static IdentityCheckCredential vcClaimDcmawDrivingPermitDvaNoEvidence() {
         return IdentityCheckCredential.builder()
                 .withType(
@@ -1468,6 +1474,15 @@ public interface VcFixtures {
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
                 DCMAW_ASYNC,
                 vcClaimDcmawDrivingPermitDva(),
+                DCMAW_ASYNC_ISSUER_BUILD,
+                INSTANT_2024_01_23_05_08_41_UTC);
+    }
+
+    static VerifiableCredential vcDcmawAsyncDrivingPermitDvaWithAuthSourceCheck() {
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DCMAW_ASYNC,
+                vcClaimDcmawDrivingPermitDvaWithAtuhSourceCheck(),
                 DCMAW_ASYNC_ISSUER_BUILD,
                 INSTANT_2024_01_23_05_08_41_UTC);
     }
