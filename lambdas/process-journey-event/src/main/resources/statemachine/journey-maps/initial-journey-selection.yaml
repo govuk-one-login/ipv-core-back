@@ -20,6 +20,9 @@ states:
       type: process
       lambda: check-existing-identity
     events:
+      dynamic-routing:
+        targetJourney: NEW_DYNAMIC_ROUTING_IDENTITY
+        targetState: START
       ipv-gpg45-medium:
         targetJourney: NEW_P2_IDENTITY
         targetState: START

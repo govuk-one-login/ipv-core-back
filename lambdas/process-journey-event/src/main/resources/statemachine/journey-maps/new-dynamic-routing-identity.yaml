@@ -1,0 +1,106 @@
+name: New Dynamic Routing Identity
+description: >-
+  PoC for introducing dynamic routing to the journey map
+
+states:
+  # Entry points
+
+  START:
+    events:
+      next:
+        targetState: DYNAMIC_ROUTING
+
+  # Parent states
+
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci-fatal:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  # Journey states
+  DYNAMIC_ROUTING:
+    response:
+      type: process
+      lambda: dynamic-routing
+    events:
+      triage-uk:
+        targetState: TRIAGE_UK_SEGMENT
+        targetEntryEvent: startSegment
+      web-passport:
+        targetState: WEB_PASSPORT_SEGMENT
+        targetEntryEvent: startSegment
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  WEB_PASSPORT_SEGMENT:
+    nestedJourney: DR_WEB_PASSPORT
+    exitEvents:
+      dr-segement-end-success:
+        targetState: DYNAMIC_ROUTING
+      dr-segement-end-failure:
+        targetState: DYNAMIC_ROUTING
+      #        FIRE-34 can we read the event inside the dynamic routing lambda? Do we need to?
+      dr-segement-end-failure-retryable:
+        targetState: DYNAMIC_ROUTING
+      return-to-rp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  TRIAGE_UK_SEGMENT:
+    nestedJourney: DR_TRIAGE_UK
+    exitEvents:
+      dr-segement-end-success:
+        targetState: DYNAMIC_ROUTING
+
+
+#  Exit states
+  PROCESS_INCOMPLETE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      account-intervention:
+        targetJourney: FAILED
+        targetState: FAILED_ACCOUNT_INTERVENTION
+      fail-with-ci:
+        targetState: RETURN_TO_RP
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

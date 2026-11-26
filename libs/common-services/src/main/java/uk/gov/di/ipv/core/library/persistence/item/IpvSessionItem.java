@@ -43,6 +43,7 @@ public class IpvSessionItem implements PersistenceItem {
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     @Builder.Default private List<StateHistoryEntry> stateHistoryStack = new ArrayList<>();
+    @Builder.Default private DynamicRoutingState dynamicRoutingState = new DynamicRoutingState();
 
     // These are used as part of an unsuccessful reverification response
     private ReverificationFailureCode failureCode;

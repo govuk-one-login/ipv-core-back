@@ -96,6 +96,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYN
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_LOW_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DYNAMIC_ROUTING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_RETRY_FRAUD_PATH;
@@ -156,6 +157,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_MEDIUM_CONFIDENCE_PATH);
     private static final JourneyResponse JOURNEY_ACCOUNT_INTERVENTION =
             new JourneyResponse(JOURNEY_ACCOUNT_INTERVENTION_PATH);
+    private static final JourneyResponse JOURNEY_DYNAMIC_ROUTING =
+            new JourneyResponse(JOURNEY_DYNAMIC_ROUTING_PATH);
 
     private static final String ACCOUNT_INTERVENTION_ERROR_DESCRIPTION =
             "Account intervention detected";
@@ -788,25 +791,30 @@ public class CheckExistingIdentityHandler
             Vot preferredNewIdentityLevel, boolean hasExpiredDcmawDrivingPermit)
             throws HttpResponseExceptionWithErrorBody {
         EmbeddedMetricHelper.identityProving();
-        switch (preferredNewIdentityLevel) {
-            case P1 -> {
-                LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-                return hasExpiredDcmawDrivingPermit
-                        ? JOURNEY_REPROVE_IDENTITY_GPG45_LOW
-                        : JOURNEY_IPV_GPG45_LOW;
-            }
-            case P2 -> {
-                LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
-                return hasExpiredDcmawDrivingPermit
-                        ? JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM
-                        : JOURNEY_IPV_GPG45_MEDIUM;
-            }
-            default -> {
-                LOGGER.info(LogHelper.buildLogMessage("Invalid preferredNewIdentityLevel"));
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_VTR_CLAIM);
-            }
-        }
+
+        // FIRE-34 Hack in dynamic routing for new identities
+        return JOURNEY_DYNAMIC_ROUTING;
+
+        //        switch (preferredNewIdentityLevel) {
+        //            case P1 -> {
+        //                LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
+        //                return hasExpiredDcmawDrivingPermit
+        //                        ? JOURNEY_REPROVE_IDENTITY_GPG45_LOW
+        //                        : JOURNEY_IPV_GPG45_LOW;
+        //            }
+        //            case P2 -> {
+        //                LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
+        //                return hasExpiredDcmawDrivingPermit
+        //                        ? JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM
+        //                        : JOURNEY_IPV_GPG45_MEDIUM;
+        //            }
+        //            default -> {
+        //                LOGGER.info(LogHelper.buildLogMessage("Invalid
+        // preferredNewIdentityLevel"));
+        //                throw new HttpResponseExceptionWithErrorBody(
+        //                        HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_VTR_CLAIM);
+        //            }
+        //        }
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {

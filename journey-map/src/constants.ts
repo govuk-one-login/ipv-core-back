@@ -16,6 +16,7 @@ export const JOURNEY_TYPES: Record<string, string> = {
   F2F_FAILED: "F2F failed",
   REVERIFICATION: "Reverification",
   INTERVENTION_REPROVE_IDENTITY: "Reprove identity for intervention",
+  NEW_DYNAMIC_ROUTING_IDENTITY: "Prove identity dynamically",
 };
 
 export const NESTED_JOURNEY_TYPES: Record<string, string> = {
@@ -26,6 +27,8 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   STRATEGIC_APP_IDENTIFY_DEVICE: "Strategic app identify device",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
+  DR_WEB_PASSPORT: "Web passport - dynamic routing",
+  DR_TRIAGE_UK: "Triage question UK - dynamic routing",
 };
 
 // These are the sub-journeys which a user starts on before going through any other sub-journey
@@ -42,6 +45,7 @@ export const COMMON_JOURNEY_TYPES: string[] = [
   "REVERIFICATION",
   "UPDATE_ADDRESS",
   "UPDATE_NAME",
+  "NEW_DYNAMIC_ROUTING_IDENTITY",
 ];
 
 export const CRI_NAMES: Record<string, string> = {

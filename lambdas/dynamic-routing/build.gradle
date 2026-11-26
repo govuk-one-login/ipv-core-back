@@ -10,7 +10,10 @@ configurations {
 }
 
 dependencies {
-	implementation libs.bundles.awsLambda,
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkHttpClientSpi,
+			libs.bundles.awsLambda,
+			project(":libs:audit-service"),
 			project(":libs:common-services")
 
 	testImplementation libs.hamcrest,

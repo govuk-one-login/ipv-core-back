@@ -15,6 +15,7 @@ awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.16.0"
 awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
+awsSdkHttpClientSpi = { module = "software.amazon.awssdk:http-client-spi" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkLogs = "com.amazonaws:aws-java-sdk-logs:1.12.797"

@@ -1,0 +1,21 @@
+name: Triage UK
+description: >-
+  Experimental triage question for dynamic routing
+
+segmentId: TRIAGE_UK
+
+entryEvents:
+  startSegment:
+    targetState: LIVE_IN_UK_PAGE
+
+nestedJourneyStates:
+  LIVE_IN_UK_PAGE:
+    response:
+      type: page
+      pageId: live-in-uk
+#      FIRE-34 how does core front tell dynamic routing about the answer?
+    events:
+      uk:
+        exitEventToEmit: dr-segement-end-success
+      international:
+        exitEventToEmit: dr-segement-end-success
