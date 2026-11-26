@@ -162,7 +162,8 @@ public class CriCheckingService {
         LOGGER.info(
                 LogHelper.buildErrorMessage(
                         "OAuth error received from CRI", errorDescription, errorCode));
-        EmbeddedMetricHelper.criReturnWithError(callbackRequest.getCredentialIssuerId(), errorCode);
+        EmbeddedMetricHelper.criReturnWithError(
+                callbackRequest.getCredentialIssuer().getId(), errorCode);
 
         return (switch (errorCode) {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
