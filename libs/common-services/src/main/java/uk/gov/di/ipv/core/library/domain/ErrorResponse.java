@@ -122,7 +122,10 @@ public enum ErrorResponse {
     FAILED_TO_CREATE_STORED_IDENTITY_FOR_EVCS(1108, "Failed to create stored identity for EVCS"),
     ERROR_CALLING_AIS_API(1109, "Error when calling AIS API"),
     IPV_SESSION_ITEM_EXPIRED(1110, "Session expired."),
-    FAILED_NAME_AND_DOB_CORRELATION(1111, "Failed to correlate gathered names and DOB");
+    FAILED_NAME_AND_DOB_CORRELATION(1111, "Failed to correlate gathered names and DOB"),
+    INVALID_STORE_TRIAGE_DATA_REQUEST(1112, "Invalid store triage data request"),
+    UNKNOWN_TRIAGE_PAGE(1113, "Unknown triage page"),
+    INVALID_TRIAGE_ANSWER(1114, "Invalid answer for triage page");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

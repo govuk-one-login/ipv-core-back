@@ -13,4 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 @NoArgsConstructor
 public class DynamicRoutingState {
     @Builder.Default private int dummyStepCount = 0;
+
+    // Triage answers. A null value means the question has not been answered.
+    private Boolean livesInUk;
 }

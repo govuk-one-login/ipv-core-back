@@ -11,6 +11,7 @@ configurations {
 
 dependencies {
 	implementation libs.bundles.awsLambda,
+			libs.jacksonDatabind,
 			project(":libs:common-services")
 
 	testImplementation libs.hamcrest,
