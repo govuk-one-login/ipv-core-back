@@ -46,6 +46,8 @@ public class CoreBack {
                             config.routes.get(
                                     "/user/proven-identity-details",
                                     lambdaHandler::getProvenUserIdentityDetails);
+                            config.routes.post(
+                                    "/user/store-triage-data", lambdaHandler::storeTriageData);
 
                             // External APIs
                             config.routes.post("/token", lambdaHandler::getToken);

@@ -161,6 +161,29 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildProvenUserIdentityDetailsFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
+  /user/store-triage-data:
+    post:
+      description: "Called when core front needs to store triage data for a user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+      responses:
+        200:
+          description: "Triage data stored"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StoreTriageDataFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+
 components:
   schemas:
     journeyType:

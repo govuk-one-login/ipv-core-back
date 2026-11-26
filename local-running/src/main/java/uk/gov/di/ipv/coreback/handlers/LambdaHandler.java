@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
 import uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler;
+import uk.gov.di.ipv.core.storetriagedata.StoreTriageDataHandler;
 import uk.gov.di.ipv.core.userreverification.UserReverificationHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 
@@ -21,6 +22,7 @@ public class LambdaHandler {
             new InitialiseIpvSessionHandler();
     private final BuildProvenUserIdentityDetailsHandler provenUserIdentityHandler =
             new BuildProvenUserIdentityDetailsHandler();
+    private final StoreTriageDataHandler storeTriageDataHandler = new StoreTriageDataHandler();
     private final ProcessCriCallbackHandler criCallbackHandler = new ProcessCriCallbackHandler();
     private final ProcessMobileAppCallbackHandler appCallbackHandler =
             new ProcessMobileAppCallbackHandler();
@@ -51,6 +53,10 @@ public class LambdaHandler {
 
     public void getProvenUserIdentityDetails(Context ctx) {
         handleApiGatewayProxyRoute(ctx, this.provenUserIdentityHandler);
+    }
+
+    public void storeTriageData(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.storeTriageDataHandler);
     }
 
     public void getUserReverification(Context ctx) {

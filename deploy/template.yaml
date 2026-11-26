@@ -2449,6 +2449,105 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildProvenUserIdentityDetailsFunctionLogGroup
 
+  StoreTriageDataFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - StoreTriageDataFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "store-triage-data-${Environment}"
+      Handler: uk.gov.di.ipv.core.storetriagedata.StoreTriageDataHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/store-triage-data
+      Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref StoreTriageDataFunctionErrorCanaryAlarm,!Ref StoreTriageDataFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub store-triage-data-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          AWS_LAMBDA_EXEC_WRAPPER: !If
+            - UseDynatrace
+            - /opt/otel-proxy-handler
+            - !Ref AWS::NoValue
+      Layers:
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryCollectorLayerArn
+          ]
+          - !Ref AWS::NoValue
+        - !If
+          - UseDynatrace
+          - !FindInMap [
+            EnvironmentConfiguration,
+            !Ref 'AWS::AccountId',
+            opentelemetryJavaWrapperLayerArn
+          ]
+          - !Ref AWS::NoValue
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/*"
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCorePrivateAPI
+            Path: /user/store-triage-data
+            Method: POST
+      AutoPublishAlias: live
+
+  StoreTriageDataFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsTestApiEnv
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref StoreTriageDataFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/POST/user/store-triage-data"
+
+  StoreTriageDataFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 180
+      LogGroupName: !Sub "/aws/lambda/store-triage-data-${Environment}"
+
+  StoreTriageDataFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsStagingIntProd
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref StoreTriageDataFunctionLogGroup
+
 
   CheckExistingIdentityFunction:
     Type: AWS::Serverless::Function
@@ -4385,6 +4484,60 @@ Resources:
           Value: !Ref Environment
         - Name: Resource
           Value: /user/proven-identity-details
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  StoreTriageDataFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+      AlarmDescription: !Sub "Error returned from the StoreTriageDataFunction."
+      AlarmName: !Sub ${AWS::StackName}-StoreTriageDataFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "store-triage-data-${Environment}:live"
+        - Name: FunctionName
+          Value: !Ref StoreTriageDataFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt StoreTriageDataFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  StoreTriageDataFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue di-ipv-core-notifications-WarningAlertsTopicArn
+      AlarmDescription: !Sub "StoreTriageDataFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-StoreTriageDataFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !If [IsTestApiEnv, !Sub "IPV Core Private Testing API Gateway ${Environment}", !Sub "IPV Core Private API Gateway ${Environment}"]
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /user/store-triage-data
       Statistic: Sum
       Unit: Count
       Period: 60

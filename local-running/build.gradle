@@ -33,6 +33,7 @@ dependencies {
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:process-mobile-app-callback"),
 			project(":lambdas:reset-identity"),
+			project(":lambdas:store-triage-data"),
 			project(":lambdas:user-reverification"),
 			project(":libs:audit-service"),
 			project(":libs:cimit-service"),
