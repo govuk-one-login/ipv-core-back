@@ -77,6 +77,7 @@ Handlers return `Map<String, Object>` by calling `.toObjectMap()` on domain resp
 - Use `LogCollector.getLogCollectorFor(HandlerClass.class)` from `libs/test-helpers` to capture and assert log output.
 - Constants for test data (e.g. `TEST_SESSION_ID`, `TEST_USER_ID`) as `private static final` fields.
 - Use `ProcessRequest.processRequestBuilder()` to build test inputs for step-function lambdas.
+- Split every test body into sections marked with `// Arrange`, `// Act` and `// Assert` comments. Where the act and assert can't be separated (e.g. `assertThrows` wrapping the call under test), use a single `// Act and Assert` section instead. Omit `// Arrange` only when the test has no setup.
 
 # Gradle Conventions
 - All dependency versions in `gradle/libs.versions.toml` — never inline versions.
