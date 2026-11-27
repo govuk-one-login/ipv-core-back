@@ -22,7 +22,7 @@ repos:
         files: .\/template\.yaml$
 
   - repo: https://github.com/bridgecrewio/checkov.git
-    rev: '3.4.6'
+    rev: '3.4.7'
     hooks:
       - id: checkov
         verbose: true
