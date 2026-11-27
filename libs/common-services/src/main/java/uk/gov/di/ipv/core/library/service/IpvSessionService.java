@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.ConditionalCheckFailedException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
@@ -172,13 +173,14 @@ public class IpvSessionService {
         updateIpvSession(ipvSessionItem);
     }
 
-    public void setAccessToken(IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
+    public void setAccessToken(IpvSessionItem ipvSessionItem, BearerAccessToken accessToken)
+            throws ConditionalCheckFailedException {
         AccessTokenMetadata accessTokenMetadata = new AccessTokenMetadata();
         accessTokenMetadata.setCreationDateTime(Instant.now().toString());
         accessTokenMetadata.setExpiryDateTime(toExpiryDateTime(accessToken.getLifetime()));
         ipvSessionItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
         ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
-        updateIpvSession(ipvSessionItem);
+        dataStore.updateItemIfAttributeNotExists(ipvSessionItem, "accessToken");
     }
 
     public void revokeAccessToken(IpvSessionItem ipvSessionItem) throws IllegalArgumentException {
