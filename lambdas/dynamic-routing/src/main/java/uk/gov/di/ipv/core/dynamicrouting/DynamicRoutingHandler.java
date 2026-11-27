@@ -44,6 +44,16 @@ public class DynamicRoutingHandler implements RequestHandler<ProcessRequest, Map
         this.ipvSessionService = new IpvSessionService(configService);
     }
 
+    // For unit tests
+    public DynamicRoutingHandler(
+            ConfigService configService,
+            AuditService auditService,
+            IpvSessionService ipvSessionService) {
+        this.configService = configService;
+        this.auditService = auditService;
+        this.ipvSessionService = ipvSessionService;
+    }
+
     // FIRE-34 This is a dummy implementation just to demonstrate the routing that is possible.
     @Override
     @Logging(clearState = true)
@@ -64,22 +74,9 @@ public class DynamicRoutingHandler implements RequestHandler<ProcessRequest, Map
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             var dynamicRoutingData = ipvSessionItem.getDynamicRoutingState();
 
-            var currentStepCount = dynamicRoutingData.getDummyStepCount();
-            JourneyResponse ret = null;
-            switch (dynamicRoutingData.getDummyStepCount()) {
-                case 0:
-                    ret = new JourneyResponse("/journey/triage-uk");
-                    dynamicRoutingData.setDummyStepCount(currentStepCount + 1);
-                    break;
-                default:
-                    ret = new JourneyResponse("/journey/web-passport");
-                    dynamicRoutingData.setDummyStepCount(currentStepCount + 1);
-                    break;
-            }
-
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            return ret.toObjectMap();
+            return dynamicRoutingData.getLivesInUk() == null
+                    ? new JourneyResponse("/journey/triage-uk").toObjectMap()
+                    : new JourneyResponse("/journey/web-passport").toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     e.getResponseCode(), e.getErrorResponse());
