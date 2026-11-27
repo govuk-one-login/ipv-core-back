@@ -184,12 +184,11 @@ public class UserIdentityService {
         var successfulDobCorrelation = checkBirthDateCorrelationInCredentials(successfulVcs);
 
         if (!successfulDobCorrelation && !successfulNameCorrelation) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_AND_DOB_CORRELATION));
+            LOGGER.info(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_AND_DOB_CORRELATION));
         } else if (!successfulDobCorrelation) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
+            LOGGER.info(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
         } else if (!successfulNameCorrelation) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
+            LOGGER.info(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
         }
 
         return new CorrelationResult(successfulNameCorrelation, successfulDobCorrelation);

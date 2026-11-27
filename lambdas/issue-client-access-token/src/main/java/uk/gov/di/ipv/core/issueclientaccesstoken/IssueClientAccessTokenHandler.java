@@ -114,7 +114,7 @@ public class IssueClientAccessTokenHandler
 
             if (ipvSessionItem.getAccessToken() != null) {
                 ErrorObject error = revokeAccessToken(ipvSessionItem);
-                LOGGER.error(
+                LOGGER.warn(
                         LogHelper.buildErrorMessage(
                                 "Auth code has been used multiple times", error));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
