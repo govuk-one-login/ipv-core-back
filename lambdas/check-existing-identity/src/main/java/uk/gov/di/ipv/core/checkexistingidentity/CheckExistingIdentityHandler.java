@@ -111,6 +111,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_ID
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UPDATE_DETAILS_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -120,6 +121,8 @@ public class CheckExistingIdentityHandler
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
+    private static final JourneyResponse JOURNEY_UPDATE_DETAILS =
+            new JourneyResponse(JOURNEY_UPDATE_DETAILS_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -350,9 +353,24 @@ public class CheckExistingIdentityHandler
 
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
+            // fetchContraIndicatorsVc() also sets ipvSessionItem.securityCheckCredential, which is
+            // required by downstream lambdas (e.g. ProcessCandidateIdentityHandler).
+            // This call must stay before the isUpdateIdentity bypass below even though
+            // `contraIndicatorsVc` and `contraIndicators` are otherwise unused on that path.
             var contraIndicatorsVc =
                     cimitService.fetchContraIndicatorsVc(
                             userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
+
+            // The request to update identity originates with SIS.
+            // It should route directly to the update-details page,
+            // bypassing the other checks and audit events in getJourneyResponse
+            if (clientOAuthSessionItem.isUpdateIdentity()) {
+                sessionCredentialsService.persistCredentials(
+                        credentialBundle.credentials,
+                        auditInformation.getAuditEventUser().getSessionId(),
+                        false);
+                return JOURNEY_UPDATE_DETAILS;
+            }
 
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
@@ -721,47 +739,10 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             AuditEventInformation auditInformation)
             throws VerifiableCredentialException {
-        // check the result of 6MFC and return the appropriate journey
-        var fraudVcs =
-                credentialBundle.credentials.stream()
-                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
-                        .toList();
-        var fixedClock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
 
-        if (VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
-                fraudVcs, configService, fixedClock)) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "All Fraud VCs are expired or from unavailable source"));
-            sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(credentialBundle.credentials),
-                    auditInformation.getAuditEventUser().getSessionId(),
-                    false);
-
-            EmbeddedMetricHelper.identityProving();
-
-            fraudVcs.stream()
-                    .findFirst()
-                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
-                    .flatMap(VcHelper::extractNbf)
-                    .ifPresent(
-                            nbfInstant -> {
-                                var vcExpiryPeriodMs =
-                                        Duration.ofDays(
-                                                        configService
-                                                                .getFraudCheckExpiryPeriodDays())
-                                                .toMillis();
-                                var nbfMs = nbfInstant.toEpochMilli();
-
-                                sendAuditEventWithExtension(
-                                        AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
-                                        auditInformation.getAuditEventUser(),
-                                        auditInformation.getDeviceInformation(),
-                                        new AuditExtensionExpiredFraudVcFound(
-                                                vcExpiryPeriodMs, nbfMs));
-                            });
-
-            return JOURNEY_REPEAT_FRAUD_CHECK;
+        var expiredFraudResponse = checkForExpiredFraudVcs(credentialBundle, auditInformation);
+        if (expiredFraudResponse.isPresent()) {
+            return expiredFraudResponse.get();
         }
 
         LOGGER.info(LogHelper.buildLogMessage("Returning reuse journey"));
@@ -870,6 +851,54 @@ public class CheckExistingIdentityHandler
             LOGGER.warn(LogHelper.buildLogMessage("Failed to compute previous_achieved_vot"), e);
             return null;
         }
+    }
+
+    private Optional<JourneyResponse> checkForExpiredFraudVcs(
+            VerifiableCredentialBundle credentialBundle, AuditEventInformation auditInformation)
+            throws VerifiableCredentialException {
+        // check the result of 6MFC and return the appropriate journey
+        var fraudVcs =
+                credentialBundle.credentials.stream()
+                        .filter(vc -> vc.getCri().equals(EXPERIAN_FRAUD))
+                        .toList();
+        var fixedClock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+
+        if (VcHelper.allFraudVcsAreExpiredOrFromUnavailableSource(
+                fraudVcs, configService, fixedClock)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "All Fraud VCs are expired or from unavailable source"));
+            sessionCredentialsService.persistCredentials(
+                    allVcsExceptFraud(credentialBundle.credentials),
+                    auditInformation.getAuditEventUser().getSessionId(),
+                    false);
+
+            EmbeddedMetricHelper.identityProving();
+
+            fraudVcs.stream()
+                    .findFirst()
+                    .filter(vc -> VcHelper.isExpiredFraudVc(vc, configService, fixedClock))
+                    .flatMap(VcHelper::extractNbf)
+                    .ifPresent(
+                            nbfInstant -> {
+                                var vcExpiryPeriodMs =
+                                        Duration.ofDays(
+                                                        configService
+                                                                .getFraudCheckExpiryPeriodDays())
+                                                .toMillis();
+                                var nbfMs = nbfInstant.toEpochMilli();
+
+                                sendAuditEventWithExtension(
+                                        AuditEventTypes.IPV_EXPIRED_FRAUD_VC_FOUND,
+                                        auditInformation.getAuditEventUser(),
+                                        auditInformation.getDeviceInformation(),
+                                        new AuditExtensionExpiredFraudVcFound(
+                                                vcExpiryPeriodMs, nbfMs));
+                            });
+
+            return Optional.of(JOURNEY_REPEAT_FRAUD_CHECK);
+        }
+        return Optional.empty();
     }
 
     @AllArgsConstructor

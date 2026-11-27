@@ -58,3 +58,32 @@ Feature: Stored Identity
       When I submit a 'update-name' event
       Then I get an 'identify-device' page response
       And I have a stored identity record with a 'P2' max vot that is 'invalid'
+
+  Rule: Existing SI record is invalidated on direct to update-details journey
+    Background: Request invalidates stored identity
+      Given the subject already has the following credentials
+        | CRI     | scenario                     |
+        | dcmaw   | kenneth-driving-permit-valid |
+        | address | kenneth-current              |
+        | fraud   | kenneth-score-2              |
+      And I have an existing stored identity record with a 'P2' vot
+      When I start a new 'medium-confidence-update-identity' journey
+      Then I get an 'update-details' page response
+
+    Scenario: Update address invalidates stored identity
+      When I submit an 'address-only' event
+      Then I get a 'address' CRI response
+      And I have a stored identity record with a 'P2' max vot that is 'invalid'
+
+    Scenario Outline: Update <name_combination> invalidates stored identity
+      When I submit a '<name_combination>' event
+      Then I get a 'page-update-name' page response
+      When I submit an 'update-name' event
+      And I have a stored identity record with a 'P2' max vot that is 'invalid'
+
+      Examples:
+        | name_combination              |
+        | given-names-only              |
+        | given-names-and-address       |
+        | family-name-and-address       |
+        | family-name-only              |

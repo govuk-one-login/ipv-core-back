@@ -105,6 +105,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String VTR = "vtr";
     private static final String CLAIMS = "claims";
     private static final String USER_INFO = "userinfo";
+    private static final String UPDATE_IDENTITY = "update_identity";
     private static final String VALUES = "values";
     private static final String SCOPE = "scope";
     private static final String INVALID_EVCS_ACCESS_TOKEN = "invalid_evcs_access_token";
@@ -117,6 +118,7 @@ class InitialiseIpvSessionHandlerTest {
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @Captor private ArgumentCaptor<String> stringArgumentCaptor;
+    @Captor private ArgumentCaptor<Boolean> booleanArgumentCaptor;
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
@@ -195,7 +197,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
-                        any(), any(), any(), any()))
+                        any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -221,7 +223,8 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(AuditEventTypes.IPV_REVERIFY_START, auditEventsCaptured.get(1).getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+                .generateClientSessionDetails(
+                        any(), any(), any(), stringArgumentCaptor.capture(), anyBoolean());
         assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
     }
 
@@ -233,7 +236,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
-                        any(), any(), any(), any()))
+                        any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -257,7 +260,8 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.getFirst().getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+                .generateClientSessionDetails(
+                        any(), any(), any(), stringArgumentCaptor.capture(), anyBoolean());
         assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
     }
 
@@ -312,7 +316,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
-                        any(), any(), any(), any()))
+                        any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -335,8 +339,47 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+                .generateClientSessionDetails(
+                        any(), any(), any(), stringArgumentCaptor.capture(), anyBoolean());
         assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
+    }
+
+    @ParameterizedTest(name = "updateIdentity={0}")
+    @ValueSource(booleans = {true, false})
+    void shouldReturnIpvSessionIdAndJourneyIdWhenProvidedValidUpdateIdentityRequest(
+            boolean updateIdentity) throws Exception {
+        // Arrange
+        signedJWT = getSignedJWT(getValidClaimsBuilder(updateIdentity));
+
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
+                        any(), any(), any(), any(), anyBoolean()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
+        assertEquals(2, responseBody.size());
+        assertEquals(TEST_GOVUK_SIGNIN_JOURNEY_ID, responseBody.get("govukSigninJourneyId"));
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(
+                        any(), any(), any(), any(), booleanArgumentCaptor.capture());
+        assertEquals(updateIdentity, booleanArgumentCaptor.getValue());
     }
 
     @ParameterizedTest
@@ -473,7 +516,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
-                        any(), any(), any(), any()))
+                        any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -719,7 +762,34 @@ class InitialiseIpvSessionHandlerTest {
         return getValidClaimsBuilder("openid");
     }
 
+    private static JWTClaimsSet.Builder getValidClaimsBuilder(Boolean updateIdentity) {
+        return getValidClaimsBuilder("openid", updateIdentity);
+    }
+
     private static JWTClaimsSet.Builder getValidClaimsBuilder(String scope) {
+        return getValidClaimsBuilder(scope, null);
+    }
+
+    private static JWTClaimsSet.Builder getValidClaimsBuilder(
+            String scope, Boolean updateIdentity) {
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put(
+                USER_INFO,
+                Map.of(
+                        ADDRESS_CLAIM_NAME,
+                        new Essential(true),
+                        CORE_IDENTITY_JWT_CLAIM_NAME,
+                        new Essential(true),
+                        PASSPORT_CLAIM_NAME,
+                        new Essential(true),
+                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                        Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN))));
+
+        if (updateIdentity != null) {
+            claims.put(UPDATE_IDENTITY, updateIdentity);
+        }
+
         return new JWTClaimsSet.Builder()
                 .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                 .issueTime(new Date())
@@ -734,18 +804,6 @@ class InitialiseIpvSessionHandlerTest {
                 .claim(VTR, List.of("P2"))
                 .claim(SCOPE, scope)
                 .claim(REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY, TEST_GOVUK_SIGNIN_JOURNEY_ID)
-                .claim(
-                        CLAIMS,
-                        Map.of(
-                                USER_INFO,
-                                Map.of(
-                                        ADDRESS_CLAIM_NAME,
-                                        new Essential(true),
-                                        CORE_IDENTITY_JWT_CLAIM_NAME,
-                                        new Essential(true),
-                                        PASSPORT_CLAIM_NAME,
-                                        new Essential(true),
-                                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                        Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN)))));
+                .claim(CLAIMS, claims);
     }
 }

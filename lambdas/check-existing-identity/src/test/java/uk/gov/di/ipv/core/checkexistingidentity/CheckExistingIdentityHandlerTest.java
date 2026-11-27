@@ -152,6 +152,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_ID
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UPDATE_DETAILS_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -177,6 +178,8 @@ class CheckExistingIdentityHandlerTest {
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
+    private static final JourneyResponse JOURNEY_UPDATE_DETAILS =
+            new JourneyResponse(JOURNEY_UPDATE_DETAILS_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -271,6 +274,7 @@ class CheckExistingIdentityHandlerTest {
                         .reproveIdentity(false)
                         .vtr(List.of(P2.name()))
                         .evcsAccessToken(EVCS_TEST_TOKEN)
+                        .updateIdentity(false)
                         .build();
 
         when(configService.getComponentId()).thenReturn("https://core-component.example");
@@ -966,6 +970,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(clientOAuthSessionItem);
             when(mockAisService.fetchAisState(TEST_USER_ID))
                     .thenReturn(createNoInterventionAisState());
+
             mockVcHelper
                     .when(
                             () ->
@@ -1225,6 +1230,39 @@ class CheckExistingIdentityHandlerTest {
                                                             AuditEventTypes
                                                                     .IPV_EXPIRED_DCMAW_DL_VC_FOUND)));
         }
+    }
+
+    @Test
+    void shouldReturnJourneyUpdateDetailsResponseIfIsUpdateIdentity() throws Exception {
+        clientOAuthSessionItem.setUpdateIdentity(true);
+
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        when(mockAisService.fetchAisState(TEST_USER_ID)).thenReturn(createNoInterventionAisState());
+
+        var vcs =
+                List.of(
+                        vcWebPassportSuccessful(),
+                        vcAddressM1a(),
+                        vcExperianKbvM1a(),
+                        vcDcmawDrivingPermitDvaM1b());
+
+        when(mockEvcsService.fetchEvcsVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, false, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(CURRENT, vcs));
+
+        var journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        verify(mockSessionCredentialService)
+                .persistCredentials(vcs, ipvSessionItem.getIpvSessionId(), false);
+
+        assertEquals(JOURNEY_UPDATE_DETAILS, journeyResponse);
     }
 
     @Test

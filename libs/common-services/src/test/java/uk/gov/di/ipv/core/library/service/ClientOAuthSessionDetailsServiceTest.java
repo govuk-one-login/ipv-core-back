@@ -100,7 +100,8 @@ class ClientOAuthSessionDetailsServiceTest {
                         clientOAuthSessionId,
                         testClaimSet,
                         "test-client",
-                        "test-evcs-access-token");
+                        "test-evcs-access-token",
+                        true);
 
         verify(mockDataStore)
                 .create(clientOAuthSessionItem, mockConfigService.getBackendSessionTtl());
@@ -115,6 +116,7 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals("test-journey-id", clientOAuthSessionItem.getGovukSigninJourneyId());
         assertEquals("test-scope", clientOAuthSessionItem.getScope());
         assertEquals(List.of("P1", "P2"), clientOAuthSessionItem.getVtr());
+        assertTrue(clientOAuthSessionItem.isUpdateIdentity());
     }
 
     @Test
