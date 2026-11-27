@@ -42,7 +42,7 @@ public class CimitService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public static final String FAILED_API_REQUEST = "API request failed";
+    public static final String FAILED_API_REQUEST = "CIMIT API request failed";
 
     public static final String GOVUK_SIGNIN_JOURNEY_ID_HEADER = "govuk-signin-journey-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
@@ -89,7 +89,7 @@ public class CimitService {
             sendPostHttpRequest(POST_CI_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
         } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error sending VC to CIMIT", e));
-            throw new CiPutException(FAILED_API_REQUEST);
+            throw new CiPutException(FAILED_API_REQUEST, e);
         }
     }
 
@@ -104,7 +104,7 @@ public class CimitService {
                     POST_MITIGATIONS_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
         } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error sending mitigation to CIMIT", e));
-            throw new CiPostMitigationsException(FAILED_API_REQUEST);
+            throw new CiPostMitigationsException(FAILED_API_REQUEST, e);
         }
     }
 
@@ -137,7 +137,7 @@ public class CimitService {
             return extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
         } catch (JsonProcessingException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error reading CIMIT VC", e));
-            throw new CiRetrievalException("Failed to deserialize ContraIndicatorCredentialDto");
+            throw new CiRetrievalException("Failed to deserialize ContraIndicatorCredentialDto", e);
         }
     }
 
@@ -163,7 +163,8 @@ public class CimitService {
             }
             return response.body();
         } catch (CimitHttpRequestException | URISyntaxException | JsonProcessingException e) {
-            throw new CiRetrievalException(FAILED_API_REQUEST);
+            LOGGER.error(LogHelper.buildErrorMessage("Error retrieving CIs from CIMIT", e));
+            throw new CiRetrievalException(FAILED_API_REQUEST, e);
         }
     }
 
@@ -180,7 +181,7 @@ public class CimitService {
                     userId, null, contraIndicatorsVC, cimitSigningKey, cimitComponentId, false);
         } catch (VerifiableCredentialException vcEx) {
             LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
-            throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
+            throw new CiRetrievalException(vcEx.getErrorResponse().getMessage(), vcEx);
         }
     }
 
@@ -216,7 +217,7 @@ public class CimitService {
             return OBJECT_MAPPER.readValue(response.body(), CimitApiResponse.class);
         } catch (JsonProcessingException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse CIMIT response", e));
-            throw new PostApiException("Failed to parse CIMIT response");
+            throw new PostApiException("Failed to parse CIMIT response", e);
         }
     }
 
@@ -253,10 +254,10 @@ public class CimitService {
                     LogHelper.buildErrorMessage(
                             "Client interrupted sending http request to CIMIT", e));
             Thread.currentThread().interrupt();
-            throw new CimitHttpRequestException(FAILED_API_REQUEST);
+            throw new CimitHttpRequestException(FAILED_API_REQUEST, e);
         } catch (IOException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Http request to CIMIT failed", e));
-            throw new CimitHttpRequestException(FAILED_API_REQUEST);
+            throw new CimitHttpRequestException(FAILED_API_REQUEST, e);
         }
     }
 
@@ -273,7 +274,7 @@ public class CimitService {
             return OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
         } catch (JsonProcessingException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error creating VC submission payload", e));
-            throw new CiPutException("Failed to serialize VC submission payload");
+            throw new CiPutException("Failed to serialize VC submission payload", e);
         }
     }
 
@@ -287,7 +288,7 @@ public class CimitService {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Error creating mitigation submission payload", e));
             throw new CiPostMitigationsException(
-                    "Failed to serialize mitigation submission payload");
+                    "Failed to serialize mitigation submission payload", e);
         }
     }
 }
