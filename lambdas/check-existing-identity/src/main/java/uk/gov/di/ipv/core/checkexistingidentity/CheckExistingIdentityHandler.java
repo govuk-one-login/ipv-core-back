@@ -411,10 +411,7 @@ public class CheckExistingIdentityHandler
                 if (asyncCriStatus.cri() == F2F) {
 
                     return handleF2fUserReturn(
-                            credentialBundle,
-                            gpg45CorrelationResult,
-                            auditInformation,
-                            clientOAuthSessionItem);
+                            credentialBundle, gpg45CorrelationResult, auditInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -584,8 +581,7 @@ public class CheckExistingIdentityHandler
     private JourneyResponse handleF2fUserReturn(
             VerifiableCredentialBundle credentialBundle,
             CorrelationResult correlationResult,
-            AuditEventInformation auditInformation,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            AuditEventInformation auditInformation)
             throws EvcsServiceException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         if (!correlationResult.isCorrelated()) {
@@ -616,10 +612,6 @@ public class CheckExistingIdentityHandler
 
             // For safety only continue if we find both VCs as expected
             if (fraudAndCicVcs.size() == 2) {
-                evcsService.markAbandonedInEvcs(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        fraudAndCicVcs);
                 credentialBundle.credentials.removeAll(fraudAndCicVcs);
 
                 sessionCredentialsService.persistCredentials(
