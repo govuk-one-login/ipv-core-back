@@ -27,7 +27,10 @@ export const NESTED_JOURNEY_TYPES: Record<string, string> = {
   STRATEGIC_APP_IDENTIFY_DEVICE: "Strategic app identify device",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
+  DR_CLAIMED_IDENTITY: "Claimed identity - dynamic routing",
+  DR_NINO: "Nino - dynamic routing",
   DR_WEB_PASSPORT: "Web passport - dynamic routing",
+  DR_WEB_DRIVING_LICENCE: "Web driving licence - dynamic routing",
   DR_TRIAGE_UK: "Triage question UK - dynamic routing",
 };
 

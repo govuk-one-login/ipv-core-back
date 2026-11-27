@@ -1,0 +1,41 @@
+name: Claimed Identity
+description: >-
+  Experimental claimed identity segment for dynamic routing
+
+segmentId: CLAIMED_IDENTITY
+
+entryEvents:
+  startSegment:
+    targetState: CRI_CLAIMED_IDENTITY
+
+nestedJourneyStates:
+  CRI_CLAIMED_IDENTITY:
+    response:
+      type: cri
+      criId: claimedIdentity
+    parent: CRI_STATE
+    events:
+      next:
+        exitEventToEmit: dr-segement-end-success
+      access-denied:
+        exitEventToEmit: dr-segement-end-failure
+      fail-with-ci:
+        exitEventToEmit: dr-segement-end-failure
+      error:
+        targetState: SORRY_CRI_TECHNICAL_PROBLEM_CRI_CLAIMED_IDENTITY
+
+  SORRY_CRI_TECHNICAL_PROBLEM_CRI_CLAIMED_IDENTITY:
+    response:
+      type: page
+      pageId: sorry-technical-problem
+    events:
+      tryAgain:
+        targetState: CRI_CLAIMED_IDENTITY
+#        FIRE-34 these are left-overs from re-using an existing page, we'd want a better named event here
+      app:
+        exitEventToEmit: dr-segement-end-failure-retryable
+      postOffice:
+        exitEventToEmit: dr-segement-end-failure-retryable
+#        FIRE-34 do we want segments to allow the user to return to the RP?
+      returnToRp:
+        exitEventToEmit: return-to-rp

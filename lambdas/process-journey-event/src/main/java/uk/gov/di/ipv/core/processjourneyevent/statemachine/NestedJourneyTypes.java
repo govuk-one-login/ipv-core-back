@@ -18,6 +18,9 @@ public enum NestedJourneyTypes {
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
     WEB_DL_OR_PASSPORT("web-dl-or-passport"),
     DR_TRIAGE_UK("dr-triage-uk"),
+    DR_CLAIMED_IDENTITY("dr-claimed-identity"),
+    DR_NINO("dr-nino"),
+    DR_WEB_DRIVING_LICENCE("dr-web-driving-licence"),
     DR_WEB_PASSPORT("dr-web-passport");
 
     private final String journeyName;

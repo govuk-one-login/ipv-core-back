@@ -57,12 +57,60 @@ states:
       web-passport:
         targetState: WEB_PASSPORT_SEGMENT
         targetEntryEvent: startSegment
+      web-driving-licence:
+        targetState: WEB_DRIVING_LICENCE_SEGMENT
+        targetEntryEvent: startSegment
+      claimed-identity:
+        targetState: CLAIMED_IDENTITY_SEGMENT
+        targetEntryEvent: startSegment
+      nino:
+        targetState: NINO_SEGMENT
+        targetEntryEvent: startSegment
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
   WEB_PASSPORT_SEGMENT:
     nestedJourney: DR_WEB_PASSPORT
+    exitEvents:
+      dr-segement-end-success:
+        targetState: DYNAMIC_ROUTING
+      dr-segement-end-failure:
+        targetState: DYNAMIC_ROUTING
+      #        FIRE-34 can we read the event inside the dynamic routing lambda? Do we need to?
+      dr-segement-end-failure-retryable:
+        targetState: DYNAMIC_ROUTING
+      return-to-rp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  WEB_DRIVING_LICENCE_SEGMENT:
+    nestedJourney: DR_WEB_DRIVING_LICENCE
+    exitEvents:
+      dr-segement-end-success:
+        targetState: DYNAMIC_ROUTING
+      dr-segement-end-failure:
+        targetState: DYNAMIC_ROUTING
+      #        FIRE-34 can we read the event inside the dynamic routing lambda? Do we need to?
+      dr-segement-end-failure-retryable:
+        targetState: DYNAMIC_ROUTING
+      return-to-rp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  CLAIMED_IDENTITY_SEGMENT:
+    nestedJourney: DR_CLAIMED_IDENTITY
+    exitEvents:
+      dr-segement-end-success:
+        targetState: DYNAMIC_ROUTING
+      dr-segement-end-failure:
+        targetState: DYNAMIC_ROUTING
+      #        FIRE-34 can we read the event inside the dynamic routing lambda? Do we need to?
+      dr-segement-end-failure-retryable:
+        targetState: DYNAMIC_ROUTING
+      return-to-rp:
+        targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  NINO_SEGMENT:
+    nestedJourney: DR_NINO
     exitEvents:
       dr-segement-end-success:
         targetState: DYNAMIC_ROUTING
