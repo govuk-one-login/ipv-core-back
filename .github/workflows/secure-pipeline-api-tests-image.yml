@@ -55,6 +55,16 @@ jobs:
         id: login-build-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Authenticate to Chainguard
+        uses: chainguard-dev/setup-chainctl@v0.5.1
+        with:
+          identity: ed89a7282cc1658ba304b99fe3ef7abb35fed9e8/d5a5a1e354d1ced8
+
+      - name: Get Chainguard npm token
+        run: |
+          chainctl auth login --audience libraries.cgr.dev
+          echo "CHAINGUARD_TOKEN=$(chainctl auth token --audience libraries.cgr.dev)" >> $GITHUB_ENV
+
       - name: Build, tag, push, and sign api testing image to build
         env:
           BUILD_ECR_REG: ${{ steps.login-build-ecr.outputs.registry }}
@@ -63,6 +73,7 @@ jobs:
           BUILD_CONTAINER_SIGN_KMS_KEY: ${{ env.ENVIRONMENT == 'build' && secrets.CONTAINER_SIGN_KMS_KEY || secrets.CONTAINER_SIGN_KMS_KEY_DEV }}
         run: |
           docker build --build-arg GITHUB_PAT="${{ secrets.GITHUB_TOKEN }}" \
+            --build-arg CHAINGUARD_TOKEN="$CHAINGUARD_TOKEN" \
             -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:latest" \
             -t "${BUILD_ECR_REG}/${BUILD_API_TESTS_ECR_REPO}:${SHA}" \
             -f api-tests/secure-pipeline/api-tests.Dockerfile .
